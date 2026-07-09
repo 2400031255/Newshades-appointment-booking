@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Gallery – New Shades{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container text-center">
+    <div class="reveal-up">
+      <div class="section-badge mb-3"><span class="badge-dot"></span> Our Work</div>
+      <h1 class="page-header-title">Our <span>Gallery</span></h1>
+      <p class="page-header-sub" style="margin:0 auto;text-align:center;">A glimpse of our finest transformations</p>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+
+    {% if photos %}
+    <div class="row g-4">
+      {% for photo in photos %}
+      <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+        <div class="gallery-card">
+          <img src="{{ url_for('static', filename='images/gallery/' + photo.filename) }}" alt="{{ photo.caption }}" class="gallery-real-img"/>
+          {% if photo.caption %}
+          <div class="gallery-real-caption">{{ photo.caption }}</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="row g-4">
+      {% for icon, label in [
+        ('fas fa-cut','Hair Cut'),('fas fa-user-tie','Beard Trim'),('fas fa-palette','Hair Color'),
+        ('fas fa-spa','Facial'),('fas fa-magic','Hair Spa'),('fas fa-hands','Head Massage'),
+        ('fas fa-star','Styling'),('fas fa-gem','Premium'),('fas fa-crown','VIP Treatment')
+      ] %}
+      <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.07 }}s">
+        <div class="gallery-card">
+          <div class="gallery-icon"><i class="{{ icon }}"></i></div>
+          <div class="gallery-label">{{ label }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="text-center mt-4" style="color:var(--text-muted);font-size:0.9rem;">
+      <i class="fas fa-info-circle me-2 text-gold"></i>Photos will appear here once uploaded from the admin panel.
+    </p>
+    {% endif %}
+
+    <div class="text-center mt-5 reveal-up">
+      <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+        <i class="fas fa-calendar-check me-2"></i>Book Your Session
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

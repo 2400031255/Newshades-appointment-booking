@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Services – New Shades{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> What We Offer</div>
+        <h1 class="page-header-title">Our <span>Services</span></h1>
+        <p class="page-header-sub">Premium grooming and beauty services tailored just for you.</p>
+      </div>
+      <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+        <i class="fas fa-calendar-check me-2"></i>Book Now
+      </a>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+
+    {% if categories %}
+    <div class="cat-filters mb-4 reveal-up">
+      <button type="button" class="cat-btn active" data-cat="all">All</button>
+      {% for cat in categories %}
+      <button type="button" class="cat-btn" data-cat="{{ cat }}">{{ cat }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row g-4" id="servicesGrid">
+      {% for svc in services %}
+      <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="{{ svc.category }}" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+        <div class="svc-select-card" style="cursor:default;">
+          <div class="svc-select-icon">
+            {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
+            {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
+            {% elif svc.category == 'Skin' %}<i class="fas fa-spa"></i>
+            {% elif svc.category == 'Wellness' %}<i class="fas fa-hands"></i>
+            {% else %}<i class="fas fa-magic"></i>{% endif %}
+          </div>
+          <h6 class="svc-select-name">{{ svc.service_name }}</h6>
+          <p class="svc-select-desc">{{ svc.description }}</p>
+          <div class="svc-select-footer">
+            <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
+            <span class="svc-dur"><i class="far fa-clock me-1"></i>{{ svc.duration }}</span>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div class="col-12 text-center py-5" style="color:var(--text-muted);">No services available yet.</div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-5 reveal-up">
+      <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+        <i class="fas fa-calendar-check me-2"></i>Book an Appointment
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}About Us – New Shades{% endblock %}
+
+{% block content %}
+
+<!-- Hero Header -->
+<div class="page-header" style="padding:130px 0 80px;">
+  <div class="page-header-orb"></div>
+  <div class="page-header-orb" style="left:-80px;top:auto;bottom:-60px;width:320px;height:320px;background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);"></div>
+  <div class="container text-center">
+    <div class="reveal-up">
+      <div class="section-badge mb-3"><span class="badge-dot"></span> Our Story</div>
+      <h1 class="page-header-title" style="font-size:clamp(2.2rem,4.5vw,3.6rem);">
+        Where Beauty Meets <span>Passion</span>
+      </h1>
+      <p class="page-header-sub" style="margin:0 auto;text-align:center;max-width:600px;">
+        New Shades is more than a salon — it's a space where every client leaves feeling confident, radiant, and truly themselves.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Story Section -->
+<section class="booking-section">
+  <div class="container">
+
+    <!-- Our Story -->
+    <div class="row align-items-center g-5 mb-6 reveal-up">
+      <div class="col-lg-6">
+        <div class="about-story-visual">
+          <div class="about-story-img-wrap">
+            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades Salon" class="about-story-img"/>
+          </div>
+          <div class="about-story-badge ab-bottom">
+            <i class="fas fa-star me-2 text-gold"></i>5★ Rated Salon
+          </div>
+          <div class="about-story-orb"></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="section-badge mb-3">Who We Are</div>
+        <h2 class="section-title mb-3">Crafting <span>Confidence</span></h2>
+        <div class="section-line" style="margin:0 0 28px;"></div>
+        <p class="about-para">New Shades was born from a dream — to create a salon where every person walks in as a guest and walks out as their best self. Founded by two passionate women who believed beauty should be accessible, personal, and transformative.</p>
+        <p class="about-para">We blend artistry with expertise, using only premium products and the latest techniques. Every cut, color, and treatment is crafted with care, precision, and a deep understanding of what makes you uniquely beautiful.</p>
+        <div class="about-values mt-4">
+          {% for icon, text in [
+            ('fas fa-gem',        'Premium international products only'),
+            ('fas fa-user-check', 'Certified & continuously trained stylists'),
+            ('fas fa-heart',      'Personalised care for every client'),
+            ('fas fa-shield-alt', 'Hygienic, safe & welcoming environment')
+          ] %}
+          <div class="about-value-item">
+            <div class="about-value-icon"><i class="{{ icon }}"></i></div>
+            <span>{{ text }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-4 mb-5">
+      {% for num, label, icon in [
+        ('500+','Happy Clients','fas fa-users'),
+        ('10+','Expert Stylists','fas fa-user-tie'),
+        ('15+','Services Offered','fas fa-concierge-bell'),
+        ('5★','Google Rating','fas fa-star')
+      ] %}
+      <div class="col-md-3 col-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+        <div class="about-stat-card">
+          <div class="about-stat-icon"><i class="{{ icon }}"></i></div>
+          <div class="about-stat-num">{{ num }}</div>
+          <div class="about-stat-label">{{ label }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Founders Section -->
+    <div class="founders-section reveal-up">
+      <div class="founders-header">
+        <div class="section-badge mb-3">The Visionaries</div>
+        <h2 class="section-title mb-2">Meet Our <span>Founders</span></h2>
+        <div class="section-line" style="margin:0 auto 16px;"></div>
+        <p style="color:var(--text-muted);max-width:520px;margin:0 auto;text-align:center;font-size:0.95rem;">
+          Two friends, one dream — to build a salon that celebrates every woman's beauty.
+        </p>
+      </div>
+
+      <div class="founders-card reveal-up" style="animation-delay:0.15s">
+        <div class="founders-img-side">
+          <div class="founders-img-wrap">
+            <img src="{{ url_for('static', filename='images/founders.jpeg') }}" alt="Komali & Gayathri – Founders of New Shades" class="founders-img"/>
+            <div class="founders-img-glow"></div>
+          </div>
+        </div>
+        <div class="founders-content-side">
+          <div class="founders-names-row">
+            <div class="founder-name-tag">
+              <div class="founder-initial">K</div>
+              <div>
+                <div class="founder-name">Komali</div>
+                <div class="founder-title">Co-Founder & Creative Director</div>
+              </div>
+            </div>
+            <div class="founders-amp">&</div>
+            <div class="founder-name-tag">
+              <div class="founder-initial">G</div>
+              <div>
+                <div class="founder-name">Gayathri</div>
+                <div class="founder-title">Co-Founder & Head Stylist</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="founders-divider"></div>
+
+          <p class="founders-quote">
+            <i class="fas fa-quote-left founders-quote-icon"></i>
+            We started New Shades because we wanted every woman to experience the joy of feeling beautiful — not just on special occasions, but every single day. Our salon is our love letter to every client who walks through our doors.
+          </p>
+
+          <div class="founders-tags">
+            <span class="founder-tag"><i class="fas fa-heart me-1"></i>Passion-Driven</span>
+            <span class="founder-tag"><i class="fas fa-leaf me-1"></i>Premium Quality</span>
+            <span class="founder-tag"><i class="fas fa-users me-1"></i>Client-First</span>
+            <span class="founder-tag"><i class="fas fa-award me-1"></i>Award-Winning</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Why Choose Us -->
+    <div class="mt-5 reveal-up">
+      <div class="section-head mb-4">
+        <div class="section-badge">Why New Shades</div>
+        <h2 class="section-title mt-2">The <span>Difference</span> You'll Feel</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="row g-4">
+        {% for icon, title, desc in [
+          ('fas fa-cut',       'Precision Artistry',    'Every cut is a masterpiece. Our stylists study your face, hair texture, and lifestyle before touching a single strand.'),
+          ('fas fa-palette',   'Color Mastery',         'From subtle highlights to bold transformations — our color specialists create looks that last and turn heads.'),
+          ('fas fa-spa',       'Skin & Wellness',       'Rejuvenating facials, relaxing massages, and nourishing treatments that restore your natural glow.'),
+          ('fas fa-clock',     'Your Time, Your Way',   'Flexible booking 7 days a week. Walk in or book via WhatsApp — we work around your schedule.')
+        ] %}
+        <div class="col-md-6 col-lg-3 reveal-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+          <div class="why-card">
+            <div class="why-icon"><i class="{{ icon }}"></i></div>
+            <h6 class="why-title">{{ title }}</h6>
+            <p class="why-desc">{{ desc }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="glass-card text-center reveal-up mt-5" style="padding:56px 32px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);pointer-events:none;"></div>
+      <div class="section-badge mb-3">Experience It Yourself</div>
+      <h3 style="font-family:'Playfair Display',serif;color:#fff;font-size:clamp(1.5rem,2.5vw,2rem);margin-bottom:12px;">
+        Ready for Your <em style="color:var(--gold-2);">Transformation?</em>
+      </h3>
+      <p style="color:var(--text-muted);margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto;">
+        Join hundreds of happy clients who trust Komali & Gayathri's team for their best look.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+          <i class="fas fa-calendar-check me-2"></i>Book Appointment
+        </a>
+        <a href="https://wa.me/{{ shop.whatsapp }}" class="btn-wa-hero" target="_blank" rel="noopener noreferrer">
+          <i class="fab fa-whatsapp me-2"></i>WhatsApp Us
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

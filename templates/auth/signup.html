@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up – New Shades{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-orb auth-orb-1"></div>
+  <div class="auth-orb auth-orb-2"></div>
+
+  <div class="auth-card reveal-up" style="width:min(100%,580px);">
+
+    <div class="auth-brand">
+      <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="auth-logo"/>
+      <div>
+        <div class="auth-brand-name">New <span>Shades</span></div>
+        <div class="auth-brand-sub">Premium Salon</div>
+      </div>
+    </div>
+
+    <h2 class="auth-title">Create Account</h2>
+    <p class="auth-subtitle">Join the New Shades experience</p>
+
+    <div class="auth-divider"><span>Sign Up</span></div>
+
+    <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
+      <div class="row g-3">
+        <div class="col-sm-6 auth-field">
+          <label class="auth-label">Full Name</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-user auth-icon"></i>
+            <input type="text" name="full_name" class="auth-input" placeholder="Your full name" required autocomplete="name"/>
+          </div>
+        </div>
+        <div class="col-sm-6 auth-field">
+          <label class="auth-label">Username</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-at auth-icon"></i>
+            <input type="text" name="username" class="auth-input" placeholder="@username" required autocomplete="username"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label">Email Address</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-envelope auth-icon"></i>
+          <input type="email" name="email" class="auth-input" placeholder="you@email.com" required autocomplete="email"/>
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label">Phone Number</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-phone auth-icon"></i>
+          <input type="tel" name="phone" class="auth-input" placeholder="+91 98765 43210" required autocomplete="tel"/>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-sm-6 auth-field">
+          <label class="auth-label">Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock auth-icon"></i>
+            <input type="password" name="password" id="pw" class="auth-input" placeholder="Min. 6 characters" minlength="6" required autocomplete="new-password"/>
+            <button type="button" class="auth-eye" onclick="togglePw('pw','eyePw')"><i class="fas fa-eye" id="eyePw"></i></button>
+          </div>
+          <div class="strength-bar mt-2"><div class="strength-fill" id="strengthFill"></div></div>
+        </div>
+        <div class="col-sm-6 auth-field">
+          <label class="auth-label">Confirm Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-shield-alt auth-icon"></i>
+            <input type="password" name="confirm_password" id="cpw" class="auth-input" placeholder="Re-enter password" minlength="6" required autocomplete="new-password"/>
+            <button type="button" class="auth-eye" onclick="togglePw('cpw','eyeCpw')"><i class="fas fa-eye" id="eyeCpw"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn mt-2">
+        <i class="fas fa-user-plus me-2"></i>Create Account
+      </button>
+    </form>
+
+    <a class="auth-link" href="{{ url_for('auth.login') }}">
+      Already have an account? <span style="color:var(--gold-2);font-weight:700;">Sign In</span>
+    </a>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(id, iconId) {
+  const inp = document.getElementById(id);
+  const ico = document.getElementById(iconId);
+  if (!inp || !ico) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+const pwInput = document.getElementById('pw');
+const fill    = document.getElementById('strengthFill');
+if (pwInput && fill) {
+  pwInput.addEventListener('input', function () {
+    const v = this.value;
+    let w = 0, color = '#c9a84c';
+    if (v.length >= 6)  { w = 33; color = '#c9a84c'; }
+    if (v.length >= 8  && /[A-Z]/.test(v)) { w = 66; color = '#e8c96a'; }
+    if (v.length >= 10 && /[A-Z]/.test(v) && /[0-9]/.test(v)) { w = 100; color = '#7ce0aa'; }
+    fill.style.width = w + '%';
+    fill.style.background = color;
+  });
+}
+const form = document.getElementById('signupForm');
+const cpw  = document.getElementById('cpw');
+if (form && cpw) {
+  form.addEventListener('submit', function (e) {
+    if (pwInput.value !== cpw.value) {
+      e.preventDefault();
+      cpw.style.borderColor = '#ff7b7b';
+      cpw.style.boxShadow   = '0 0 0 3px rgba(255,123,123,0.2)';
+    }
+  });
+}
+</script>
+{% endblock %}

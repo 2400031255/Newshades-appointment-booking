@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Contact – New Shades{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container text-center">
+    <div class="reveal-up">
+      <div class="section-badge mb-3">Get In Touch</div>
+      <h1 class="page-header-title">Contact <span>Us</span></h1>
+      <p class="page-header-sub" style="margin:0 auto;text-align:center;">We'd love to hear from you. Visit us or reach out anytime.</p>
+    </div>
+  </div>
+</div>
+
+<section class="py-5">
+  <div class="container">
+    <div class="row g-5 align-items-start">
+
+      <!-- Contact Info -->
+      <div class="col-lg-5 reveal-up">
+        <div class="glass-card h-100">
+          <h4 class="section-title mb-4">Visit <span>Us</span></h4>
+
+          <div class="contact-info-item">
+            <div class="contact-info-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div>
+              <div class="contact-info-label">Address</div>
+              <div class="contact-info-val">{{ shop.address }}</div>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="contact-info-icon"><i class="fas fa-phone"></i></div>
+            <div>
+              <div class="contact-info-label">Phone</div>
+              <a href="tel:{{ shop.phone }}" class="contact-info-val contact-info-link">{{ shop.phone }}</a>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="contact-info-icon"><i class="fas fa-envelope"></i></div>
+            <div>
+              <div class="contact-info-label">Email</div>
+              <a href="mailto:{{ shop.email }}" class="contact-info-val contact-info-link">{{ shop.email }}</a>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="contact-info-icon" style="color:#25d366;background:rgba(37,211,102,0.12);border-color:rgba(37,211,102,0.2);"><i class="fab fa-whatsapp"></i></div>
+            <div>
+              <div class="contact-info-label">WhatsApp</div>
+              <a href="https://wa.me/{{ shop.whatsapp }}" class="contact-info-val contact-info-link" target="_blank" rel="noopener noreferrer">Chat with us</a>
+            </div>
+          </div>
+
+          <div class="contact-info-item">
+            <div class="contact-info-icon"><i class="far fa-clock"></i></div>
+            <div>
+              <div class="contact-info-label">Working Hours</div>
+              <div class="contact-info-val">
+                <div>Mon – Fri: {{ shop.hours_weekday }}</div>
+                <div>Saturday: {{ shop.hours_saturday }}</div>
+                <div>Sunday: {{ shop.hours_sunday }}</div>
+              </div>
+            </div>
+          </div>
+
+          <a href="https://wa.me/{{ shop.whatsapp }}" class="btn-wa-confirm mt-4 d-inline-flex" target="_blank" rel="noopener noreferrer">
+            <i class="fab fa-whatsapp me-2"></i>WhatsApp Us Now
+          </a>
+        </div>
+      </div>
+
+      <!-- Map -->
+      <div class="col-lg-7 reveal-up" style="animation-delay:0.15s">
+        <div class="glass-card">
+          <h5 class="section-label mb-3"><i class="fas fa-map-marked-alt me-2 text-gold"></i>Find Us</h5>
+          {% if shop.map_embed %}
+          <iframe src="{{ shop.map_embed }}" width="100%" height="380" style="border:0;border-radius:12px;" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" sandbox="allow-scripts allow-same-origin"></iframe>
+          {% else %}
+          <div class="map-placeholder">
+            <i class="fas fa-map-marker-alt map-placeholder-icon"></i>
+            <p class="map-placeholder-text">{{ shop.name }}</p>
+            <p class="map-placeholder-addr">{{ shop.address }}</p>
+            <a href="https://maps.google.com/?q={{ shop.address }}" target="_blank" rel="noopener noreferrer" class="btn-gold-hero mt-3">
+              <i class="fas fa-directions me-2"></i>Get Directions
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

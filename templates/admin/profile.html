@@ -1,0 +1,99 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}My Profile – New Shades Admin{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4" style="max-width:900px;">
+
+  <!-- Change Username -->
+  <div class="col-md-6">
+    <div class="admin-card h-100">
+      <div class="settings-card-head">
+        <div class="settings-card-icon"><i class="fas fa-user-edit"></i></div>
+        <div>
+          <h6 class="settings-card-title">Change Username</h6>
+          <p class="settings-card-sub">Current: <strong style="color:var(--gold-2);">{{ admin.username }}</strong></p>
+        </div>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="action" value="username"/>
+        <div class="auth-field">
+          <label class="auth-label">Current Password <span style="color:#ff6b6b;">*</span></label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock auth-icon"></i>
+            <input type="password" name="current_password" id="cp1" class="auth-input" placeholder="Enter current password" required/>
+            <button type="button" class="auth-eye" onclick="togglePw('cp1','eye1')"><i class="fas fa-eye" id="eye1"></i></button>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">New Username</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-user auth-icon"></i>
+            <input type="text" name="new_username" class="auth-input" placeholder="Min. 3 characters" required/>
+          </div>
+        </div>
+        <button type="submit" class="auth-btn mt-2">
+          <i class="fas fa-save me-2"></i>Update Username
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Change Password -->
+  <div class="col-md-6">
+    <div class="admin-card h-100">
+      <div class="settings-card-head">
+        <div class="settings-card-icon" style="background:rgba(255,107,107,0.12);border-color:rgba(255,107,107,0.2);color:#ff6b6b;">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <div>
+          <h6 class="settings-card-title">Change Password</h6>
+          <p class="settings-card-sub">Use a strong password with letters & numbers</p>
+        </div>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="action" value="password"/>
+        <div class="auth-field">
+          <label class="auth-label">Current Password <span style="color:#ff6b6b;">*</span></label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-lock auth-icon"></i>
+            <input type="password" name="current_password" id="cp2" class="auth-input" placeholder="Enter current password" required/>
+            <button type="button" class="auth-eye" onclick="togglePw('cp2','eye2')"><i class="fas fa-eye" id="eye2"></i></button>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">New Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-key auth-icon"></i>
+            <input type="password" name="new_password" id="np" class="auth-input" placeholder="Min. 6 characters" required/>
+            <button type="button" class="auth-eye" onclick="togglePw('np','eye3')"><i class="fas fa-eye" id="eye3"></i></button>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label class="auth-label">Confirm New Password</label>
+          <div class="auth-input-wrap">
+            <i class="fas fa-shield-alt auth-icon"></i>
+            <input type="password" name="confirm_password" id="cnp" class="auth-input" placeholder="Re-enter new password" required/>
+            <button type="button" class="auth-eye" onclick="togglePw('cnp','eye4')"><i class="fas fa-eye" id="eye4"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="auth-btn mt-2" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);">
+          <i class="fas fa-lock me-2"></i>Update Password
+        </button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(id, iconId) {
+  const inp = document.getElementById(id);
+  const ico = document.getElementById(iconId);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+</script>
+{% endblock %}

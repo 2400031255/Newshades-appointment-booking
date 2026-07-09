@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Login – New Shades{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-orb auth-orb-1"></div>
+  <div class="auth-orb auth-orb-2"></div>
+
+  <div class="auth-card reveal-up">
+
+    <div class="auth-brand">
+      <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="auth-logo"/>
+      <div>
+        <div class="auth-brand-name">New <span>Shades</span></div>
+        <div class="auth-brand-sub">Premium Salon</div>
+      </div>
+    </div>
+
+    <h2 class="auth-title">Welcome Back</h2>
+    <p class="auth-subtitle">Sign in to book your next appointment</p>
+
+    <div class="auth-divider"><span>Login</span></div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}">
+      <div class="auth-field">
+        <label class="auth-label">Username or Email</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-user auth-icon"></i>
+          <input type="text" name="identifier" class="auth-input" placeholder="@username or you@email.com" required autocomplete="username"/>
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label class="auth-label">Password</label>
+        <div class="auth-input-wrap">
+          <i class="fas fa-lock auth-icon"></i>
+          <input type="password" name="password" id="loginPw" class="auth-input" placeholder="Your password" required autocomplete="current-password"/>
+          <button type="button" class="auth-eye" onclick="togglePw('loginPw','loginEye')">
+            <i class="fas fa-eye" id="loginEye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="auth-btn">
+        <i class="fas fa-sign-in-alt me-2"></i>Sign In
+      </button>
+    </form>
+
+    <a class="auth-link" href="{{ url_for('auth.signup') }}">
+      Don't have an account? <span style="color:var(--gold-2);font-weight:700;">Sign Up</span>
+    </a>
+
+    <div class="auth-note">
+      <i class="fas fa-shield-alt me-1" style="color:var(--gold);"></i>
+      Admin access uses the same login page.
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePw(id, iconId) {
+  const inp = document.getElementById(id);
+  const ico = document.getElementById(iconId);
+  if (!inp || !ico) return;
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+</script>
+{% endblock %}

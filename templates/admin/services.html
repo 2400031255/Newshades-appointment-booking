@@ -1,0 +1,55 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Services – New Shades Admin{% endblock %}
+{% block page_title %}Manage Services{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h6 class="fw-bold mb-0" style="color:#fff;">All Services <span style="color:var(--gold);">({{ services|length }})</span></h6>
+    <a href="{{ url_for('admin.add_service') }}" class="btn-gold">
+      <i class="fas fa-plus me-2"></i>Add Service
+    </a>
+  </div>
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Service</th><th>Category</th><th>Price</th><th>Duration</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for svc in services %}
+        <tr>
+          <td class="admin-td-muted">{{ svc.id }}</td>
+          <td>
+            <div class="admin-td-bold">{{ svc.service_name }}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">{{ svc.description[:50] }}{% if svc.description and svc.description|length > 50 %}...{% endif %}</div>
+          </td>
+          <td><span class="admin-badge">{{ svc.category }}</span></td>
+          <td style="color:var(--gold-2);font-weight:700;">₹{{ "%.0f"|format(svc.price) }}</td>
+          <td class="admin-td-muted">{{ svc.duration }}</td>
+          <td>
+            {% if svc.is_active %}
+            <span class="admin-status-badge badge-status-confirmed">Active</span>
+            {% else %}
+            <span class="admin-status-badge badge-status-cancelled">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="d-flex gap-2">
+              <a href="{{ url_for('admin.edit_service', sid=svc.id) }}" class="admin-action-btn">
+                <i class="fas fa-edit"></i>
+              </a>
+              <form method="POST" action="{{ url_for('admin.delete_service', sid=svc.id) }}" class="d-inline"
+                    onsubmit="return confirm('Delete this service?')">
+                <button type="submit" class="admin-action-btn admin-action-danger">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

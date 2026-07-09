@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Profile – New Shades{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> Account</div>
+        <h1 class="page-header-title">My <span>Profile</span></h1>
+        <p class="page-header-sub">Manage your personal details and preferences.</p>
+      </div>
+      <a href="{{ url_for('customer.appointments') }}" class="btn-outline-gold">
+        <i class="fas fa-history me-2"></i>My Appointments
+      </a>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7 reveal-up">
+
+        <!-- Avatar -->
+        <div class="glass-card text-center mb-4" style="padding:32px 24px;">
+          <div class="profile-avatar mx-auto">
+            <i class="fas fa-user"></i>
+            <div class="profile-avatar-ring"></div>
+          </div>
+          <h4 class="profile-name mt-3">{{ user.full_name }}</h4>
+          <p class="profile-since">Member since {{ user.created_at }}</p>
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <div class="text-center">
+              <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold-2);font-weight:700;">
+                {{ user.phone }}
+              </div>
+              <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);">Phone</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="glass-card">
+          <h6 style="color:#fff;font-weight:700;margin-bottom:20px;">
+            <i class="fas fa-edit me-2 text-gold"></i>Edit Details
+          </h6>
+          <form method="POST" action="{{ url_for('customer.profile') }}">
+            <div class="auth-field">
+              <label class="auth-label">Full Name</label>
+              <div class="auth-input-wrap">
+                <i class="fas fa-user auth-icon"></i>
+                <input type="text" name="full_name" class="auth-input" value="{{ user.full_name }}" required/>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label class="auth-label">Mobile Number</label>
+              <div class="auth-input-wrap">
+                <i class="fas fa-phone auth-icon"></i>
+                <input type="tel" name="phone" class="auth-input" value="{{ user.phone }}" required/>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label class="auth-label">Email Address</label>
+              <div class="auth-input-wrap">
+                <i class="fas fa-envelope auth-icon"></i>
+                <input type="email" class="auth-input" value="{{ user.email }}" disabled style="opacity:0.5;cursor:not-allowed;"/>
+              </div>
+              <small style="color:var(--text-muted);font-size:0.78rem;margin-top:4px;display:block;">Email cannot be changed.</small>
+            </div>
+            <button type="submit" class="auth-btn mt-2">
+              <i class="fas fa-save me-2"></i>Save Changes
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

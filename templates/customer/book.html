@@ -1,0 +1,406 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+.book-shell {
+  min-height: 100vh;
+  padding: 100px 0 80px;
+}
+
+/* ── Page header ── */
+.book-header {
+  padding: 32px 0 36px;
+  margin-bottom: 8px;
+}
+.book-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.book-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+  margin-bottom: 10px;
+}
+.book-back:hover { color: var(--gold-2); }
+.book-page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  color: #fff;
+  margin: 0;
+}
+.book-page-title span { color: var(--gold); }
+
+/* ── Progress bar ── */
+.booking-progress {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+}
+.bp-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  position: relative;
+}
+.bp-step:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 12px;
+  border-radius: 999px;
+  transition: background 0.4s ease;
+}
+.bp-step.done:not(:last-child)::after {
+  background: linear-gradient(90deg, var(--gold-2), var(--gold));
+}
+.bp-num {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.1);
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.04);
+  transition: all 0.3s ease;
+}
+.bp-step.active .bp-num {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(201,168,76,0.3);
+}
+.bp-step.done .bp-num {
+  background: rgba(37,211,102,0.15);
+  color: #7ce0aa;
+  border-color: rgba(37,211,102,0.3);
+}
+.bp-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+.bp-step.active .bp-label { color: var(--gold-2); }
+.bp-step.done  .bp-label  { color: #7ce0aa; }
+@media (max-width: 576px) { .bp-label { display: none; } }
+
+/* ── Sticky summary sidebar ── */
+.booking-sidebar {
+  position: sticky;
+  top: 100px;
+}
+.booking-sidebar-card {
+  border-radius: 20px;
+  padding: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.18);
+}
+.sidebar-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 0.85rem;
+  color: rgba(240,230,211,0.8);
+  animation: sidebarItemIn 0.3s ease;
+}
+@keyframes sidebarItemIn {
+  from { opacity: 0; transform: translateX(8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.sidebar-selected-item:last-child { border-bottom: none; }
+.sidebar-item-price { color: var(--gold-2); font-weight: 700; }
+.sidebar-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(201,168,76,0.2);
+}
+.sidebar-total-label { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; }
+.sidebar-total-val   { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--gold-2); font-weight: 700; }
+.sidebar-empty {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 16px 0;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="book-shell">
+  <div class="container">
+
+    <!-- Back + Header -->
+    <div class="book-header reveal-up">
+      <a href="{{ url_for('customer.dashboard') }}" class="book-back">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </a>
+      <div class="book-header-inner">
+        <div>
+          <div class="section-badge mb-2"><span class="badge-dot"></span> New Booking</div>
+          <h1 class="book-page-title">Book an <span>Appointment</span></h1>
+        </div>
+        <a href="{{ url_for('customer.appointments') }}" class="btn-outline-gold">
+          <i class="fas fa-history me-2"></i>My Bookings
+        </a>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="booking-progress reveal-up" id="bookingProgress" style="animation-delay:0.1s">
+      <div class="bp-step active" id="bp1">
+        <div class="bp-num">1</div>
+        <span class="bp-label">Services</span>
+      </div>
+      <div class="bp-step" id="bp2">
+        <div class="bp-num">2</div>
+        <span class="bp-label">Date & Time</span>
+      </div>
+      <div class="bp-step" id="bp3">
+        <div class="bp-num">3</div>
+        <span class="bp-label">Confirm</span>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Main form -->
+      <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('customer.book') }}" id="bookingForm">
+
+          <!-- Step 1: Services -->
+          <div class="booking-step reveal-up" style="animation-delay:0.15s">
+            <div class="booking-step-label">
+              <span class="step-num">1</span> Choose Services
+            </div>
+            <div class="glass-card">
+              <div class="row g-3 align-items-center mb-4">
+                <div class="col-md-5">
+                  <div class="search-wrap">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="serviceSearch" class="search-input" placeholder="Search services…"/>
+                  </div>
+                </div>
+                <div class="col-md-7">
+                  <div class="cat-filters">
+                    <button type="button" class="cat-btn active" data-cat="all">All</button>
+                    {% for cat in categories %}
+                    <button type="button" class="cat-btn" data-cat="{{ cat }}">{{ cat }}</button>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3" id="servicesGrid">
+                {% for svc in services %}
+                <div class="col-lg-4 col-md-6 service-col" data-cat="{{ svc.category }}">
+                  <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}"
+                    class="d-none"
+                    {% if rebook_services and svc.service_name in rebook_services %}checked{% endif %}/>
+                  <div class="svc-select-card {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
+                       data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
+                       data-name="{{ svc.service_name }}">
+                    <div class="svc-select-check"><i class="fas fa-check"></i></div>
+                    <div class="svc-select-icon">
+                      {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
+                      {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
+                      {% elif svc.category == 'Skin' %}<i class="fas fa-spa"></i>
+                      {% elif svc.category == 'Wellness' %}<i class="fas fa-hands"></i>
+                      {% else %}<i class="fas fa-magic"></i>{% endif %}
+                    </div>
+                    <h6 class="svc-select-name">{{ svc.service_name }}</h6>
+                    <p class="svc-select-desc">{{ svc.description }}</p>
+                    <div class="svc-select-footer">
+                      <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
+                      <span class="svc-dur"><i class="far fa-clock me-1"></i>{{ svc.duration }}</span>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Date & Time -->
+          <div class="booking-step reveal-up" style="animation-delay:0.2s">
+            <div class="booking-step-label">
+              <span class="step-num">2</span> Pick Date & Time
+            </div>
+            <div class="glass-card">
+              <div class="row g-4">
+                <div class="col-md-5">
+                  <label class="field-label">Preferred Date <span class="text-danger">*</span></label>
+                  <div class="d-flex gap-2 mt-2">
+                    <select id="sel_day" class="premium-input" style="flex:1;">
+                      <option value="">Day</option>
+                      {% for d in range(1, 32) %}
+                      <option value="{{ '%02d'|format(d) }}">{{ '%02d'|format(d) }}</option>
+                      {% endfor %}
+                    </select>
+                    <select id="sel_month" class="premium-input" style="flex:1.5;">
+                      <option value="">Month</option>
+                      {% for m, mname in [(1,'January'),(2,'February'),(3,'March'),(4,'April'),(5,'May'),(6,'June'),(7,'July'),(8,'August'),(9,'September'),(10,'October'),(11,'November'),(12,'December')] %}
+                      <option value="{{ '%02d'|format(m) }}">{{ mname }}</option>
+                      {% endfor %}
+                    </select>
+                    <input type="number" id="sel_year" class="premium-input" style="flex:1.2;" placeholder="Year" min="2026" max="2099"/>
+                  </div>
+                  <input type="hidden" name="preferred_date" id="preferred_date" required/>
+                </div>
+                <div class="col-md-7">
+                  <label class="field-label">Preferred Time <span style="color:var(--text-muted);font-size:0.78rem;">(Optional)</span></label>
+                  <input type="hidden" name="preferred_time" id="preferred_time"/>
+                  <div class="time-slots-wrap mt-2">
+                    {% for t in ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'] %}
+                    <span class="time-chip" data-time="{{ t }}">{{ t }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Confirm -->
+          <div class="booking-step reveal-up" style="animation-delay:0.25s">
+            <div class="booking-step-label">
+              <span class="step-num">3</span> Confirm & Book
+            </div>
+            <div class="booking-summary-bar">
+              <div class="summary-info d-flex flex-column gap-1">
+                <div><i class="fas fa-shopping-bag me-2 text-gold"></i><span id="selectedCount" style="font-size:1.1rem;font-weight:600;">0 services selected</span></div>
+                <div style="font-size:0.95rem;color:var(--text-muted);">
+                  <i class="fas fa-tag me-1"></i>Total: <strong id="totalPrice" style="color:var(--gold-2);font-size:1rem;">₹0</strong>
+                  &nbsp;·&nbsp;
+                  <i class="far fa-clock me-1"></i>Est. time: <strong id="totalTime" style="color:var(--gold-2);font-size:1rem;">0 min</strong>
+                </div>
+              </div>
+              <button type="submit" id="bookBtn" class="btn-wa-book" disabled>
+                <i class="fab fa-whatsapp me-2"></i>Book via WhatsApp
+              </button>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Sticky sidebar summary -->
+      <div class="col-lg-4 d-none d-lg-block">
+        <div class="booking-sidebar reveal-up" style="animation-delay:0.3s">
+          <div class="booking-sidebar-card">
+            <div class="sidebar-title"><i class="fas fa-receipt me-2 text-gold"></i>Your Selection</div>
+            <div id="sidebarItems">
+              <div class="sidebar-empty" id="sidebarEmpty">No services selected yet.</div>
+            </div>
+            <div class="sidebar-total-row" id="sidebarTotalRow" style="display:none!important;">
+              <span class="sidebar-total-label">Total</span>
+              <span class="sidebar-total-val" id="sidebarTotal">₹0</span>
+            </div>
+          </div>
+
+          <!-- Tips card -->
+          <div class="booking-sidebar-card mt-3" style="border-color:rgba(255,255,255,0.06);">
+            <div class="sidebar-title" style="font-size:0.85rem;"><i class="fas fa-lightbulb me-2" style="color:var(--gold);"></i>Tips</div>
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+              {% for tip in ['You can select multiple services in one booking','Flexible time means we\'ll confirm a slot for you','Bookings are confirmed via WhatsApp'] %}
+              <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.82rem;color:var(--text-muted);">
+                <i class="fas fa-check-circle" style="color:var(--gold);margin-top:2px;flex-shrink:0;"></i>{{ tip }}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ── Sidebar live update ── */
+function updateSidebar() {
+  const items   = document.getElementById('sidebarItems');
+  const empty   = document.getElementById('sidebarEmpty');
+  const totalRow = document.getElementById('sidebarTotalRow');
+  const totalEl  = document.getElementById('sidebarTotal');
+  if (!items) return;
+
+  const selected = document.querySelectorAll('.svc-select-card.selected');
+  // remove old items (keep empty msg)
+  items.querySelectorAll('.sidebar-selected-item').forEach(el => el.remove());
+
+  let total = 0;
+  selected.forEach(card => {
+    const price = parseFloat(card.dataset.price || 0);
+    total += price;
+    const row = document.createElement('div');
+    row.className = 'sidebar-selected-item';
+    row.innerHTML = `<span>${card.dataset.name}</span><span class="sidebar-item-price">₹${price.toFixed(0)}</span>`;
+    items.appendChild(row);
+  });
+
+  const hasItems = selected.length > 0;
+  if (empty) empty.style.display = hasItems ? 'none' : '';
+  if (totalRow) totalRow.style.cssText = hasItems ? '' : 'display:none!important;';
+  if (totalEl)  totalEl.textContent = '₹' + total.toFixed(0);
+
+  /* progress bar */
+  const bp1 = document.getElementById('bp1');
+  const bp2 = document.getElementById('bp2');
+  const bp3 = document.getElementById('bp3');
+  if (!bp1) return;
+  const dateVal = document.getElementById('preferred_date')?.value;
+  if (hasItems && dateVal) {
+    bp1.classList.add('done'); bp1.classList.remove('active');
+    bp2.classList.add('done'); bp2.classList.remove('active');
+    bp3.classList.add('active');
+  } else if (hasItems) {
+    bp1.classList.add('done'); bp1.classList.remove('active');
+    bp2.classList.add('active'); bp2.classList.remove('done');
+    bp3.classList.remove('active','done');
+  } else {
+    bp1.classList.add('active'); bp1.classList.remove('done');
+    bp2.classList.remove('active','done');
+    bp3.classList.remove('active','done');
+  }
+}
+
+/* hook into existing updateCount */
+const _origUpdate = window.updateCount;
+document.querySelectorAll('.svc-select-card').forEach(card => {
+  card.addEventListener('click', () => setTimeout(updateSidebar, 10));
+});
+document.getElementById('preferred_date')?.addEventListener('change', updateSidebar);
+['sel_day','sel_month','sel_year'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) { el.addEventListener('change', updateSidebar); el.addEventListener('input', updateSidebar); }
+});
+updateSidebar();
+</script>
+{% endblock %}

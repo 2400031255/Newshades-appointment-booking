@@ -1,0 +1,34 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Customers – New Shades Admin{% endblock %}
+{% block page_title %}Customer List{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h6 class="fw-bold mb-0" style="color:#fff;">All Customers <span style="color:var(--gold);">({{ users|length }})</span></h6>
+  </div>
+  {% if users %}
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Joined</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="admin-td-muted">{{ u.id }}</td>
+          <td class="admin-td-bold">{{ u.full_name }}</td>
+          <td class="admin-td-muted">{{ u.email }}</td>
+          <td class="admin-td-muted">{{ u.phone }}</td>
+          <td><span class="admin-badge">{{ u.appt_count }} bookings</span></td>
+          <td class="admin-td-muted">{{ u.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center py-5" style="color:var(--text-muted);">No customers yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

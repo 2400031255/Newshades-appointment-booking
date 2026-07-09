@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}New Shades{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}?v={{ range(1,99999)|random }}" rel="stylesheet"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Cursor glow -->
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('index') }}">
+      <div class="brand-wrap">
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="brand-logo"/>
+        <div class="brand-text">
+          <span class="brand-name">New Shades</span>
+          <span class="brand-tagline">Premium Salon</span>
+        </div>
+      </div>
+    </a>
+    <button class="navbar-toggler-custom" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        {% if session.get('user_id') %}
+          {% if session.get('is_admin') %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-alt me-1"></i>Admin Panel</a></li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.dashboard' }}" href="{{ url_for('customer.dashboard') }}"><i class="fas fa-home me-1"></i>Home</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint in ['customer.book_page','customer.book'] }}" href="{{ url_for('customer.book_page') }}"><i class="fas fa-calendar-plus me-1"></i>Book</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.appointments' }}" href="{{ url_for('customer.appointments') }}"><i class="fas fa-history me-1"></i>Appointments</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.profile' }}" href="{{ url_for('customer.profile') }}"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
+          {% endif %}
+          <li class="nav-item ms-lg-2">
+            <a class="btn-nav-outline" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
+          </li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'index' }}" href="{{ url_for('index') }}">Home</a></li>
+          <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'about' }}" href="{{ url_for('about') }}">About</a></li>
+          <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'services' }}" href="{{ url_for('services') }}">Services</a></li>
+          <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'gallery' }}" href="{{ url_for('gallery') }}">Gallery</a></li>
+          <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'contact' }}" href="{{ url_for('contact') }}">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Login</a></li>
+          <li class="nav-item ms-lg-2">
+            <a class="btn-nav-gold" href="{{ url_for('auth.signup') }}"><i class="fas fa-calendar-check me-1"></i>Book Now</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+        <div class="flash-alert flash-{{ cat }}">
+          <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }} me-2"></i>
+          {{ msg }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<!-- WhatsApp Float -->
+{% if shop.whatsapp %}
+<a href="https://wa.me/{{ shop.whatsapp }}" class="wa-float" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">
+  <i class="fab fa-whatsapp"></i>
+  <span class="wa-float-ripple"></span>
+</a>
+{% endif %}
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-glow"></div>
+  <div class="container">
+    <div class="row py-5 g-4">
+      <div class="col-lg-4 mb-2">
+        <div class="footer-brand">
+          <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="footer-logo"/>
+          <div>
+            <div class="footer-brand-name">New Shades</div>
+            <div class="footer-brand-sub">Premium Salon & Studio</div>
+          </div>
+        </div>
+        <p class="footer-desc">Premium salon services crafted for your style, comfort and confidence.</p>
+        <div class="footer-socials">
+          <a href="https://www.instagram.com/newshades_eluru?igsh=eXU1MDh3aXFvdmh2" class="social-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://wa.me/{{ shop.whatsapp }}" class="social-btn"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-2 col-6">
+        <div class="footer-heading">Quick Links</div>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="{{ url_for('gallery') }}">Gallery</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-6">
+        <div class="footer-heading">Hours</div>
+        <ul class="footer-links">
+          <li>Mon – Fri &nbsp;{{ shop.hours_weekday if shop.hours_weekday else '9AM – 8PM' }}</li>
+          <li>Saturday &nbsp;{{ shop.hours_saturday if shop.hours_saturday else '9AM – 6PM' }}</li>
+          <li>Sunday &nbsp;{{ shop.hours_sunday if shop.hours_sunday else '10AM – 4PM' }}</li>
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <div class="footer-heading">Contact</div>
+        <ul class="footer-links">
+          <li><i class="fas fa-map-marker-alt me-2 text-gold"></i>{{ shop.address if shop.address else 'Eluru, Andhra Pradesh' }}</li>
+          <li><i class="fas fa-phone me-2 text-gold"></i><a href="tel:{{ shop.phone }}">{{ shop.phone if shop.phone else 'Contact via WhatsApp' }}</a></li>
+          {% if shop.whatsapp %}
+          <li><i class="fab fa-whatsapp me-2 text-gold"></i><a href="https://wa.me/{{ shop.whatsapp }}">WhatsApp Us</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 New Shades. All rights reserved.</span>
+      <span>Crafted with <i class="fas fa-heart text-gold"></i> for you</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v={{ range(1,99999)|random }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

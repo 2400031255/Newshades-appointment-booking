@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+salon_app.db
+static/images/gallery/*
+!static/images/gallery/.gitkeep
+*.log
+.DS_Store

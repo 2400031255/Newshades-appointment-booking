@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+.cust-shell {
+  min-height: 100vh;
+  padding: 100px 0 80px;
+  position: relative;
+}
+.cust-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 10% 10%, rgba(201,168,76,0.1), transparent 40%),
+    radial-gradient(ellipse at 90% 80%, rgba(201,168,76,0.06), transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Welcome banner ── */
+.welcome-banner {
+  position: relative;
+  border-radius: 28px;
+  padding: 40px 44px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.14) 0%, rgba(255,255,255,0.04) 60%, rgba(201,168,76,0.06) 100%);
+  border: 1px solid rgba(201,168,76,0.25);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 65%);
+  pointer-events: none;
+}
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  left: -40px; bottom: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.08), transparent 65%);
+  pointer-events: none;
+}
+.welcome-greeting {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.welcome-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  color: #fff;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+.welcome-name span { color: var(--gold-2); }
+.welcome-sub {
+  color: rgba(240,230,211,0.7);
+  font-size: 0.95rem;
+  margin: 0;
+}
+.welcome-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  display: grid; place-items: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #120e08;
+  border: 3px solid rgba(255,255,255,0.12);
+  box-shadow: 0 12px 32px rgba(201,168,76,0.3);
+  flex-shrink: 0;
+}
+
+/* ── Stat cards ── */
+.cust-stat {
+  border-radius: 20px;
+  padding: 24px 22px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.14);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.cust-stat:hover { transform: translateY(-4px); border-color: rgba(201,168,76,0.3); }
+.cust-stat::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: 0 0 20px 20px;
+}
+.cust-stat-total::after   { background: linear-gradient(90deg, var(--gold-2), var(--gold)); }
+.cust-stat-pending::after { background: linear-gradient(90deg, #ffc36b, #ff9a4a); }
+.cust-stat-done::after    { background: linear-gradient(90deg, #7ce0aa, #25d366); }
+.cust-stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+.cust-stat-total .cust-stat-icon   { background: rgba(201,168,76,0.12); color: var(--gold-2); }
+.cust-stat-pending .cust-stat-icon { background: rgba(255,170,77,0.12); color: #ffc36b; }
+.cust-stat-done .cust-stat-icon    { background: rgba(37,211,102,0.1);  color: #7ce0aa; }
+.cust-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.cust-stat-label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ── Quick actions ── */
+.quick-action {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.14);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  text-decoration: none;
+  color: #fff;
+}
+.quick-action:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201,168,76,0.35);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  color: #fff;
+}
+.quick-action-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+.qa-book   .quick-action-icon { background: linear-gradient(135deg, var(--gold-2), var(--gold)); color: #120e08; }
+.qa-hist   .quick-action-icon { background: rgba(105,152,255,0.14); color: #9dc0ff; }
+.qa-prof   .quick-action-icon { background: rgba(201,168,76,0.12);  color: var(--gold-2); }
+.qa-wa     .quick-action-icon { background: rgba(37,211,102,0.12);  color: #7ce0aa; }
+.quick-action-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+.quick-action-sub {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+/* ── Recent appointments ── */
+.recent-appt-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.recent-appt-row:last-child { border-bottom: none; }
+.recent-appt-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.1);
+  color: var(--gold-2);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.recent-appt-name {
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.9rem;
+}
+.recent-appt-meta {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin-top: 2px;
+}
+.recent-appt-status {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Section card ── */
+.dash-card {
+  border-radius: 22px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.14);
+  height: 100%;
+}
+.dash-card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dash-card-title i { color: var(--gold); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cust-shell">
+  <div class="container" style="position:relative;z-index:1;">
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner reveal-up">
+      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+        <div>
+          <div class="welcome-greeting"><i class="fas fa-sun me-2"></i>Good to see you back</div>
+          <h1 class="welcome-name">Hello, <span>{{ user.full_name.split()[0] }}</span> ✨</h1>
+          <p class="welcome-sub">Ready for your next premium experience? Book an appointment below.</p>
+        </div>
+        <div class="welcome-avatar">{{ user.full_name[0].upper() }}</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4 reveal-up" style="animation-delay:0.05s">
+        <div class="cust-stat cust-stat-total">
+          <div class="cust-stat-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="cust-stat-num">{{ total }}</div>
+          <div class="cust-stat-label">Total Bookings</div>
+        </div>
+      </div>
+      <div class="col-md-4 reveal-up" style="animation-delay:0.1s">
+        <div class="cust-stat cust-stat-pending">
+          <div class="cust-stat-icon"><i class="fas fa-hourglass-half"></i></div>
+          <div class="cust-stat-num">{{ pending }}</div>
+          <div class="cust-stat-label">Pending</div>
+        </div>
+      </div>
+      <div class="col-md-4 reveal-up" style="animation-delay:0.15s">
+        <div class="cust-stat cust-stat-done">
+          <div class="cust-stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="cust-stat-num">{{ confirmed }}</div>
+          <div class="cust-stat-label">Confirmed</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Quick Actions -->
+      <div class="col-lg-5 reveal-up" style="animation-delay:0.2s">
+        <div class="dash-card">
+          <div class="dash-card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+          <div class="d-flex flex-column gap-3">
+            <a href="{{ url_for('customer.book_page') }}" class="quick-action qa-book">
+              <div class="quick-action-icon"><i class="fas fa-calendar-plus"></i></div>
+              <div>
+                <div class="quick-action-title">Book Appointment</div>
+                <div class="quick-action-sub">Choose services & pick a date</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:var(--gold);opacity:0.6;"></i>
+            </a>
+            <a href="{{ url_for('customer.appointments') }}" class="quick-action qa-hist">
+              <div class="quick-action-icon"><i class="fas fa-history"></i></div>
+              <div>
+                <div class="quick-action-title">My Appointments</div>
+                <div class="quick-action-sub">View, cancel or re-book</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:#9dc0ff;opacity:0.6;"></i>
+            </a>
+            <a href="{{ url_for('customer.profile') }}" class="quick-action qa-prof">
+              <div class="quick-action-icon"><i class="fas fa-user-edit"></i></div>
+              <div>
+                <div class="quick-action-title">My Profile</div>
+                <div class="quick-action-sub">Update your details</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:var(--gold);opacity:0.6;"></i>
+            </a>
+            <a href="https://wa.me/{{ shop.whatsapp }}" target="_blank" rel="noopener noreferrer" class="quick-action qa-wa">
+              <div class="quick-action-icon"><i class="fab fa-whatsapp"></i></div>
+              <div>
+                <div class="quick-action-title">Chat with Us</div>
+                <div class="quick-action-sub">WhatsApp for quick help</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:#7ce0aa;opacity:0.6;"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Appointments -->
+      <div class="col-lg-7 reveal-up" style="animation-delay:0.25s">
+        <div class="dash-card">
+          <div class="dash-card-title d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-clock"></i> Recent Appointments</span>
+            <a href="{{ url_for('customer.appointments') }}" style="font-size:0.78rem;color:var(--gold-2);font-family:'DM Sans',sans-serif;font-weight:600;">
+              View All <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+          {% if recent_appts %}
+            {% for appt in recent_appts %}
+            <div class="recent-appt-row">
+              <div class="recent-appt-icon"><i class="fas fa-concierge-bell"></i></div>
+              <div style="flex:1;min-width:0;">
+                <div class="recent-appt-name">{{ appt.selected_services }}</div>
+                <div class="recent-appt-meta">
+                  <i class="fas fa-calendar-alt me-1"></i>
+                  {% set d = appt.preferred_date %}
+                  {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+                  {% if appt.preferred_time %}
+                  &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ appt.preferred_time }}
+                  {% endif %}
+                </div>
+              </div>
+              <span class="recent-appt-status appt-status-{{ appt.status.lower() }}">{{ appt.status }}</span>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="text-center py-4">
+            <div style="font-size:2.5rem;color:rgba(201,168,76,0.2);margin-bottom:12px;"><i class="fas fa-calendar-times"></i></div>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin:0;">No appointments yet.</p>
+            <a href="{{ url_for('customer.book_page') }}" class="btn-gold-hero mt-3" style="font-size:0.85rem;padding:10px 20px;">
+              <i class="fas fa-plus me-2"></i>Book Now
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

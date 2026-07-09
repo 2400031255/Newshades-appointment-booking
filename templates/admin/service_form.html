@@ -1,0 +1,53 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ 'Edit' if service else 'Add' }} Service – New Shades Admin{% endblock %}
+{% block page_title %}{{ 'Edit' if service else 'Add' }} Service{% endblock %}
+
+{% block content %}
+<div class="admin-card" style="max-width:600px;">
+  <h6 class="fw-bold mb-4" style="color:#fff;">{{ 'Edit Service' if service else 'Add New Service' }}</h6>
+  <form method="POST">
+    <div class="auth-field">
+      <label class="auth-label">Service Name <span style="color:#ff7b7b;">*</span></label>
+      <input type="text" name="service_name" class="auth-input" style="padding:12px 14px;" value="{{ service.service_name if service else '' }}" required/>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Description</label>
+      <textarea name="description" class="auth-input" style="padding:12px 14px;height:90px;resize:vertical;">{{ service.description if service else '' }}</textarea>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-6 auth-field">
+        <label class="auth-label">Price (₹) <span style="color:#ff7b7b;">*</span></label>
+        <input type="number" name="price" class="auth-input" style="padding:12px 14px;" step="0.01" min="0" value="{{ service.price if service else '' }}" required/>
+      </div>
+      <div class="col-6 auth-field">
+        <label class="auth-label">Duration <span style="color:#ff7b7b;">*</span></label>
+        <input type="text" name="duration" class="auth-input" style="padding:12px 14px;" placeholder="e.g. 30 mins" value="{{ service.duration if service else '' }}" required/>
+      </div>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Category</label>
+      <select name="category" class="auth-input" style="padding:12px 14px;">
+        {% for cat in ['Hair','Beard','Skin','Wellness','General'] %}
+        <option value="{{ cat }}" {{ 'selected' if service and service.category == cat }}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">Image URL <span style="color:var(--text-muted);font-size:0.75rem;">(Optional)</span></label>
+      <input type="url" name="image_url" class="auth-input" style="padding:12px 14px;" placeholder="https://..." value="{{ service.image_url if service else '' }}"/>
+    </div>
+    {% if service %}
+    <div class="mb-4 d-flex align-items-center gap-3">
+      <input type="checkbox" name="is_active" id="is_active" style="width:18px;height:18px;accent-color:var(--gold);" {{ 'checked' if service.is_active }}/>
+      <label for="is_active" style="color:var(--text-soft);margin:0;">Active (visible to customers)</label>
+    </div>
+    {% endif %}
+    <div class="d-flex gap-3 mt-2">
+      <button type="submit" class="btn-gold px-4 py-2">
+        {{ 'Update Service' if service else 'Add Service' }}
+      </button>
+      <a href="{{ url_for('admin.services') }}" class="admin-cancel-btn">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}New Shades – Premium Salon{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-orb hero-orb-3"></div>
+  <canvas id="particleCanvas"></canvas>
+  <div class="container hero-container">
+    <div class="row align-items-center min-vh-100">
+      <div class="col-lg-6 hero-content">
+        <div class="hero-badge reveal-up">
+          <span class="badge-dot"></span> Premium Salon Experience
+        </div>
+        <h1 class="hero-title reveal-up" style="animation-delay:0.1s">
+          Your Style,<br><em class="hero-em" id="heroTypewriter"></em>
+        </h1>
+        <p class="hero-subtitle reveal-up" style="animation-delay:0.2s">
+          Experience world-class grooming and beauty services tailored just for you. Book your appointment in seconds.
+        </p>
+        <div class="hero-actions reveal-up" style="animation-delay:0.3s">
+          <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+            <i class="fas fa-calendar-check me-2"></i>Book Appointment
+          </a>
+          <a href="{{ url_for('gallery') }}" class="btn-ghost-hero">
+            <i class="fas fa-images me-2"></i>View Gallery
+          </a>
+        </div>
+        <div class="hero-stats reveal-up" style="animation-delay:0.4s">
+          <div class="hero-stat">
+            <div class="hero-stat-num" data-count="500">0</div>
+            <div class="hero-stat-label">Happy Clients</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-num" data-count="15">0</div>
+            <div class="hero-stat-label">Services</div>
+          </div>
+          <div class="hero-stat-divider"></div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">5★</div>
+            <div class="hero-stat-label">Rating</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+        <div class="hero-visual reveal-up" style="animation-delay:0.2s">
+          <div class="hero-ring hero-ring-1"></div>
+          <div class="hero-ring hero-ring-2"></div>
+          <div class="hero-ring hero-ring-3"></div>
+          <div class="hero-circle-main">
+            <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="hero-logo-img"/>
+          </div>
+          <div class="hero-float-badge hfb-1"><i class="fas fa-star me-1"></i>5.0 Rating</div>
+          <div class="hero-float-badge hfb-2"><i class="fas fa-check me-1"></i>Trusted</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint">
+    <div class="scroll-mouse"><div class="scroll-wheel"></div></div>
+  </div>
+</section>
+
+<!-- Services -->
+<section class="section-services" id="services">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Our Services</div>
+      <h2 class="section-title">What We <span>Offer</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row g-4 mt-2">
+      {% set preview = [
+        ('fas fa-cut',        'Hair',         'Cuts, trims, styling & more'),
+        ('fas fa-palette',    'Hair Color',   'Highlights, balayage & full color'),
+        ('fas fa-magic',      'Hair Spa',     'Nourishing & repair treatments'),
+        ('fas fa-spa',        'Facial',       'Glow, cleanup & skin care'),
+        ('fas fa-hands',      'Massage',      'Head, body & relaxation therapy'),
+        ('fas fa-female',     'Bridal',       'Complete bridal packages')
+      ] %}
+      {% for icon, name, desc in preview %}
+      <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+        <div class="svc-card tilt-card">
+          <div class="svc-card-glow"></div>
+          <div class="svc-icon"><i class="{{ icon }}"></i></div>
+          <h5 class="svc-name">{{ name }}</h5>
+          <p class="svc-desc">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-5 reveal-up">
+      <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">Book Now <i class="fas fa-arrow-right ms-2"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- Why Us -->
+<section class="section-why">
+  <div class="why-bg-glow"></div>
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Why Us</div>
+      <h2 class="section-title">The <span>New Shades</span> Difference</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row g-4 mt-2">
+      {% for icon, title, desc in [
+        ('fas fa-award','Expert Stylists','Trained professionals with years of experience'),
+        ('fas fa-leaf','Premium Products','Only the finest quality products used'),
+        ('fas fa-clock','Flexible Timing','Book at your convenience, 7 days a week'),
+        ('fab fa-whatsapp','Easy Booking','Book via WhatsApp in just a few taps')
+      ] %}
+      <div class="col-md-3 col-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.1 }}s">
+        <div class="why-card">
+          <div class="why-icon"><i class="{{ icon }}"></i></div>
+          <h6 class="why-title">{{ title }}</h6>
+          <p class="why-desc">{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section-why">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Happy Clients</div>
+      <h2 class="section-title">What They <span>Say</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="testimonial-track-wrap reveal-up" style="animation-delay:0.2s">
+      <div class="testimonial-track" id="testimonialTrack">
+        {% if reviews %}
+          {% for r in reviews %}
+          <div class="testimonial-slide">
+            <div class="testimonial-card">
+              <div class="testimonial-stars">
+                {% for i in range(r.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                {% for i in range(5 - r.rating) %}<i class="far fa-star" style="opacity:0.3;"></i>{% endfor %}
+              </div>
+              <p class="testimonial-text">&ldquo;{{ r.comment }}&rdquo;</p>
+              <div class="testimonial-author"><i class="fas fa-user-circle me-2" style="color:var(--gold);opacity:0.7;"></i>{{ r.full_name }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          {% for name, text, stars in [
+            ('Priya R.',  'Amazing experience! The hair spa left my hair feeling silky smooth. Highly recommend New Shades!', 5),
+            ('Ravi K.',   'Best beard trim in town. The staff is professional and the ambiance is top-notch.', 5),
+            ('Sneha M.',  'Booked via WhatsApp in seconds. The facial was absolutely relaxing. Will definitely come back!', 5),
+            ('Arjun T.',  'Great haircut and very friendly staff. The salon has a premium feel at an affordable price.', 5)
+          ] %}
+          <div class="testimonial-slide">
+            <div class="testimonial-card">
+              <div class="testimonial-stars">{% for _ in range(stars) %}<i class="fas fa-star"></i>{% endfor %}</div>
+              <p class="testimonial-text">&ldquo;{{ text }}&rdquo;</p>
+              <div class="testimonial-author"><i class="fas fa-user-circle me-2" style="color:var(--gold);opacity:0.7;"></i>{{ name }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div class="testimonial-dots" id="testimonialDots"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Business Hours -->
+<section class="section-services">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Visit Us</div>
+      <h2 class="section-title">Business <span>Hours</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-lg-5 reveal-up">
+        <div class="glass-card">
+          {% for label, val, icon in [
+            ('Monday – Friday', shop.hours_weekday if shop.hours_weekday else '9:00 AM – 8:00 PM', 'fas fa-briefcase'),
+            ('Saturday',        shop.hours_saturday if shop.hours_saturday else '9:00 AM – 6:00 PM', 'fas fa-calendar-day'),
+            ('Sunday',          shop.hours_sunday if shop.hours_sunday else '10:00 AM – 4:00 PM',   'fas fa-sun')
+          ] %}
+          <div class="hours-row">
+            <span class="hours-label"><i class="{{ icon }} me-2 text-gold"></i>{{ label }}</span>
+            <span class="hours-val">{{ val }}</span>
+          </div>
+          {% endfor %}
+          {% if shop.address %}
+          <div class="hours-address">
+            <i class="fas fa-map-marker-alt me-2 text-gold"></i>{{ shop.address }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-cta">
+  <div class="cta-orb cta-orb-1"></div>
+  <div class="cta-orb cta-orb-2"></div>
+  <div class="container text-center">
+    <div class="reveal-up">
+      <div class="section-badge mb-3">Get Started</div>
+      <h2 class="cta-title">Ready for a <em>Fresh Look?</em></h2>
+      <p class="cta-sub">Book your appointment today and let us take care of the rest.</p>
+      <div class="cta-actions">
+        <a href="{{ url_for('auth.signup') }}" class="btn-gold-hero">
+          <i class="fas fa-calendar-check me-2"></i>Get Started
+        </a>
+        <a href="https://wa.me/{{ shop.whatsapp }}" class="btn-wa-hero" target="_blank" rel="noopener noreferrer">
+          <i class="fab fa-whatsapp me-2"></i>Chat on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

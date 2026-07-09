@@ -1,0 +1,70 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Appointments – New Shades Admin{% endblock %}
+{% block page_title %}Appointment Requests{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <h6 class="fw-bold mb-0" style="color:#fff;">All Appointments <span style="color:var(--gold);">({{ appointments|length }})</span></h6>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+      {% for s in ['', 'Pending', 'Confirmed', 'Cancelled'] %}
+      <a href="{{ url_for('admin.appointments', status=s) }}" class="admin-filter-btn {{ 'active' if status_filter == s }}">
+        {{ s if s else 'All' }}
+      </a>
+      {% endfor %}
+      <a href="{{ url_for('admin.export_appointments') }}" class="admin-filter-btn" style="border-color:rgba(201,168,76,0.5);color:var(--gold-2);">
+        <i class="fas fa-download me-1"></i>CSV
+      </a>
+    </div>
+  </div>
+
+  {% if appointments %}
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Time</th><th>Status</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td class="admin-td-muted">{{ a.id }}</td>
+          <td class="admin-td-bold">{{ a.full_name }}</td>
+          <td>
+            <div class="admin-td-muted">{{ a.phone }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">{{ a.email }}</div>
+          </td>
+          <td class="admin-td-muted">{{ a.selected_services }}</td>
+          <td class="admin-td-bold">
+            {% if a.preferred_date %}
+              {% set d = a.preferred_date %}
+              {% if d is string %}
+                {{ d }}
+              {% else %}
+                {{ d.strftime('%d %b %Y') }}
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td class="admin-td-muted">{{ a.preferred_time if a.preferred_time else '—' }}</td>
+          <td>
+            <span class="badge-status-{{ a.status.lower() }} admin-status-badge">{{ a.status }}</span>
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('admin.update_status', aid=a.id) }}" class="d-flex gap-2 align-items-center">
+              <select name="status" class="admin-select">
+                {% for s in ['Pending','Confirmed','Cancelled'] %}
+                <option value="{{ s }}" {{ 'selected' if a.status == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="admin-update-btn"><i class="fas fa-check"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center py-5" style="color:var(--text-muted);">No appointments found.</p>
+  {% endif %}
+</div>
+{% endblock %}
