@@ -1,12 +1,14 @@
 import os
+import re
 import sqlite3
 import pymysql
 from flask import g, current_app
 
 
+# ── Schema helpers ────────────────────────────────────────────────────────────
+
 def _init_sqlite_schema(conn):
-    conn.executescript(
-        """
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             full_name TEXT NOT NULL,
@@ -17,7 +19,6 @@ def _init_sqlite_schema(conn):
             is_admin INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
-
         CREATE TABLE IF NOT EXISTS services (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             service_name TEXT NOT NULL,
@@ -28,7 +29,6 @@ def _init_sqlite_schema(conn):
             image_url TEXT DEFAULT '',
             is_active INTEGER DEFAULT 1
         );
-
         CREATE TABLE IF NOT EXISTS appointments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -39,12 +39,10 @@ def _init_sqlite_schema(conn):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
-
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
-
         CREATE TABLE IF NOT EXISTS reviews (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
@@ -53,53 +51,145 @@ def _init_sqlite_schema(conn):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
-        """
-    )
-
+        CREATE TABLE IF NOT EXISTS gallery (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            caption TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
     conn.execute(
         "INSERT OR IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (?,?,?,?,?,?)",
-        (
-            'Komali',
-            'komali',
-            '0000000000',
-            'komali@newshades.com',
-            '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe',
-            1,
-        ),
+        ('Komali', 'komali', '0000000000', 'komali@newshades.com',
+         '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1),
     )
-
-    conn.execute("SELECT COUNT(*) AS c FROM services")
-    if conn.execute("SELECT COUNT(*) AS c FROM services").fetchone()[0] == 0:
+    if conn.execute("SELECT COUNT(*) FROM services").fetchone()[0] == 0:
         conn.executemany(
             "INSERT INTO services (service_name, description, price, duration, category) VALUES (?,?,?,?,?)",
             [
-                ('Hair Cut', 'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
-                ('Beard Trim', 'Clean beard shaping and trimming', 150.00, '20 mins', 'Beard'),
-                ('Hair Color', 'Full hair coloring with premium products', 800.00, '90 mins', 'Hair'),
-                ('Facial', 'Deep cleansing facial treatment', 500.00, '45 mins', 'Skin'),
-                ('Head Massage', 'Relaxing scalp and head massage', 250.00, '30 mins', 'Wellness'),
-                ('Hair Spa', 'Nourishing hair spa treatment', 600.00, '60 mins', 'Hair'),
+                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
+                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
+                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
+                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
+                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
+                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
             ],
         )
     conn.commit()
 
 
+def _init_pg_schema(conn):
+    """Create tables in PostgreSQL if they don't exist and seed default data."""
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            full_name VARCHAR(100) NOT NULL,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            phone VARCHAR(20) NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            is_admin SMALLINT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS services (
+            id SERIAL PRIMARY KEY,
+            service_name VARCHAR(100) NOT NULL,
+            description TEXT,
+            price NUMERIC(10,2) NOT NULL,
+            duration VARCHAR(50) NOT NULL,
+            category VARCHAR(50) DEFAULT 'General',
+            image_url VARCHAR(255) DEFAULT '',
+            is_active SMALLINT DEFAULT 1
+        );
+        CREATE TABLE IF NOT EXISTS appointments (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL,
+            selected_services TEXT NOT NULL,
+            preferred_date DATE NOT NULL,
+            preferred_time VARCHAR(20),
+            status VARCHAR(20) DEFAULT 'Pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS settings (
+            key VARCHAR(100) PRIMARY KEY,
+            value TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS reviews (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL,
+            rating INT NOT NULL CHECK(rating BETWEEN 1 AND 5),
+            comment TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS gallery (
+            id SERIAL PRIMARY KEY,
+            filename VARCHAR(255) NOT NULL,
+            caption VARCHAR(255) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    # Seed admin user
+    cur.execute("""
+        INSERT INTO users (full_name, username, phone, email, password_hash, is_admin)
+        VALUES (%s,%s,%s,%s,%s,%s)
+        ON CONFLICT (username) DO NOTHING
+    """, ('Komali', 'komali', '0000000000', 'komali@newshades.com',
+          '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1))
+    # Seed services if empty
+    cur.execute("SELECT COUNT(*) FROM services")
+    if cur.fetchone()[0] == 0:
+        cur.executemany(
+            "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
+            [
+                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
+                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
+                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
+                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
+                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
+                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
+            ],
+        )
+    conn.commit()
+    cur.close()
+
+
+# ── Connection ────────────────────────────────────────────────────────────────
+
 def _connect_sqlite():
-    db_path = current_app.config.get('SQLITE_DB_PATH') or os.path.join(current_app.root_path, 'salon_app.db')
+    db_path = current_app.config.get('SQLITE_DB_PATH') or \
+              os.path.join(current_app.root_path, 'salon_app.db')
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    try:
-        conn.execute('PRAGMA foreign_keys = ON')
-        _init_sqlite_schema(conn)
-    except Exception:
-        conn.close()
-        raise
+    conn.execute('PRAGMA foreign_keys = ON')
+    _init_sqlite_schema(conn)
     return conn
 
 
 def get_db():
     if 'db' not in g:
         cfg = current_app.config
+        db_url = cfg.get('DATABASE_URL', '')
+
+        # 1. Try PostgreSQL (Render)
+        if db_url:
+            try:
+                import psycopg2
+                import psycopg2.extras
+                # Render gives postgres:// but psycopg2 needs postgresql://
+                if db_url.startswith('postgres://'):
+                    db_url = db_url.replace('postgres://', 'postgresql://', 1)
+                g.db = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor)
+                g.db.autocommit = False
+                g.db_backend = 'postgres'
+                _init_pg_schema(g.db)
+                return g.db
+            except Exception as e:
+                current_app.logger.warning('PostgreSQL connection failed: %s', e)
+
+        # 2. Try MySQL (local dev)
         try:
             g.db = pymysql.connect(
                 host=cfg['MYSQL_HOST'],
@@ -110,24 +200,31 @@ def get_db():
                 autocommit=True,
             )
             g.db_backend = 'mysql'
+            return g.db
         except Exception:
-            g.db = _connect_sqlite()
-            g.db_backend = 'sqlite'
+            pass
+
+        # 3. SQLite fallback
+        g.db = _connect_sqlite()
+        g.db_backend = 'sqlite'
+
     else:
-        if g.get('db_backend') == 'mysql':
+        backend = g.get('db_backend')
+        if backend == 'postgres':
+            try:
+                g.db.cursor().execute('SELECT 1')
+            except Exception:
+                g.pop('db', None)
+                g.pop('db_backend', None)
+                return get_db()
+        elif backend == 'mysql':
             try:
                 g.db.ping(reconnect=True)
             except Exception:
                 g.pop('db', None)
                 g.pop('db_backend', None)
                 return get_db()
-        else:
-            try:
-                g.db.execute('SELECT 1')
-            except Exception:
-                g.pop('db', None)
-                g.pop('db_backend', None)
-                return get_db()
+
     return g.db
 
 
@@ -138,8 +235,9 @@ def close_db(e=None):
     g.pop('db_backend', None)
 
 
+# ── SQL normalisation (SQLite only) ──────────────────────────────────────────
+
 def _normalize_sql(sql):
-    import re
     sql = sql.replace('%s', '?')
     sql = re.sub(r'ON DUPLICATE KEY UPDATE\s+\S+\s*=\s*\?', '', sql)
     sql = sql.replace('INSERT INTO', 'INSERT OR REPLACE INTO')
@@ -147,13 +245,29 @@ def _normalize_sql(sql):
     return sql
 
 
+# ── Public API ────────────────────────────────────────────────────────────────
+
 def query(sql, args=(), one=False):
     conn = get_db()
-    if g.get('db_backend') == 'sqlite':
+    backend = g.get('db_backend')
+
+    if backend == 'sqlite':
         cur = conn.execute(_normalize_sql(sql), tuple(args))
-        rows = [dict(row) for row in cur.fetchall()]
+        rows = [dict(r) for r in cur.fetchall()]
         return (rows[0] if rows else None) if one else rows
 
+    if backend == 'postgres':
+        # Convert backtick-quoted identifiers for PostgreSQL
+        sql = re.sub(r'`(\w+)`', r'"\1"', sql)
+        # Convert INSERT ... ON DUPLICATE KEY UPDATE to INSERT ... ON CONFLICT DO UPDATE
+        sql = _pg_upsert(sql)
+        cur = conn.cursor()
+        cur.execute(sql, args)
+        rows = cur.fetchall()
+        cur.close()
+        return (rows[0] if rows else None) if one else (rows or [])
+
+    # MySQL
     cur = conn.cursor()
     cur.execute(sql, args)
     rv = cur.fetchall()
@@ -163,12 +277,57 @@ def query(sql, args=(), one=False):
 
 def execute(sql, args=()):
     conn = get_db()
-    if g.get('db_backend') == 'sqlite':
+    backend = g.get('db_backend')
+
+    if backend == 'sqlite':
         cur = conn.execute(_normalize_sql(sql), tuple(args))
         conn.commit()
         return cur.lastrowid
 
+    if backend == 'postgres':
+        sql = re.sub(r'`(\w+)`', r'"\1"', sql)
+        sql = _pg_upsert(sql)
+        cur = conn.cursor()
+        # Get last inserted id for INSERT statements
+        if sql.strip().upper().startswith('INSERT'):
+            cur.execute(sql + ' RETURNING id', args)
+            row = cur.fetchone()
+            conn.commit()
+            cur.close()
+            return row['id'] if row else None
+        cur.execute(sql, args)
+        conn.commit()
+        cur.close()
+        return None
+
+    # MySQL
     cur = conn.cursor()
     cur.execute(sql, args)
     cur.close()
     return cur.lastrowid
+
+
+def _pg_upsert(sql):
+    """Convert MySQL ON DUPLICATE KEY UPDATE to PostgreSQL ON CONFLICT DO UPDATE."""
+    pattern = re.compile(
+        r"INSERT INTO\s+(`?\w+`?)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)\s*ON DUPLICATE KEY UPDATE\s+(.+)",
+        re.IGNORECASE | re.DOTALL
+    )
+    m = pattern.match(sql.strip())
+    if not m:
+        return sql
+    table   = m.group(1).strip('`"')
+    cols    = [c.strip().strip('`"') for c in m.group(2).split(',')]
+    vals    = m.group(3)
+    updates = m.group(4).strip()
+    # Build SET clause for ON CONFLICT
+    set_parts = []
+    for part in re.split(r',\s*(?=\w)', updates):
+        col_match = re.match(r'`?(\w+)`?\s*=\s*(.+)', part.strip())
+        if col_match:
+            set_parts.append(f'"{col_match.group(1)}" = {col_match.group(2)}')
+    cols_quoted = ', '.join(f'"{c}"' for c in cols)
+    return (
+        f'INSERT INTO "{table}" ({cols_quoted}) VALUES ({vals}) '
+        f'ON CONFLICT ("{cols[0]}") DO UPDATE SET {", ".join(set_parts)}'
+    )

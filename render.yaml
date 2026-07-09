@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: newshades-salon
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: newshades-db
+          property: connectionString
+
+databases:
+  - name: newshades-db
+    databaseName: salon_db
+    plan: free

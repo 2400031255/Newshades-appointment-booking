@@ -200,7 +200,7 @@ def settings():
             fields = ['shop_name','shop_tagline','shop_address','shop_phone','shop_email','shop_hours_weekday','shop_hours_saturday','shop_hours_sunday','map_embed']
             for f in fields:
                 val = request.form.get(f, '').strip()
-                execute("INSERT INTO settings (`key`, value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE value=%s", (f, val, val))
+                execute("INSERT INTO settings (key, value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE value=%s", (f, val, val))
             flash('Shop details updated successfully.', 'success')
 
         elif action == 'whatsapp':
@@ -208,7 +208,7 @@ def settings():
             if not wa.isdigit() or len(wa) < 10:
                 flash('Enter a valid WhatsApp number with country code.', 'danger')
             else:
-                execute("INSERT INTO settings (`key`, value) VALUES ('whatsapp_number', %s) ON DUPLICATE KEY UPDATE value=%s", (wa, wa))
+                execute("INSERT INTO settings (key, value) VALUES ('whatsapp_number', %s) ON DUPLICATE KEY UPDATE value=%s", (wa, wa))
                 flash('WhatsApp number updated.', 'success')
 
         elif action == 'account':
@@ -240,7 +240,7 @@ def settings():
         return redirect(url_for('admin.settings'))
 
     def get_setting(key, default=''):
-        row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
+        row = query("SELECT value FROM settings WHERE key=%s", (key,), one=True)
         return row['value'] if row else default
 
     s = {

@@ -99,7 +99,7 @@ def book():
         f"{time_line}\n\n"
         f"Please confirm my appointment.\n\nThank you."
     )
-    row = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
+    row = query("SELECT value FROM settings WHERE key='whatsapp_number'", one=True)
     wa_number = row['value'].strip() if row and row['value'] else ''
     if not wa_number:
         flash('WhatsApp number is not configured yet. Please contact the salon directly.', 'warning')

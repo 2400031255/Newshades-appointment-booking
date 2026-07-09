@@ -20,7 +20,7 @@ def create_app():
         from db import query
         def get_setting(key, default=''):
             try:
-                row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
+                row = query("SELECT value FROM settings WHERE key=%s", (key,), one=True)
                 return row['value'] if row else default
             except Exception as e:
                 current_app.logger.warning('get_setting(%s) failed: %s', key, e)
