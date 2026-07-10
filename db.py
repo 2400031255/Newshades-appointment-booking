@@ -36,6 +36,7 @@ def _init_sqlite_schema(conn):
             preferred_date TEXT NOT NULL,
             preferred_time TEXT,
             status TEXT DEFAULT 'Pending',
+            ticket_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );

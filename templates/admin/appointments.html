@@ -4,11 +4,26 @@
 
 {% block content %}
 <div class="admin-card">
+  <!-- Toolbar -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-    <h6 class="fw-bold mb-0" style="color:#fff;">All Appointments <span style="color:var(--gold);">({{ appointments|length }})</span></h6>
+    <h6 class="fw-bold mb-0" style="color:#fff;">
+      All Appointments <span style="color:var(--gold);">({{ appointments|length }})</span>
+    </h6>
     <div class="d-flex gap-2 flex-wrap align-items-center">
-      {% for s in ['', 'Pending', 'Confirmed', 'Cancelled'] %}
-      <a href="{{ url_for('admin.appointments', status=s) }}" class="admin-filter-btn {{ 'active' if status_filter == s }}">
+      <!-- Search -->
+      <form method="GET" action="{{ url_for('admin.appointments') }}" class="d-flex gap-2">
+        <input type="hidden" name="status" value="{{ status_filter }}"/>
+        <div style="position:relative;">
+          <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.8rem;"></i>
+          <input type="text" name="q" value="{{ search }}" placeholder="Search name, phone…"
+            style="padding:8px 12px 8px 34px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;width:200px;"/>
+        </div>
+        <button type="submit" class="admin-update-btn"><i class="fas fa-search"></i></button>
+      </form>
+      <!-- Status filters -->
+      {% for s in ['', 'Pending', 'Confirmed', 'Checked In', 'Completed', 'Rejected', 'Cancelled'] %}
+      <a href="{{ url_for('admin.appointments', status=s, q=search) }}"
+         class="admin-filter-btn {{ 'active' if status_filter == s }}">
         {{ s if s else 'All' }}
       </a>
       {% endfor %}
@@ -22,7 +37,7 @@
   <div class="table-responsive">
     <table class="admin-table">
       <thead>
-        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Time</th><th>Status</th><th>Update</th></tr>
+        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for a in appointments %}
@@ -33,30 +48,53 @@
             <div class="admin-td-muted">{{ a.phone }}</div>
             <div style="font-size:0.75rem;color:var(--text-muted);">{{ a.email }}</div>
           </td>
-          <td class="admin-td-muted">{{ a.selected_services }}</td>
+          <td class="admin-td-muted" style="max-width:180px;">{{ a.selected_services }}</td>
           <td class="admin-td-bold">
             {% if a.preferred_date %}
               {% set d = a.preferred_date %}
-              {% if d is string %}
-                {{ d }}
-              {% else %}
-                {{ d.strftime('%d %b %Y') }}
-              {% endif %}
+              {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
             {% else %}—{% endif %}
           </td>
           <td class="admin-td-muted">{{ a.preferred_time if a.preferred_time else '—' }}</td>
           <td>
-            <span class="badge-status-{{ a.status.lower() }} admin-status-badge">{{ a.status }}</span>
+            <span class="admin-status-badge badge-status-{{ a.status.lower().replace(' ','-') }}">{{ a.status }}</span>
           </td>
           <td>
-            <form method="POST" action="{{ url_for('admin.update_status', aid=a.id) }}" class="d-flex gap-2 align-items-center">
-              <select name="status" class="admin-select">
-                {% for s in ['Pending','Confirmed','Cancelled'] %}
-                <option value="{{ s }}" {{ 'selected' if a.status == s }}>{{ s }}</option>
-                {% endfor %}
-              </select>
-              <button type="submit" class="admin-update-btn"><i class="fas fa-check"></i></button>
-            </form>
+            <div class="d-flex gap-1 flex-wrap">
+              {% if a.status == 'Pending' %}
+              <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+                <input type="hidden" name="action" value="accept"/>
+                <button type="submit" class="admin-update-btn" style="background:rgba(37,211,102,0.15);border-color:rgba(37,211,102,0.3);color:#7ce0aa;" title="Accept">
+                  <i class="fas fa-check"></i>
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+                <input type="hidden" name="action" value="reject"/>
+                <button type="submit" class="admin-action-btn admin-action-danger" title="Reject">
+                  <i class="fas fa-times"></i>
+                </button>
+              </form>
+              {% elif a.status == 'Confirmed' %}
+              <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+                <input type="hidden" name="action" value="checkin"/>
+                <button type="submit" class="admin-update-btn" style="background:rgba(105,152,255,0.15);border-color:rgba(105,152,255,0.3);color:#9dc0ff;" title="Check In">
+                  <i class="fas fa-sign-in-alt"></i>
+                </button>
+              </form>
+              {% elif a.status == 'Checked In' %}
+              <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+                <input type="hidden" name="action" value="complete"/>
+                <button type="submit" class="admin-update-btn" style="background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.3);color:var(--gold-2);" title="Complete">
+                  <i class="fas fa-flag-checkered"></i>
+                </button>
+              </form>
+              {% endif %}
+              {% if a.get('ticket_id') %}
+              <span style="padding:6px 10px;border-radius:8px;background:rgba(201,168,76,0.1);color:var(--gold-2);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;">
+                #{{ a.ticket_id }}
+              </span>
+              {% endif %}
+            </div>
           </td>
         </tr>
         {% endfor %}
@@ -67,4 +105,13 @@
   <p class="text-center py-5" style="color:var(--text-muted);">No appointments found.</p>
   {% endif %}
 </div>
+
+<style>
+.badge-status-pending       { background:rgba(255,170,77,0.16);  color:#ffc36b; }
+.badge-status-confirmed     { background:rgba(71,188,121,0.16);  color:#7ce0aa; }
+.badge-status-cancelled     { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
+.badge-status-rejected      { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
+.badge-status-checked-in    { background:rgba(105,152,255,0.16); color:#9dc0ff; }
+.badge-status-completed     { background:rgba(201,168,76,0.16);  color:var(--gold-2); }
+</style>
 {% endblock %}

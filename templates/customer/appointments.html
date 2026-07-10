@@ -111,9 +111,16 @@
               </button>
             </form>
             {% endif %}
+            {% if appt.status in ('Confirmed', 'Checked In', 'Completed') and appt.get('ticket_id') %}
+            <a href="{{ url_for('customer.ticket', aid=appt.id) }}" class="btn-appt-rebook" style="background:rgba(37,211,102,0.1);border-color:rgba(37,211,102,0.3);color:#7ce0aa;">
+              <i class="fas fa-ticket-alt me-1"></i>View Ticket
+            </a>
+            {% endif %}
+            {% if appt.status not in ('Pending',) %}
             <a href="{{ url_for('customer.rebook', aid=appt.id) }}" class="btn-appt-rebook">
               <i class="fas fa-redo me-1"></i>Re-book
             </a>
+            {% endif %}
           </div>
         </div>
       </div>

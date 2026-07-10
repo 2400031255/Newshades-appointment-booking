@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% block title %}Appointment Ticket #{{ appt.ticket_id }} – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+.ticket-shell {
+  min-height: 100vh;
+  padding: 100px 16px 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(201,168,76,0.12), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(37,211,102,0.06), transparent 40%),
+    linear-gradient(135deg, var(--ink) 0%, #0f0d15 50%, #17120f 100%);
+}
+
+/* ── Ticket card ── */
+.ticket-card {
+  width: min(100%, 520px);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+  border: 1px solid rgba(201,168,76,0.25);
+  background: linear-gradient(160deg, #1a1510 0%, #0f0d12 100%);
+  animation: ticketIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes ticketIn {
+  from { opacity:0; transform: translateY(30px) scale(0.97); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+
+/* ── Header strip ── */
+.ticket-header {
+  background: linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.ticket-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
+}
+.ticket-logo {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.4);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.ticket-salon-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #120e08;
+  position: relative;
+  z-index: 1;
+}
+.ticket-salon-sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(18,14,8,0.7);
+  position: relative;
+  z-index: 1;
+}
+.ticket-confirmed-badge {
+  margin-left: auto;
+  background: rgba(18,14,8,0.2);
+  border: 1px solid rgba(18,14,8,0.3);
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #120e08;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Ticket body ── */
+.ticket-body { padding: 28px; }
+
+.ticket-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed rgba(201,168,76,0.2);
+}
+.ticket-id-label { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); }
+.ticket-id-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-2);
+  letter-spacing: 0.1em;
+}
+
+.ticket-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.ticket-field-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.ticket-field-val {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.ticket-services-block {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.14);
+  margin-bottom: 20px;
+}
+.ticket-services-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.ticket-service-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.2);
+  color: var(--gold-2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 3px 3px 3px 0;
+}
+
+/* ── Tear line ── */
+.ticket-tear {
+  position: relative;
+  margin: 0 -1px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+}
+.ticket-tear::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  border-top: 2px dashed rgba(201,168,76,0.2);
+}
+.ticket-tear-circle-l,
+.ticket-tear-circle-r {
+  position: absolute;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #080608;
+  border: 1px solid rgba(201,168,76,0.2);
+}
+.ticket-tear-circle-l { left: -12px; }
+.ticket-tear-circle-r { right: -12px; }
+
+/* ── QR section ── */
+.ticket-qr-section {
+  padding: 20px 28px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.ticket-qr-wrap {
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px;
+  flex-shrink: 0;
+}
+.ticket-qr-wrap canvas,
+.ticket-qr-wrap img { display: block; }
+.ticket-hint {
+  color: rgba(240,230,211,0.6);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.ticket-hint strong { color: var(--gold-2); }
+
+/* ── Action buttons ── */
+.ticket-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 28px 28px;
+  flex-wrap: wrap;
+}
+
+/* ── Print styles ── */
+@media print {
+  body * { visibility: hidden; }
+  .ticket-card, .ticket-card * { visibility: visible; }
+  .ticket-card { position: fixed; inset: 0; margin: auto; box-shadow: none; border: none; }
+  .ticket-actions, .ticket-back-btn { display: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-shell">
+  <div style="width:min(100%,520px);">
+
+    <!-- Back -->
+    <a href="{{ url_for('customer.appointments') }}" class="book-back d-inline-flex align-items-center gap-2 mb-3" style="color:var(--text-muted);font-size:0.85rem;text-decoration:none;">
+      <i class="fas fa-arrow-left"></i> Back to Appointments
+    </a>
+
+    <div class="ticket-card" id="ticketCard">
+
+      <!-- Header -->
+      <div class="ticket-header">
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="ticket-logo"/>
+        <div>
+          <div class="ticket-salon-name">{{ shop_name }}</div>
+          <div class="ticket-salon-sub">Premium Salon & Studio</div>
+        </div>
+        <span class="ticket-confirmed-badge"><i class="fas fa-check me-1"></i>{{ appt.status }}</span>
+      </div>
+
+      <!-- Body -->
+      <div class="ticket-body">
+        <!-- Ticket ID -->
+        <div class="ticket-id-row">
+          <div>
+            <div class="ticket-id-label">Appointment ID</div>
+            <div class="ticket-id-val">#{{ appt.ticket_id }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="ticket-id-label">Booked On</div>
+            <div style="color:rgba(240,230,211,0.7);font-size:0.82rem;">{{ appt.created_at }}</div>
+          </div>
+        </div>
+
+        <!-- Details grid -->
+        <div class="ticket-grid">
+          <div>
+            <div class="ticket-field-label"><i class="fas fa-user me-1"></i>Customer</div>
+            <div class="ticket-field-val">{{ appt.full_name }}</div>
+          </div>
+          <div>
+            <div class="ticket-field-label"><i class="fas fa-phone me-1"></i>Phone</div>
+            <div class="ticket-field-val">{{ appt.phone }}</div>
+          </div>
+          <div>
+            <div class="ticket-field-label"><i class="fas fa-calendar me-1"></i>Date</div>
+            <div class="ticket-field-val">
+              {% set d = appt.preferred_date %}
+              {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+            </div>
+          </div>
+          <div>
+            <div class="ticket-field-label"><i class="fas fa-clock me-1"></i>Time</div>
+            <div class="ticket-field-val">{{ appt.preferred_time if appt.preferred_time else 'Flexible' }}</div>
+          </div>
+        </div>
+
+        <!-- Services -->
+        <div class="ticket-services-block">
+          <div class="ticket-services-label"><i class="fas fa-concierge-bell me-1"></i>Services</div>
+          {% for svc in appt.selected_services.split(',') %}
+          <span class="ticket-service-tag">{{ svc.strip() }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Tear line -->
+      <div class="ticket-tear">
+        <div class="ticket-tear-circle-l"></div>
+        <div class="ticket-tear-circle-r"></div>
+      </div>
+
+      <!-- QR section -->
+      <div class="ticket-qr-section">
+        <div class="ticket-qr-wrap">
+          <canvas id="qrCanvas"></canvas>
+        </div>
+        <div class="ticket-hint">
+          <strong>Show this ticket at the salon</strong> during check-in.<br><br>
+          The receptionist will scan your QR code or look up your Appointment ID <strong>#{{ appt.ticket_id }}</strong>.
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="ticket-actions">
+        <button onclick="window.print()" class="btn-outline-gold" style="padding:10px 18px;font-size:0.85rem;">
+          <i class="fas fa-print me-2"></i>Print
+        </button>
+        <button onclick="downloadTicket()" class="btn-gold-hero" style="padding:10px 18px;font-size:0.85rem;">
+          <i class="fas fa-download me-2"></i>Save as Image
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QR Code library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+// Generate QR code
+QRCode.toCanvas(document.getElementById('qrCanvas'), '{{ appt.ticket_id }}', {
+  width: 110,
+  color: { dark: '#120e08', light: '#ffffff' }
+});
+
+// Save as image using html2canvas
+function downloadTicket() {
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+  script.onload = function() {
+    html2canvas(document.getElementById('ticketCard'), { scale: 2, backgroundColor: '#0f0d12' }).then(canvas => {
+      const a = document.createElement('a');
+      a.download = 'ticket-{{ appt.ticket_id }}.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    });
+  };
+  document.head.appendChild(script);
+}
+</script>
+{% endblock %}

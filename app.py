@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for
+from flask import Flask, render_template, session, redirect, url_for, current_app
 from config import Config
 from db import close_db
 import os
@@ -20,7 +20,7 @@ def create_app():
         from db import query
         def get_setting(key, default=''):
             try:
-                row = query("SELECT value FROM settings WHERE key=%s", (key,), one=True)
+                row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
                 return row['value'] if row else default
             except Exception as e:
                 current_app.logger.warning('get_setting(%s) failed: %s', key, e)
@@ -77,7 +77,7 @@ def create_app():
         from db import query
         def get_setting(key, default=''):
             try:
-                row = query("SELECT value FROM settings WHERE key=%s", (key,), one=True)
+                row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
                 return row['value'] if row else default
             except Exception:
                 return default

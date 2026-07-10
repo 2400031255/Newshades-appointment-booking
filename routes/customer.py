@@ -1,9 +1,8 @@
 from datetime import date
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+import uuid
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, make_response
 from functools import wraps
 from db import query, execute
-import json
-from urllib.parse import quote
 
 customer = Blueprint('customer', __name__)
 
@@ -14,6 +13,7 @@ def login_required(f):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated
+
 
 @customer.route('/dashboard')
 @login_required
@@ -26,20 +26,22 @@ def dashboard():
         "SELECT * FROM appointments WHERE user_id=%s ORDER BY created_at DESC LIMIT 3",
         (session['user_id'],)
     )
-    total   = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s", (session['user_id'],), one=True)['c']
-    pending = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
+    total     = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s", (session['user_id'],), one=True)['c']
+    pending   = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
     confirmed = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Confirmed'", (session['user_id'],), one=True)['c']
     return render_template('customer/dashboard.html', user=user, recent_appts=appts,
                            total=total, pending=pending, confirmed=confirmed)
 
+
 @customer.route('/book')
 @login_required
 def book_page():
-    services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
+    services   = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
     categories = list(dict.fromkeys(s['category'] for s in services))
     rebook_services = session.pop('rebook_services', None)
     return render_template('customer/book.html', services=services, categories=categories,
                            rebook_services=rebook_services)
+
 
 @customer.route('/book', methods=['POST'])
 @login_required
@@ -49,7 +51,7 @@ def book():
         session.clear()
         return redirect(url_for('auth.login'))
 
-    service_ids = [int(i) for i in request.form.getlist('services') if i.isdigit()]
+    service_ids    = [int(i) for i in request.form.getlist('services') if i.isdigit()]
     preferred_date = request.form.get('preferred_date', '')
     preferred_time = request.form.get('preferred_time', '')
 
@@ -67,48 +69,50 @@ def book():
         return redirect(url_for('customer.book_page'))
 
     services = query(
-        "SELECT service_name FROM services WHERE id IN ({})".format(','.join(['%s']*len(service_ids))),
+        "SELECT service_name FROM services WHERE id IN ({})".format(','.join(['%s'] * len(service_ids))),
         tuple(service_ids)
     )
     service_names = [s['service_name'] for s in services]
-    services_str = ', '.join(service_names)
+    services_str  = ', '.join(service_names)
 
-    # Save to DB
+    try:
+        formatted_date = date.fromisoformat(preferred_date).strftime('%d %b %Y')
+    except Exception:
+        formatted_date = preferred_date
+
     execute(
         "INSERT INTO appointments (user_id, selected_services, preferred_date, preferred_time) VALUES (%s,%s,%s,%s)",
         (session['user_id'], services_str, preferred_date, preferred_time)
     )
 
-    # Format date as DD/MM/YYYY
+    # SMS admin
     try:
-        d = date.fromisoformat(preferred_date)
-        formatted_date = d.strftime('%d/%m/%Y')
-    except Exception:
-        formatted_date = preferred_date
+        from sms import sms_new_booking
+        admin_phone = current_app.config.get('ADMIN_PHONE', '')
+        if admin_phone:
+            sms_new_booking(admin_phone, user['full_name'], user['phone'], formatted_date, preferred_time)
+    except Exception as e:
+        current_app.logger.error('SMS error: %s', e)
 
-    # Build WhatsApp message
-    service_list = '\n'.join(f'• {s}' for s in service_names)
-    time_line = f"Preferred Time:\n{preferred_time}" if preferred_time else "Preferred Time:\nFlexible"
-    message = (
-        f"Hello,\n\nI would like to book an appointment.\n\n"
-        f"Customer Name:\n{user['full_name']}\n\n"
-        f"Phone Number:\n{user['phone']}\n\n"
-        f"Email:\n{user['email']}\n\n"
-        f"Selected Services:\n{service_list}\n\n"
-        f"Preferred Date:\n{formatted_date}\n\n"
-        f"{time_line}\n\n"
-        f"Please confirm my appointment.\n\nThank you."
+    flash('Appointment booked! We will confirm it shortly.', 'success')
+    return redirect(url_for('customer.appointments'))
+
+
+@customer.route('/ticket/<int:aid>')
+@login_required
+def ticket(aid):
+    appt = query(
+        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
+        "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
+        (aid, session['user_id']), one=True
     )
-    row = query("SELECT value FROM settings WHERE key='whatsapp_number'", one=True)
-    wa_number = row['value'].strip() if row and row['value'] else ''
-    if not wa_number:
-        flash('WhatsApp number is not configured yet. Please contact the salon directly.', 'warning')
-        wa_url = ''
-    else:
-        wa_url = f"https://wa.me/{wa_number}?text={quote(message)}"
+    if not appt or appt['status'] not in ('Confirmed', 'Checked In', 'Completed'):
+        flash('Ticket not available.', 'danger')
+        return redirect(url_for('customer.appointments'))
+    shop_name = query("SELECT value FROM settings WHERE `key`='shop_name'", one=True)
+    shop_name = shop_name['value'] if shop_name else 'New Shades'
+    return render_template('customer/ticket.html', appt=appt, shop_name=shop_name)
 
-    return render_template('customer/confirm.html', user=user, service_names=service_names,
-                           preferred_date=formatted_date, preferred_time=preferred_time, wa_url=wa_url)
 
 @customer.route('/cancel/<int:aid>', methods=['POST'])
 @login_required
@@ -121,6 +125,7 @@ def cancel_appointment(aid):
         flash('Only pending appointments can be cancelled.', 'danger')
     return redirect(url_for('customer.appointments'))
 
+
 @customer.route('/rebook/<int:aid>')
 @login_required
 def rebook(aid):
@@ -130,6 +135,7 @@ def rebook(aid):
     session['rebook_services'] = appt['selected_services']
     return redirect(url_for('customer.book_page'))
 
+
 @customer.route('/appointments')
 @login_required
 def appointments():
@@ -138,9 +144,10 @@ def appointments():
         (session['user_id'],)
     )
     existing_review = query("SELECT * FROM reviews WHERE user_id=%s", (session['user_id'],), one=True)
-    has_confirmed = any(a['status'] in ('Confirmed', 'Completed') for a in appts)
+    has_confirmed   = any(a['status'] in ('Confirmed', 'Checked In', 'Completed') for a in appts)
     return render_template('customer/appointments.html', appointments=appts,
                            existing_review=existing_review, has_confirmed=has_confirmed)
+
 
 @customer.route('/review', methods=['POST'])
 @login_required
@@ -153,7 +160,6 @@ def submit_review():
     if not comment or len(comment) > 500:
         flash('Please write a review (max 500 characters).', 'danger')
         return redirect(url_for('customer.appointments'))
-    # one review per user
     existing = query("SELECT id FROM reviews WHERE user_id=%s", (session['user_id'],), one=True)
     if existing:
         execute("UPDATE reviews SET rating=%s, comment=%s WHERE user_id=%s",
@@ -173,7 +179,7 @@ def profile():
         session.clear()
         return redirect(url_for('auth.login'))
     if request.method == 'POST':
-        name = request.form['full_name'].strip()
+        name  = request.form['full_name'].strip()
         phone = request.form['phone'].strip()
         execute("UPDATE users SET full_name=%s, phone=%s WHERE id=%s",
                 (name, phone, session['user_id']))

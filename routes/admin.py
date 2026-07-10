@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, Response
 from functools import wraps
 from db import query, execute
-import bcrypt, os, csv, io
+import bcrypt, os, csv, io, uuid
 from werkzeug.utils import secure_filename
 
-ALLOWED_EXT = {'jpg','jpeg','png','webp','gif'}
+ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.',1)[1].lower() in ALLOWED_EXT
+def allowed_file(f):
+    return '.' in f and f.rsplit('.', 1)[1].lower() in ALLOWED_EXT
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -22,21 +22,25 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+
+# ── Dashboard ──────────────────────────────────────────────────────────────
 @admin.route('/')
 @admin_required
 def dashboard():
-    total_users = query("SELECT COUNT(*) as c FROM users WHERE is_admin=0", one=True)['c']
+    total_users    = query("SELECT COUNT(*) as c FROM users WHERE is_admin=0", one=True)['c']
     total_services = query("SELECT COUNT(*) as c FROM services", one=True)['c']
-    total_appts = query("SELECT COUNT(*) as c FROM appointments", one=True)['c']
-    pending = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)['c']
+    total_appts    = query("SELECT COUNT(*) as c FROM appointments", one=True)['c']
+    pending        = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)['c']
     recent = query(
-        "SELECT a.*, u.full_name, u.phone FROM appointments a JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 5"
+        "SELECT a.*, u.full_name, u.phone FROM appointments a "
+        "JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 5"
     )
-    return render_template('admin/dashboard.html',
-                           total_users=total_users, total_services=total_services,
-                           total_appts=total_appts, pending=pending, recent=recent)
+    return render_template('admin/dashboard.html', total_users=total_users,
+                           total_services=total_services, total_appts=total_appts,
+                           pending=pending, recent=recent)
 
-# --- Services ---
+
+# ── Services ───────────────────────────────────────────────────────────────
 @admin.route('/services')
 @admin_required
 def services():
@@ -80,54 +84,117 @@ def delete_service(sid):
     flash('Service deleted.', 'success')
     return redirect(url_for('admin.services'))
 
-# --- Appointments ---
+
+# ── Appointments ───────────────────────────────────────────────────────────
 @admin.route('/appointments')
 @admin_required
 def appointments():
     status_filter = request.args.get('status', '')
+    search        = request.args.get('q', '').strip()
+    base_sql = (
+        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
+        "JOIN users u ON a.user_id=u.id"
+    )
+    conditions, args = [], []
     if status_filter:
-        appts = query(
-            "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.status=%s ORDER BY a.created_at DESC",
-            (status_filter,)
-        )
-    else:
-        appts = query(
-            "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC"
-        )
-    return render_template('admin/appointments.html', appointments=appts, status_filter=status_filter)
+        conditions.append("a.status=%s"); args.append(status_filter)
+    if search:
+        conditions.append("(u.full_name LIKE %s OR u.phone LIKE %s OR a.selected_services LIKE %s)")
+        args += [f'%{search}%', f'%{search}%', f'%{search}%']
+    if conditions:
+        base_sql += ' WHERE ' + ' AND '.join(conditions)
+    base_sql += ' ORDER BY a.created_at DESC'
+    appts = query(base_sql, tuple(args))
+    return render_template('admin/appointments.html', appointments=appts,
+                           status_filter=status_filter, search=search)
+
+
+@admin.route('/appointments/action/<int:aid>', methods=['POST'])
+@admin_required
+def appointment_action(aid):
+    action = request.form.get('action')
+    appt   = query(
+        "SELECT a.*, u.full_name, u.phone FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.id=%s",
+        (aid,), one=True
+    )
+    if not appt:
+        flash('Appointment not found.', 'danger')
+        return redirect(url_for('admin.appointments'))
+
+    try:
+        d = appt['preferred_date']
+        fmt_date = d.strftime('%d %b %Y') if hasattr(d, 'strftime') else str(d)
+    except Exception:
+        fmt_date = str(appt['preferred_date'])
+    fmt_time = appt['preferred_time'] or 'Flexible'
+
+    if action == 'accept':
+        ticket_id = str(uuid.uuid4())[:8].upper()
+        execute("UPDATE appointments SET status='Confirmed', ticket_id=%s WHERE id=%s", (ticket_id, aid))
+        flash('Appointment confirmed and ticket generated.', 'success')
+        try:
+            from sms import sms_confirmed
+            sms_confirmed(appt['phone'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('SMS error: %s', e)
+        try:
+            from email_service import send_confirmation_email
+            send_confirmation_email(appt['email'], appt['full_name'],
+                                    fmt_date, fmt_time, appt['selected_services'])
+        except Exception as e:
+            current_app.logger.error('Email error: %s', e)
+
+    elif action == 'reject':
+        execute("UPDATE appointments SET status='Rejected' WHERE id=%s", (aid,))
+        flash('Appointment rejected.', 'warning')
+        try:
+            from sms import sms_rejected
+            sms_rejected(appt['phone'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('SMS error: %s', e)
+        try:
+            from email_service import send_rejection_email
+            send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('Email error: %s', e)
+
+    elif action == 'checkin':
+        execute("UPDATE appointments SET status='Checked In' WHERE id=%s", (aid,))
+        flash('Customer checked in.', 'success')
+
+    elif action == 'complete':
+        execute("UPDATE appointments SET status='Completed' WHERE id=%s", (aid,))
+        flash('Appointment marked as completed.', 'success')
+
+    return redirect(url_for('admin.appointments'))
+
 
 @admin.route('/appointments/export')
 @admin_required
 def export_appointments():
     appts = query(
-        "SELECT a.id, u.full_name, u.phone, u.email, a.selected_services, a.preferred_date, a.preferred_time, a.status, a.created_at "
+        "SELECT a.id, u.full_name, u.phone, u.email, a.selected_services, "
+        "a.preferred_date, a.preferred_time, a.status, a.ticket_id, a.created_at "
         "FROM appointments a JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC"
     )
     si = io.StringIO()
-    writer = csv.writer(si)
-    writer.writerow(['ID','Customer','Phone','Email','Services','Date','Time','Status','Booked At'])
+    w  = csv.writer(si)
+    w.writerow(['ID', 'Customer', 'Phone', 'Email', 'Services', 'Date', 'Time', 'Status', 'Ticket ID', 'Booked At'])
     for a in appts:
-        writer.writerow([a['id'], a['full_name'], a['phone'], a['email'],
-                         a['selected_services'], a['preferred_date'],
-                         a['preferred_time'] or '', a['status'], a['created_at']])
-    output = si.getvalue()
-    return Response(output, mimetype='text/csv',
+        w.writerow([a['id'], a['full_name'], a['phone'], a['email'],
+                    a['selected_services'], a['preferred_date'],
+                    a['preferred_time'] or '', a['status'], a.get('ticket_id') or '', a['created_at']])
+    return Response(si.getvalue(), mimetype='text/csv',
                     headers={'Content-Disposition': 'attachment; filename=appointments.csv'})
 
 
-@admin.route('/appointments/status/<int:aid>', methods=['POST'])
-@admin_required
-def update_status(aid):
-    execute("UPDATE appointments SET status=%s WHERE id=%s", (request.form['status'], aid))
-    flash('Status updated.', 'success')
-    return redirect(url_for('admin.appointments'))
-
-# --- Reviews ---
+# ── Reviews ────────────────────────────────────────────────────────────────
 @admin.route('/reviews')
 @admin_required
 def reviews():
     revs = query(
-        "SELECT r.*, u.full_name, u.phone FROM reviews r JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC"
+        "SELECT r.*, u.full_name, u.phone FROM reviews r "
+        "JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC"
     )
     avg = query("SELECT AVG(rating) as a, COUNT(*) as c FROM reviews", one=True)
     return render_template('admin/reviews.html', reviews=revs, avg=avg)
@@ -139,126 +206,110 @@ def delete_review(rid):
     flash('Review deleted.', 'success')
     return redirect(url_for('admin.reviews'))
 
-# --- Customers ---
+
+# ── Customers ──────────────────────────────────────────────────────────────
 @admin.route('/customers')
 @admin_required
 def customers():
-    users = query("SELECT u.*, COUNT(a.id) as appt_count FROM users u LEFT JOIN appointments a ON u.id=a.user_id WHERE u.is_admin=0 GROUP BY u.id ORDER BY u.created_at DESC")
+    users = query(
+        "SELECT u.*, COUNT(a.id) as appt_count FROM users u "
+        "LEFT JOIN appointments a ON u.id=a.user_id "
+        "WHERE u.is_admin=0 GROUP BY u.id ORDER BY u.created_at DESC"
+    )
     return render_template('admin/customers.html', users=users)
 
-# --- Profile ---
+
+# ── Profile ────────────────────────────────────────────────────────────────
 @admin.route('/profile', methods=['GET', 'POST'])
 @admin_required
 def profile():
     admin_user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
     if request.method == 'POST':
-        action = request.form.get('action')
+        action           = request.form.get('action')
         current_password = request.form.get('current_password', '')
-
         if not bcrypt.checkpw(current_password.encode(), admin_user['password_hash'].encode()):
             flash('Current password is incorrect.', 'danger')
             return redirect(url_for('admin.profile'))
-
         if action == 'username':
             new_username = request.form.get('new_username', '').strip().lower()
             if len(new_username) < 3:
                 flash('Username must be at least 3 characters.', 'danger')
                 return redirect(url_for('admin.profile'))
-            existing = query("SELECT id FROM users WHERE username=%s AND id!=%s", (new_username, session['user_id']), one=True)
-            if existing:
+            if query("SELECT id FROM users WHERE username=%s AND id!=%s", (new_username, session['user_id']), one=True):
                 flash('Username already taken.', 'danger')
                 return redirect(url_for('admin.profile'))
             execute("UPDATE users SET username=%s WHERE id=%s", (new_username, session['user_id']))
             session['user_name'] = new_username
-            flash('Username updated successfully.', 'success')
-
+            flash('Username updated.', 'success')
         elif action == 'password':
-            new_password = request.form.get('new_password', '')
+            new_pw  = request.form.get('new_password', '')
             confirm = request.form.get('confirm_password', '')
-            if len(new_password) < 6:
+            if len(new_pw) < 6:
                 flash('Password must be at least 6 characters.', 'danger')
                 return redirect(url_for('admin.profile'))
-            if new_password != confirm:
+            if new_pw != confirm:
                 flash('Passwords do not match.', 'danger')
                 return redirect(url_for('admin.profile'))
-            hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
-            execute("UPDATE users SET password_hash=%s WHERE id=%s", (hashed, session['user_id']))
-            flash('Password updated successfully.', 'success')
-
+            execute("UPDATE users SET password_hash=%s WHERE id=%s",
+                    (bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode(), session['user_id']))
+            flash('Password updated.', 'success')
         return redirect(url_for('admin.profile'))
-
     return render_template('admin/profile.html', admin=admin_user)
 
-# --- Settings ---
+
+# ── Settings ───────────────────────────────────────────────────────────────
 @admin.route('/settings', methods=['GET', 'POST'])
 @admin_required
 def settings():
     if request.method == 'POST':
         action = request.form.get('action')
-
         if action == 'shop':
-            fields = ['shop_name','shop_tagline','shop_address','shop_phone','shop_email','shop_hours_weekday','shop_hours_saturday','shop_hours_sunday','map_embed']
-            for f in fields:
+            for f in ['shop_name','shop_tagline','shop_address','shop_phone','shop_email',
+                      'shop_hours_weekday','shop_hours_saturday','shop_hours_sunday','map_embed']:
                 val = request.form.get(f, '').strip()
-                execute("INSERT INTO settings (key, value) VALUES (%s, %s) ON DUPLICATE KEY UPDATE value=%s", (f, val, val))
-            flash('Shop details updated successfully.', 'success')
-
+                execute("INSERT OR REPLACE INTO settings (key, value) VALUES (%s,%s)", (f, val))
+            flash('Shop details updated.', 'success')
         elif action == 'whatsapp':
             wa = request.form.get('whatsapp_number', '').strip().replace('+','').replace(' ','').replace('-','')
             if not wa.isdigit() or len(wa) < 10:
                 flash('Enter a valid WhatsApp number with country code.', 'danger')
             else:
-                execute("INSERT INTO settings (key, value) VALUES ('whatsapp_number', %s) ON DUPLICATE KEY UPDATE value=%s", (wa, wa))
+                execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('whatsapp_number',%s)", (wa,))
                 flash('WhatsApp number updated.', 'success')
-
         elif action == 'account':
             new_username = request.form.get('new_username', '').strip().lower()
             new_password = request.form.get('new_password', '')
             confirm      = request.form.get('confirm_password', '')
-            admin_user   = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
-
             if new_username and len(new_username) >= 3:
-                existing = query("SELECT id FROM users WHERE username=%s AND id!=%s", (new_username, session['user_id']), one=True)
-                if existing:
+                if query("SELECT id FROM users WHERE username=%s AND id!=%s", (new_username, session['user_id']), one=True):
                     flash('Username already taken.', 'danger')
                     return redirect(url_for('admin.settings'))
                 execute("UPDATE users SET username=%s WHERE id=%s", (new_username, session['user_id']))
                 session['username'] = new_username
                 flash('Username updated.', 'success')
-
             if new_password:
-                if len(new_password) < 6:
-                    flash('Password must be at least 6 characters.', 'danger')
+                if len(new_password) < 6 or new_password != confirm:
+                    flash('Password must be 6+ chars and match confirmation.', 'danger')
                     return redirect(url_for('admin.settings'))
-                if new_password != confirm:
-                    flash('Passwords do not match.', 'danger')
-                    return redirect(url_for('admin.settings'))
-                hashed = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
-                execute("UPDATE users SET password_hash=%s WHERE id=%s", (hashed, session['user_id']))
-                flash('Password updated successfully.', 'success')
-
+                execute("UPDATE users SET password_hash=%s WHERE id=%s",
+                        (bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode(), session['user_id']))
+                flash('Password updated.', 'success')
         return redirect(url_for('admin.settings'))
 
-    def get_setting(key, default=''):
-        row = query("SELECT value FROM settings WHERE key=%s", (key,), one=True)
+    def gs(key, default=''):
+        row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
         return row['value'] if row else default
 
-    s = {
-        'whatsapp_number':    get_setting('whatsapp_number'),
-        'shop_name':          get_setting('shop_name', 'New Shades'),
-        'shop_tagline':       get_setting('shop_tagline', 'Premium Salon & Studio'),
-        'shop_address':       get_setting('shop_address', '123 Salon Street, City'),
-        'shop_phone':         get_setting('shop_phone', ''),
-        'shop_email':         get_setting('shop_email', ''),
-        'shop_hours_weekday': get_setting('shop_hours_weekday', ''),
-        'shop_hours_saturday':get_setting('shop_hours_saturday', ''),
-        'shop_hours_sunday':  get_setting('shop_hours_sunday', ''),
-        'map_embed':          get_setting('map_embed', ''),
-    }
+    s = {k: gs(k, d) for k, d in [
+        ('whatsapp_number',''), ('shop_name','New Shades'), ('shop_tagline','Premium Salon & Studio'),
+        ('shop_address',''), ('shop_phone',''), ('shop_email',''),
+        ('shop_hours_weekday',''), ('shop_hours_saturday',''), ('shop_hours_sunday',''), ('map_embed','')
+    ]}
     admin_user = query("SELECT username, email FROM users WHERE id=%s", (session['user_id'],), one=True)
     return render_template('admin/settings.html', s=s, admin_user=admin_user)
 
-# --- Gallery ---
+
+# ── Gallery ────────────────────────────────────────────────────────────────
 @admin.route('/gallery')
 @admin_required
 def gallery():
@@ -268,22 +319,20 @@ def gallery():
 @admin.route('/gallery/upload', methods=['POST'])
 @admin_required
 def gallery_upload():
-    files = request.files.getlist('photos')
-    caption = request.form.get('caption', '').strip()
+    files      = request.files.getlist('photos')
+    caption    = request.form.get('caption', '').strip()
     upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
     os.makedirs(upload_dir, exist_ok=True)
     count = 0
     for f in files:
         if f and allowed_file(f.filename):
-            filename = secure_filename(f.filename)
-            # avoid overwrite
-            base, ext = os.path.splitext(filename)
             import time
-            filename = f"{base}_{int(time.time()*1000)}{ext}"
+            base, ext = os.path.splitext(secure_filename(f.filename))
+            filename  = f"{base}_{int(time.time()*1000)}{ext}"
             f.save(os.path.join(upload_dir, filename))
-            execute("INSERT INTO gallery (filename, caption) VALUES (%s, %s)", (filename, caption))
+            execute("INSERT INTO gallery (filename, caption) VALUES (%s,%s)", (filename, caption))
             count += 1
-    flash(f'{count} photo(s) uploaded successfully.', 'success')
+    flash(f'{count} photo(s) uploaded.', 'success')
     return redirect(url_for('admin.gallery'))
 
 @admin.route('/gallery/delete/<int:gid>', methods=['POST'])
@@ -291,10 +340,8 @@ def gallery_upload():
 def gallery_delete(gid):
     photo = query("SELECT filename FROM gallery WHERE id=%s", (gid,), one=True)
     if photo:
-        safe_name = secure_filename(photo['filename'])
         upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
-        path = os.path.join(upload_dir, safe_name)
-        # prevent path traversal — ensure file is inside gallery dir
+        path = os.path.join(upload_dir, secure_filename(photo['filename']))
         if os.path.abspath(path).startswith(os.path.abspath(upload_dir)) and os.path.exists(path):
             os.remove(path)
         execute("DELETE FROM gallery WHERE id=%s", (gid,))
