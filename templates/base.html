@@ -20,7 +20,9 @@
   <div class="container">
     <a class="navbar-brand" href="{{ url_for('index') }}">
       <div class="brand-wrap">
-        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="brand-logo"/>
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="brand-logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
         <div class="brand-text">
           <span class="brand-name">New Shades</span>
           <span class="brand-tagline">Premium Salon</span>

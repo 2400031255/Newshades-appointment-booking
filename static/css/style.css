@@ -88,10 +88,13 @@ a {
 .admin-brand-logo {
   width: 44px;
   height: 44px;
+  min-width: 44px;
   object-fit: cover;
   border-radius: 50%;
   border: 1px solid rgba(255,255,255,0.16);
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  display: block;
+  flex-shrink: 0;
 }
 
 .navbar {
@@ -258,6 +261,7 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .brand-text {
@@ -1995,6 +1999,7 @@ a {
   .brand-logo {
     width: 40px;
     height: 40px;
+    min-width: 40px;
   }
 }
 
@@ -3636,7 +3641,7 @@ a {
   .admin-card { padding: 16px; }
   .brand-name { font-size: 1rem; }
   .brand-tagline { font-size: 0.65rem; }
-  .brand-logo { width: 36px; height: 36px; }
+  .brand-logo { width: 36px; height: 36px; min-width: 36px; display: block; }
   .hero { padding-top: 100px; }
   .hero-title { font-size: 2rem !important; }
   .hero-subtitle { font-size: 0.9rem; }
