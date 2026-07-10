@@ -31,8 +31,9 @@ if (canvas) {
   let particles = [];
 
   function resizeCanvas() {
-    canvas.width  = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    const hero = canvas.parentElement;
+    canvas.width  = hero ? hero.offsetWidth : window.innerWidth;
+    canvas.height = hero ? hero.offsetHeight : window.innerHeight;
   }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
