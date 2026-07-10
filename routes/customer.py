@@ -94,8 +94,23 @@ def book():
     except Exception as e:
         current_app.logger.error('SMS error: %s', e)
 
-    flash('Appointment booked! We will confirm it shortly.', 'success')
-    return redirect(url_for('customer.appointments'))
+    # Email customer — booking received notification
+    try:
+        from email_service import send_booking_received_email
+        if user.get('email'):
+            send_booking_received_email(
+                user['email'], user['full_name'],
+                formatted_date, preferred_time, services_str
+            )
+    except Exception as e:
+        current_app.logger.error('Email error: %s', e)
+
+    return render_template('customer/confirm.html',
+        user=user,
+        service_names=service_names,
+        preferred_date=formatted_date,
+        preferred_time=preferred_time
+    )
 
 
 @customer.route('/ticket/<int:aid>')

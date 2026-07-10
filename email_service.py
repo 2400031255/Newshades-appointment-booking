@@ -67,6 +67,27 @@ def _base_html(content: str) -> str:
 </html>"""
 
 
+def send_booking_received_email(to_email: str, customer_name: str,
+                                 appt_date: str, appt_time: str, services: str) -> bool:
+    time_display = appt_time or 'Flexible'
+    n = html.escape(customer_name)
+    d = html.escape(str(appt_date))
+    t = html.escape(str(time_display))
+    s = html.escape(str(services))
+    content = f"""
+<p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
+<p>We've received your appointment request and it is currently <strong style="color:#f5c842;">pending review</strong>. You'll receive another email once it's confirmed.</p>
+<div class="detail-box">
+  <div class="detail-row"><span class="detail-label">📅 Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">✂️ Services</span><span class="detail-val">{s}</span></div>
+  <div class="detail-row"><span class="detail-label">📋 Status</span><span class="detail-val" style="color:#f5c842;">Pending Confirmation</span></div>
+</div>
+<p>Our team will review and confirm your booking shortly. Thank you for choosing New Shades! ✨</p>
+"""
+    return _send(to_email, 'Booking Received – New Shades', _base_html(content))
+
+
 def send_confirmation_email(to_email: str, customer_name: str,
                              appt_date: str, appt_time: str, services: str) -> bool:
     time_display = appt_time or 'Flexible'
