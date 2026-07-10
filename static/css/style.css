@@ -1200,6 +1200,14 @@ a {
   overflow: hidden;
 }
 
+@media (max-width: 991px) {
+  .hero {
+    min-height: auto;
+    padding: 100px 0 60px;
+    align-items: flex-start;
+  }
+}
+
 .hero::before,
 .hero::after {
   content: '';
@@ -3520,11 +3528,23 @@ a {
 .hero .row {
   overflow-x: hidden;
 }
+.hero-row {
+  min-height: calc(100vh - 128px);
+  padding: 20px 0 40px;
+}
 .hero-content {
   width: 100%;
   max-width: 100%;
 }
 @media (max-width: 991px) {
+  .hero {
+    min-height: auto;
+    padding: 100px 0 60px;
+  }
+  .hero-row {
+    min-height: auto;
+    padding: 0;
+  }
   .hero-content {
     text-align: center;
     padding: 0 8px;

@@ -21,8 +21,8 @@
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-  border: 1px solid rgba(201,168,76,0.25);
-  background: linear-gradient(160deg, #1a1510 0%, #0f0d12 100%);
+  border: 1px solid #c9a84c;
+  background: #1a1510;
   animation: ticketIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
 }
 @keyframes ticketIn {
@@ -87,7 +87,7 @@
 }
 
 /* ── Ticket body ── */
-.ticket-body { padding: 28px; }
+.ticket-body { padding: 28px; background: #1a1510; }
 
 .ticket-id-row {
   display: flex;
@@ -127,8 +127,8 @@
 .ticket-services-block {
   padding: 14px;
   border-radius: 12px;
-  background: rgba(201,168,76,0.06);
-  border: 1px solid rgba(201,168,76,0.14);
+  background: #221c10;
+  border: 1px solid #5a4a20;
   margin-bottom: 20px;
 }
 .ticket-services-label {
@@ -142,9 +142,9 @@
   display: inline-block;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.2);
-  color: var(--gold-2);
+  background: #2e2210;
+  border: 1px solid #7a5c1e;
+  color: #e8c96a;
   font-size: 0.8rem;
   font-weight: 600;
   margin: 3px 3px 3px 0;
@@ -169,8 +169,8 @@
   position: absolute;
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: #080608;
-  border: 1px solid rgba(201,168,76,0.2);
+  background: #0d0b10;
+  border: 1px solid #5a4a20;
 }
 .ticket-tear-circle-l { left: -12px; }
 .ticket-tear-circle-r { right: -12px; }
@@ -181,6 +181,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  background: #1a1510;
 }
 .ticket-qr-wrap {
   background: #fff;
@@ -203,6 +204,7 @@
   gap: 10px;
   padding: 0 28px 28px;
   flex-wrap: wrap;
+  background: #1a1510;
 }
 
 /* ── Print styles ── */
@@ -315,44 +317,67 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- QR Code library -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-// Generate QR code
 QRCode.toCanvas(document.getElementById('qrCanvas'), '{{ appt.ticket_id }}', {
-  width: 140,
-  margin: 1,
-  color: { dark: '#120e08', light: '#ffffff' }
+  width: 160,
+  margin: 2,
+  color: { dark: '#1a0f00', light: '#ffffff' }
 });
 
-// Save as image using html2canvas — high quality
 function downloadTicket() {
   const btn = document.querySelector('[onclick="downloadTicket()"]');
   if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...'; btn.disabled = true; }
 
-  const script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-  script.onload = function() {
-    const card = document.getElementById('ticketCard');
-    html2canvas(card, {
-      scale: 4,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#0f0d12',
-      logging: false,
-      imageTimeout: 0,
-      removeContainer: true
-    }).then(canvas => {
-      const a = document.createElement('a');
-      a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
-      a.href = canvas.toDataURL('image/png', 1.0);
-      a.click();
-      if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
-    }).catch(() => {
-      if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
-    });
-  };
-  document.head.appendChild(script);
+  // Build a clean off-screen ticket with fully opaque colors for crisp image
+  const src = document.getElementById('ticketCard');
+  const clone = src.cloneNode(true);
+
+  // Force all backgrounds to solid opaque equivalents
+  clone.style.cssText = [
+    'position:fixed', 'left:-9999px', 'top:0',
+    'width:520px', 'border-radius:24px', 'overflow:hidden',
+    'background:#1a1510', 'border:1px solid #c9a84c',
+    'box-shadow:none', 'font-family:DM Sans,Inter,sans-serif'
+  ].join(';');
+
+  // Fix semi-transparent elements inside clone
+  clone.querySelectorAll('*').forEach(el => {
+    const cs = window.getComputedStyle(el);
+    const bg = cs.backgroundColor;
+    if (bg && bg.includes('rgba')) {
+      // Convert rgba to solid by blending on #1a1510
+      el.style.backgroundColor = bg.replace(/rgba\((\d+),(\d+),(\d+),([\.\d]+)\)/, (_, r, g, b, a) => {
+        const base = [26, 21, 16];
+        const alpha = parseFloat(a);
+        const out = [r, g, b].map((c, i) => Math.round(parseFloat(c) * alpha + base[i] * (1 - alpha)));
+        return `rgb(${out[0]},${out[1]},${out[2]})`;
+      });
+    }
+  });
+
+  document.body.appendChild(clone);
+
+  html2canvas(clone, {
+    scale: 3,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#1a1510',
+    logging: false,
+    imageTimeout: 0,
+    removeContainer: false
+  }).then(canvas => {
+    document.body.removeChild(clone);
+    const a = document.createElement('a');
+    a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
+    a.href = canvas.toDataURL('image/png', 1.0);
+    a.click();
+    if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
+  }).catch(() => {
+    if (document.body.contains(clone)) document.body.removeChild(clone);
+    if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
+  });
 }
 </script>
 {% endblock %}
