@@ -69,11 +69,35 @@ def book():
         return redirect(url_for('customer.book_page'))
 
     services = query(
-        "SELECT service_name FROM services WHERE id IN ({})".format(','.join(['%s'] * len(service_ids))),
+        "SELECT service_name, price FROM services WHERE id IN ({})".format(','.join(['%s'] * len(service_ids))),
         tuple(service_ids)
     )
     service_names = [s['service_name'] for s in services]
     services_str  = ', '.join(service_names)
+    total_price   = sum(float(s['price'] or 0) for s in services)
+
+    # Auto-apply best matching active offer
+    today_str = date.today().isoformat()
+    active_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
+        (today_str, today_str)
+    )
+    applied_offer = None
+    for offer in active_offers:
+        if not offer.get('discount_percent'):
+            continue
+        app_svcs = (offer.get('applicable_services') or '').strip()
+        if not app_svcs:
+            applied_offer = offer
+            break
+        svc_list = [s.strip().lower() for s in app_svcs.split(',')]
+        if any(n.lower() in svc_list for n in service_names):
+            applied_offer = offer
+            break
+
+    discount_percent = float(applied_offer['discount_percent']) if applied_offer else 0.0
+    discount_amount  = round(total_price * discount_percent / 100, 2)
+    final_price      = round(total_price - discount_amount, 2)
 
     try:
         formatted_date = date.fromisoformat(preferred_date).strftime('%d %b %Y')
@@ -81,8 +105,9 @@ def book():
         formatted_date = preferred_date
 
     execute(
-        "INSERT INTO appointments (user_id, selected_services, preferred_date, preferred_time) VALUES (%s,%s,%s,%s)",
-        (session['user_id'], services_str, preferred_date, preferred_time)
+        "INSERT INTO appointments (user_id, selected_services, preferred_date, preferred_time, total_price, discount_percent, offer_applied) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+        (session['user_id'], services_str, preferred_date, preferred_time,
+         final_price, discount_percent, applied_offer['title'] if applied_offer else '')
     )
 
     # SMS admin

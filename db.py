@@ -37,6 +37,9 @@ def _init_sqlite_schema(conn):
             preferred_time TEXT,
             status TEXT DEFAULT 'Pending',
             ticket_id TEXT,
+            total_price REAL DEFAULT 0,
+            discount_percent REAL DEFAULT 0,
+            offer_applied TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
@@ -63,6 +66,8 @@ def _init_sqlite_schema(conn):
             title TEXT NOT NULL,
             description TEXT DEFAULT '',
             discount_text TEXT DEFAULT '',
+            discount_percent REAL DEFAULT 0,
+            applicable_services TEXT DEFAULT '',
             valid_from DATE,
             valid_until DATE,
             is_active INTEGER DEFAULT 1,
@@ -120,6 +125,10 @@ def _init_pg_schema(conn):
             preferred_date DATE NOT NULL,
             preferred_time VARCHAR(20),
             status VARCHAR(20) DEFAULT 'Pending',
+            ticket_id VARCHAR(20),
+            total_price NUMERIC(10,2) DEFAULT 0,
+            discount_percent NUMERIC(5,2) DEFAULT 0,
+            offer_applied VARCHAR(150) DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
@@ -146,6 +155,8 @@ def _init_pg_schema(conn):
             title VARCHAR(150) NOT NULL,
             description TEXT DEFAULT '',
             discount_text VARCHAR(100) DEFAULT '',
+            discount_percent NUMERIC(5,2) DEFAULT 0,
+            applicable_services TEXT DEFAULT '',
             valid_from DATE,
             valid_until DATE,
             is_active SMALLINT DEFAULT 1,

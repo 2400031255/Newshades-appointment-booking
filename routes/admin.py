@@ -354,31 +354,61 @@ def gallery_delete(gid):
 @admin_required
 def offers():
     all_offers = query("SELECT * FROM offers ORDER BY created_at DESC")
-    return render_template('admin/offers.html', offers=all_offers)
+    all_services = query("SELECT id, service_name, price FROM services WHERE is_active=1 ORDER BY category, service_name")
+    return render_template('admin/offers.html', offers=all_offers, all_services=all_services)
 
 @admin.route('/offers/save', methods=['POST'])
 @admin_required
 def save_offer():
-    oid          = request.form.get('offer_id', '').strip()
-    title        = request.form.get('title', '').strip()
-    description  = request.form.get('description', '').strip()
-    discount     = request.form.get('discount_text', '').strip()
-    valid_from   = request.form.get('valid_from') or None
-    valid_until  = request.form.get('valid_until') or None
-    is_active    = 1 if request.form.get('is_active') else 0
+    from datetime import datetime
+    oid                  = request.form.get('offer_id', '').strip()
+    title                = request.form.get('title', '').strip()
+    description          = request.form.get('description', '').strip()
+    discount_text        = request.form.get('discount_text', '').strip()
+    discount_percent     = request.form.get('discount_percent', '0').strip() or '0'
+    applicable_services  = ','.join(request.form.getlist('applicable_services'))
+    is_active            = 1 if request.form.get('is_active') else 0
+
+    # Parse dd/mm/yyyy → yyyy-mm-dd for DB storage
+    def parse_date(val):
+        val = (val or '').strip()
+        if not val:
+            return None
+        for fmt in ('%d/%m/%Y', '%Y-%m-%d'):
+            try:
+                return datetime.strptime(val, fmt).strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        return None
+
+    valid_from  = parse_date(request.form.get('valid_from'))
+    valid_until = parse_date(request.form.get('valid_until'))
+
     if not title:
         flash('Offer title is required.', 'danger')
         return redirect(url_for('admin.offers'))
+    try:
+        discount_percent = float(discount_percent)
+        if not (0 <= discount_percent <= 100):
+            raise ValueError
+    except ValueError:
+        flash('Discount % must be between 0 and 100.', 'danger')
+        return redirect(url_for('admin.offers'))
+
     if oid:
         execute(
-            "UPDATE offers SET title=%s, description=%s, discount_text=%s, valid_from=%s, valid_until=%s, is_active=%s WHERE id=%s",
-            (title, description, discount, valid_from, valid_until, is_active, int(oid))
+            "UPDATE offers SET title=%s, description=%s, discount_text=%s, discount_percent=%s, "
+            "applicable_services=%s, valid_from=%s, valid_until=%s, is_active=%s WHERE id=%s",
+            (title, description, discount_text, discount_percent,
+             applicable_services, valid_from, valid_until, is_active, int(oid))
         )
         flash('Offer updated.', 'success')
     else:
         execute(
-            "INSERT INTO offers (title, description, discount_text, valid_from, valid_until, is_active) VALUES (%s,%s,%s,%s,%s,%s)",
-            (title, description, discount, valid_from, valid_until, is_active)
+            "INSERT INTO offers (title, description, discount_text, discount_percent, "
+            "applicable_services, valid_from, valid_until, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+            (title, description, discount_text, discount_percent,
+             applicable_services, valid_from, valid_until, is_active)
         )
         flash('Offer created.', 'success')
     return redirect(url_for('admin.offers'))

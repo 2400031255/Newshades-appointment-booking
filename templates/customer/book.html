@@ -431,6 +431,16 @@
               <span class="sidebar-total-label">Total</span>
               <span class="sidebar-total-val" id="sidebarTotal">₹0</span>
             </div>
+            <div id="sidebarDiscountRow" style="display:none;margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.2);">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:0.78rem;color:#7ce0aa;"><i class="fas fa-tag me-1"></i><span id="sidebarOfferName"></span></span>
+                <span style="font-size:0.82rem;color:#7ce0aa;font-weight:700;">-₹<span id="sidebarDiscountAmt">0</span></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px solid rgba(37,211,102,0.15);">
+                <span style="font-size:0.75rem;color:rgba(240,230,211,0.5);">You pay</span>
+                <span style="font-size:1.1rem;color:var(--gold-2);font-weight:800;">₹<span id="sidebarFinalAmt">0</span></span>
+              </div>
+            </div>
           </div>
 
           <!-- Tips card -->
@@ -454,22 +464,41 @@
 
 {% block extra_js %}
 <script>
+/* ── Offers data for discount matching ── */
+const OFFERS = [
+  {% for o in today_offers %}
+  { title: {{ o.title|tojson }}, discount_percent: {{ (o.discount_percent or 0)|float }}, applicable_services: {{ (o.applicable_services or '')|tojson }} }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+function findMatchingOffer(selectedNames) {
+  for (const o of OFFERS) {
+    if (!o.discount_percent) continue;
+    if (!o.applicable_services) return o; // applies to all
+    const svcs = o.applicable_services.split(',').map(s => s.trim().toLowerCase());
+    if (selectedNames.some(n => svcs.includes(n.toLowerCase()))) return o;
+  }
+  return null;
+}
+
 /* ── Sidebar live update ── */
 function updateSidebar() {
   const items   = document.getElementById('sidebarItems');
   const empty   = document.getElementById('sidebarEmpty');
   const totalRow = document.getElementById('sidebarTotalRow');
   const totalEl  = document.getElementById('sidebarTotal');
+  const discountRow = document.getElementById('sidebarDiscountRow');
   if (!items) return;
 
   const selected = document.querySelectorAll('.svc-select-card.selected');
-  // remove old items (keep empty msg)
   items.querySelectorAll('.sidebar-selected-item').forEach(el => el.remove());
 
   let total = 0;
+  const selectedNames = [];
   selected.forEach(card => {
     const price = parseFloat(card.dataset.price || 0);
     total += price;
+    selectedNames.push(card.dataset.name);
     const row = document.createElement('div');
     row.className = 'sidebar-selected-item';
     row.innerHTML = `<span>${card.dataset.name}</span><span class="sidebar-item-price">₹${price.toFixed(0)}</span>`;
@@ -480,6 +509,19 @@ function updateSidebar() {
   if (empty) empty.style.display = hasItems ? 'none' : '';
   if (totalRow) totalRow.style.cssText = hasItems ? '' : 'display:none!important;';
   if (totalEl)  totalEl.textContent = '₹' + total.toFixed(0);
+
+  // offer discount
+  const offer = hasItems ? findMatchingOffer(selectedNames) : null;
+  if (offer && discountRow) {
+    const discAmt = (total * offer.discount_percent / 100);
+    const finalAmt = total - discAmt;
+    document.getElementById('sidebarOfferName').textContent = offer.title + ' (' + offer.discount_percent + '% off)';
+    document.getElementById('sidebarDiscountAmt').textContent = discAmt.toFixed(0);
+    document.getElementById('sidebarFinalAmt').textContent = finalAmt.toFixed(0);
+    discountRow.style.display = '';
+  } else if (discountRow) {
+    discountRow.style.display = 'none';
+  }
 
   /* progress bar */
   const bp1 = document.getElementById('bp1');

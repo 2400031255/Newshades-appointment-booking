@@ -488,8 +488,26 @@ textarea.of-input { resize: vertical; min-height: 80px; }
         </div>
 
         <div class="of-field">
-          <label class="of-label">Discount / Highlight</label>
+          <label class="of-label">Discount Label</label>
           <input type="text" name="discount_text" id="offerDiscount" class="of-input" placeholder="e.g. 20% OFF, Free Head Massage">
+        </div>
+
+        <div class="of-field">
+          <label class="of-label">Discount % <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(auto-applied to bill)</span></label>
+          <input type="number" name="discount_percent" id="offerDiscountPct" class="of-input" placeholder="e.g. 20" min="0" max="100" step="0.01">
+        </div>
+
+        <div class="of-field">
+          <label class="of-label">Applicable Services <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(leave blank = all)</span></label>
+          <div style="max-height:160px;overflow-y:auto;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:10px 12px;display:flex;flex-direction:column;gap:6px;" id="serviceCheckboxList">
+            {% for svc in all_services %}
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.83rem;color:rgba(240,230,211,0.75);">
+              <input type="checkbox" name="applicable_services" value="{{ svc.service_name }}" class="svc-offer-cb" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
+              <span>{{ svc.service_name }}</span>
+              <span style="margin-left:auto;color:var(--gold-2);font-size:0.75rem;">₹{{ "%.0f"|format(svc.price) }}</span>
+            </label>
+            {% endfor %}
+          </div>
         </div>
 
         <div class="of-field">
@@ -500,14 +518,14 @@ textarea.of-input { resize: vertical; min-height: 80px; }
         <div class="row g-2 mb-0">
           <div class="col-6">
             <div class="of-field">
-              <label class="of-label">Valid From</label>
-              <input type="date" name="valid_from" id="offerFrom" class="of-input">
+              <label class="of-label">Valid From (dd/mm/yyyy)</label>
+              <input type="text" name="valid_from" id="offerFrom" class="of-input" placeholder="01/06/2025">
             </div>
           </div>
           <div class="col-6">
             <div class="of-field">
-              <label class="of-label">Valid Until</label>
-              <input type="date" name="valid_until" id="offerUntil" class="of-input">
+              <label class="of-label">Valid Until (dd/mm/yyyy)</label>
+              <input type="text" name="valid_until" id="offerUntil" class="of-input" placeholder="30/06/2025">
             </div>
           </div>
         </div>
@@ -587,7 +605,7 @@ textarea.of-input { resize: vertical; min-height: 80px; }
               </div>
             </div>
             <div class="offer-actions">
-              <button onclick="editOffer({{ o.id }}, {{ o.title|tojson }}, {{ o.description|tojson }}, {{ o.discount_text|tojson }}, '{{ o.valid_from or '' }}', '{{ o.valid_until or '' }}', {{ o.is_active }})"
+              <button onclick="editOffer({{ o.id }}, {{ o.title|tojson }}, {{ (o.description or '')|tojson }}, {{ (o.discount_text or '')|tojson }}, {{ (o.discount_percent or 0)|tojson }}, {{ (o.applicable_services or '')|tojson }}, '{{ o.valid_from or '' }}', '{{ o.valid_until or '' }}', {{ o.is_active }})"
                       class="offer-action-btn" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
@@ -616,18 +634,29 @@ textarea.of-input { resize: vertical; min-height: 80px; }
 
 {% block extra_js %}
 <script>
-function editOffer(id, title, desc, discount, from, until, active) {
+function toDisplayDate(iso) {
+  if (!iso) return '';
+  const p = iso.toString().split('-');
+  if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+  return iso;
+}
+function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until, active) {
   document.getElementById('offerId').value = id;
   document.getElementById('offerTitle').value = title;
   document.getElementById('offerDesc').value = desc;
   document.getElementById('offerDiscount').value = discount;
-  document.getElementById('offerFrom').value = from;
-  document.getElementById('offerUntil').value = until;
+  document.getElementById('offerDiscountPct').value = discountPct || '';
+  document.getElementById('offerFrom').value = toDisplayDate(from);
+  document.getElementById('offerUntil').value = toDisplayDate(until);
   document.getElementById('offerActive').checked = active == 1;
+  // set service checkboxes
+  const selected = appSvcs ? appSvcs.split(',').map(s => s.trim()) : [];
+  document.querySelectorAll('.svc-offer-cb').forEach(cb => {
+    cb.checked = selected.includes(cb.value);
+  });
   document.getElementById('formCardTitle').textContent = 'Edit Offer';
   document.getElementById('formBtnText').textContent = 'Update Offer';
   document.getElementById('offerFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  // pulse the form card
   const card = document.getElementById('offerFormCard');
   card.style.borderColor = 'rgba(201,168,76,0.5)';
   card.style.boxShadow = '0 0 0 2px rgba(201,168,76,0.15), 0 24px 60px rgba(0,0,0,0.3)';
@@ -636,6 +665,7 @@ function editOffer(id, title, desc, discount, from, until, active) {
 function resetForm() {
   document.getElementById('offerForm').reset();
   document.getElementById('offerId').value = '';
+  document.querySelectorAll('.svc-offer-cb').forEach(cb => cb.checked = false);
   document.getElementById('formCardTitle').textContent = 'New Offer';
   document.getElementById('formBtnText').textContent = 'Create Offer';
   document.getElementById('offerActive').checked = true;
