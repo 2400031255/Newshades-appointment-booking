@@ -58,6 +58,16 @@ def _init_sqlite_schema(conn):
             caption TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS offers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            discount_text TEXT DEFAULT '',
+            valid_from DATE,
+            valid_until DATE,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     conn.execute(
         "INSERT OR IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (?,?,?,?,?,?)",
@@ -129,6 +139,16 @@ def _init_pg_schema(conn):
             id SERIAL PRIMARY KEY,
             filename VARCHAR(255) NOT NULL,
             caption VARCHAR(255) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS offers (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            description TEXT DEFAULT '',
+            discount_text VARCHAR(100) DEFAULT '',
+            valid_from DATE,
+            valid_until DATE,
+            is_active SMALLINT DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)

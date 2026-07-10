@@ -347,3 +347,45 @@ def gallery_delete(gid):
         execute("DELETE FROM gallery WHERE id=%s", (gid,))
         flash('Photo deleted.', 'success')
     return redirect(url_for('admin.gallery'))
+
+
+# ── Offers ───────────────────────────────────────────────────────────────
+@admin.route('/offers')
+@admin_required
+def offers():
+    all_offers = query("SELECT * FROM offers ORDER BY created_at DESC")
+    return render_template('admin/offers.html', offers=all_offers)
+
+@admin.route('/offers/save', methods=['POST'])
+@admin_required
+def save_offer():
+    oid          = request.form.get('offer_id', '').strip()
+    title        = request.form.get('title', '').strip()
+    description  = request.form.get('description', '').strip()
+    discount     = request.form.get('discount_text', '').strip()
+    valid_from   = request.form.get('valid_from') or None
+    valid_until  = request.form.get('valid_until') or None
+    is_active    = 1 if request.form.get('is_active') else 0
+    if not title:
+        flash('Offer title is required.', 'danger')
+        return redirect(url_for('admin.offers'))
+    if oid:
+        execute(
+            "UPDATE offers SET title=%s, description=%s, discount_text=%s, valid_from=%s, valid_until=%s, is_active=%s WHERE id=%s",
+            (title, description, discount, valid_from, valid_until, is_active, int(oid))
+        )
+        flash('Offer updated.', 'success')
+    else:
+        execute(
+            "INSERT INTO offers (title, description, discount_text, valid_from, valid_until, is_active) VALUES (%s,%s,%s,%s,%s,%s)",
+            (title, description, discount, valid_from, valid_until, is_active)
+        )
+        flash('Offer created.', 'success')
+    return redirect(url_for('admin.offers'))
+
+@admin.route('/offers/delete/<int:oid>', methods=['POST'])
+@admin_required
+def delete_offer(oid):
+    execute("DELETE FROM offers WHERE id=%s", (oid,))
+    flash('Offer deleted.', 'success')
+    return redirect(url_for('admin.offers'))

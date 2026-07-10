@@ -32,8 +32,20 @@ def create_app():
                 pending_appts = r['c'] if r else 0
             except Exception as e:
                 current_app.logger.warning('pending_appts query failed: %s', e)
+        today_offers = []
+        try:
+            from datetime import date
+            today = date.today().isoformat()
+            today_offers = query(
+                "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
+                (today, today)
+            )
+        except Exception as e:
+            current_app.logger.warning('today_offers query failed: %s', e)
         return dict(
             pending_appts=pending_appts,
+            today_offers=today_offers,
+            now_date=__import__('datetime').date.today().isoformat(),
             shop={
                 'name':           get_setting('shop_name', 'New Shades'),
                 'phone':          get_setting('shop_phone', ''),

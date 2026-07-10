@@ -1,0 +1,644 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Offers – New Shades Admin{% endblock %}
+{% block page_title %}Manage Offers{% endblock %}
+
+{% block content %}
+
+<style>
+/* ── Offers page ── */
+.offers-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(255,255,255,0.03) 60%, rgba(201,168,76,0.06) 100%);
+  border: 1px solid rgba(201,168,76,0.22);
+  position: relative;
+  overflow: hidden;
+}
+.offers-page-header::before {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.15), transparent 65%);
+  pointer-events: none;
+}
+.offers-page-header::after {
+  content: '';
+  position: absolute;
+  left: -40px; bottom: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.08), transparent 65%);
+  pointer-events: none;
+}
+.offers-header-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-size: 1.4rem;
+  box-shadow: 0 12px 32px rgba(201,168,76,0.35);
+  flex-shrink: 0;
+  animation: iconPulse 3s ease-in-out infinite;
+}
+@keyframes iconPulse {
+  0%,100% { box-shadow: 0 12px 32px rgba(201,168,76,0.35); }
+  50%      { box-shadow: 0 12px 48px rgba(201,168,76,0.6); }
+}
+.offers-header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 4px;
+}
+.offers-header-sub {
+  color: rgba(240,230,211,0.6);
+  font-size: 0.88rem;
+  margin: 0;
+}
+.offers-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.25);
+  color: var(--gold-2);
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+/* ── Form card ── */
+.offer-form-card {
+  border-radius: 24px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.18);
+  position: sticky;
+  top: 90px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.offer-form-card:focus-within {
+  border-color: rgba(201,168,76,0.4);
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.15), 0 24px 60px rgba(0,0,0,0.3);
+}
+.offer-form-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.offer-form-icon {
+  width: 46px; height: 46px;
+  border-radius: 13px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.22);
+  color: var(--gold-2);
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.offer-form-card:focus-within .offer-form-icon {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  border-color: transparent;
+}
+.offer-form-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 700;
+  margin: 0 0 3px;
+}
+.offer-form-sub {
+  color: rgba(240,230,211,0.5);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+/* ── Input styling ── */
+.of-field { margin-bottom: 18px; }
+.of-label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(240,230,211,0.5);
+  margin-bottom: 7px;
+  font-weight: 600;
+}
+.of-input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.88rem;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  outline: none;
+}
+.of-input:focus {
+  border-color: rgba(201,168,76,0.5);
+  background: rgba(201,168,76,0.06);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.of-input::placeholder { color: rgba(255,255,255,0.2); }
+textarea.of-input { resize: vertical; min-height: 80px; }
+
+/* ── Toggle switch ── */
+.of-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  margin-bottom: 20px;
+}
+.of-toggle-label { color: rgba(240,230,211,0.7); font-size: 0.88rem; font-weight: 600; }
+.of-toggle-switch {
+  position: relative;
+  width: 46px; height: 26px;
+}
+.of-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.of-toggle-slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.of-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  left: 3px; top: 3px;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.of-toggle-switch input:checked + .of-toggle-slider {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+}
+.of-toggle-switch input:checked + .of-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* ── Submit btn ── */
+.of-submit-row { display: flex; gap: 10px; }
+.of-btn-submit {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.of-btn-submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.of-btn-submit:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(201,168,76,0.4); }
+.of-btn-submit:hover::before { opacity: 1; }
+.of-btn-reset {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(240,230,211,0.5);
+  cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 0.9rem;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+.of-btn-reset:hover { background: rgba(255,99,99,0.1); border-color: rgba(255,99,99,0.3); color: #ff6b6b; }
+
+/* ── Offers list ── */
+.offers-list-card {
+  border-radius: 24px;
+  padding: 28px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.14);
+}
+.offers-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.offers-list-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ── Offer item card ── */
+.offer-item {
+  position: relative;
+  padding: 20px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(201,168,76,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.15);
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  animation: offerItemIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes offerItemIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.offer-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.offer-item:hover {
+  transform: translateY(-3px);
+  border-color: rgba(201,168,76,0.35);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+.offer-item:hover::before { opacity: 1; }
+.offer-item.is-expired { opacity: 0.45; filter: grayscale(0.3); }
+
+.offer-item-glow {
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.offer-item:hover .offer-item-glow { opacity: 1.5; }
+
+.offer-item-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.2);
+  color: var(--gold-2);
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+.offer-item:hover .offer-item-icon {
+  background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.08));
+  border-color: rgba(201,168,76,0.4);
+}
+
+.offer-item-name {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.95rem;
+  margin-bottom: 3px;
+}
+.offer-item-desc {
+  color: rgba(240,230,211,0.55);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.offer-discount-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(232,201,106,0.08));
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold-2);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.offer-status-live {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.25);
+  color: #7ce0aa; font-size: 0.7rem; font-weight: 700;
+}
+.offer-status-live::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #25d366;
+  animation: livePulse 1.5s ease-in-out infinite;
+}
+@keyframes livePulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+.offer-status-inactive {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,99,99,0.08); border: 1px solid rgba(255,99,99,0.2);
+  color: #ff8a8a; font-size: 0.7rem; font-weight: 700;
+}
+.offer-status-expired {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.2);
+  color: #ffc107; font-size: 0.7rem; font-weight: 700;
+}
+
+.offer-date-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.offer-date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: rgba(240,230,211,0.45);
+}
+
+.offer-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.offer-action-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: rgba(240,230,211,0.5);
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.25s ease;
+}
+.offer-action-btn:hover { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.3); color: var(--gold-2); transform: scale(1.1); }
+.offer-action-del:hover { background: rgba(255,99,99,0.1); border-color: rgba(255,99,99,0.3); color: #ff6b6b; }
+
+/* ── Empty state ── */
+.offers-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+.offers-empty-icon {
+  width: 80px; height: 80px;
+  border-radius: 24px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.15);
+  color: rgba(201,168,76,0.4);
+  font-size: 2rem;
+  margin: 0 auto 20px;
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.offers-empty-title { color: rgba(240,230,211,0.6); font-size: 1rem; font-weight: 600; margin-bottom: 6px; }
+.offers-empty-sub   { color: rgba(240,230,211,0.35); font-size: 0.82rem; }
+
+/* ── Shimmer on hover ── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.of-btn-submit:active { transform: scale(0.97); }
+</style>
+
+<!-- Page Header -->
+<div class="offers-page-header">
+  <div class="d-flex align-items-center gap-3">
+    <div class="offers-header-icon"><i class="fas fa-fire"></i></div>
+    <div>
+      <h2 class="offers-header-title">Manage Offers</h2>
+      <p class="offers-header-sub">Create & manage promotions shown to customers</p>
+    </div>
+  </div>
+  <div class="d-flex gap-3 flex-wrap">
+    {% set active_count = offers | selectattr('is_active', 'equalto', 1) | list | length %}
+    <div class="offers-stat-pill">
+      <i class="fas fa-bolt"></i> {{ active_count }} Active
+    </div>
+    <div class="offers-stat-pill" style="color:rgba(240,230,211,0.5);border-color:rgba(255,255,255,0.1);">
+      <i class="fas fa-layer-group"></i> {{ offers|length }} Total
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Form -->
+  <div class="col-lg-4">
+    <div class="offer-form-card" id="offerFormCard">
+      <div class="offer-form-head">
+        <div class="offer-form-icon"><i class="fas fa-tag"></i></div>
+        <div>
+          <div class="offer-form-title" id="formCardTitle">New Offer</div>
+          <div class="offer-form-sub">Create a promotion for customers</div>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('admin.save_offer') }}" id="offerForm">
+        <input type="hidden" name="offer_id" id="offerId" value="">
+
+        <div class="of-field">
+          <label class="of-label">Offer Title *</label>
+          <input type="text" name="title" id="offerTitle" class="of-input" placeholder="e.g. Weekend Special" required>
+        </div>
+
+        <div class="of-field">
+          <label class="of-label">Discount / Highlight</label>
+          <input type="text" name="discount_text" id="offerDiscount" class="of-input" placeholder="e.g. 20% OFF, Free Head Massage">
+        </div>
+
+        <div class="of-field">
+          <label class="of-label">Description</label>
+          <textarea name="description" id="offerDesc" class="of-input" rows="3" placeholder="Details about the offer..."></textarea>
+        </div>
+
+        <div class="row g-2 mb-0">
+          <div class="col-6">
+            <div class="of-field">
+              <label class="of-label">Valid From</label>
+              <input type="date" name="valid_from" id="offerFrom" class="of-input">
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="of-field">
+              <label class="of-label">Valid Until</label>
+              <input type="date" name="valid_until" id="offerUntil" class="of-input">
+            </div>
+          </div>
+        </div>
+
+        <div class="of-toggle-row">
+          <span class="of-toggle-label"><i class="fas fa-eye me-2" style="color:var(--gold);opacity:0.7;"></i>Show to customers</span>
+          <label class="of-toggle-switch">
+            <input type="checkbox" name="is_active" id="offerActive" checked>
+            <span class="of-toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="of-submit-row">
+          <button type="submit" class="of-btn-submit">
+            <i class="fas fa-save"></i>
+            <span id="formBtnText">Create Offer</span>
+          </button>
+          <button type="button" onclick="resetForm()" class="of-btn-reset" title="Reset">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="col-lg-8">
+    <div class="offers-list-card">
+      <div class="offers-list-head">
+        <h6 class="offers-list-title">
+          All Offers
+          <span style="color:var(--gold);font-size:0.9rem;margin-left:6px;">({{ offers|length }})</span>
+        </h6>
+        {% if active_count > 0 %}
+        <div class="offer-status-live">{{ active_count }} Live Now</div>
+        {% endif %}
+      </div>
+
+      {% if offers %}
+      <div class="d-flex flex-column gap-3" id="offersList">
+        {% for o in offers %}
+        {% set today = now_date %}
+        {% set is_valid = (not o.valid_from or o.valid_from <= today) and (not o.valid_until or o.valid_until >= today) %}
+        <div class="offer-item {{ 'is-expired' if not is_valid or not o.is_active }}" style="animation-delay:{{ loop.index0 * 0.07 }}s">
+          <div class="offer-item-glow"></div>
+          <div class="d-flex align-items-start justify-content-between gap-3">
+            <div class="d-flex align-items-start gap-3 flex-1 min-w-0">
+              <div class="offer-item-icon"><i class="fas fa-tag"></i></div>
+              <div class="flex-1 min-w-0">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                  <span class="offer-item-name">{{ o.title }}</span>
+                  {% if o.discount_text %}
+                  <span class="offer-discount-tag"><i class="fas fa-bolt" style="font-size:0.65rem;"></i>{{ o.discount_text }}</span>
+                  {% endif %}
+                  {% if o.is_active and is_valid %}
+                  <span class="offer-status-live">Live</span>
+                  {% elif not o.is_active %}
+                  <span class="offer-status-inactive"><i class="fas fa-eye-slash" style="font-size:0.65rem;"></i>Inactive</span>
+                  {% else %}
+                  <span class="offer-status-expired"><i class="fas fa-clock" style="font-size:0.65rem;"></i>Expired</span>
+                  {% endif %}
+                </div>
+                {% if o.description %}
+                <p class="offer-item-desc">{{ o.description }}</p>
+                {% endif %}
+                <div class="offer-date-row">
+                  {% if o.valid_from %}
+                  <span class="offer-date-chip"><i class="fas fa-calendar-alt"></i>From {{ o.valid_from }}</span>
+                  {% endif %}
+                  {% if o.valid_until %}
+                  <span class="offer-date-chip"><i class="fas fa-calendar-check"></i>Until {{ o.valid_until }}</span>
+                  {% endif %}
+                  {% if not o.valid_from and not o.valid_until %}
+                  <span class="offer-date-chip"><i class="fas fa-infinity"></i>No expiry</span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="offer-actions">
+              <button onclick="editOffer({{ o.id }}, {{ o.title|tojson }}, {{ o.description|tojson }}, {{ o.discount_text|tojson }}, '{{ o.valid_from or '' }}', '{{ o.valid_until or '' }}', {{ o.is_active }})"
+                      class="offer-action-btn" title="Edit">
+                <i class="fas fa-edit"></i>
+              </button>
+              <form method="POST" action="{{ url_for('admin.delete_offer', oid=o.id) }}" onsubmit="return confirm('Delete this offer?')" style="margin:0;">
+                <button type="submit" class="offer-action-btn offer-action-del" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="offers-empty">
+        <div class="offers-empty-icon"><i class="fas fa-tag"></i></div>
+        <div class="offers-empty-title">No offers yet</div>
+        <div class="offers-empty-sub">Create your first promotion to attract customers</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editOffer(id, title, desc, discount, from, until, active) {
+  document.getElementById('offerId').value = id;
+  document.getElementById('offerTitle').value = title;
+  document.getElementById('offerDesc').value = desc;
+  document.getElementById('offerDiscount').value = discount;
+  document.getElementById('offerFrom').value = from;
+  document.getElementById('offerUntil').value = until;
+  document.getElementById('offerActive').checked = active == 1;
+  document.getElementById('formCardTitle').textContent = 'Edit Offer';
+  document.getElementById('formBtnText').textContent = 'Update Offer';
+  document.getElementById('offerFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // pulse the form card
+  const card = document.getElementById('offerFormCard');
+  card.style.borderColor = 'rgba(201,168,76,0.5)';
+  card.style.boxShadow = '0 0 0 2px rgba(201,168,76,0.15), 0 24px 60px rgba(0,0,0,0.3)';
+  setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 2000);
+}
+function resetForm() {
+  document.getElementById('offerForm').reset();
+  document.getElementById('offerId').value = '';
+  document.getElementById('formCardTitle').textContent = 'New Offer';
+  document.getElementById('formBtnText').textContent = 'Create Offer';
+  document.getElementById('offerActive').checked = true;
+}
+</script>
+{% endblock %}

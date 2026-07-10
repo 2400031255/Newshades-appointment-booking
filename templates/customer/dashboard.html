@@ -223,6 +223,171 @@
   gap: 10px;
 }
 .dash-card-title i { color: var(--gold); }
+
+/* ── Offers strip ── */
+.offers-strip {
+  position: relative;
+  border-radius: 24px;
+  padding: 26px 28px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(255,255,255,0.03) 60%, rgba(201,168,76,0.05) 100%);
+  border: 1px solid rgba(201,168,76,0.28);
+  overflow: hidden;
+}
+.offers-strip::before {
+  content: '';
+  position: absolute;
+  right: -80px; top: -80px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 65%);
+  pointer-events: none;
+  animation: offerOrb 6s ease-in-out infinite;
+}
+@keyframes offerOrb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(-20px,10px) scale(1.1); }
+}
+.offers-strip-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  color: var(--gold-2);
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.offers-fire-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, rgba(255,140,0,0.2), rgba(201,168,76,0.1));
+  border: 1px solid rgba(255,140,0,0.25);
+  color: #ff8c00;
+  font-size: 0.85rem;
+  animation: firePulse 2s ease-in-out infinite;
+}
+@keyframes firePulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,140,0,0.3); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,140,0,0); }
+}
+.offers-count-badge {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.offers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
+}
+.offer-card {
+  position: relative;
+  padding: 20px 18px;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(201,168,76,0.09), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.22);
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: offerCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes offerCardIn {
+  from { opacity:0; transform: translateY(16px) scale(0.95); }
+  to   { opacity:1; transform: translateY(0) scale(1); }
+}
+.offer-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,168,76,0.1);
+}
+.offer-card-glow {
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 70%);
+  pointer-events: none;
+  transition: transform 0.4s ease;
+}
+.offer-card:hover .offer-card-glow { transform: scale(1.3); }
+.offer-card-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
+  background-size: 200% 100%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.offer-card:hover .offer-card-shine {
+  opacity: 1;
+  animation: cardShine 0.6s ease forwards;
+}
+@keyframes cardShine {
+  from { background-position: -100% center; }
+  to   { background-position: 200% center; }
+}
+.offer-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 14px rgba(201,168,76,0.35);
+}
+.offer-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 7px;
+  line-height: 1.3;
+}
+.offer-desc {
+  color: rgba(240,230,211,0.62);
+  font-size: 0.8rem;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.offer-expiry {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.offer-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--gold-2);
+  transition: all 0.25s ease;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.2);
+}
+.offer-cta:hover {
+  background: rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.4);
+  color: #fff;
+  transform: translateX(2px);
+}
 </style>
 {% endblock %}
 
@@ -241,6 +406,38 @@
         <div class="welcome-avatar">{{ user.full_name[0].upper() }}</div>
       </div>
     </div>
+
+    <!-- Today's Offers -->
+    {% if today_offers %}
+    <div class="offers-strip reveal-up mb-4">
+      <div class="offers-strip-head">
+        <div class="offers-fire-icon"><i class="fas fa-fire"></i></div>
+        Today's Offers
+        <span class="offers-count-badge">{{ today_offers|length }}</span>
+      </div>
+      <div class="offers-grid">
+        {% for offer in today_offers %}
+        <div class="offer-card" style="animation-delay:{{ loop.index0 * 0.1 }}s">
+          <div class="offer-card-glow"></div>
+          <div class="offer-card-shine"></div>
+          {% if offer.discount_text %}
+          <div class="offer-pill"><i class="fas fa-bolt" style="font-size:0.6rem;"></i>{{ offer.discount_text }}</div>
+          {% endif %}
+          <div class="offer-title">{{ offer.title }}</div>
+          {% if offer.description %}
+          <div class="offer-desc">{{ offer.description }}</div>
+          {% endif %}
+          {% if offer.valid_until %}
+          <div class="offer-expiry"><i class="fas fa-clock"></i>Valid until {{ offer.valid_until }}</div>
+          {% endif %}
+          <a href="{{ url_for('customer.book_page') }}" class="offer-cta">
+            Book Now <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Stats -->
     <div class="row g-3 mb-4">

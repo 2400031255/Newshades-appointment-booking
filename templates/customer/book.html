@@ -149,6 +149,97 @@
   text-align: center;
   padding: 16px 0;
 }
+
+/* ── Offers banner on book page ── */
+.offers-book-banner {
+  position: relative;
+  padding: 22px 26px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(255,255,255,0.02) 60%, rgba(201,168,76,0.05) 100%);
+  border: 1px solid rgba(201,168,76,0.28);
+  overflow: hidden;
+}
+.offers-book-banner::before {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 65%);
+  pointer-events: none;
+  animation: bannerOrb 5s ease-in-out infinite;
+}
+@keyframes bannerOrb {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.15) translate(-10px, 5px); }
+}
+.offers-book-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.offers-book-fire {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, rgba(255,140,0,0.2), rgba(201,168,76,0.1));
+  border: 1px solid rgba(255,140,0,0.25);
+  color: #ff8c00;
+  font-size: 0.8rem;
+  animation: firePulse2 2s ease-in-out infinite;
+}
+@keyframes firePulse2 {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,140,0,0.3); }
+  50%      { box-shadow: 0 0 0 5px rgba(255,140,0,0); }
+}
+.offers-book-label {
+  font-weight: 800;
+  color: var(--gold-2);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.offer-book-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+.offer-book-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 14px;
+  background: rgba(201,168,76,0.07);
+  border: 1px solid rgba(201,168,76,0.2);
+  flex-wrap: wrap;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  animation: chipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes chipIn {
+  from { opacity:0; transform: scale(0.85) translateY(8px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.offer-book-chip:hover {
+  background: rgba(201,168,76,0.12);
+  border-color: rgba(201,168,76,0.35);
+  transform: translateY(-2px);
+}
+.offer-pill-sm {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-size: 0.68rem;
+  font-weight: 900;
+  box-shadow: 0 3px 10px rgba(201,168,76,0.3);
+}
+.offer-chip-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.offer-chip-desc {
+  color: rgba(240,230,211,0.55);
+  font-size: 0.76rem;
+}
 </style>
 {% endblock %}
 
@@ -171,6 +262,26 @@
         </a>
       </div>
     </div>
+
+    <!-- Offers banner -->
+    {% if today_offers %}
+    <div class="offers-book-banner reveal-up mb-4" style="animation-delay:0.08s">
+      <div class="offers-book-head">
+        <div class="offers-book-fire"><i class="fas fa-fire"></i></div>
+        <span class="offers-book-label">Today's Offers</span>
+        <span style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;border-radius:999px;padding:2px 10px;font-size:0.68rem;font-weight:900;">{{ today_offers|length }}</span>
+      </div>
+      <div class="offer-book-chips">
+        {% for offer in today_offers %}
+        <div class="offer-book-chip" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+          {% if offer.discount_text %}<span class="offer-pill-sm">{{ offer.discount_text }}</span>{% endif %}
+          <span class="offer-chip-title">{{ offer.title }}</span>
+          {% if offer.description %}<span class="offer-chip-desc">— {{ offer.description }}</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
 
     <!-- Progress -->
     <div class="booking-progress reveal-up" id="bookingProgress" style="animation-delay:0.1s">
