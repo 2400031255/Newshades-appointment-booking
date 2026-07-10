@@ -6,14 +6,14 @@ import time
 
 auth = Blueprint('auth', __name__)
 
-# Simple in-memory rate limiter: max 5 attempts per IP per 5 minutes
+# Simple in-memory rate limiter: max 10 attempts per IP per 5 minutes
 _login_attempts = defaultdict(list)
 
 def _is_rate_limited(ip):
     now = time.time()
     attempts = [t for t in _login_attempts[ip] if now - t < 300]
     _login_attempts[ip] = attempts
-    if len(attempts) >= 5:
+    if len(attempts) >= 10:
         return True
     _login_attempts[ip].append(now)
     return False

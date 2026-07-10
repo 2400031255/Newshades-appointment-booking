@@ -3513,6 +3513,31 @@ a {
    FULL RESPONSIVE — Phone / Tablet / iPad / Laptop
    ═══════════════════════════════════════════════ */
 
+/* Hero mobile fix — prevent overflow */
+.hero {
+  overflow-x: hidden;
+}
+.hero .row {
+  overflow-x: hidden;
+}
+.hero-content {
+  width: 100%;
+  max-width: 100%;
+}
+@media (max-width: 991px) {
+  .hero-content {
+    text-align: center;
+    padding: 0 8px;
+  }
+  .hero-badge { margin-left: auto; margin-right: auto; }
+  .hero-actions { justify-content: center; flex-wrap: wrap; }
+  .hero-stats { justify-content: center; }
+  .hero-subtitle { margin-left: auto; margin-right: auto; }
+  .hero-title { font-size: clamp(1.9rem, 6vw, 3rem) !important; }
+  .col-lg-6.hero-content { order: 1; }
+  .col-lg-6.d-none { order: 2; }
+}
+
 /* Sidebar overlay for mobile */
 .sidebar-overlay {
   display: none;

@@ -320,20 +320,36 @@
 <script>
 // Generate QR code
 QRCode.toCanvas(document.getElementById('qrCanvas'), '{{ appt.ticket_id }}', {
-  width: 110,
+  width: 140,
+  margin: 1,
   color: { dark: '#120e08', light: '#ffffff' }
 });
 
-// Save as image using html2canvas
+// Save as image using html2canvas — high quality
 function downloadTicket() {
+  const btn = document.querySelector('[onclick="downloadTicket()"]');
+  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...'; btn.disabled = true; }
+
   const script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
   script.onload = function() {
-    html2canvas(document.getElementById('ticketCard'), { scale: 2, backgroundColor: '#0f0d12' }).then(canvas => {
+    const card = document.getElementById('ticketCard');
+    html2canvas(card, {
+      scale: 4,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#0f0d12',
+      logging: false,
+      imageTimeout: 0,
+      removeContainer: true
+    }).then(canvas => {
       const a = document.createElement('a');
-      a.download = 'ticket-{{ appt.ticket_id }}.png';
-      a.href = canvas.toDataURL('image/png');
+      a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
+      a.href = canvas.toDataURL('image/png', 1.0);
       a.click();
+      if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
+    }).catch(() => {
+      if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
     });
   };
   document.head.appendChild(script);
