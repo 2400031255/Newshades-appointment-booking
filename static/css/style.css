@@ -1207,17 +1207,40 @@ a {
 .hero {
   position: relative;
   min-height: 100vh;
-  padding: 128px 0 96px;
+  padding: 0;
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
+/* Push content below fixed navbar (navbar height ~72px) */
+.hero-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding-top: 96px;
+  padding-bottom: 80px;
+}
+
+.hero-row {
+  min-height: auto;
+}
+
 @media (max-width: 991px) {
   .hero {
     min-height: auto;
-    padding: 100px 0 60px;
     align-items: flex-start;
+  }
+  .hero-container {
+    padding-top: 100px;
+    padding-bottom: 60px;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero-container {
+    padding-top: 90px;
+    padding-bottom: 50px;
   }
 }
 
@@ -1971,10 +1994,6 @@ a {
 }
 
 @media (max-width: 767px) {
-  .hero {
-    padding-top: 112px;
-  }
-
   .hero-circle {
     width: 260px;
     height: 260px;
@@ -3540,38 +3559,27 @@ a {
 .hero {
   overflow-x: hidden;
 }
-.hero .row {
-  overflow-x: hidden;
-}
 .hero-row {
-  min-height: calc(100vh - 128px);
-  padding: 20px 0 40px;
+  min-height: auto;
+  padding: 0;
 }
 .hero-content {
   width: 100%;
   max-width: 100%;
+  position: relative;
+  z-index: 1;
 }
 @media (max-width: 991px) {
-  .hero {
-    min-height: auto;
-    padding: 100px 0 60px;
-  }
-  .hero-row {
-    min-height: auto;
-    padding: 0;
-  }
   .hero-content {
     text-align: center;
-    padding: 0 8px;
+    padding: 0 4px;
   }
   .hero-badge { margin-left: auto; margin-right: auto; }
-  .hero-actions { justify-content: center; flex-wrap: wrap; }
+  .hero-actions { justify-content: center; flex-wrap: wrap; gap: 12px; }
   .hero-stats { justify-content: center; }
   .hero-subtitle { margin-left: auto; margin-right: auto; }
-  .hero-title { font-size: clamp(1.9rem, 6vw, 3rem) !important; }
-  .col-lg-6.hero-content { order: 1; }
-  .col-lg-6.d-none { order: 2; }
-  .btn-gold-hero, .btn-ghost-hero { width: 100%; justify-content: center; }
+  .hero-title { font-size: clamp(2rem, 7vw, 3.2rem) !important; }
+  .btn-gold-hero, .btn-ghost-hero { min-width: 160px; }
 }
 
 /* Sidebar overlay for mobile */
@@ -3643,7 +3651,6 @@ a {
   .brand-name { font-size: 1rem; }
   .brand-tagline { font-size: 0.65rem; }
   .brand-logo { width: 36px; height: 36px; min-width: 36px; display: block; }
-  .hero { padding-top: 100px; }
   .hero-title { font-size: 2rem !important; }
   .hero-subtitle { font-size: 0.9rem; }
   .hero-stats { flex-wrap: wrap; gap: 12px; justify-content: center; }
