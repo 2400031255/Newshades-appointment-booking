@@ -444,6 +444,50 @@ textarea.of-input { resize: vertical; min-height: 80px; }
   100% { background-position: 200% center; }
 }
 .of-btn-submit:active { transform: scale(0.97); }
+
+/* ── Service selector in offer form ── */
+.offer-cat-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(201,168,76,0.22);
+  background: rgba(255,255,255,0.04);
+  color: rgba(240,230,211,0.55);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.offer-cat-pill:hover { border-color: rgba(201,168,76,0.4); color: var(--gold-2); }
+.offer-cat-pill.active {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  border-color: transparent;
+}
+.svc-offer-row:hover { background: rgba(201,168,76,0.06); }
+.svc-offer-row.checked { background: rgba(201,168,76,0.08); }
+.svc-selected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.25);
+  color: var(--gold-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  animation: tagIn 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes tagIn {
+  from { opacity:0; transform: scale(0.7); }
+  to   { opacity:1; transform: scale(1); }
+}
+.svc-selected-tag button {
+  background: none; border: none; color: rgba(201,168,76,0.5);
+  cursor: pointer; padding: 0; font-size: 0.7rem; line-height: 1;
+  transition: color 0.2s;
+}
+.svc-selected-tag button:hover { color: #ff6b6b; }
 </style>
 
 <!-- Page Header -->
@@ -499,14 +543,40 @@ textarea.of-input { resize: vertical; min-height: 80px; }
 
         <div class="of-field">
           <label class="of-label">Applicable Services <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(leave blank = all)</span></label>
-          <div style="max-height:160px;overflow-y:auto;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:10px 12px;display:flex;flex-direction:column;gap:6px;" id="serviceCheckboxList">
+
+          <!-- Search box -->
+          <div style="position:relative;margin-bottom:8px;">
+            <i class="fas fa-search" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.78rem;pointer-events:none;"></i>
+            <input type="text" id="svcSearchOffer" class="of-input" placeholder="Search services…" style="padding-left:32px;margin-bottom:0;" oninput="filterOfferSvcs()">
+          </div>
+
+          <!-- Category pills -->
+          <div id="offerCatPills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+            <button type="button" class="offer-cat-pill active" data-cat="all" onclick="filterOfferCat(this)">All</button>
+            {% set cats = [] %}
+            {% for svc in all_services %}{% if svc.category not in cats %}{% set _ = cats.append(svc.category) %}{% endif %}{% endfor %}
+            {% for cat in cats %}
+            <button type="button" class="offer-cat-pill" data-cat="{{ cat }}" onclick="filterOfferCat(this)">{{ cat }}</button>
+            {% endfor %}
+          </div>
+
+          <!-- Scrollable checkbox list -->
+          <div style="max-height:180px;overflow-y:auto;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);padding:8px;display:flex;flex-direction:column;gap:4px;" id="serviceCheckboxList">
             {% for svc in all_services %}
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.83rem;color:rgba(240,230,211,0.75);">
-              <input type="checkbox" name="applicable_services" value="{{ svc.service_name }}" class="svc-offer-cb" style="accent-color:var(--gold);width:14px;height:14px;cursor:pointer;">
-              <span>{{ svc.service_name }}</span>
-              <span style="margin-left:auto;color:var(--gold-2);font-size:0.75rem;">₹{{ "%.0f"|format(svc.price) }}</span>
+            <label class="svc-offer-row" data-cat="{{ svc.category }}" data-name="{{ svc.service_name|lower }}" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 8px;border-radius:8px;transition:background 0.2s;">
+              <input type="checkbox" name="applicable_services" value="{{ svc.service_name }}" class="svc-offer-cb" style="accent-color:var(--gold);width:15px;height:15px;cursor:pointer;flex-shrink:0;">
+              <span style="flex:1;font-size:0.83rem;color:rgba(240,230,211,0.8);">{{ svc.service_name }}</span>
+              <span style="color:var(--gold-2);font-size:0.75rem;font-weight:700;">₹{{ "%.0f"|format(svc.price) }}</span>
+              <span style="font-size:0.7rem;color:rgba(240,230,211,0.35);">({{ svc.category }})</span>
             </label>
             {% endfor %}
+          </div>
+
+          <!-- Selected tags -->
+          <div id="selectedSvcTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:0;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <span id="svcSelectedCount" style="font-size:0.72rem;color:rgba(240,230,211,0.4);">0 selected (blank = all services)</span>
+            <button type="button" onclick="clearAllSvcs()" style="font-size:0.72rem;color:rgba(255,99,99,0.6);background:none;border:none;cursor:pointer;padding:0;">Clear all</button>
           </div>
         </div>
 
@@ -634,12 +704,70 @@ textarea.of-input { resize: vertical; min-height: 80px; }
 
 {% block extra_js %}
 <script>
+let _offerActiveCat = 'all';
+
+function filterOfferSvcs() {
+  const q = document.getElementById('svcSearchOffer').value.toLowerCase();
+  document.querySelectorAll('.svc-offer-row').forEach(row => {
+    const name = row.dataset.name || '';
+    const cat  = row.dataset.cat || '';
+    const catMatch = _offerActiveCat === 'all' || cat === _offerActiveCat;
+    const nameMatch = name.includes(q);
+    row.style.display = (catMatch && nameMatch) ? '' : 'none';
+  });
+}
+
+function filterOfferCat(btn) {
+  document.querySelectorAll('.offer-cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _offerActiveCat = btn.dataset.cat;
+  filterOfferSvcs();
+}
+
+function updateSvcTags() {
+  const wrap = document.getElementById('selectedSvcTags');
+  const countEl = document.getElementById('svcSelectedCount');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const checked = document.querySelectorAll('.svc-offer-cb:checked');
+  checked.forEach(cb => {
+    const tag = document.createElement('span');
+    tag.className = 'svc-selected-tag';
+    tag.innerHTML = `${cb.value} <button type="button" onclick="uncheckSvc('${cb.value.replace(/'/g,"\\'")}')"><i class="fas fa-times"></i></button>`;
+    wrap.appendChild(tag);
+  });
+  // highlight checked rows
+  document.querySelectorAll('.svc-offer-row').forEach(row => {
+    const cb = row.querySelector('.svc-offer-cb');
+    row.classList.toggle('checked', cb && cb.checked);
+  });
+  if (countEl) countEl.textContent = checked.length + ' selected' + (checked.length === 0 ? ' (blank = all services)' : '');
+}
+
+function uncheckSvc(name) {
+  document.querySelectorAll('.svc-offer-cb').forEach(cb => {
+    if (cb.value === name) { cb.checked = false; }
+  });
+  updateSvcTags();
+}
+
+function clearAllSvcs() {
+  document.querySelectorAll('.svc-offer-cb').forEach(cb => cb.checked = false);
+  updateSvcTags();
+}
+
+document.querySelectorAll('.svc-offer-cb').forEach(cb => {
+  cb.addEventListener('change', updateSvcTags);
+});
+updateSvcTags();
+
 function toDisplayDate(iso) {
   if (!iso) return '';
   const p = iso.toString().split('-');
   if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
   return iso;
 }
+
 function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until, active) {
   document.getElementById('offerId').value = id;
   document.getElementById('offerTitle').value = title;
@@ -649,11 +777,11 @@ function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until,
   document.getElementById('offerFrom').value = toDisplayDate(from);
   document.getElementById('offerUntil').value = toDisplayDate(until);
   document.getElementById('offerActive').checked = active == 1;
-  // set service checkboxes
   const selected = appSvcs ? appSvcs.split(',').map(s => s.trim()) : [];
   document.querySelectorAll('.svc-offer-cb').forEach(cb => {
     cb.checked = selected.includes(cb.value);
   });
+  updateSvcTags();
   document.getElementById('formCardTitle').textContent = 'Edit Offer';
   document.getElementById('formBtnText').textContent = 'Update Offer';
   document.getElementById('offerFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -662,10 +790,12 @@ function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until,
   card.style.boxShadow = '0 0 0 2px rgba(201,168,76,0.15), 0 24px 60px rgba(0,0,0,0.3)';
   setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 2000);
 }
+
 function resetForm() {
   document.getElementById('offerForm').reset();
   document.getElementById('offerId').value = '';
   document.querySelectorAll('.svc-offer-cb').forEach(cb => cb.checked = false);
+  updateSvcTags();
   document.getElementById('formCardTitle').textContent = 'New Offer';
   document.getElementById('formBtnText').textContent = 'Create Offer';
   document.getElementById('offerActive').checked = true;

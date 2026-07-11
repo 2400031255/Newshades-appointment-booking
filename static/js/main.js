@@ -95,13 +95,16 @@ const counterObserver = new IntersectionObserver((entries) => {
 document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 
 /* ── Service Card Selection ── */
-document.querySelectorAll('.svc-select-card').forEach(card => {
+document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
   card.addEventListener('click', () => {
     const id = card.dataset.id;
     const cb = document.getElementById('svc-' + id);
     if (!cb) return;
     cb.checked = !cb.checked;
-    card.classList.toggle('selected', cb.checked);
+    // sync all elements with same data-id
+    document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
+      el.classList.toggle('selected', cb.checked);
+    });
     updateCount();
   });
 });

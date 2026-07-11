@@ -150,7 +150,91 @@
   padding: 16px 0;
 }
 
-/* ── Offers banner on book page ── */
+/* ── Mobile compact service row ── */
+.svc-mobile-row {
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: 14px;
+  border: 1.5px solid rgba(201,168,76,0.15);
+  background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.svc-mobile-row:active { transform: scale(0.98); }
+.svc-mobile-row.selected {
+  border-color: rgba(201,168,76,0.7);
+  background: linear-gradient(145deg, rgba(201,168,76,0.12), rgba(255,255,255,0.04));
+}
+.svc-mobile-icon {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.1);
+  color: var(--gold-2);
+  font-size: 1rem;
+  flex-shrink: 0;
+  border: 1px solid rgba(201,168,76,0.15);
+}
+.svc-mobile-row.selected .svc-mobile-icon {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  border-color: transparent;
+}
+.svc-mobile-info { flex: 1; min-width: 0; }
+.svc-mobile-name {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.svc-mobile-meta { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
+.svc-mobile-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.svc-mobile-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  color: var(--gold-2);
+  font-weight: 700;
+}
+.svc-mobile-check {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  color: transparent;
+  font-size: 0.6rem;
+  transition: all 0.2s ease;
+}
+.svc-mobile-row.selected .svc-mobile-check {
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  border-color: transparent;
+  color: #120e08;
+}
+
+/* Mobile: full-width single column for service grid */
+@media (max-width: 767px) {
+  #servicesGrid .col-12 { padding-left: 0; padding-right: 0; }
+  #servicesGrid.row { gap: 0 !important; row-gap: 8px !important; }
+  .book-shell { padding: 80px 0 60px; }
+  .book-header { padding: 20px 0 24px; }
+  .book-page-title { font-size: 1.5rem; }
+  .booking-summary-bar { flex-direction: column; gap: 14px; }
+  .btn-wa-book { width: 100%; justify-content: center; }
+  .glass-card { padding: 16px 14px; }
+  .booking-step-label { font-size: 0.9rem; }
+  .time-slots-wrap { gap: 8px; }
+  .time-chip { padding: 9px 12px; font-size: 0.82rem; min-height: 42px; }
+}
 .offers-book-banner {
   position: relative;
   padding: 22px 26px;
@@ -329,11 +413,12 @@
               </div>
               <div class="row g-3" id="servicesGrid">
                 {% for svc in services %}
-                <div class="col-lg-4 col-md-6 service-col" data-cat="{{ svc.category }}">
+                <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}">
                   <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}"
                     class="d-none"
                     {% if rebook_services and svc.service_name in rebook_services %}checked{% endif %}/>
-                  <div class="svc-select-card {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
+                  <!-- Desktop card -->
+                  <div class="svc-select-card d-none d-md-flex flex-column {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
                        data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
                        data-name="{{ svc.service_name }}">
                     <div class="svc-select-check"><i class="fas fa-check"></i></div>
@@ -349,6 +434,26 @@
                     <div class="svc-select-footer">
                       <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
                       <span class="svc-dur"><i class="far fa-clock me-1"></i>{{ svc.duration }}</span>
+                    </div>
+                  </div>
+                  <!-- Mobile compact row -->
+                  <div class="svc-mobile-row d-flex d-md-none {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
+                       data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
+                       data-name="{{ svc.service_name }}">
+                    <div class="svc-mobile-icon">
+                      {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
+                      {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
+                      {% elif svc.category == 'Skin' %}<i class="fas fa-spa"></i>
+                      {% elif svc.category == 'Wellness' %}<i class="fas fa-hands"></i>
+                      {% else %}<i class="fas fa-magic"></i>{% endif %}
+                    </div>
+                    <div class="svc-mobile-info">
+                      <div class="svc-mobile-name">{{ svc.service_name }}</div>
+                      <div class="svc-mobile-meta"><i class="far fa-clock me-1"></i>{{ svc.duration }}</div>
+                    </div>
+                    <div class="svc-mobile-right">
+                      <div class="svc-mobile-price">₹{{ "%.0f"|format(svc.price) }}</div>
+                      <div class="svc-mobile-check"><i class="fas fa-check"></i></div>
                     </div>
                   </div>
                 </div>
@@ -546,8 +651,19 @@ function updateSidebar() {
 
 /* hook into existing updateCount */
 const _origUpdate = window.updateCount;
-document.querySelectorAll('.svc-select-card').forEach(card => {
-  card.addEventListener('click', () => setTimeout(updateSidebar, 10));
+// Handle both desktop cards and mobile rows
+document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(el => {
+  el.addEventListener('click', () => {
+    const id = el.dataset.id;
+    // sync the paired element
+    const pair = document.querySelectorAll(`[data-id="${id}"]`);
+    const cb = document.getElementById('svc-' + id);
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    pair.forEach(p => p.classList.toggle('selected', cb.checked));
+    if (typeof updateCount === 'function') updateCount();
+    setTimeout(updateSidebar, 10);
+  });
 });
 document.getElementById('preferred_date')?.addEventListener('change', updateSidebar);
 ['sel_day','sel_month','sel_year'].forEach(id => {
