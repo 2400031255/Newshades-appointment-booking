@@ -150,6 +150,32 @@
   padding: 16px 0;
 }
 
+/* ── Offer badge on service card/row ── */
+.svc-offer-badge {
+  position: absolute;
+  top: 10px; left: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(37,211,102,0.35);
+}
+.svc-offer-badge-sm {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #25d366, #128c7e);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
 /* ── Mobile compact service row ── */
 .svc-mobile-row {
   align-items: center;
@@ -420,8 +446,14 @@
                   <!-- Desktop card -->
                   <div class="svc-select-card d-none d-md-flex flex-column {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
                        data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
-                       data-name="{{ svc.service_name }}">
+                       data-name="{{ svc.service_name }}"
+                       data-discounted="{{ svc.discounted_price }}"
+                       data-offer-pct="{{ svc.offer_pct }}"
+                       data-offer-text="{{ svc.offer_text or '' }}">
                     <div class="svc-select-check"><i class="fas fa-check"></i></div>
+                    {% if svc.offer_pct > 0 %}
+                    <div class="svc-offer-badge"><i class="fas fa-bolt me-1" style="font-size:0.6rem;"></i>{{ svc.offer_text }}</div>
+                    {% endif %}
                     <div class="svc-select-icon">
                       {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
                       {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
@@ -432,14 +464,24 @@
                     <h6 class="svc-select-name">{{ svc.service_name }}</h6>
                     <p class="svc-select-desc">{{ svc.description }}</p>
                     <div class="svc-select-footer">
-                      <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
+                      <div>
+                        {% if svc.offer_pct > 0 %}
+                        <span style="text-decoration:line-through;color:var(--text-muted);font-size:0.8rem;">₹{{ "%.0f"|format(svc.price) }}</span>
+                        <span class="svc-price" style="color:#7ce0aa;">₹{{ "%.0f"|format(svc.discounted_price) }}</span>
+                        {% else %}
+                        <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
+                        {% endif %}
+                      </div>
                       <span class="svc-dur"><i class="far fa-clock me-1"></i>{{ svc.duration }}</span>
                     </div>
                   </div>
                   <!-- Mobile compact row -->
                   <div class="svc-mobile-row d-flex d-md-none {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
                        data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
-                       data-name="{{ svc.service_name }}">
+                       data-name="{{ svc.service_name }}"
+                       data-discounted="{{ svc.discounted_price }}"
+                       data-offer-pct="{{ svc.offer_pct }}"
+                       data-offer-text="{{ svc.offer_text or '' }}">
                     <div class="svc-mobile-icon">
                       {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
                       {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
@@ -448,11 +490,18 @@
                       {% else %}<i class="fas fa-magic"></i>{% endif %}
                     </div>
                     <div class="svc-mobile-info">
-                      <div class="svc-mobile-name">{{ svc.service_name }}</div>
+                      <div class="svc-mobile-name">{{ svc.service_name }}
+                        {% if svc.offer_pct > 0 %}<span class="svc-offer-badge-sm">{{ svc.offer_text }}</span>{% endif %}
+                      </div>
                       <div class="svc-mobile-meta"><i class="far fa-clock me-1"></i>{{ svc.duration }}</div>
                     </div>
                     <div class="svc-mobile-right">
+                      {% if svc.offer_pct > 0 %}
+                      <div style="text-decoration:line-through;color:var(--text-muted);font-size:0.72rem;">₹{{ "%.0f"|format(svc.price) }}</div>
+                      <div class="svc-mobile-price" style="color:#7ce0aa;">₹{{ "%.0f"|format(svc.discounted_price) }}</div>
+                      {% else %}
                       <div class="svc-mobile-price">₹{{ "%.0f"|format(svc.price) }}</div>
+                      {% endif %}
                       <div class="svc-mobile-check"><i class="fas fa-check"></i></div>
                     </div>
                   </div>
@@ -569,64 +618,80 @@
 
 {% block extra_js %}
 <script>
-/* ── Offers data for discount matching ── */
-const OFFERS = [
-  {% for o in today_offers %}
-  { title: {{ o.title|tojson }}, discount_percent: {{ (o.discount_percent or 0)|float }}, applicable_services: {{ (o.applicable_services or '')|tojson }} }{% if not loop.last %},{% endif %}
-  {% endfor %}
-];
-
-function findMatchingOffer(selectedNames) {
-  for (const o of OFFERS) {
-    if (!o.discount_percent) continue;
-    if (!o.applicable_services) return o; // applies to all
-    const svcs = o.applicable_services.split(',').map(s => s.trim().toLowerCase());
-    if (selectedNames.some(n => svcs.includes(n.toLowerCase()))) return o;
-  }
-  return null;
-}
-
 /* ── Sidebar live update ── */
 function updateSidebar() {
-  const items   = document.getElementById('sidebarItems');
-  const empty   = document.getElementById('sidebarEmpty');
-  const totalRow = document.getElementById('sidebarTotalRow');
-  const totalEl  = document.getElementById('sidebarTotal');
+  const items      = document.getElementById('sidebarItems');
+  const empty      = document.getElementById('sidebarEmpty');
+  const totalRow   = document.getElementById('sidebarTotalRow');
+  const totalEl    = document.getElementById('sidebarTotal');
   const discountRow = document.getElementById('sidebarDiscountRow');
   if (!items) return;
 
-  const selected = document.querySelectorAll('.svc-select-card.selected');
+  const selected = document.querySelectorAll('.svc-select-card.selected, .svc-mobile-row.selected');
+  // deduplicate by data-id
+  const seen = new Set();
+  const unique = [];
+  selected.forEach(el => {
+    if (!seen.has(el.dataset.id)) { seen.add(el.dataset.id); unique.push(el); }
+  });
+
   items.querySelectorAll('.sidebar-selected-item').forEach(el => el.remove());
 
-  let total = 0;
-  const selectedNames = [];
-  selected.forEach(card => {
-    const price = parseFloat(card.dataset.price || 0);
-    total += price;
-    selectedNames.push(card.dataset.name);
+  let originalTotal = 0, discountedTotal = 0, totalDiscount = 0;
+  let offerName = '';
+
+  unique.forEach(card => {
+    const origPrice = parseFloat(card.dataset.price || 0);
+    const discPrice = parseFloat(card.dataset.discounted || card.dataset.price || 0);
+    const offerPct  = parseFloat(card.dataset.offerPct || 0);
+    const offerText = card.dataset.offerText || '';
+    originalTotal  += origPrice;
+    discountedTotal += discPrice;
+    totalDiscount  += (origPrice - discPrice);
+    if (offerPct > 0 && offerText) offerName = offerText;
+
     const row = document.createElement('div');
     row.className = 'sidebar-selected-item';
-    row.innerHTML = `<span>${card.dataset.name}</span><span class="sidebar-item-price">₹${price.toFixed(0)}</span>`;
+    if (offerPct > 0) {
+      row.innerHTML = `<span>${card.dataset.name}</span><div style="text-align:right;"><div style="text-decoration:line-through;color:var(--text-muted);font-size:0.72rem;">₹${origPrice.toFixed(0)}</div><div style="color:#7ce0aa;font-weight:700;font-size:0.85rem;">₹${discPrice.toFixed(0)}</div></div>`;
+    } else {
+      row.innerHTML = `<span>${card.dataset.name}</span><span class="sidebar-item-price">₹${origPrice.toFixed(0)}</span>`;
+    }
     items.appendChild(row);
   });
 
-  const hasItems = selected.length > 0;
+  const hasItems = unique.length > 0;
   if (empty) empty.style.display = hasItems ? 'none' : '';
   if (totalRow) totalRow.style.cssText = hasItems ? '' : 'display:none!important;';
-  if (totalEl)  totalEl.textContent = '₹' + total.toFixed(0);
+  if (totalEl)  totalEl.textContent = '₹' + discountedTotal.toFixed(0);
 
-  // offer discount
-  const offer = hasItems ? findMatchingOffer(selectedNames) : null;
-  if (offer && discountRow) {
-    const discAmt = (total * offer.discount_percent / 100);
-    const finalAmt = total - discAmt;
-    document.getElementById('sidebarOfferName').textContent = offer.title + ' (' + offer.discount_percent + '% off)';
-    document.getElementById('sidebarDiscountAmt').textContent = discAmt.toFixed(0);
-    document.getElementById('sidebarFinalAmt').textContent = finalAmt.toFixed(0);
-    discountRow.style.display = '';
-  } else if (discountRow) {
-    discountRow.style.display = 'none';
+  // Show discount row if any discount applied
+  if (discountRow) {
+    if (hasItems && totalDiscount > 0) {
+      document.getElementById('sidebarOfferName').textContent = offerName;
+      document.getElementById('sidebarDiscountAmt').textContent = totalDiscount.toFixed(0);
+      document.getElementById('sidebarFinalAmt').textContent = discountedTotal.toFixed(0);
+      discountRow.style.display = '';
+      if (totalEl) totalEl.style.textDecoration = 'line-through';
+      if (totalEl) totalEl.style.color = 'var(--text-muted)';
+      if (totalEl) totalEl.style.fontSize = '0.9rem';
+    } else {
+      discountRow.style.display = 'none';
+      if (totalEl) { totalEl.style.textDecoration = ''; totalEl.style.color = ''; totalEl.style.fontSize = ''; }
+    }
   }
+
+  // Also update the bottom summary bar
+  const countEl = document.getElementById('selectedCount');
+  const priceEl = document.getElementById('totalPrice');
+  const timeEl  = document.getElementById('totalTime');
+  if (countEl) countEl.textContent = unique.length + ' service' + (unique.length !== 1 ? 's' : '') + ' selected';
+  if (priceEl) priceEl.textContent = '₹' + discountedTotal.toFixed(0);
+  let totalMins = 0;
+  unique.forEach(c => { const m = (c.dataset.dur||'').match(/(\d+)/); if(m) totalMins += parseInt(m[1]); });
+  if (timeEl) timeEl.textContent = totalMins + ' min';
+  const btn = document.getElementById('bookBtn');
+  if (btn) btn.disabled = unique.length === 0;
 
   /* progress bar */
   const bp1 = document.getElementById('bp1');

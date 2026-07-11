@@ -39,8 +39,49 @@ def book_page():
     services   = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
     categories = list(dict.fromkeys(s['category'] for s in services))
     rebook_services = session.pop('rebook_services', None)
+
+    # Build offer map: service_name (lower) → best offer
+    from datetime import date as _date
+    today_str = _date.today().isoformat()
+    active_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 "
+        "AND (valid_from IS NULL OR valid_from <= %s) "
+        "AND (valid_until IS NULL OR valid_until >= %s)",
+        (today_str, today_str)
+    )
+    # offer_map[service_name_lower] = {title, discount_percent, discount_text}
+    offer_map = {}   # specific service offers
+    global_offer = None  # offer with no applicable_services (applies to all)
+    for o in active_offers:
+        if not o.get('discount_percent'):
+            continue
+        app_svcs = (o.get('applicable_services') or '').strip()
+        if not app_svcs:
+            if not global_offer:
+                global_offer = o
+        else:
+            for sname in app_svcs.split(','):
+                key = sname.strip().lower()
+                if key and key not in offer_map:
+                    offer_map[key] = o
+
+    # Attach offer info to each service
+    for svc in services:
+        key = svc['service_name'].lower()
+        matched = offer_map.get(key) or global_offer
+        if matched:
+            svc['offer_title']   = matched['title']
+            svc['offer_pct']     = float(matched['discount_percent'] or 0)
+            svc['offer_text']    = matched.get('discount_text') or f"{matched['discount_percent']}% OFF"
+            svc['discounted_price'] = round(float(svc['price']) * (1 - svc['offer_pct'] / 100), 2)
+        else:
+            svc['offer_title']   = None
+            svc['offer_pct']     = 0
+            svc['offer_text']    = None
+            svc['discounted_price'] = float(svc['price'])
+
     return render_template('customer/book.html', services=services, categories=categories,
-                           rebook_services=rebook_services)
+                           rebook_services=rebook_services, active_offers=active_offers)
 
 
 @customer.route('/book', methods=['POST'])
@@ -76,27 +117,42 @@ def book():
     services_str  = ', '.join(service_names)
     total_price   = sum(float(s['price'] or 0) for s in services)
 
-    # Auto-apply best matching active offer
+    # Find best active offer and apply discount ONLY to matching services
     today_str = date.today().isoformat()
     active_offers = query(
         "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
         (today_str, today_str)
     )
-    applied_offer = None
-    for offer in active_offers:
-        if not offer.get('discount_percent'):
-            continue
-        app_svcs = (offer.get('applicable_services') or '').strip()
-        if not app_svcs:
-            applied_offer = offer
-            break
-        svc_list = [s.strip().lower() for s in app_svcs.split(',')]
-        if any(n.lower() in svc_list for n in service_names):
-            applied_offer = offer
-            break
 
+    # Build per-service offer map
+    offer_map = {}    # service_name_lower -> offer
+    global_offer = None
+    for o in active_offers:
+        if not o.get('discount_percent'):
+            continue
+        app_svcs = (o.get('applicable_services') or '').strip()
+        if not app_svcs:
+            if not global_offer:
+                global_offer = o
+        else:
+            for sname in app_svcs.split(','):
+                key = sname.strip().lower()
+                if key and key not in offer_map:
+                    offer_map[key] = o
+
+    # Calculate discount only on services that have a matching offer
+    discount_amount = 0.0
+    applied_offer   = None
+    for svc in services:
+        key     = svc['service_name'].lower()
+        matched = offer_map.get(key) or global_offer
+        if matched:
+            applied_offer    = matched
+            pct              = float(matched['discount_percent'] or 0)
+            discount_amount += float(svc['price'] or 0) * pct / 100
+
+    discount_amount  = round(discount_amount, 2)
     discount_percent = float(applied_offer['discount_percent']) if applied_offer else 0.0
-    discount_amount  = round(total_price * discount_percent / 100, 2)
     final_price      = round(total_price - discount_amount, 2)
 
     try:
@@ -134,7 +190,11 @@ def book():
         user=user,
         service_names=service_names,
         preferred_date=formatted_date,
-        preferred_time=preferred_time
+        preferred_time=preferred_time,
+        total_price=total_price,
+        discount_amount=discount_amount,
+        final_price=final_price,
+        applied_offer=applied_offer
     )
 
 
