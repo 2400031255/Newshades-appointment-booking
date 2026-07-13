@@ -181,6 +181,10 @@ def appointment_action(aid):
         execute("UPDATE appointments SET status='Completed' WHERE id=%s", (aid,))
         flash('Appointment marked as completed.', 'success')
 
+    elif action == 'delete':
+        execute("DELETE FROM appointments WHERE id=%s", (aid,))
+        flash('Appointment deleted.', 'success')
+
     return redirect(url_for('admin.appointments'))
 
 
@@ -369,6 +373,90 @@ def gallery_delete(gid):
         execute("DELETE FROM gallery WHERE id=%s", (gid,))
         flash('Photo deleted.', 'success')
     return redirect(url_for('admin.gallery'))
+
+
+# ── Schedule / Blocked Slots ─────────────────────────────────────────────
+@admin.route('/schedule')
+@admin_required
+def schedule():
+    from datetime import date
+    blocks = query("SELECT * FROM blocked_slots ORDER BY block_date ASC, block_time ASC")
+    # Format dates as dd/mm/yyyy for display
+    for b in blocks:
+        try:
+            d = b['block_date']
+            b['display_date'] = d.strftime('%d/%m/%Y') if hasattr(d, 'strftime') else str(d)[5:7]+'/'+str(d)[8:10]+'/'+str(d)[:4] if len(str(d)) == 10 else str(d)
+        except Exception:
+            b['display_date'] = str(b['block_date'])
+    today = date.today().strftime('%d/%m/%Y')
+    return render_template('admin/schedule.html', blocks=blocks, today=today)
+
+
+@admin.route('/schedule/block', methods=['POST'])
+@admin_required
+def add_block():
+    from datetime import datetime
+    raw_date   = request.form.get('block_date', '').strip()
+    block_time = request.form.get('block_time', '').strip() or None
+    full_day   = request.form.get('full_day') == '1'
+    reason     = request.form.get('reason', '').strip()
+
+    # Parse dd/mm/yyyy
+    try:
+        block_date = datetime.strptime(raw_date, '%d/%m/%Y').strftime('%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date format. Use DD/MM/YYYY.', 'danger')
+        return redirect(url_for('admin.schedule'))
+
+    if full_day:
+        # Block entire day — remove existing slots for that day first, insert one full-day record
+        execute("DELETE FROM blocked_slots WHERE block_date=%s", (block_date,))
+        execute(
+            "INSERT INTO blocked_slots (block_date, block_time, reason) VALUES (%s,%s,%s)",
+            (block_date, None, reason or 'Full Day Blocked')
+        )
+        flash(f'Full day blocked: {raw_date}', 'success')
+    else:
+        if not block_time:
+            flash('Please select a time slot or enable Full Day.', 'danger')
+            return redirect(url_for('admin.schedule'))
+        # Check duplicate
+        existing = query(
+            "SELECT id FROM blocked_slots WHERE block_date=%s AND block_time=%s",
+            (block_date, block_time), one=True
+        )
+        if existing:
+            flash('That slot is already blocked.', 'warning')
+            return redirect(url_for('admin.schedule'))
+        execute(
+            "INSERT INTO blocked_slots (block_date, block_time, reason) VALUES (%s,%s,%s)",
+            (block_date, block_time, reason)
+        )
+        flash(f'Slot blocked: {raw_date} at {block_time}', 'success')
+    return redirect(url_for('admin.schedule'))
+
+
+@admin.route('/schedule/unblock/<int:bid>', methods=['POST'])
+@admin_required
+def delete_block(bid):
+    execute("DELETE FROM blocked_slots WHERE id=%s", (bid,))
+    flash('Block removed.', 'success')
+    return redirect(url_for('admin.schedule'))
+
+
+@admin.route('/schedule/unblock-date', methods=['POST'])
+@admin_required
+def unblock_date():
+    from datetime import datetime
+    raw_date = request.form.get('block_date', '').strip()
+    try:
+        block_date = datetime.strptime(raw_date, '%d/%m/%Y').strftime('%Y-%m-%d')
+    except ValueError:
+        flash('Invalid date.', 'danger')
+        return redirect(url_for('admin.schedule'))
+    execute("DELETE FROM blocked_slots WHERE block_date=%s", (block_date,))
+    flash(f'All blocks removed for {raw_date}', 'success')
+    return redirect(url_for('admin.schedule'))
 
 
 # ── Offers ───────────────────────────────────────────────────────────────

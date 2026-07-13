@@ -1,0 +1,318 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Schedule – New Shades Admin{% endblock %}
+{% block page_title %}Schedule & Blocking{% endblock %}
+
+{% block content %}
+
+<!-- Stats row -->
+<div class="sched-stats">
+  <div class="sched-stat-card">
+    <div class="sched-stat-icon"><i class="fas fa-ban"></i></div>
+    <div>
+      <div class="sched-stat-val">{{ blocks|length }}</div>
+      <div class="sched-stat-label">Total Blocks</div>
+    </div>
+  </div>
+  <div class="sched-stat-card">
+    <div class="sched-stat-icon" style="background:rgba(255,170,77,0.15);color:#ffc36b;"><i class="fas fa-calendar-day"></i></div>
+    <div>
+      <div class="sched-stat-val">{{ blocks|selectattr('block_time','none')|list|length }}</div>
+      <div class="sched-stat-label">Full Day Blocks</div>
+    </div>
+  </div>
+  <div class="sched-stat-card">
+    <div class="sched-stat-icon" style="background:rgba(105,152,255,0.15);color:#9dc0ff;"><i class="fas fa-clock"></i></div>
+    <div>
+      <div class="sched-stat-val">{{ blocks|selectattr('block_time')|list|length }}</div>
+      <div class="sched-stat-label">Time Slot Blocks</div>
+    </div>
+  </div>
+</div>
+
+<div class="sched-grid">
+
+  <!-- Add Block Form -->
+  <div class="admin-card sched-form-card">
+    <h6 class="sched-section-title"><i class="fas fa-plus-circle me-2" style="color:var(--gold);"></i>Block a Date / Slot</h6>
+
+    <form method="POST" action="{{ url_for('admin.add_block') }}" id="blockForm">
+
+      <!-- Date picker -->
+      <div class="sched-field">
+        <label class="sched-label">Date <span style="color:var(--gold);">*</span></label>
+        <div class="sched-date-wrap">
+          <i class="fas fa-calendar-alt sched-field-icon"></i>
+          <input type="text" name="block_date" id="blockDate" placeholder="DD/MM/YYYY"
+            class="sched-input" maxlength="10" autocomplete="off" required/>
+        </div>
+        <div class="sched-hint">Format: DD/MM/YYYY e.g. {{ today }}</div>
+      </div>
+
+      <!-- Full day toggle -->
+      <div class="sched-field">
+        <label class="sched-toggle-row">
+          <div class="sched-toggle-info">
+            <span class="sched-label mb-0">Full Day Block</span>
+            <span class="sched-hint">Block the entire day — no bookings allowed</span>
+          </div>
+          <div class="sched-toggle-wrap">
+            <input type="checkbox" id="fullDayToggle" name="full_day" value="1"/>
+            <span class="sched-toggle-slider"></span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Time slot (hidden when full day) -->
+      <div class="sched-field" id="timeField">
+        <label class="sched-label">Time Slot <span style="color:var(--gold);">*</span></label>
+        <div class="sched-date-wrap">
+          <i class="fas fa-clock sched-field-icon"></i>
+          <select name="block_time" class="sched-input sched-select" id="blockTime">
+            <option value="">— Select time —</option>
+            {% for h in range(9, 20) %}
+              {% for m in ['00', '30'] %}
+                {% set hh = '%02d'|format(h) %}
+                <option value="{{ hh }}:{{ m }}">{{ hh }}:{{ m }}</option>
+              {% endfor %}
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div class="sched-field">
+        <label class="sched-label">Reason <span class="sched-hint">(optional)</span></label>
+        <div class="sched-date-wrap">
+          <i class="fas fa-tag sched-field-icon"></i>
+          <input type="text" name="reason" placeholder="e.g. Holiday, Staff leave…" class="sched-input"/>
+        </div>
+      </div>
+
+      <button type="submit" class="sched-submit-btn">
+        <i class="fas fa-ban me-2"></i>Block Slot
+      </button>
+    </form>
+
+    <!-- Unblock entire date -->
+    <div class="sched-divider"></div>
+    <h6 class="sched-section-title mt-0"><i class="fas fa-unlock me-2" style="color:#7ce0aa;"></i>Unblock Entire Date</h6>
+    <form method="POST" action="{{ url_for('admin.unblock_date') }}" class="d-flex gap-2 align-items-end flex-wrap">
+      <div class="sched-field mb-0" style="flex:1;min-width:160px;">
+        <div class="sched-date-wrap">
+          <i class="fas fa-calendar-alt sched-field-icon"></i>
+          <input type="text" name="block_date" placeholder="DD/MM/YYYY" class="sched-input" maxlength="10" required/>
+        </div>
+      </div>
+      <button type="submit" class="sched-unblock-btn"><i class="fas fa-unlock me-1"></i>Unblock All</button>
+    </form>
+  </div>
+
+  <!-- Blocked Slots List -->
+  <div class="admin-card sched-list-card">
+    <h6 class="sched-section-title"><i class="fas fa-list me-2" style="color:var(--gold);"></i>Blocked Slots
+      <span style="color:var(--gold);font-size:0.85rem;">({{ blocks|length }})</span>
+    </h6>
+
+    {% if blocks %}
+    <!-- Group by date -->
+    {% set ns = namespace(prev_date='') %}
+    <div class="sched-blocks-list">
+      {% for b in blocks %}
+        {% set cur_date = b.display_date %}
+        {% if cur_date != ns.prev_date %}
+          {% if ns.prev_date != '' %}</div>{% endif %}
+          <div class="sched-date-group">
+          <div class="sched-date-header">
+            <i class="fas fa-calendar-day me-2" style="color:var(--gold);"></i>{{ cur_date }}
+            {% if not b.block_time %}
+            <span class="sched-fullday-badge">Full Day</span>
+            {% endif %}
+          </div>
+          {% set ns.prev_date = cur_date %}
+        {% endif %}
+
+        <div class="sched-block-row">
+          <div class="sched-block-left">
+            {% if b.block_time %}
+            <span class="sched-time-chip"><i class="fas fa-clock me-1"></i>{{ b.block_time }}</span>
+            {% else %}
+            <span class="sched-time-chip sched-fullday-chip"><i class="fas fa-ban me-1"></i>All Day</span>
+            {% endif %}
+            {% if b.reason %}
+            <span class="sched-reason">{{ b.reason }}</span>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('admin.delete_block', bid=b.id) }}" onsubmit="return confirm('Remove this block?')">
+            <button type="submit" class="sched-del-btn" title="Remove block">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </form>
+        </div>
+
+      {% endfor %}
+      </div><!-- close last group -->
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-calendar-check" style="font-size:2.5rem;color:rgba(201,168,76,0.25);"></i>
+      <p class="mt-3" style="color:var(--text-muted);font-size:0.9rem;">No blocked slots. All dates are open.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<style>
+/* Stats */
+.sched-stats {
+  display:flex; gap:16px; flex-wrap:wrap; margin-bottom:24px;
+}
+.sched-stat-card {
+  flex:1; min-width:140px;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.12);
+  border-radius:14px; padding:16px 20px;
+  display:flex; align-items:center; gap:14px;
+}
+.sched-stat-icon {
+  width:42px; height:42px; border-radius:12px;
+  background:rgba(201,168,76,0.12); color:var(--gold-2);
+  display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+  flex-shrink:0;
+}
+.sched-stat-val   { font-size:1.5rem; font-weight:800; color:#fff; line-height:1; }
+.sched-stat-label { font-size:0.75rem; color:var(--text-muted); margin-top:3px; }
+
+/* Grid */
+.sched-grid {
+  display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start;
+}
+@media(max-width:900px){ .sched-grid{ grid-template-columns:1fr; } }
+
+/* Form */
+.sched-section-title {
+  font-size:0.9rem; font-weight:700; color:#fff;
+  margin-bottom:20px; display:flex; align-items:center;
+}
+.sched-field { margin-bottom:18px; }
+.sched-label { display:block; font-size:0.8rem; font-weight:600; color:rgba(240,230,211,0.7); margin-bottom:7px; }
+.sched-hint  { font-size:0.72rem; color:var(--text-muted); margin-top:5px; }
+.sched-date-wrap { position:relative; }
+.sched-field-icon {
+  position:absolute; left:13px; top:50%; transform:translateY(-50%);
+  color:var(--gold); font-size:0.8rem; pointer-events:none;
+}
+.sched-input {
+  width:100%; padding:10px 12px 10px 36px;
+  background:rgba(255,255,255,0.06); border:1px solid rgba(201,168,76,0.2);
+  border-radius:10px; color:#fff; font-size:0.88rem; outline:none;
+  transition:border-color 0.2s;
+}
+.sched-input:focus { border-color:rgba(201,168,76,0.5); }
+.sched-select { appearance:none; cursor:pointer; }
+
+/* Toggle */
+.sched-toggle-row {
+  display:flex; justify-content:space-between; align-items:center;
+  cursor:pointer; gap:12px;
+}
+.sched-toggle-info { display:flex; flex-direction:column; gap:3px; }
+.sched-toggle-wrap { position:relative; flex-shrink:0; }
+.sched-toggle-wrap input { opacity:0; width:0; height:0; position:absolute; }
+.sched-toggle-slider {
+  display:block; width:46px; height:26px; border-radius:999px;
+  background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+  transition:all 0.3s; cursor:pointer; position:relative;
+}
+.sched-toggle-slider::after {
+  content:''; position:absolute; top:3px; left:3px;
+  width:18px; height:18px; border-radius:50%;
+  background:#fff; transition:all 0.3s;
+}
+.sched-toggle-wrap input:checked + .sched-toggle-slider {
+  background:linear-gradient(135deg,#c9a84c,#e8c96a);
+  border-color:transparent;
+}
+.sched-toggle-wrap input:checked + .sched-toggle-slider::after { left:23px; }
+
+/* Buttons */
+.sched-submit-btn {
+  width:100%; padding:12px; border-radius:12px; border:none;
+  background:linear-gradient(135deg,#c9a84c,#e8c96a);
+  color:#120e08; font-weight:700; font-size:0.9rem; cursor:pointer;
+  transition:opacity 0.2s; margin-top:4px;
+}
+.sched-submit-btn:hover { opacity:0.88; }
+.sched-unblock-btn {
+  padding:10px 18px; border-radius:10px;
+  background:rgba(124,224,170,0.12); border:1px solid rgba(124,224,170,0.3);
+  color:#7ce0aa; font-size:0.85rem; font-weight:600; cursor:pointer;
+  white-space:nowrap; transition:all 0.2s;
+}
+.sched-unblock-btn:hover { background:rgba(124,224,170,0.2); }
+.sched-divider { border:none; border-top:1px solid rgba(255,255,255,0.07); margin:24px 0; }
+
+/* Blocks list */
+.sched-blocks-list { display:flex; flex-direction:column; gap:8px; max-height:520px; overflow-y:auto; padding-right:4px; }
+.sched-blocks-list::-webkit-scrollbar { width:4px; }
+.sched-blocks-list::-webkit-scrollbar-thumb { background:rgba(201,168,76,0.3); border-radius:4px; }
+.sched-date-group { display:flex; flex-direction:column; gap:6px; }
+.sched-date-header {
+  font-size:0.8rem; font-weight:700; color:var(--gold-2);
+  padding:8px 12px; background:rgba(201,168,76,0.07);
+  border-radius:8px; display:flex; align-items:center; gap:6px;
+  margin-bottom:2px;
+}
+.sched-fullday-badge {
+  margin-left:auto; padding:2px 8px; border-radius:999px;
+  background:rgba(226,93,93,0.15); color:#ff9a9a;
+  font-size:0.68rem; font-weight:700; letter-spacing:0.05em;
+}
+.sched-block-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06); border-radius:10px;
+  margin-left:12px;
+}
+.sched-block-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.sched-time-chip {
+  padding:4px 10px; border-radius:999px; font-size:0.78rem; font-weight:600;
+  background:rgba(105,152,255,0.12); color:#9dc0ff;
+  border:1px solid rgba(105,152,255,0.2);
+}
+.sched-fullday-chip { background:rgba(226,93,93,0.12); color:#ff9a9a; border-color:rgba(226,93,93,0.2); }
+.sched-reason { font-size:0.78rem; color:var(--text-muted); }
+.sched-del-btn {
+  width:30px; height:30px; border-radius:8px; border:1px solid rgba(226,93,93,0.2);
+  background:rgba(226,93,93,0.08); color:rgba(255,154,154,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.75rem; cursor:pointer; transition:all 0.2s; flex-shrink:0;
+}
+.sched-del-btn:hover { background:rgba(226,93,93,0.2); color:#ff9a9a; }
+
+.sched-form-card, .sched-list-card { height:fit-content; }
+</style>
+
+<script>
+// Toggle time field visibility
+const toggle = document.getElementById('fullDayToggle');
+const timeField = document.getElementById('timeField');
+const blockTime = document.getElementById('blockTime');
+toggle.addEventListener('change', function() {
+  if (this.checked) {
+    timeField.style.display = 'none';
+    blockTime.removeAttribute('required');
+  } else {
+    timeField.style.display = 'block';
+    blockTime.setAttribute('required', '');
+  }
+});
+
+// Auto-format date input as DD/MM/YYYY
+document.getElementById('blockDate').addEventListener('input', function() {
+  let v = this.value.replace(/\D/g,'');
+  if (v.length >= 3 && v.length <= 4) v = v.slice(0,2)+'/'+v.slice(2);
+  else if (v.length >= 5) v = v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4,8);
+  this.value = v;
+});
+</script>
+{% endblock %}

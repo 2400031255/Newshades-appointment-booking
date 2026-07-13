@@ -49,6 +49,9 @@
     <a href="{{ url_for('admin.gallery') }}" class="{{ 'active' if request.endpoint == 'admin.gallery' }}">
       <span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span>
     </a>
+    <a href="{{ url_for('admin.schedule') }}" class="{{ 'active' if request.endpoint in ('admin.schedule','admin.add_block','admin.delete_block','admin.unblock_date') }}">
+      <span class="sidebar-nav-label"><i class="fas fa-ban"></i> Schedule</span>
+    </a>
     <a href="{{ url_for('admin.offers') }}" class="{{ 'active' if request.endpoint in ('admin.offers',) }}">
       <span class="sidebar-nav-label"><i class="fas fa-tag"></i> Offers</span>
     </a>

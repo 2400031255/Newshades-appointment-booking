@@ -4,13 +4,13 @@
 
 {% block content %}
 <div class="admin-card">
+
   <!-- Toolbar -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h6 class="fw-bold mb-0" style="color:#fff;">
       All Appointments <span style="color:var(--gold);">({{ appointments|length }})</span>
     </h6>
     <div class="d-flex gap-2 flex-wrap align-items-center">
-      <!-- Search -->
       <form method="GET" action="{{ url_for('admin.appointments') }}" class="d-flex gap-2">
         <input type="hidden" name="status" value="{{ status_filter }}"/>
         <div style="position:relative;">
@@ -20,7 +20,6 @@
         </div>
         <button type="submit" class="admin-update-btn"><i class="fas fa-search"></i></button>
       </form>
-      <!-- Status filters -->
       {% for s in ['', 'Pending', 'Confirmed', 'Checked In', 'Completed', 'Rejected', 'Cancelled'] %}
       <a href="{{ url_for('admin.appointments', status=s, q=search) }}"
          class="admin-filter-btn {{ 'active' if status_filter == s }}">
@@ -34,10 +33,12 @@
   </div>
 
   {% if appointments %}
-  <div class="table-responsive">
+
+  <!-- Desktop Table -->
+  <div class="table-responsive d-none d-md-block">
     <table class="admin-table">
       <thead>
-        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr>
+        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Time</th><th>Price</th><th>Status</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for a in appointments %}
@@ -48,52 +49,58 @@
             <div class="admin-td-muted">{{ a.phone }}</div>
             <div style="font-size:0.75rem;color:var(--text-muted);">{{ a.email }}</div>
           </td>
-          <td class="admin-td-muted" style="max-width:180px;">{{ a.selected_services }}</td>
-          <td class="admin-td-bold">
+          <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">{{ a.selected_services }}</td>
+          <td class="admin-td-bold" style="white-space:nowrap;">
             {% if a.preferred_date %}
               {% set d = a.preferred_date %}
-              {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+              {% if d is string %}
+                {{ d[8:10] }}/{{ d[5:7] }}/{{ d[2:4] }}
+              {% else %}
+                {{ d.strftime('%d/%m/%y') }}
+              {% endif %}
             {% else %}—{% endif %}
           </td>
-          <td class="admin-td-muted">{{ a.preferred_time if a.preferred_time else '—' }}</td>
+          <td class="admin-td-muted" style="white-space:nowrap;">{{ a.preferred_time if a.preferred_time else '—' }}</td>
+          <td style="white-space:nowrap;">
+            {% if a.get('total_price') %}
+              <span style="color:var(--gold-2);font-weight:700;">₹{{ '%.0f'|format(a.total_price) }}</span>
+              {% if a.get('discount_percent') and a.discount_percent > 0 %}
+              <div style="font-size:0.72rem;color:#7ce0aa;">-{{ '%.0f'|format(a.discount_percent) }}% off</div>
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
           <td>
             <span class="admin-status-badge badge-status-{{ a.status.lower().replace(' ','-') }}">{{ a.status }}</span>
           </td>
           <td>
-            <div class="d-flex gap-1 flex-wrap">
+            <div class="d-flex gap-1 flex-wrap align-items-center">
               {% if a.status == 'Pending' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
                 <input type="hidden" name="action" value="accept"/>
-                <button type="submit" class="admin-update-btn" style="background:rgba(37,211,102,0.15);border-color:rgba(37,211,102,0.3);color:#7ce0aa;" title="Accept">
-                  <i class="fas fa-check"></i>
-                </button>
+                <button type="submit" class="appt-action-btn btn-accept" title="Confirm"><i class="fas fa-check"></i></button>
               </form>
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
                 <input type="hidden" name="action" value="reject"/>
-                <button type="submit" class="admin-action-btn admin-action-danger" title="Reject">
-                  <i class="fas fa-times"></i>
-                </button>
+                <button type="submit" class="appt-action-btn btn-reject" title="Reject"><i class="fas fa-times"></i></button>
               </form>
               {% elif a.status == 'Confirmed' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
                 <input type="hidden" name="action" value="checkin"/>
-                <button type="submit" class="admin-update-btn" style="background:rgba(105,152,255,0.15);border-color:rgba(105,152,255,0.3);color:#9dc0ff;" title="Check In">
-                  <i class="fas fa-sign-in-alt"></i>
-                </button>
+                <button type="submit" class="appt-action-btn btn-checkin" title="Check In"><i class="fas fa-sign-in-alt"></i></button>
               </form>
               {% elif a.status == 'Checked In' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
                 <input type="hidden" name="action" value="complete"/>
-                <button type="submit" class="admin-update-btn" style="background:rgba(201,168,76,0.15);border-color:rgba(201,168,76,0.3);color:var(--gold-2);" title="Complete">
-                  <i class="fas fa-flag-checkered"></i>
-                </button>
+                <button type="submit" class="appt-action-btn btn-complete" title="Complete"><i class="fas fa-flag-checkered"></i></button>
               </form>
               {% endif %}
               {% if a.get('ticket_id') %}
-              <span style="padding:6px 10px;border-radius:8px;background:rgba(201,168,76,0.1);color:var(--gold-2);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;">
-                #{{ a.ticket_id }}
-              </span>
+              <span class="ticket-badge">#{{ a.ticket_id }}</span>
               {% endif %}
+              <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}" onsubmit="return confirm('Delete this appointment?')">
+                <input type="hidden" name="action" value="delete"/>
+                <button type="submit" class="appt-action-btn btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
+              </form>
             </div>
           </td>
         </tr>
@@ -101,17 +108,118 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Mobile Cards -->
+  <div class="d-md-none appt-cards">
+    {% for a in appointments %}
+    <div class="appt-card">
+      <div class="appt-card-top">
+        <div>
+          <div class="appt-card-name">{{ a.full_name }}</div>
+          <div class="appt-card-phone">{{ a.phone }}</div>
+        </div>
+        <span class="admin-status-badge badge-status-{{ a.status.lower().replace(' ','-') }}">{{ a.status }}</span>
+      </div>
+      <div class="appt-card-services">{{ a.selected_services }}</div>
+      <div class="appt-card-meta">
+        <span><i class="fas fa-calendar-alt me-1" style="color:var(--gold);"></i>
+          {% if a.preferred_date %}
+            {% set d = a.preferred_date %}
+            {% if d is string %}{{ d[8:10] }}/{{ d[5:7] }}/{{ d[2:4] }}{% else %}{{ d.strftime('%d/%m/%y') }}{% endif %}
+          {% else %}—{% endif %}
+        </span>
+        <span><i class="fas fa-clock me-1" style="color:var(--gold);"></i>{{ a.preferred_time if a.preferred_time else 'Flexible' }}</span>
+        {% if a.get('total_price') %}
+        <span><i class="fas fa-rupee-sign me-1" style="color:var(--gold);"></i>₹{{ '%.0f'|format(a.total_price) }}</span>
+        {% endif %}
+      </div>
+      <div class="appt-card-actions">
+        {% if a.status == 'Pending' %}
+        <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+          <input type="hidden" name="action" value="accept"/>
+          <button class="appt-mob-btn btn-accept"><i class="fas fa-check me-1"></i>Confirm</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+          <input type="hidden" name="action" value="reject"/>
+          <button class="appt-mob-btn btn-reject"><i class="fas fa-times me-1"></i>Reject</button>
+        </form>
+        {% elif a.status == 'Confirmed' %}
+        <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+          <input type="hidden" name="action" value="checkin"/>
+          <button class="appt-mob-btn btn-checkin"><i class="fas fa-sign-in-alt me-1"></i>Check In</button>
+        </form>
+        {% elif a.status == 'Checked In' %}
+        <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+          <input type="hidden" name="action" value="complete"/>
+          <button class="appt-mob-btn btn-complete"><i class="fas fa-flag-checkered me-1"></i>Complete</button>
+        </form>
+        {% endif %}
+        <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}" onsubmit="return confirm('Delete this appointment?')">
+          <input type="hidden" name="action" value="delete"/>
+          <button class="appt-mob-btn btn-delete"><i class="fas fa-trash me-1"></i>Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
   {% else %}
-  <p class="text-center py-5" style="color:var(--text-muted);">No appointments found.</p>
+  <div class="text-center py-5">
+    <i class="fas fa-calendar-times" style="font-size:2.5rem;color:rgba(201,168,76,0.3);"></i>
+    <p class="mt-3" style="color:var(--text-muted);">No appointments found.</p>
+  </div>
   {% endif %}
 </div>
 
 <style>
-.badge-status-pending       { background:rgba(255,170,77,0.16);  color:#ffc36b; }
-.badge-status-confirmed     { background:rgba(71,188,121,0.16);  color:#7ce0aa; }
-.badge-status-cancelled     { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
-.badge-status-rejected      { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
-.badge-status-checked-in    { background:rgba(105,152,255,0.16); color:#9dc0ff; }
-.badge-status-completed     { background:rgba(201,168,76,0.16);  color:var(--gold-2); }
+/* Status badges */
+.badge-status-pending     { background:rgba(255,170,77,0.16);  color:#ffc36b; }
+.badge-status-confirmed   { background:rgba(71,188,121,0.16);  color:#7ce0aa; }
+.badge-status-cancelled   { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
+.badge-status-rejected    { background:rgba(226,93,93,0.16);   color:#ff9a9a; }
+.badge-status-checked-in  { background:rgba(105,152,255,0.16); color:#9dc0ff; }
+.badge-status-completed   { background:rgba(201,168,76,0.16);  color:var(--gold-2); }
+
+/* Action buttons */
+.appt-action-btn {
+  width:32px; height:32px; border-radius:8px; border:1px solid;
+  display:flex; align-items:center; justify-content:center;
+  font-size:0.78rem; cursor:pointer; transition:all 0.2s;
+}
+.btn-accept  { background:rgba(37,211,102,0.12); border-color:rgba(37,211,102,0.3);  color:#7ce0aa; }
+.btn-reject  { background:rgba(226,93,93,0.12);  border-color:rgba(226,93,93,0.3);   color:#ff9a9a; }
+.btn-checkin { background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3); color:#9dc0ff; }
+.btn-complete{ background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.3);  color:var(--gold-2); }
+.btn-delete  { background:rgba(226,93,93,0.08);  border-color:rgba(226,93,93,0.2);   color:rgba(255,154,154,0.6); }
+.btn-delete:hover { background:rgba(226,93,93,0.2); color:#ff9a9a; }
+.appt-action-btn:hover { transform:scale(1.1); }
+
+.ticket-badge {
+  padding:4px 8px; border-radius:6px;
+  background:rgba(201,168,76,0.1); color:var(--gold-2);
+  font-size:0.7rem; font-weight:700; letter-spacing:0.08em;
+}
+
+/* Mobile cards */
+.appt-cards { display:flex; flex-direction:column; gap:12px; }
+.appt-card {
+  background:rgba(255,255,255,0.04); border:1px solid rgba(201,168,76,0.12);
+  border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px;
+}
+.appt-card-top   { display:flex; justify-content:space-between; align-items:flex-start; }
+.appt-card-name  { font-weight:700; color:#fff; font-size:0.95rem; }
+.appt-card-phone { font-size:0.78rem; color:var(--text-muted); margin-top:2px; }
+.appt-card-services { font-size:0.82rem; color:rgba(240,230,211,0.6); line-height:1.4; }
+.appt-card-meta  { display:flex; flex-wrap:wrap; gap:10px; font-size:0.8rem; color:rgba(240,230,211,0.7); }
+.appt-card-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.appt-mob-btn {
+  padding:7px 14px; border-radius:999px; border:1px solid;
+  font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s;
+}
+.appt-mob-btn.btn-accept  { background:rgba(37,211,102,0.12); border-color:rgba(37,211,102,0.3);  color:#7ce0aa; }
+.appt-mob-btn.btn-reject  { background:rgba(226,93,93,0.12);  border-color:rgba(226,93,93,0.3);   color:#ff9a9a; }
+.appt-mob-btn.btn-checkin { background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3); color:#9dc0ff; }
+.appt-mob-btn.btn-complete{ background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.3);  color:var(--gold-2); }
+.appt-mob-btn.btn-delete  { background:rgba(226,93,93,0.08);  border-color:rgba(226,93,93,0.2);   color:rgba(255,154,154,0.6); }
 </style>
 {% endblock %}
