@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, Response
 from functools import wraps
 from db import query, execute
-import bcrypt, os, csv, io, uuid, math
+import bcrypt, os, csv, io, uuid, math, time
 from werkzeug.utils import secure_filename
 from sms import sms_confirmed, sms_rejected
 from email_service import send_confirmation_email, send_rejection_email
@@ -349,7 +349,6 @@ def gallery_upload():
     count = 0
     for f in files:
         if f and allowed_file(f.filename):
-            import time
             base, ext = os.path.splitext(secure_filename(f.filename))
             filename  = f"{base}_{int(time.time()*1000)}{ext}"
             f.save(os.path.join(upload_dir, filename))
@@ -412,8 +411,7 @@ def save_offer():
         return redirect(url_for('admin.offers'))
     try:
         discount_percent = float(discount_percent)
-        import math
-        if math.isnan(discount_percent) or math.isinf(discount_percent) or not (0 <= discount_percent <= 100):
+        if math.isnan(discount_percent) or not (0 <= discount_percent <= 100):
             raise ValueError
     except (ValueError, TypeError):
         flash('Discount % must be between 0 and 100.', 'danger')
