@@ -94,42 +94,7 @@ const counterObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
 
-/* ── Service Card Selection ── */
-document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
-  card.addEventListener('click', () => {
-    const id = card.dataset.id;
-    const cb = document.getElementById('svc-' + id);
-    if (!cb) return;
-    cb.checked = !cb.checked;
-    // sync all elements with same data-id
-    document.querySelectorAll(`[data-id="${id}"]`).forEach(el => {
-      el.classList.toggle('selected', cb.checked);
-    });
-    updateCount();
-  });
-});
 
-function updateCount() {
-  const count = document.querySelectorAll('.svc-select-card.selected').length;
-  const el = document.getElementById('selectedCount');
-  if (el) el.textContent = count + ' service' + (count !== 1 ? 's' : '') + ' selected';
-  const btn = document.getElementById('bookBtn');
-  if (btn) btn.disabled = count === 0;
-
-  // Live price + time total
-  let totalPrice = 0, totalMins = 0;
-  document.querySelectorAll('.svc-select-card.selected').forEach(c => {
-    totalPrice += parseFloat(c.dataset.price || 0);
-    const dur = c.dataset.dur || '';
-    const m = dur.match(/(\d+)/);
-    if (m) totalMins += parseInt(m[1]);
-  });
-  const priceEl = document.getElementById('totalPrice');
-  const timeEl  = document.getElementById('totalTime');
-  if (priceEl) priceEl.textContent = '\u20b9' + totalPrice.toFixed(0);
-  if (timeEl)  timeEl.textContent  = totalMins + ' min';
-}
-updateCount();
 
 /* ── Time Chip Selection ── */
 const timeChips = document.querySelectorAll('.time-chip');

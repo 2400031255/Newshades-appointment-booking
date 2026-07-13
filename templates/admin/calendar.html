@@ -1,0 +1,417 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Appointment Calendar – Admin{% endblock %}
+
+{% block extra_css %}
+<!-- FullCalendar -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet"/>
+<style>
+:root { --gold:#c9a84c; --gold-2:#e8c96a; }
+
+/* ── Shell ── */
+.admin-cal-shell { min-height:100vh; padding:90px 0 60px; }
+.admin-cal-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px; margin-bottom:20px;
+}
+.admin-cal-title { font-family:'Playfair Display',serif; font-size:1.6rem; color:#fff; margin:0; }
+
+/* ── View toggle ── */
+.view-toggle { display:flex; gap:4px; background:rgba(255,255,255,.04); border-radius:12px; padding:4px; border:1px solid rgba(255,255,255,.06); }
+.view-btn {
+  padding:7px 16px; border-radius:9px; border:none; background:transparent;
+  color:rgba(240,230,211,.5); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .2s;
+}
+.view-btn.active { background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:#120e08; }
+
+/* ── FullCalendar overrides ── */
+#adminCal {
+  background:rgba(255,255,255,.02);
+  border-radius:20px;
+  border:1px solid rgba(201,168,76,.15);
+  padding:16px;
+  min-height:600px;
+}
+.fc { color:#f0e6d3; font-family:'DM Sans',sans-serif; }
+.fc-toolbar-title { font-family:'Playfair Display',serif; font-size:1.2rem !important; color:#fff !important; }
+.fc-button { background:rgba(255,255,255,.06) !important; border:1px solid rgba(255,255,255,.1) !important; color:rgba(240,230,211,.8) !important; border-radius:8px !important; font-size:.8rem !important; }
+.fc-button:hover { background:rgba(201,168,76,.15) !important; border-color:rgba(201,168,76,.3) !important; }
+.fc-button-active, .fc-button-primary:not(:disabled).fc-button-active { background:linear-gradient(135deg,var(--gold-2),var(--gold)) !important; color:#120e08 !important; border-color:transparent !important; }
+.fc-col-header-cell { background:rgba(255,255,255,.03) !important; }
+.fc-col-header-cell-cushion { color:rgba(240,230,211,.5) !important; font-size:.75rem !important; font-weight:700 !important; letter-spacing:.08em !important; text-transform:uppercase !important; text-decoration:none !important; }
+.fc-daygrid-day { background:rgba(255,255,255,.01) !important; }
+.fc-daygrid-day:hover { background:rgba(201,168,76,.04) !important; }
+.fc-daygrid-day-number { color:rgba(240,230,211,.6) !important; font-size:.8rem !important; text-decoration:none !important; }
+.fc-day-today { background:rgba(201,168,76,.06) !important; }
+.fc-day-today .fc-daygrid-day-number { color:var(--gold-2) !important; font-weight:800 !important; }
+.fc-event { border-radius:6px !important; border:none !important; font-size:.75rem !important; font-weight:600 !important; padding:2px 6px !important; cursor:pointer !important; }
+.fc-event:hover { filter:brightness(1.15); }
+.fc-timegrid-slot { border-color:rgba(255,255,255,.04) !important; }
+.fc-timegrid-axis { color:rgba(240,230,211,.3) !important; font-size:.72rem !important; }
+.fc-scrollgrid { border-color:rgba(255,255,255,.06) !important; }
+.fc-scrollgrid td, .fc-scrollgrid th { border-color:rgba(255,255,255,.04) !important; }
+.fc-list-event { background:rgba(255,255,255,.02) !important; }
+.fc-list-event:hover td { background:rgba(201,168,76,.06) !important; }
+.fc-list-day-cushion { background:rgba(255,255,255,.04) !important; color:rgba(240,230,211,.6) !important; }
+
+/* ── Legend ── */
+.cal-legend-bar { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+.legend-pill { display:flex; align-items:center; gap:6px; font-size:.72rem; color:rgba(240,230,211,.5); }
+.legend-color { width:12px; height:12px; border-radius:4px; }
+
+/* ── Appointment modal ── */
+.appt-modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999;
+  display:none; place-items:center; backdrop-filter:blur(4px);
+}
+.appt-modal-overlay.show { display:grid; }
+.appt-modal {
+  width:min(100%,480px); margin:16px; border-radius:24px; overflow:hidden;
+  background:#1a1510; border:1px solid rgba(201,168,76,.25);
+  box-shadow:0 40px 100px rgba(0,0,0,.6);
+  animation:modalIn .3s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes modalIn { from{opacity:0;transform:scale(.95) translateY(20px)} to{opacity:1;transform:none} }
+.appt-modal-header {
+  padding:20px 24px; background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(255,255,255,.02));
+  border-bottom:1px solid rgba(255,255,255,.06); display:flex; align-items:center; justify-content:space-between;
+}
+.appt-modal-title { font-family:'Playfair Display',serif; font-size:1.1rem; color:#fff; }
+.modal-close { width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:rgba(240,230,211,.6); cursor:pointer; display:grid; place-items:center; font-size:.8rem; }
+.appt-modal-body { padding:24px; }
+.appt-detail-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.04); font-size:.85rem; }
+.appt-detail-row:last-child { border-bottom:none; }
+.appt-detail-label { color:rgba(240,230,211,.45); }
+.appt-detail-val { color:#fff; font-weight:600; text-align:right; max-width:60%; }
+.status-badge { padding:3px 12px; border-radius:999px; font-size:.72rem; font-weight:800; letter-spacing:.06em; }
+.status-Confirmed  { background:rgba(34,197,94,.15);  color:#22c55e; }
+.status-Pending    { background:rgba(245,158,11,.15); color:#f59e0b; }
+.status-Cancelled  { background:rgba(239,68,68,.15);  color:#ef4444; }
+.status-Rejected   { background:rgba(239,68,68,.15);  color:#ef4444; }
+.status-Completed  { background:rgba(59,130,246,.15); color:#3b82f6; }
+.status-CheckedIn  { background:rgba(139,92,246,.15); color:#8b5cf6; }
+.appt-modal-actions { padding:0 24px 24px; display:flex; gap:8px; flex-wrap:wrap; }
+.action-btn {
+  flex:1; min-width:80px; padding:9px 12px; border-radius:10px; border:none;
+  font-size:.78rem; font-weight:700; cursor:pointer; transition:all .2s; text-align:center;
+}
+.action-btn:hover { transform:translateY(-1px); filter:brightness(1.1); }
+.btn-accept   { background:rgba(34,197,94,.2);  color:#22c55e;  border:1px solid rgba(34,197,94,.3); }
+.btn-reject   { background:rgba(239,68,68,.2);  color:#ef4444;  border:1px solid rgba(239,68,68,.3); }
+.btn-checkin  { background:rgba(139,92,246,.2); color:#8b5cf6;  border:1px solid rgba(139,92,246,.3); }
+.btn-complete { background:rgba(59,130,246,.2); color:#3b82f6;  border:1px solid rgba(59,130,246,.3); }
+
+/* ── Block panel ── */
+.block-panel { border-radius:16px; padding:20px; background:rgba(239,68,68,.05); border:1px solid rgba(239,68,68,.15); }
+.block-panel-title { font-size:.85rem; font-weight:700; color:#ef4444; margin-bottom:14px; }
+
+/* ── Live dot ── */
+.live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:livePulse 2s ease-in-out infinite; display:inline-block; }
+@keyframes livePulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-cal-shell">
+  <div class="container-fluid px-4">
+
+    <!-- Top bar -->
+    <div class="admin-cal-topbar reveal-up">
+      <div>
+        <a href="{{ url_for('admin.dashboard') }}" style="color:rgba(240,230,211,.4);font-size:.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <i class="fas fa-arrow-left"></i> Dashboard
+        </a>
+        <h1 class="admin-cal-title">Appointment <span style="color:var(--gold);">Calendar</span></h1>
+      </div>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:rgba(240,230,211,.4);">
+          <span class="live-dot"></span> Real-time
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="dayGridMonth">Month</button>
+          <button class="view-btn" data-view="timeGridWeek">Week</button>
+          <button class="view-btn" data-view="timeGridDay">Day</button>
+          <button class="view-btn" data-view="listWeek">List</button>
+        </div>
+        <button class="btn-outline-gold" style="padding:8px 16px;font-size:.8rem;" onclick="document.getElementById('blockPanel').scrollIntoView({behavior:'smooth'})">
+          <i class="fas fa-ban me-2"></i>Block Slots
+        </button>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="cal-legend-bar reveal-up" style="animation-delay:.05s">
+      <div class="legend-pill"><div class="legend-color" style="background:#22c55e;"></div>Confirmed</div>
+      <div class="legend-pill"><div class="legend-color" style="background:#f59e0b;"></div>Pending</div>
+      <div class="legend-pill"><div class="legend-color" style="background:#ef4444;"></div>Cancelled / Rejected</div>
+      <div class="legend-pill"><div class="legend-color" style="background:#3b82f6;"></div>Completed</div>
+      <div class="legend-pill"><div class="legend-color" style="background:#8b5cf6;"></div>Checked In</div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="reveal-up" style="animation-delay:.1s;">
+      <div id="adminCal"></div>
+    </div>
+
+    <!-- Block Slots Panel -->
+    <div class="row g-4 mt-2" id="blockPanel">
+      <div class="col-lg-6 reveal-up" style="animation-delay:.15s;">
+        <div class="block-panel">
+          <div class="block-panel-title"><i class="fas fa-ban me-2"></i>Block Date / Time Slot</div>
+          <div class="row g-3">
+            <div class="col-md-5">
+              <label class="field-label mb-1">Date</label>
+              <input type="date" id="blockDate" class="premium-input" min="{{ now_date }}"/>
+            </div>
+            <div class="col-md-4">
+              <label class="field-label mb-1">Time (optional)</label>
+              <select id="blockTime" class="premium-input">
+                <option value="">Full Day</option>
+                {% for t in ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'] %}
+                <option value="{{ t }}">{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+              <button class="btn-gold-hero w-100" style="padding:10px;" onclick="blockSlot()">
+                <i class="fas fa-lock me-1"></i>Block
+              </button>
+            </div>
+            <div class="col-12">
+              <input type="text" id="blockReason" class="premium-input" placeholder="Reason (e.g. Holiday, Staff leave)"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 reveal-up" style="animation-delay:.2s;">
+        <div class="glass-card">
+          <div style="font-size:.85rem;font-weight:700;color:rgba(240,230,211,.7);margin-bottom:14px;"><i class="fas fa-list me-2 text-gold"></i>Blocked Slots</div>
+          <div id="blockedList" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+            <div style="color:rgba(240,230,211,.3);font-size:.8rem;text-align:center;padding:12px;">Loading…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Appointment Detail Modal -->
+<div class="appt-modal-overlay" id="apptModal">
+  <div class="appt-modal">
+    <div class="appt-modal-header">
+      <div class="appt-modal-title" id="modalTitle">Appointment Details</div>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="appt-modal-body" id="modalBody"></div>
+    <div class="appt-modal-actions" id="modalActions"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+let calendar;
+let currentEventId = null;
+
+/* ── FullCalendar init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const calEl = document.getElementById('adminCal');
+  calendar = new FullCalendar.Calendar(calEl, {
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left:   'prev,next today',
+      center: 'title',
+      right:  ''
+    },
+    height: 'auto',
+    editable: true,
+    droppable: true,
+    eventDurationEditable: false,
+    events: fetchEvents,
+    eventClick: onEventClick,
+    eventDrop: onEventDrop,
+    eventDidMount(info) {
+      // Tooltip
+      info.el.title = `${info.event.extendedProps.customer} — ${info.event.extendedProps.time}`;
+    },
+    datesSet() {
+      // Refresh when navigating
+    }
+  });
+  calendar.render();
+
+  // View toggle buttons
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      calendar.changeView(btn.dataset.view);
+    });
+  });
+
+  loadBlockedList();
+});
+
+/* ── Fetch events from API ── */
+function fetchEvents(info, successCb, failureCb) {
+  const start = info.startStr.slice(0,10);
+  const end   = info.endStr.slice(0,10);
+  fetch(`/api/calendar/admin/appointments?start=${start}&end=${end}`)
+    .then(r => r.json())
+    .then(data => successCb(data))
+    .catch(() => failureCb());
+}
+
+/* ── Event click → modal ── */
+function onEventClick(info) {
+  const p = info.event.extendedProps;
+  currentEventId = info.event.id;
+
+  document.getElementById('modalTitle').textContent = `#${p.ticket_id || info.event.id} — ${p.customer}`;
+
+  const statusClass = p.status.replace(' ','');
+  document.getElementById('modalBody').innerHTML = `
+    <div class="appt-detail-row"><span class="appt-detail-label">Customer</span><span class="appt-detail-val">${p.customer}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Phone</span><span class="appt-detail-val">${p.phone}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Email</span><span class="appt-detail-val" style="font-size:.78rem;">${p.email}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Date</span><span class="appt-detail-val">${info.event.startStr.slice(0,10)}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Time</span><span class="appt-detail-val">${p.time}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Services</span><span class="appt-detail-val">${p.services}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Total</span><span class="appt-detail-val" style="color:var(--gold-2);">₹${p.price.toFixed(0)}</span></div>
+    <div class="appt-detail-row"><span class="appt-detail-label">Status</span><span class="appt-detail-val"><span class="status-badge status-${statusClass}">${p.status}</span></span></div>
+  `;
+
+  // Action buttons based on status
+  const actions = document.getElementById('modalActions');
+  actions.innerHTML = '';
+  if (p.status === 'Pending') {
+    actions.innerHTML += `<button class="action-btn btn-accept" onclick="doAction('accept')"><i class="fas fa-check me-1"></i>Accept</button>`;
+    actions.innerHTML += `<button class="action-btn btn-reject" onclick="doAction('reject')"><i class="fas fa-times me-1"></i>Reject</button>`;
+  }
+  if (p.status === 'Confirmed') {
+    actions.innerHTML += `<button class="action-btn btn-checkin" onclick="doAction('checkin')"><i class="fas fa-sign-in-alt me-1"></i>Check In</button>`;
+    actions.innerHTML += `<button class="action-btn btn-complete" onclick="doAction('complete')"><i class="fas fa-flag-checkered me-1"></i>Complete</button>`;
+  }
+  if (p.status === 'Checked In') {
+    actions.innerHTML += `<button class="action-btn btn-complete" onclick="doAction('complete')"><i class="fas fa-flag-checkered me-1"></i>Complete</button>`;
+  }
+
+  document.getElementById('apptModal').classList.add('show');
+}
+
+/* ── Drag-drop reschedule ── */
+function onEventDrop(info) {
+  const newDate = info.event.startStr.slice(0,10);
+  const newTime = info.event.extendedProps.time;
+  if (!confirm(`Reschedule to ${newDate} at ${newTime}?`)) {
+    info.revert();
+    return;
+  }
+  fetch('/api/calendar/admin/reschedule', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({id: info.event.id, date: newDate, time: newTime})
+  }).then(r => r.json()).then(d => {
+    if (!d.ok) { info.revert(); alert('Reschedule failed.'); }
+    else calendar.refetchEvents();
+  }).catch(() => { info.revert(); });
+}
+
+/* ── Admin action ── */
+async function doAction(action) {
+  if (!currentEventId) return;
+  const res  = await fetch('/api/calendar/admin/action', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({id: currentEventId, action})
+  });
+  const data = await res.json();
+  if (data.ok) {
+    closeModal();
+    calendar.refetchEvents();
+    showToast(`Action "${action}" applied successfully.`, 'success');
+  } else {
+    showToast('Action failed. Please try again.', 'danger');
+  }
+}
+
+/* ── Block slot ── */
+async function blockSlot() {
+  const date   = document.getElementById('blockDate').value;
+  const time   = document.getElementById('blockTime').value || null;
+  const reason = document.getElementById('blockReason').value;
+  if (!date) { showToast('Please select a date.', 'warning'); return; }
+  const res  = await fetch('/api/calendar/admin/block', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({date, time, reason})
+  });
+  const data = await res.json();
+  if (data.ok) {
+    showToast('Slot blocked successfully.', 'success');
+    loadBlockedList();
+    calendar.refetchEvents();
+  }
+}
+
+async function unblockSlot(date, time) {
+  await fetch('/api/calendar/admin/unblock', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({date, time})
+  });
+  loadBlockedList();
+  calendar.refetchEvents();
+  showToast('Slot unblocked.', 'success');
+}
+
+async function loadBlockedList() {
+  const res  = await fetch('/api/calendar/admin/blocked-dates');
+  const data = await res.json();
+  const list = document.getElementById('blockedList');
+  if (!data.length) {
+    list.innerHTML = '<div style="color:rgba(240,230,211,.3);font-size:.8rem;text-align:center;padding:12px;">No blocked slots.</div>';
+    return;
+  }
+  list.innerHTML = data.map(b => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);">
+      <div>
+        <div style="font-size:.82rem;color:#fff;font-weight:600;">${b.block_date}${b.block_time ? ' · '+b.block_time : ' (Full Day)'}</div>
+        ${b.reason ? `<div style="font-size:.7rem;color:rgba(240,230,211,.4);">${b.reason}</div>` : ''}
+      </div>
+      <button onclick="unblockSlot('${b.block_date}','${b.block_time||''}')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:pointer;">
+        <i class="fas fa-unlock"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+/* ── Modal close ── */
+function closeModal() {
+  document.getElementById('apptModal').classList.remove('show');
+  currentEventId = null;
+}
+document.getElementById('apptModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('apptModal')) closeModal();
+});
+
+/* ── Socket.IO real-time ── */
+const socket = io();
+socket.on('calendar_update', () => {
+  calendar.refetchEvents();
+  loadBlockedList();
+});
+
+/* ── Toast helper ── */
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = `flash-alert flash-${type}`;
+  t.style.cssText = 'position:fixed;top:80px;right:20px;z-index:99999;min-width:260px;';
+  t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'} me-2"></i>${msg}<button class="flash-close" onclick="this.parentElement.remove()">×</button>`;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; setTimeout(()=>t.remove(),400); }, 3500);
+}
+</script>
+{% endblock %}

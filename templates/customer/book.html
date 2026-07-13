@@ -714,20 +714,15 @@ function updateSidebar() {
   }
 }
 
-/* hook into existing updateCount */
-const _origUpdate = window.updateCount;
-// Handle both desktop cards and mobile rows
+/* Wire up service selection — single source of truth, no double-toggle */
 document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(el => {
   el.addEventListener('click', () => {
     const id = el.dataset.id;
-    // sync the paired element
-    const pair = document.querySelectorAll(`[data-id="${id}"]`);
     const cb = document.getElementById('svc-' + id);
     if (!cb) return;
     cb.checked = !cb.checked;
-    pair.forEach(p => p.classList.toggle('selected', cb.checked));
-    if (typeof updateCount === 'function') updateCount();
-    setTimeout(updateSidebar, 10);
+    document.querySelectorAll(`[data-id="${id}"]`).forEach(p => p.classList.toggle('selected', cb.checked));
+    updateSidebar();
   });
 });
 document.getElementById('preferred_date')?.addEventListener('change', updateSidebar);

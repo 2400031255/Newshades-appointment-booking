@@ -1,13 +1,27 @@
 from flask import Flask, render_template, session, redirect, url_for, current_app
+from flask_socketio import SocketIO, emit
 from config import Config
 from db import close_db
 import os
+
+socketio = SocketIO()
+
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
     app.config['WTF_CSRF_ENABLED'] = False
+
+    # Init Socket.IO
+    socketio.init_app(
+        app,
+        cors_allowed_origins='*',
+        async_mode='threading',
+        logger=False,
+        engineio_logger=False,
+        manage_session=False
+    )
 
     @app.before_request
     def make_session_permanent():
@@ -59,9 +73,11 @@ def create_app():
     from routes.auth import auth
     from routes.customer import customer
     from routes.admin import admin
+    from routes.calendar_api import cal_api
     app.register_blueprint(auth)
     app.register_blueprint(customer)
     app.register_blueprint(admin)
+    app.register_blueprint(cal_api)
 
     @app.route('/')
     def index():
@@ -126,8 +142,24 @@ def create_app():
             photos = []
         return render_template('gallery.html', photos=photos)
 
+    # ── Socket.IO events ──────────────────────────────────────────────────────
+    @socketio.on('connect')
+    def on_connect():
+        emit('connected', {'status': 'ok'})
+
+    @socketio.on('ping_calendar')
+    def on_ping():
+        emit('pong_calendar', {'ts': __import__('datetime').datetime.now().isoformat()})
+
     return app
+
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true')
+    socketio.run(
+        app,
+        debug=os.environ.get('FLASK_DEBUG', 'false').lower() == 'true',
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', 5000)),
+        allow_unsafe_werkzeug=True
+    )

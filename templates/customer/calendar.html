@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% block title %}Book via Calendar – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+  --gold: #c9a84c; --gold-2: #e8c96a; --ink: #0d0b10;
+  --glass: rgba(255,255,255,0.04); --glass-border: rgba(201,168,76,0.18);
+}
+.cal-shell { min-height:100vh; padding:100px 0 80px; }
+
+/* ── Month grid ── */
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.cal-nav-btn {
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--glass-border);
+  background:var(--glass); color:var(--gold-2); cursor:pointer; display:grid;
+  place-items:center; transition:all .2s; font-size:.9rem;
+}
+.cal-nav-btn:hover { background:rgba(201,168,76,.15); }
+.cal-month-title { font-family:'Playfair Display',serif; font-size:1.4rem; color:#fff; }
+
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-dow {
+  text-align:center; font-size:.7rem; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:rgba(240,230,211,.4); padding:8px 0;
+}
+.cal-day {
+  aspect-ratio:1; border-radius:12px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; cursor:pointer; position:relative;
+  border:1.5px solid transparent; transition:all .2s; font-size:.85rem;
+  background:rgba(255,255,255,.03);
+}
+.cal-day.empty { background:transparent; border:none; cursor:default; }
+.cal-day.past  { opacity:.3; cursor:not-allowed; }
+.cal-day.closed { background:rgba(239,68,68,.06); border-color:rgba(239,68,68,.15); cursor:not-allowed; }
+.cal-day.full  { background:rgba(239,68,68,.08); border-color:rgba(239,68,68,.2); cursor:not-allowed; }
+.cal-day.limited { background:rgba(245,158,11,.08); border-color:rgba(245,158,11,.2); }
+.cal-day.available { background:rgba(34,197,94,.06); border-color:rgba(34,197,94,.15); }
+.cal-day.available:hover { background:rgba(201,168,76,.12); border-color:var(--gold); transform:scale(1.05); }
+.cal-day.selected { background:linear-gradient(135deg,rgba(201,168,76,.25),rgba(232,201,106,.1)); border-color:var(--gold-2); box-shadow:0 0 20px rgba(201,168,76,.3); }
+.cal-day.today .cal-day-num { background:linear-gradient(135deg,var(--gold-2),var(--gold)); color:#120e08; border-radius:50%; width:26px; height:26px; display:grid; place-items:center; font-weight:800; }
+.cal-day-num { font-weight:600; color:#fff; font-size:.85rem; }
+.cal-day-dot { width:5px; height:5px; border-radius:50%; margin-top:3px; }
+.cal-day.available .cal-day-dot { background:#22c55e; }
+.cal-day.limited  .cal-day-dot { background:#f59e0b; }
+.cal-day.full     .cal-day-dot { background:#ef4444; }
+
+/* ── Slot panel ── */
+.slot-panel { border-radius:20px; padding:24px; background:var(--glass); border:1px solid var(--glass-border); }
+.slot-panel-title { font-family:'Playfair Display',serif; font-size:1rem; color:#fff; margin-bottom:16px; }
+.slot-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.slot-chip {
+  padding:12px 10px; border-radius:14px; border:1.5px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03); cursor:pointer; text-align:center;
+  transition:all .2s; position:relative; overflow:hidden;
+}
+.slot-chip.available:hover { border-color:var(--gold); background:rgba(201,168,76,.1); }
+.slot-chip.selected { border-color:var(--gold-2); background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(232,201,106,.08)); box-shadow:0 4px 16px rgba(201,168,76,.25); }
+.slot-chip.unavailable { opacity:.4; cursor:not-allowed; }
+.slot-time { font-weight:700; color:#fff; font-size:.88rem; }
+.slot-remain { font-size:.68rem; color:rgba(240,230,211,.5); margin-top:3px; }
+.slot-remain.low { color:#f59e0b; }
+.slot-chip.selected .slot-time { color:var(--gold-2); }
+
+/* ── AI badge ── */
+.ai-badge {
+  display:inline-flex; align-items:center; gap:6px; padding:3px 10px;
+  border-radius:999px; background:linear-gradient(135deg,rgba(139,92,246,.3),rgba(59,130,246,.2));
+  border:1px solid rgba(139,92,246,.4); color:#a78bfa; font-size:.65rem; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase; margin-bottom:6px;
+}
+.ai-rec-card {
+  padding:14px 16px; border-radius:14px; border:1px solid rgba(139,92,246,.25);
+  background:rgba(139,92,246,.06); cursor:pointer; transition:all .2s;
+}
+.ai-rec-card:hover { border-color:rgba(139,92,246,.5); background:rgba(139,92,246,.12); transform:translateY(-2px); }
+.ai-rec-card.selected { border-color:#8b5cf6; background:rgba(139,92,246,.18); }
+
+/* ── Legend ── */
+.cal-legend { display:flex; gap:16px; flex-wrap:wrap; margin-top:12px; }
+.legend-item { display:flex; align-items:center; gap:6px; font-size:.72rem; color:rgba(240,230,211,.5); }
+.legend-dot { width:10px; height:10px; border-radius:3px; }
+
+/* ── Loading spinner ── */
+.cal-loading { display:none; position:absolute; inset:0; background:rgba(13,11,16,.7); border-radius:20px; place-items:center; z-index:10; }
+.cal-loading.show { display:grid; }
+.spinner-gold { width:32px; height:32px; border:3px solid rgba(201,168,76,.2); border-top-color:var(--gold-2); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── Live indicator ── */
+.live-dot { width:8px; height:8px; border-radius:50%; background:#22c55e; animation:livePulse 2s ease-in-out infinite; display:inline-block; margin-right:6px; }
+@keyframes livePulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{box-shadow:0 0 0 6px rgba(34,197,94,0)} }
+
+@media(max-width:576px) {
+  .slot-grid { grid-template-columns:repeat(2,1fr); }
+  .cal-day { border-radius:8px; font-size:.75rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cal-shell">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="mb-4 reveal-up">
+      <a href="{{ url_for('customer.book_page') }}" class="book-back d-inline-flex align-items-center gap-2 mb-3" style="color:var(--text-muted);font-size:.85rem;text-decoration:none;">
+        <i class="fas fa-arrow-left"></i> Back to Quick Book
+      </a>
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          <div class="section-badge mb-2"><span class="badge-dot"></span> Calendar Booking</div>
+          <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.6rem,3vw,2.2rem);color:#fff;margin:0;">
+            Pick Your <span style="color:var(--gold);">Date & Time</span>
+          </h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:.8rem;color:rgba(240,230,211,.5);">
+          <span class="live-dot"></span> Live availability
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Left: Calendar + AI -->
+      <div class="col-lg-7">
+
+        <!-- AI Recommendations -->
+        <div class="glass-card mb-4 reveal-up" id="aiSection" style="animation-delay:.05s">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div style="width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,rgba(139,92,246,.3),rgba(59,130,246,.2));border:1px solid rgba(139,92,246,.3);display:grid;place-items:center;color:#a78bfa;font-size:.8rem;">
+              <i class="fas fa-robot"></i>
+            </div>
+            <span style="font-weight:700;color:#fff;font-size:.9rem;">AI Smart Scheduling</span>
+            <span style="font-size:.7rem;color:rgba(240,230,211,.4);">— Best slots for you</span>
+          </div>
+          <div id="aiRecs" class="row g-2">
+            <div class="col-12 text-center" style="color:rgba(240,230,211,.4);font-size:.82rem;padding:12px 0;">
+              <i class="fas fa-spinner fa-spin me-2"></i>Finding best slots…
+            </div>
+          </div>
+        </div>
+
+        <!-- Month Calendar -->
+        <div class="glass-card reveal-up" style="animation-delay:.1s;position:relative;">
+          <div class="cal-loading" id="calLoading"><div class="spinner-gold"></div></div>
+
+          <div class="cal-header">
+            <button class="cal-nav-btn" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+            <div class="cal-month-title" id="monthTitle">Loading…</div>
+            <button class="cal-nav-btn" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+          </div>
+
+          <div class="cal-grid" id="calGrid">
+            {% for d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] %}
+            <div class="cal-dow">{{ d }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="cal-legend mt-3">
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(34,197,94,.5);"></div>Available</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(245,158,11,.5);"></div>Limited</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(239,68,68,.5);"></div>Full / Closed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Slot picker + Booking form -->
+      <div class="col-lg-5">
+
+        <!-- Slot panel -->
+        <div class="slot-panel mb-4 reveal-up" style="animation-delay:.15s;">
+          <div class="slot-panel-title" id="slotPanelTitle">
+            <i class="fas fa-clock me-2 text-gold"></i>Select a Date First
+          </div>
+          <div id="slotGrid" class="slot-grid">
+            <div class="col-span-2 text-center" style="color:rgba(240,230,211,.35);font-size:.82rem;padding:20px 0;grid-column:1/-1;">
+              Click a date on the calendar to see available slots.
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking form -->
+        <div class="glass-card reveal-up" style="animation-delay:.2s;" id="bookingFormCard">
+          <div class="sidebar-title mb-3"><i class="fas fa-calendar-check me-2 text-gold"></i>Confirm Booking</div>
+
+          <form method="POST" action="{{ url_for('customer.book') }}" id="calBookForm">
+            <input type="hidden" name="preferred_date" id="formDate"/>
+            <input type="hidden" name="preferred_time" id="formTime"/>
+
+            <!-- Service selection -->
+            <div class="mb-3">
+              <label class="field-label mb-2">Services <span class="text-danger">*</span></label>
+              <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;" id="serviceList">
+                {% for svc in services %}
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02);cursor:pointer;transition:all .2s;" class="svc-label">
+                  <input type="checkbox" name="services" value="{{ svc.id }}" style="accent-color:var(--gold-2);width:16px;height:16px;flex-shrink:0;" class="svc-cb"/>
+                  <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;color:#fff;font-size:.85rem;">{{ svc.service_name }}</div>
+                    <div style="font-size:.72rem;color:rgba(240,230,211,.45);">{{ svc.duration }} · ₹{{ "%.0f"|format(svc.price) }}</div>
+                  </div>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Selected summary -->
+            <div id="bookSummary" style="display:none;padding:12px;border-radius:12px;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.18);margin-bottom:16px;font-size:.82rem;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="color:rgba(240,230,211,.5);">Date</span>
+                <span style="color:#fff;font-weight:600;" id="summaryDate">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="color:rgba(240,230,211,.5);">Time</span>
+                <span style="color:var(--gold-2);font-weight:600;" id="summaryTime">—</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span style="color:rgba(240,230,211,.5);">Services</span>
+                <span style="color:#fff;font-weight:600;" id="summaryServices">—</span>
+              </div>
+            </div>
+
+            <button type="submit" id="calBookBtn" class="btn-wa-book w-100" disabled style="justify-content:center;">
+              <i class="fas fa-calendar-check me-2"></i>Book Appointment
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+/* ── State ── */
+const today = new Date();
+let curYear  = today.getFullYear();
+let curMonth = today.getMonth() + 1; // 1-based
+let monthData = {};
+let selectedDate = null;
+let selectedTime = null;
+
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+/* ── Socket.IO ── */
+const socket = io();
+socket.on('calendar_update', () => {
+  loadMonth(curYear, curMonth);
+  if (selectedDate) loadSlots(selectedDate);
+});
+
+/* ── Load month availability ── */
+async function loadMonth(year, month) {
+  document.getElementById('calLoading').classList.add('show');
+  document.getElementById('monthTitle').textContent = `${MONTH_NAMES[month-1]} ${year}`;
+  try {
+    const res  = await fetch(`/api/calendar/month-availability?year=${year}&month=${month}`);
+    monthData  = (await res.json()).days || {};
+  } catch(e) { monthData = {}; }
+  renderGrid(year, month);
+  document.getElementById('calLoading').classList.remove('show');
+}
+
+function renderGrid(year, month) {
+  const grid = document.getElementById('calGrid');
+  // Remove old day cells (keep DOW headers = first 7 children)
+  while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+  const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const status = monthData[ds] || 'available';
+    const el = document.createElement('div');
+    el.className = `cal-day ${status}`;
+    if (ds === todayStr) el.classList.add('today');
+    if (ds === selectedDate) el.classList.add('selected');
+
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = d;
+    el.appendChild(numEl);
+
+    if (!['past','closed','full'].includes(status)) {
+      const dot = document.createElement('div');
+      dot.className = 'cal-day-dot';
+      el.appendChild(dot);
+      el.addEventListener('click', () => selectDate(ds));
+    }
+    grid.appendChild(el);
+  }
+}
+
+/* ── Select date ── */
+function selectDate(ds) {
+  selectedDate = ds;
+  selectedTime = null;
+  document.getElementById('formDate').value = ds;
+  document.getElementById('formTime').value = '';
+  // Re-render to show selection
+  renderGrid(curYear, curMonth);
+  loadSlots(ds);
+  updateSummary();
+}
+
+/* ── Load slots ── */
+async function loadSlots(ds) {
+  const panel = document.getElementById('slotGrid');
+  panel.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(240,230,211,.4);font-size:.82rem;padding:16px 0;"><i class="fas fa-spinner fa-spin me-2"></i>Loading slots…</div>';
+
+  // Format date for display
+  const [y,m,d] = ds.split('-');
+  const dateObj = new Date(y, m-1, d);
+  document.getElementById('slotPanelTitle').innerHTML =
+    `<i class="fas fa-clock me-2 text-gold"></i>${dateObj.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}`;
+
+  try {
+    const res  = await fetch(`/api/calendar/slots?date=${ds}`);
+    const data = await res.json();
+
+    if (data.past) {
+      panel.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(240,230,211,.35);font-size:.82rem;padding:20px 0;">Past date — cannot book.</div>';
+      return;
+    }
+    if (data.blocked) {
+      panel.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#ef4444;font-size:.82rem;padding:20px 0;"><i class="fas fa-ban me-2"></i>${data.message}</div>`;
+      return;
+    }
+    if (!data.slots || data.slots.length === 0) {
+      panel.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:rgba(240,230,211,.35);font-size:.82rem;padding:20px 0;">No slots available for this day.</div>';
+      return;
+    }
+
+    panel.innerHTML = '';
+    data.slots.forEach(s => {
+      const chip = document.createElement('div');
+      chip.className = `slot-chip ${s.available ? 'available' : 'unavailable'}`;
+      if (s.time === selectedTime) chip.classList.add('selected');
+
+      const remainText = s.available
+        ? `${s.remaining}/${s.max} slots left`
+        : (s.reason === 'past' ? 'Past' : 'Full');
+      const lowClass = s.remaining <= 1 ? 'low' : '';
+
+      chip.innerHTML = `<div class="slot-time">${s.time}</div><div class="slot-remain ${lowClass}">${remainText}</div>`;
+
+      if (s.available) {
+        chip.addEventListener('click', () => {
+          selectedTime = s.time;
+          document.getElementById('formTime').value = s.time;
+          document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+          updateSummary();
+          updateBookBtn();
+        });
+      }
+      panel.appendChild(chip);
+    });
+  } catch(e) {
+    panel.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ef4444;font-size:.82rem;padding:20px 0;">Failed to load slots. Please try again.</div>';
+  }
+}
+
+/* ── AI Recommendations ── */
+async function loadAI() {
+  try {
+    const res  = await fetch('/api/calendar/ai-recommend');
+    const data = await res.json();
+    const cont = document.getElementById('aiRecs');
+    if (!data.recommendations || data.recommendations.length === 0) {
+      cont.innerHTML = '<div class="col-12" style="color:rgba(240,230,211,.4);font-size:.82rem;text-align:center;padding:8px 0;">No recommendations available right now.</div>';
+      return;
+    }
+    cont.innerHTML = '';
+    data.recommendations.forEach((r, i) => {
+      const col = document.createElement('div');
+      col.className = 'col-md-4 col-12';
+      col.innerHTML = `
+        <div class="ai-rec-card" data-date="${r.date}" data-time="${r.time}">
+          <div class="ai-badge"><i class="fas fa-magic"></i> AI Pick ${i+1}</div>
+          <div style="font-weight:700;color:#fff;font-size:.85rem;">${r.day_label}</div>
+          <div style="color:var(--gold-2);font-size:.82rem;margin-top:2px;">${r.time}</div>
+          <div style="font-size:.7rem;color:rgba(240,230,211,.4);margin-top:4px;">${r.remaining} slot${r.remaining!==1?'s':''} left</div>
+        </div>`;
+      col.querySelector('.ai-rec-card').addEventListener('click', () => {
+        // Parse date to navigate to correct month
+        const [y,m,d] = r.date.split('-').map(Number);
+        curYear = y; curMonth = m;
+        loadMonth(y, m).then(() => selectDate(r.date)).then(() => {
+          selectedTime = r.time;
+          document.getElementById('formTime').value = r.time;
+          // Re-render slots with selection
+          loadSlots(r.date);
+          updateSummary();
+          updateBookBtn();
+        });
+        document.querySelectorAll('.ai-rec-card').forEach(c => c.classList.remove('selected'));
+        col.querySelector('.ai-rec-card').classList.add('selected');
+      });
+      cont.appendChild(col);
+    });
+  } catch(e) {
+    document.getElementById('aiRecs').innerHTML = '';
+  }
+}
+
+/* ── Summary & button ── */
+function updateSummary() {
+  const summary = document.getElementById('bookSummary');
+  const checked = document.querySelectorAll('.svc-cb:checked');
+  if (selectedDate && selectedTime && checked.length > 0) {
+    summary.style.display = '';
+    const [y,m,d] = selectedDate.split('-');
+    const dateObj = new Date(y, m-1, d);
+    document.getElementById('summaryDate').textContent = dateObj.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('summaryTime').textContent = selectedTime;
+    const names = Array.from(checked).map(cb => cb.closest('label').querySelector('div div').textContent);
+    document.getElementById('summaryServices').textContent = names.join(', ');
+  } else {
+    summary.style.display = 'none';
+  }
+  updateBookBtn();
+}
+
+function updateBookBtn() {
+  const checked = document.querySelectorAll('.svc-cb:checked').length;
+  const btn = document.getElementById('calBookBtn');
+  btn.disabled = !(selectedDate && selectedTime && checked > 0);
+}
+
+/* ── Service checkboxes ── */
+document.querySelectorAll('.svc-label').forEach(label => {
+  label.addEventListener('click', () => {
+    setTimeout(() => { updateSummary(); }, 10);
+  });
+  const cb = label.querySelector('.svc-cb');
+  cb.addEventListener('change', () => {
+    label.style.borderColor = cb.checked ? 'rgba(201,168,76,.5)' : 'rgba(255,255,255,.06)';
+    label.style.background  = cb.checked ? 'rgba(201,168,76,.08)' : 'rgba(255,255,255,.02)';
+    updateSummary();
+  });
+});
+
+/* ── Navigation ── */
+document.getElementById('prevMonth').addEventListener('click', () => {
+  curMonth--;
+  if (curMonth < 1) { curMonth = 12; curYear--; }
+  loadMonth(curYear, curMonth);
+});
+document.getElementById('nextMonth').addEventListener('click', () => {
+  curMonth++;
+  if (curMonth > 12) { curMonth = 1; curYear++; }
+  loadMonth(curYear, curMonth);
+});
+
+/* ── Init ── */
+loadMonth(curYear, curMonth);
+loadAI();
+
+// Auto-refresh slots every 30s
+setInterval(() => {
+  if (selectedDate) loadSlots(selectedDate);
+}, 30000);
+</script>
+{% endblock %}

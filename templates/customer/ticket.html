@@ -4,215 +4,90 @@
 {% block extra_css %}
 <style>
 .ticket-shell {
-  min-height: 100vh;
-  padding: 100px 16px 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height:100vh; padding:100px 16px 60px;
+  display:flex; align-items:center; justify-content:center;
   background:
-    radial-gradient(circle at 20% 20%, rgba(201,168,76,0.12), transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(37,211,102,0.06), transparent 40%),
+    radial-gradient(circle at 20% 20%, rgba(201,168,76,.12), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(37,211,102,.06), transparent 40%),
     linear-gradient(135deg, var(--ink) 0%, #0f0d15 50%, #17120f 100%);
 }
-
-/* ── Ticket card ── */
 .ticket-card {
-  width: min(100%, 520px);
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-  border: 1px solid #c9a84c;
-  background: #1a1510;
-  animation: ticketIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  width:min(100%,520px); border-radius:24px; overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,.5); border:1px solid #c9a84c;
+  background:#1a1510; animation:ticketIn .6s cubic-bezier(.22,1,.36,1) both;
 }
-@keyframes ticketIn {
-  from { opacity:0; transform: translateY(30px) scale(0.97); }
-  to   { opacity:1; transform: translateY(0) scale(1); }
-}
+@keyframes ticketIn { from{opacity:0;transform:translateY(30px) scale(.97)} to{opacity:1;transform:none} }
 
-/* ── Header strip ── */
+/* ── Expired overlay ── */
+.ticket-expired-overlay {
+  position:absolute; inset:0; background:rgba(13,11,16,.88);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; border-radius:24px; z-index:10; backdrop-filter:blur(4px);
+}
+.ticket-expired-icon { font-size:3rem; color:#ef4444; }
+.ticket-expired-text { font-family:'Playfair Display',serif; font-size:1.2rem; color:#ef4444; }
+.ticket-expired-sub  { font-size:.82rem; color:rgba(240,230,211,.5); text-align:center; max-width:280px; }
+
+/* ── Header ── */
 .ticket-header {
-  background: linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c);
-  padding: 24px 28px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
+  background:linear-gradient(135deg,#c9a84c,#e8c96a,#c9a84c);
+  padding:24px 28px; display:flex; align-items:center; gap:16px;
+  position:relative; overflow:hidden;
 }
-.ticket-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
+.ticket-header::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15),transparent 60%); }
+.ticket-logo { width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.4); flex-shrink:0; position:relative; z-index:1; }
+.ticket-salon-name { font-family:'Playfair Display',serif; font-size:1.3rem; font-weight:700; color:#120e08; position:relative; z-index:1; }
+.ticket-salon-sub  { font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:rgba(18,14,8,.7); position:relative; z-index:1; }
+.ticket-status-badge {
+  margin-left:auto; border-radius:999px; padding:5px 14px;
+  font-size:.72rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+  position:relative; z-index:1;
 }
-.ticket-logo {
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255,255,255,0.4);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-}
-.ticket-salon-name {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #120e08;
-  position: relative;
-  z-index: 1;
-}
-.ticket-salon-sub {
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(18,14,8,0.7);
-  position: relative;
-  z-index: 1;
-}
-.ticket-confirmed-badge {
-  margin-left: auto;
-  background: rgba(18,14,8,0.2);
-  border: 1px solid rgba(18,14,8,0.3);
-  border-radius: 999px;
-  padding: 5px 14px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #120e08;
-  position: relative;
-  z-index: 1;
-}
+.badge-Confirmed  { background:rgba(34,197,94,.2);  color:#15803d; border:1px solid rgba(34,197,94,.4); }
+.badge-Pending    { background:rgba(245,158,11,.2); color:#92400e; border:1px solid rgba(245,158,11,.4); }
+.badge-Completed  { background:rgba(59,130,246,.2); color:#1e40af; border:1px solid rgba(59,130,246,.4); }
+.badge-CheckedIn  { background:rgba(139,92,246,.2); color:#5b21b6; border:1px solid rgba(139,92,246,.4); }
 
-/* ── Ticket body ── */
-.ticket-body { padding: 28px; background: #1a1510; }
+/* ── Body ── */
+.ticket-body { padding:28px; background:#1a1510; }
+.ticket-id-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px dashed rgba(201,168,76,.2); }
+.ticket-id-label { font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--text-muted); }
+.ticket-id-val   { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; color:var(--gold-2); letter-spacing:.1em; }
+.ticket-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+.ticket-field-label { font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px; }
+.ticket-field-val   { color:#fff; font-weight:600; font-size:.9rem; }
+.ticket-services-block { padding:14px; border-radius:12px; background:#221c10; border:1px solid #5a4a20; margin-bottom:20px; }
+.ticket-services-label { font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+.ticket-service-tag { display:inline-block; padding:4px 12px; border-radius:999px; background:#2e2210; border:1px solid #7a5c1e; color:#e8c96a; font-size:.8rem; font-weight:600; margin:3px 3px 3px 0; }
 
-.ticket-id-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px dashed rgba(201,168,76,0.2);
-}
-.ticket-id-label { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-muted); }
-.ticket-id-val {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--gold-2);
-  letter-spacing: 0.1em;
-}
-
-.ticket-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
-}
-.ticket-field-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.ticket-field-val {
-  color: #fff;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-.ticket-services-block {
-  padding: 14px;
-  border-radius: 12px;
-  background: #221c10;
-  border: 1px solid #5a4a20;
-  margin-bottom: 20px;
-}
-.ticket-services-label {
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: 8px;
-}
-.ticket-service-tag {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #2e2210;
-  border: 1px solid #7a5c1e;
-  color: #e8c96a;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin: 3px 3px 3px 0;
-}
+/* ── Expiry bar ── */
+.ticket-expiry-bar { padding:10px 14px; border-radius:10px; margin-bottom:16px; font-size:.78rem; display:flex; align-items:center; gap:8px; }
+.expiry-valid   { background:rgba(34,197,94,.08);  border:1px solid rgba(34,197,94,.2);  color:#22c55e; }
+.expiry-expired { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.2);  color:#ef4444; }
+.expiry-today   { background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); color:#f59e0b; }
 
 /* ── Tear line ── */
-.ticket-tear {
-  position: relative;
-  margin: 0 -1px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-}
-.ticket-tear::before {
-  content: '';
-  position: absolute;
-  left: 0; right: 0;
-  border-top: 2px dashed rgba(201,168,76,0.2);
-}
-.ticket-tear-circle-l,
-.ticket-tear-circle-r {
-  position: absolute;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: #0d0b10;
-  border: 1px solid #5a4a20;
-}
-.ticket-tear-circle-l { left: -12px; }
-.ticket-tear-circle-r { right: -12px; }
+.ticket-tear { position:relative; margin:0 -1px; height:24px; display:flex; align-items:center; }
+.ticket-tear::before { content:''; position:absolute; left:0; right:0; border-top:2px dashed rgba(201,168,76,.2); }
+.ticket-tear-circle-l, .ticket-tear-circle-r { position:absolute; width:24px; height:24px; border-radius:50%; background:#0d0b10; border:1px solid #5a4a20; }
+.ticket-tear-circle-l { left:-12px; }
+.ticket-tear-circle-r { right:-12px; }
 
 /* ── QR section ── */
-.ticket-qr-section {
-  padding: 20px 28px 28px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  background: #1a1510;
-}
-.ticket-qr-wrap {
-  background: #fff;
-  border-radius: 12px;
-  padding: 8px;
-  flex-shrink: 0;
-}
-.ticket-qr-wrap canvas,
-.ticket-qr-wrap img { display: block; }
-.ticket-hint {
-  color: rgba(240,230,211,0.6);
-  font-size: 0.8rem;
-  line-height: 1.6;
-}
-.ticket-hint strong { color: var(--gold-2); }
+.ticket-qr-section { padding:20px 28px 28px; display:flex; align-items:center; gap:20px; background:#1a1510; }
+.ticket-qr-wrap { background:#fff; border-radius:12px; padding:8px; flex-shrink:0; }
+.ticket-qr-wrap canvas, .ticket-qr-wrap img { display:block; }
+.ticket-hint { color:rgba(240,230,211,.6); font-size:.8rem; line-height:1.6; }
+.ticket-hint strong { color:var(--gold-2); }
 
-/* ── Action buttons ── */
-.ticket-actions {
-  display: flex;
-  gap: 10px;
-  padding: 0 28px 28px;
-  flex-wrap: wrap;
-  background: #1a1510;
-}
+/* ── Actions ── */
+.ticket-actions { display:flex; gap:10px; padding:0 28px 28px; flex-wrap:wrap; background:#1a1510; }
 
-/* ── Print styles ── */
 @media print {
-  body * { visibility: hidden; }
-  .ticket-card, .ticket-card * { visibility: visible; }
-  .ticket-card { position: fixed; inset: 0; margin: auto; box-shadow: none; border: none; }
-  .ticket-actions, .ticket-back-btn { display: none !important; }
+  body * { visibility:hidden; }
+  .ticket-card, .ticket-card * { visibility:visible; }
+  .ticket-card { position:fixed; inset:0; margin:auto; box-shadow:none; border:none; }
+  .ticket-actions, .ticket-back-btn, .ticket-expired-overlay { display:none !important; }
 }
 </style>
 {% endblock %}
@@ -221,25 +96,45 @@
 <div class="ticket-shell">
   <div style="width:min(100%,520px);">
 
-    <!-- Back -->
-    <a href="{{ url_for('customer.appointments') }}" class="book-back d-inline-flex align-items-center gap-2 mb-3" style="color:var(--text-muted);font-size:0.85rem;text-decoration:none;">
+    <a href="{{ url_for('customer.appointments') }}" class="book-back d-inline-flex align-items-center gap-2 mb-3 ticket-back-btn" style="color:var(--text-muted);font-size:.85rem;text-decoration:none;">
       <i class="fas fa-arrow-left"></i> Back to Appointments
     </a>
 
-    <div class="ticket-card" id="ticketCard">
+    <div class="ticket-card" id="ticketCard" style="position:relative;">
+
+      <!-- Expired overlay (shown by JS if expired) -->
+      <div class="ticket-expired-overlay" id="expiredOverlay" style="display:none;">
+        <div class="ticket-expired-icon"><i class="fas fa-ban"></i></div>
+        <div class="ticket-expired-text">Ticket Expired</div>
+        <div class="ticket-expired-sub">This appointment date has passed. The ticket is no longer valid for check-in.</div>
+        <a href="{{ url_for('customer.book_page') }}" class="btn-gold-hero mt-2" style="padding:10px 24px;font-size:.85rem;">
+          <i class="fas fa-calendar-plus me-2"></i>Book New Appointment
+        </a>
+      </div>
 
       <!-- Header -->
       <div class="ticket-header">
-        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="ticket-logo"/>
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="ticket-logo"
+             onerror="this.style.display='none'"/>
         <div>
           <div class="ticket-salon-name">{{ shop_name }}</div>
           <div class="ticket-salon-sub">Premium Salon & Studio</div>
         </div>
-        <span class="ticket-confirmed-badge"><i class="fas fa-check me-1"></i>{{ appt.status }}</span>
+        <span class="ticket-status-badge badge-{{ appt.status.replace(' ','') }}">
+          <i class="fas fa-check me-1"></i>{{ appt.status }}
+        </span>
       </div>
 
       <!-- Body -->
       <div class="ticket-body">
+
+        <!-- Expiry indicator -->
+        {% set appt_date_str = appt.preferred_date | string | truncate(10, False, '') %}
+        <div class="ticket-expiry-bar" id="expiryBar">
+          <i class="fas fa-clock"></i>
+          <span id="expiryText">Checking validity…</span>
+        </div>
+
         <!-- Ticket ID -->
         <div class="ticket-id-row">
           <div>
@@ -248,7 +143,7 @@
           </div>
           <div style="text-align:right;">
             <div class="ticket-id-label">Booked On</div>
-            <div style="color:rgba(240,230,211,0.7);font-size:0.82rem;">{{ appt.created_at }}</div>
+            <div style="color:rgba(240,230,211,.7);font-size:.82rem;">{{ appt.created_at }}</div>
           </div>
         </div>
 
@@ -265,8 +160,7 @@
           <div>
             <div class="ticket-field-label"><i class="fas fa-calendar me-1"></i>Date</div>
             <div class="ticket-field-val">
-              {% set d = appt.preferred_date %}
-              {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+              {{ appt.preferred_date | string | truncate(10, False, '') }}
             </div>
           </div>
           <div>
@@ -282,6 +176,13 @@
           <span class="ticket-service-tag">{{ svc.strip() }}</span>
           {% endfor %}
         </div>
+
+        {% if appt.total_price %}
+        <div style="display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);">
+          <span style="font-size:.78rem;color:rgba(240,230,211,.5);">Total Amount</span>
+          <span style="font-family:'Playfair Display',serif;color:var(--gold-2);font-weight:700;">₹{{ "%.0f"|format(appt.total_price) }}</span>
+        </div>
+        {% endif %}
       </div>
 
       <!-- Tear line -->
@@ -297,17 +198,20 @@
         </div>
         <div class="ticket-hint">
           <strong>Show this ticket at the salon</strong> during check-in.<br><br>
-          The receptionist will scan your QR code or look up your Appointment ID <strong>#{{ appt.ticket_id }}</strong>.
+          The receptionist will scan your QR code or look up Appointment ID <strong>#{{ appt.ticket_id }}</strong>.
         </div>
       </div>
 
       <!-- Actions -->
-      <div class="ticket-actions">
-        <button onclick="window.print()" class="btn-outline-gold" style="padding:10px 18px;font-size:0.85rem;">
+      <div class="ticket-actions" id="ticketActions">
+        <button onclick="window.print()" class="btn-outline-gold" style="padding:10px 18px;font-size:.85rem;">
           <i class="fas fa-print me-2"></i>Print
         </button>
-        <button onclick="downloadTicket()" class="btn-gold-hero" style="padding:10px 18px;font-size:0.85rem;">
-          <i class="fas fa-download me-2"></i>Save as Image
+        <button onclick="downloadPDF()" class="btn-gold-hero" style="padding:10px 18px;font-size:.85rem;" id="pdfBtn">
+          <i class="fas fa-file-pdf me-2"></i>Download PDF
+        </button>
+        <button onclick="downloadImage()" class="btn-outline-gold" style="padding:10px 18px;font-size:.85rem;" id="imgBtn">
+          <i class="fas fa-image me-2"></i>Save Image
         </button>
       </div>
 
@@ -319,65 +223,94 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
-QRCode.toCanvas(document.getElementById('qrCanvas'), '{{ appt.ticket_id }}', {
-  width: 160,
-  margin: 2,
-  color: { dark: '#1a0f00', light: '#ffffff' }
-});
+/* ── QR Code ── */
+QRCode.toCanvas(document.getElementById('qrCanvas'),
+  'NEWSHADES:{{ appt.ticket_id }}:{{ appt.preferred_date | string | truncate(10, False, "") }}',
+  { width:140, margin:2, color:{ dark:'#1a0f00', light:'#ffffff' } }
+);
 
-function downloadTicket() {
-  const btn = document.querySelector('[onclick="downloadTicket()"]');
-  if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...'; btn.disabled = true; }
+/* ── Expiry check ── */
+(function() {
+  const apptDateStr = '{{ appt.preferred_date | string | truncate(10, False, "") }}'.slice(0,10);
+  const apptDate    = new Date(apptDateStr + 'T23:59:59');
+  const now         = new Date();
+  const bar         = document.getElementById('expiryBar');
+  const text        = document.getElementById('expiryText');
+  const overlay     = document.getElementById('expiredOverlay');
 
-  // Build a clean off-screen ticket with fully opaque colors for crisp image
-  const src = document.getElementById('ticketCard');
-  const clone = src.cloneNode(true);
-
-  // Force all backgrounds to solid opaque equivalents
-  clone.style.cssText = [
-    'position:fixed', 'left:-9999px', 'top:0',
-    'width:520px', 'border-radius:24px', 'overflow:hidden',
-    'background:#1a1510', 'border:1px solid #c9a84c',
-    'box-shadow:none', 'font-family:DM Sans,Inter,sans-serif'
-  ].join(';');
-
-  // Fix semi-transparent elements inside clone
-  clone.querySelectorAll('*').forEach(el => {
-    const cs = window.getComputedStyle(el);
-    const bg = cs.backgroundColor;
-    if (bg && bg.includes('rgba')) {
-      // Convert rgba to solid by blending on #1a1510
-      el.style.backgroundColor = bg.replace(/rgba\((\d+),(\d+),(\d+),([\.\d]+)\)/, (_, r, g, b, a) => {
-        const base = [26, 21, 16];
-        const alpha = parseFloat(a);
-        const out = [r, g, b].map((c, i) => Math.round(parseFloat(c) * alpha + base[i] * (1 - alpha)));
-        return `rgb(${out[0]},${out[1]},${out[2]})`;
-      });
+  if (now > apptDate) {
+    // Expired
+    bar.className = 'ticket-expiry-bar expiry-expired';
+    text.textContent = 'This ticket has expired — appointment date has passed.';
+    overlay.style.display = 'flex';
+    // Disable action buttons
+    document.getElementById('ticketActions').style.opacity = '.4';
+    document.getElementById('ticketActions').style.pointerEvents = 'none';
+  } else {
+    const diffMs   = apptDate - now;
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffDays === 0) {
+      bar.className = 'ticket-expiry-bar expiry-today';
+      text.textContent = '⚡ Your appointment is TODAY — show this ticket at the salon!';
+    } else {
+      bar.className = 'ticket-expiry-bar expiry-valid';
+      text.textContent = `✓ Valid ticket — expires in ${diffDays} day${diffDays!==1?'s':''} (after appointment date)`;
     }
-  });
+  }
+})();
 
+/* ── Download PDF ── */
+async function downloadPDF() {
+  const btn = document.getElementById('pdfBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating…';
+  btn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(document.getElementById('ticketCard'), {
+      scale:3, useCORS:true, allowTaint:true, backgroundColor:'#1a1510', logging:false
+    });
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation:'portrait', unit:'px', format:[520, canvas.height/3] });
+    pdf.addImage(imgData, 'PNG', 0, 0, 520, canvas.height/3);
+    pdf.save('NewShades-Ticket-{{ appt.ticket_id }}.pdf');
+  } catch(e) {
+    alert('PDF generation failed. Please try Save Image instead.');
+  }
+  btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Download PDF';
+  btn.disabled = false;
+}
+
+/* ── Download Image ── */
+async function downloadImage() {
+  const btn = document.getElementById('imgBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
+  btn.disabled = true;
+
+  const src   = document.getElementById('ticketCard');
+  const clone = src.cloneNode(true);
+  clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:520px;border-radius:24px;overflow:hidden;background:#1a1510;border:1px solid #c9a84c;box-shadow:none;';
+  // Remove expired overlay from clone
+  const ov = clone.querySelector('#expiredOverlay');
+  if (ov) ov.remove();
   document.body.appendChild(clone);
 
-  html2canvas(clone, {
-    scale: 3,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#1a1510',
-    logging: false,
-    imageTimeout: 0,
-    removeContainer: false
-  }).then(canvas => {
+  try {
+    const canvas = await html2canvas(clone, {
+      scale:3, useCORS:true, allowTaint:true, backgroundColor:'#1a1510', logging:false
+    });
     document.body.removeChild(clone);
     const a = document.createElement('a');
     a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
     a.href = canvas.toDataURL('image/png', 1.0);
     a.click();
-    if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
-  }).catch(() => {
+  } catch(e) {
     if (document.body.contains(clone)) document.body.removeChild(clone);
-    if (btn) { btn.innerHTML = '<i class="fas fa-download me-2"></i>Save as Image'; btn.disabled = false; }
-  });
+  }
+  btn.innerHTML = '<i class="fas fa-image me-2"></i>Save Image';
+  btn.disabled = false;
 }
 </script>
 {% endblock %}

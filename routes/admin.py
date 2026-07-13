@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, Response
 from functools import wraps
 from db import query, execute
-import bcrypt, os, csv, io, uuid
+import bcrypt, os, csv, io, uuid, math
 from werkzeug.utils import secure_filename
+from sms import sms_confirmed, sms_rejected
+from email_service import send_confirmation_email, send_rejection_email
 
 ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 
@@ -21,6 +23,13 @@ def admin_required(f):
             return redirect(url_for('customer.dashboard'))
         return f(*args, **kwargs)
     return decorated
+
+
+# ── Calendar ──────────────────────────────────────────────────────────────
+@admin.route('/calendar')
+@admin_required
+def calendar():
+    return render_template('admin/calendar.html')
 
 
 # ── Dashboard ──────────────────────────────────────────────────────────────
@@ -114,7 +123,7 @@ def appointments():
 def appointment_action(aid):
     action = request.form.get('action')
     appt   = query(
-        "SELECT a.*, u.full_name, u.phone FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.id=%s",
+        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.id=%s",
         (aid,), one=True
     )
     if not appt:
@@ -130,15 +139,23 @@ def appointment_action(aid):
 
     if action == 'accept':
         ticket_id = str(uuid.uuid4())[:8].upper()
-        execute("UPDATE appointments SET status='Confirmed', ticket_id=%s WHERE id=%s", (ticket_id, aid))
+        # Ticket expires at end of appointment date
+        try:
+            from datetime import date as _date, datetime as _datetime
+            appt_date  = _date.fromisoformat(str(appt['preferred_date'])[:10])
+            expires_at = _datetime.combine(appt_date, _datetime.max.time()).isoformat()
+        except Exception:
+            expires_at = None
+        execute(
+            "UPDATE appointments SET status='Confirmed', ticket_id=%s, ticket_expires_at=%s WHERE id=%s",
+            (ticket_id, expires_at, aid)
+        )
         flash('Appointment confirmed and ticket generated.', 'success')
         try:
-            from sms import sms_confirmed
             sms_confirmed(appt['phone'], appt['full_name'], fmt_date, fmt_time)
         except Exception as e:
             current_app.logger.error('SMS error: %s', e)
         try:
-            from email_service import send_confirmation_email
             send_confirmation_email(appt['email'], appt['full_name'],
                                     fmt_date, fmt_time, appt['selected_services'])
         except Exception as e:
@@ -148,12 +165,10 @@ def appointment_action(aid):
         execute("UPDATE appointments SET status='Rejected' WHERE id=%s", (aid,))
         flash('Appointment rejected.', 'warning')
         try:
-            from sms import sms_rejected
             sms_rejected(appt['phone'], appt['full_name'], fmt_date, fmt_time)
         except Exception as e:
             current_app.logger.error('SMS error: %s', e)
         try:
-            from email_service import send_rejection_email
             send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
         except Exception as e:
             current_app.logger.error('Email error: %s', e)
@@ -267,14 +282,22 @@ def settings():
             for f in ['shop_name','shop_tagline','shop_address','shop_phone','shop_email',
                       'shop_hours_weekday','shop_hours_saturday','shop_hours_sunday','map_embed']:
                 val = request.form.get(f, '').strip()
-                execute("INSERT OR REPLACE INTO settings (key, value) VALUES (%s,%s)", (f, val))
+                existing = query("SELECT `key` FROM settings WHERE `key`=%s", (f,), one=True)
+                if existing:
+                    execute("UPDATE settings SET value=%s WHERE `key`=%s", (val, f))
+                else:
+                    execute("INSERT INTO settings (`key`, value) VALUES (%s,%s)", (f, val))
             flash('Shop details updated.', 'success')
         elif action == 'whatsapp':
             wa = request.form.get('whatsapp_number', '').strip().replace('+','').replace(' ','').replace('-','')
             if not wa.isdigit() or len(wa) < 10:
                 flash('Enter a valid WhatsApp number with country code.', 'danger')
             else:
-                execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('whatsapp_number',%s)", (wa,))
+                existing = query("SELECT `key` FROM settings WHERE `key`='whatsapp_number'", one=True)
+                if existing:
+                    execute("UPDATE settings SET value=%s WHERE `key`='whatsapp_number'", (wa,))
+                else:
+                    execute("INSERT INTO settings (`key`, value) VALUES ('whatsapp_number',%s)", (wa,))
                 flash('WhatsApp number updated.', 'success')
         elif action == 'account':
             new_username = request.form.get('new_username', '').strip().lower()
@@ -389,9 +412,10 @@ def save_offer():
         return redirect(url_for('admin.offers'))
     try:
         discount_percent = float(discount_percent)
-        if not (0 <= discount_percent <= 100):
+        import math
+        if math.isnan(discount_percent) or math.isinf(discount_percent) or not (0 <= discount_percent <= 100):
             raise ValueError
-    except ValueError:
+    except (ValueError, TypeError):
         flash('Discount % must be between 0 and 100.', 'danger')
         return redirect(url_for('admin.offers'))
 

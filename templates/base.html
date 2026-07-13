@@ -41,6 +41,7 @@
           {% else %}
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.dashboard' }}" href="{{ url_for('customer.dashboard') }}"><i class="fas fa-home me-1"></i>Home</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint in ['customer.book_page','customer.book'] }}" href="{{ url_for('customer.book_page') }}"><i class="fas fa-calendar-plus me-1"></i>Book</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.calendar_page' }}" href="{{ url_for('customer.calendar_page') }}"><i class="fas fa-calendar-alt me-1"></i>Calendar</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.appointments' }}" href="{{ url_for('customer.appointments') }}"><i class="fas fa-history me-1"></i>Appointments</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.profile' }}" href="{{ url_for('customer.profile') }}"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
           {% endif %}

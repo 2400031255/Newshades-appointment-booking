@@ -37,11 +37,23 @@ def _init_sqlite_schema(conn):
             preferred_time TEXT,
             status TEXT DEFAULT 'Pending',
             ticket_id TEXT,
+            ticket_expires_at TEXT,
             total_price REAL DEFAULT 0,
             discount_percent REAL DEFAULT 0,
             offer_applied TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS blocked_slots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            block_date TEXT NOT NULL,
+            block_time TEXT,
+            reason TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS salon_config (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
@@ -126,11 +138,23 @@ def _init_pg_schema(conn):
             preferred_time VARCHAR(20),
             status VARCHAR(20) DEFAULT 'Pending',
             ticket_id VARCHAR(20),
+            ticket_expires_at TIMESTAMP,
             total_price NUMERIC(10,2) DEFAULT 0,
             discount_percent NUMERIC(5,2) DEFAULT 0,
             offer_applied VARCHAR(150) DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS blocked_slots (
+            id SERIAL PRIMARY KEY,
+            block_date DATE NOT NULL,
+            block_time VARCHAR(20),
+            reason VARCHAR(255) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS salon_config (
+            key VARCHAR(100) PRIMARY KEY,
+            value TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS settings (
             key VARCHAR(100) PRIMARY KEY,
@@ -188,6 +212,127 @@ def _init_pg_schema(conn):
     cur.close()
 
 
+def _init_mysql_schema(conn):
+    """Create/alter tables in MySQL to ensure all columns and tables exist."""
+    cur = conn.cursor()
+    stmts = [
+        """CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            full_name VARCHAR(100) NOT NULL,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            phone VARCHAR(20) NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            is_admin TINYINT(1) DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS services (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            service_name VARCHAR(100) NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            duration VARCHAR(50) NOT NULL,
+            category VARCHAR(50) DEFAULT 'General',
+            image_url VARCHAR(255) DEFAULT '',
+            is_active TINYINT(1) DEFAULT 1
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS appointments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            selected_services TEXT NOT NULL,
+            preferred_date DATE NOT NULL,
+            preferred_time VARCHAR(20),
+            status ENUM('Pending','Confirmed','Cancelled','Rejected','Checked In','Completed') DEFAULT 'Pending',
+            ticket_id VARCHAR(20),
+            ticket_expires_at DATETIME,
+            total_price DECIMAL(10,2) DEFAULT 0,
+            discount_percent DECIMAL(5,2) DEFAULT 0,
+            offer_applied VARCHAR(150) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS blocked_slots (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            block_date DATE NOT NULL,
+            block_time VARCHAR(20),
+            reason VARCHAR(255) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS salon_config (
+            `key` VARCHAR(100) PRIMARY KEY,
+            value TEXT NOT NULL
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS settings (
+            `key` VARCHAR(100) PRIMARY KEY,
+            value TEXT NOT NULL
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS reviews (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            rating INT NOT NULL,
+            comment TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS gallery (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            filename VARCHAR(255) NOT NULL,
+            caption VARCHAR(255) DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS offers (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(150) NOT NULL,
+            description TEXT DEFAULT '',
+            discount_text VARCHAR(100) DEFAULT '',
+            discount_percent DECIMAL(5,2) DEFAULT 0,
+            applicable_services TEXT DEFAULT '',
+            valid_from DATE,
+            valid_until DATE,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4""",
+    ]
+    # Add missing columns to existing appointments table (safe ALTER)
+    alter_stmts = [
+        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ticket_expires_at DATETIME",
+        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2) DEFAULT 0",
+        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0",
+        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS offer_applied VARCHAR(150) DEFAULT ''",
+        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ticket_id VARCHAR(20)",
+    ]
+    for stmt in stmts:
+        try:
+            cur.execute(stmt)
+        except Exception:
+            pass  # column may already exist
+    for stmt in alter_stmts:
+        try:
+            cur.execute(stmt)
+        except Exception:
+            pass  # column may already exist
+    # Seed admin
+    cur.execute(
+        "INSERT IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s)",
+        ('Komali', 'komali', '0000000000', 'komali@newshades.com',
+         '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1)
+    )
+    cur.execute("SELECT COUNT(*) as c FROM services")
+    if cur.fetchone()['c'] == 0:
+        cur.executemany(
+            "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
+            [
+                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
+                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
+                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
+                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
+                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
+                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
+            ]
+        )
+    cur.close()
+
+
 # ── Connection ────────────────────────────────────────────────────────────────
 
 def _connect_sqlite():
@@ -196,7 +341,11 @@ def _connect_sqlite():
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA foreign_keys = ON')
-    _init_sqlite_schema(conn)
+    try:
+        _init_sqlite_schema(conn)
+    except Exception as e:
+        conn.close()
+        raise
     return conn
 
 
@@ -223,7 +372,7 @@ def get_db():
 
         # 2. Try MySQL (local dev)
         try:
-            g.db = pymysql.connect(
+            conn = pymysql.connect(
                 host=cfg['MYSQL_HOST'],
                 user=cfg['MYSQL_USER'],
                 password=cfg['MYSQL_PASSWORD'],
@@ -231,10 +380,12 @@ def get_db():
                 cursorclass=pymysql.cursors.DictCursor,
                 autocommit=True,
             )
+            _init_mysql_schema(conn)
+            g.db = conn
             g.db_backend = 'mysql'
             return g.db
-        except Exception:
-            pass
+        except Exception as e:
+            current_app.logger.warning('MySQL connection failed: %s', e)
 
         # 3. SQLite fallback
         g.db = _connect_sqlite()
@@ -270,9 +421,11 @@ def close_db(e=None):
 # ── SQL normalisation (SQLite only) ──────────────────────────────────────────
 
 def _normalize_sql(sql):
+    """Convert MySQL-style SQL to SQLite-compatible SQL."""
     sql = sql.replace('%s', '?')
     sql = re.sub(r'ON DUPLICATE KEY UPDATE\s+\S+\s*=\s*\?', '', sql)
-    sql = sql.replace('INSERT INTO', 'INSERT OR REPLACE INTO')
+    # Only convert bare INSERT INTO (not INSERT OR REPLACE/IGNORE already)
+    sql = re.sub(r'\bINSERT INTO\b', 'INSERT OR IGNORE INTO', sql)
     sql = re.sub(r'`(\w+)`', r'\1', sql)
     return sql
 
@@ -335,8 +488,9 @@ def execute(sql, args=()):
     # MySQL
     cur = conn.cursor()
     cur.execute(sql, args)
+    last_id = cur.lastrowid
     cur.close()
-    return cur.lastrowid
+    return last_id
 
 
 def _pg_upsert(sql):

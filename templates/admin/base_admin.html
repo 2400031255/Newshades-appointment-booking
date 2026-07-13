@@ -37,6 +37,9 @@
       <span class="sidebar-pending-badge">{{ pending_count }}</span>
       {% endif %}
     </a>
+    <a href="{{ url_for('admin.calendar') }}" class="{{ 'active' if request.endpoint == 'admin.calendar' }}">
+      <span class="sidebar-nav-label"><i class="fas fa-calendar-alt"></i> Calendar</span>
+    </a>
     <a href="{{ url_for('admin.customers') }}" class="{{ 'active' if request.endpoint == 'admin.customers' }}">
       <span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span>
     </a>
