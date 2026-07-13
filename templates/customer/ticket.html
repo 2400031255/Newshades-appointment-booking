@@ -83,11 +83,40 @@
 /* ── Actions ── */
 .ticket-actions { display:flex; gap:10px; padding:0 28px 28px; flex-wrap:wrap; background:#1a1510; }
 
+/* ── Print / Download light theme ── */
+.ticket-card-light {
+  background:#fff !important;
+  border:2px solid #c9a84c !important;
+}
+.ticket-card-light .ticket-body { background:#fff !important; }
+.ticket-card-light .ticket-qr-section { background:#fff !important; }
+.ticket-card-light .ticket-actions { background:#fff !important; }
+.ticket-card-light .ticket-id-val { color:#8a6a1a !important; }
+.ticket-card-light .ticket-field-val { color:#1a1510 !important; }
+.ticket-card-light .ticket-field-label { color:#888 !important; }
+.ticket-card-light .ticket-services-block { background:#fdf6e3 !important; border-color:#e8c96a !important; }
+.ticket-card-light .ticket-service-tag { background:#fdf0c8 !important; border-color:#c9a84c !important; color:#7a5010 !important; }
+.ticket-card-light .ticket-hint { color:#555 !important; }
+.ticket-card-light .ticket-hint strong { color:#8a6a1a !important; }
+.ticket-card-light .ticket-expiry-bar.expiry-valid { background:#f0fdf4 !important; border-color:#86efac !important; color:#166534 !important; }
+.ticket-card-light .ticket-expiry-bar.expiry-today { background:#fffbeb !important; border-color:#fcd34d !important; color:#92400e !important; }
+.ticket-card-light .ticket-tear-circle-l,
+.ticket-card-light .ticket-tear-circle-r { background:#f5f5f5 !important; border-color:#e8c96a !important; }
+.ticket-card-light .ticket-qr-wrap { background:#fff !important; border:1px solid #e8c96a; }
+
 @media print {
   body * { visibility:hidden; }
   .ticket-card, .ticket-card * { visibility:visible; }
-  .ticket-card { position:fixed; inset:0; margin:auto; box-shadow:none; border:none; }
+  .ticket-card { position:fixed; inset:0; margin:auto; box-shadow:none; }
   .ticket-actions, .ticket-back-btn, .ticket-expired-overlay { display:none !important; }
+  /* Light theme for print */
+  .ticket-card { background:#fff !important; border:2px solid #c9a84c !important; }
+  .ticket-body, .ticket-qr-section { background:#fff !important; }
+  .ticket-field-val { color:#1a1510 !important; }
+  .ticket-id-val { color:#8a6a1a !important; }
+  .ticket-services-block { background:#fdf6e3 !important; }
+  .ticket-service-tag { background:#fdf0c8 !important; color:#7a5010 !important; }
+  .ticket-hint { color:#555 !important; }
 }
 </style>
 {% endblock %}
@@ -267,9 +296,19 @@ async function downloadPDF() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating…';
   btn.disabled = true;
 
+  const card = document.getElementById('ticketCard');
+  const actionsEl = document.getElementById('ticketActions');
+  const expiryBar = document.getElementById('expiryBar');
+
+  // Apply light theme
+  card.classList.add('ticket-card-light');
+  actionsEl.style.display = 'none';
+
   try {
-    const canvas = await html2canvas(document.getElementById('ticketCard'), {
-      scale:3, useCORS:true, allowTaint:true, backgroundColor:'#1a1510', logging:false
+    await new Promise(r => setTimeout(r, 80)); // let CSS apply
+    const canvas = await html2canvas(card, {
+      scale:3, useCORS:true, allowTaint:true,
+      backgroundColor:'#ffffff', logging:false
     });
     const imgData = canvas.toDataURL('image/png', 1.0);
     const { jsPDF } = window.jspdf;
@@ -279,6 +318,10 @@ async function downloadPDF() {
   } catch(e) {
     alert('PDF generation failed. Please try Save Image instead.');
   }
+
+  // Restore dark theme
+  card.classList.remove('ticket-card-light');
+  actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Download PDF';
   btn.disabled = false;
 }
@@ -289,26 +332,30 @@ async function downloadImage() {
   btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   btn.disabled = true;
 
-  const src   = document.getElementById('ticketCard');
-  const clone = src.cloneNode(true);
-  clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:520px;border-radius:24px;overflow:hidden;background:#1a1510;border:1px solid #c9a84c;box-shadow:none;';
-  // Remove expired overlay from clone
-  const ov = clone.querySelector('#expiredOverlay');
-  if (ov) ov.remove();
-  document.body.appendChild(clone);
+  const card = document.getElementById('ticketCard');
+  const actionsEl = document.getElementById('ticketActions');
+
+  // Apply light theme
+  card.classList.add('ticket-card-light');
+  actionsEl.style.display = 'none';
 
   try {
-    const canvas = await html2canvas(clone, {
-      scale:3, useCORS:true, allowTaint:true, backgroundColor:'#1a1510', logging:false
+    await new Promise(r => setTimeout(r, 80));
+    const canvas = await html2canvas(card, {
+      scale:3, useCORS:true, allowTaint:true,
+      backgroundColor:'#ffffff', logging:false
     });
-    document.body.removeChild(clone);
     const a = document.createElement('a');
     a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
     a.href = canvas.toDataURL('image/png', 1.0);
     a.click();
   } catch(e) {
-    if (document.body.contains(clone)) document.body.removeChild(clone);
+    console.error(e);
   }
+
+  // Restore dark theme
+  card.classList.remove('ticket-card-light');
+  actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-image me-2"></i>Save Image';
   btn.disabled = false;
 }

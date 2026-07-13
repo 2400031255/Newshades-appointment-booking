@@ -385,11 +385,14 @@ def schedule():
     for b in blocks:
         try:
             d = b['block_date']
-            b['display_date'] = d.strftime('%d/%m/%Y') if hasattr(d, 'strftime') else str(d)[5:7]+'/'+str(d)[8:10]+'/'+str(d)[:4] if len(str(d)) == 10 else str(d)
+            b['display_date'] = d.strftime('%d/%m/%Y') if hasattr(d, 'strftime') else (str(d)[8:10]+'/'+str(d)[5:7]+'/'+str(d)[:4] if len(str(d)) >= 10 else str(d))
         except Exception:
             b['display_date'] = str(b['block_date'])
     today = date.today().strftime('%d/%m/%Y')
-    return render_template('admin/schedule.html', blocks=blocks, today=today)
+    full_day_count = sum(1 for b in blocks if not b['block_time'])
+    slot_count     = sum(1 for b in blocks if b['block_time'])
+    return render_template('admin/schedule.html', blocks=blocks, today=today,
+                           full_day_count=full_day_count, slot_count=slot_count)
 
 
 @admin.route('/schedule/block', methods=['POST'])

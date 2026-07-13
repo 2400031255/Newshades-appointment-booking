@@ -16,14 +16,14 @@
   <div class="sched-stat-card">
     <div class="sched-stat-icon" style="background:rgba(255,170,77,0.15);color:#ffc36b;"><i class="fas fa-calendar-day"></i></div>
     <div>
-      <div class="sched-stat-val">{{ blocks|selectattr('block_time','none')|list|length }}</div>
+      <div class="sched-stat-val">{{ full_day_count }}</div>
       <div class="sched-stat-label">Full Day Blocks</div>
     </div>
   </div>
   <div class="sched-stat-card">
     <div class="sched-stat-icon" style="background:rgba(105,152,255,0.15);color:#9dc0ff;"><i class="fas fa-clock"></i></div>
     <div>
-      <div class="sched-stat-val">{{ blocks|selectattr('block_time')|list|length }}</div>
+      <div class="sched-stat-val">{{ slot_count }}</div>
       <div class="sched-stat-label">Time Slot Blocks</div>
     </div>
   </div>
