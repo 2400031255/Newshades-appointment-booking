@@ -1,62 +1,415 @@
 {% extends 'base.html' %}
 {% block title %}Login – New Shades{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Split shell ── */
+.login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+}
+
+/* ── Left branded panel ── */
+.login-left {
+  flex: 0 0 42%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 48px;
+  background: radial-gradient(ellipse at 40% 35%, #2d1a00 0%, #1a1000 35%, #0c0b10 100%);
+  overflow: hidden;
+}
+.login-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(201,168,76,0.18) 0%, transparent 50%),
+    radial-gradient(circle at 75% 80%, rgba(201,168,76,0.10) 0%, transparent 45%);
+  pointer-events: none;
+}
+.ll-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.12);
+  pointer-events: none;
+  animation: llRing 5s ease-in-out infinite;
+}
+.ll-ring-1 { width: 320px; height: 320px; animation-delay: 0s; }
+.ll-ring-2 { width: 500px; height: 500px; animation-delay: 0.8s; border-color: rgba(201,168,76,0.06); }
+@keyframes llRing {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.04); opacity: 0.5; }
+}
+
+.ll-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.ll-logo-wrap {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+}
+.ll-logo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(201,168,76,0.5);
+  box-shadow: 0 0 40px rgba(201,168,76,0.3), 0 0 80px rgba(201,168,76,0.10);
+  animation: llLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes llLogoIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.ll-logo-glow {
+  position: absolute;
+  inset: -18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 70%);
+  animation: llGlow 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes llGlow {
+  0%,100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.6; }
+}
+
+.ll-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+.ll-sub {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.95rem, 2vw, 1.25rem);
+  font-style: italic;
+  color: var(--gold-2);
+  margin: 0;
+}
+.ll-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(232,201,106,0.6);
+  margin: 8px 0 28px;
+  text-transform: uppercase;
+}
+
+.ll-divider {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+  margin: 4px 0 24px;
+}
+
+/* Stats row */
+.ll-stats {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.ll-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.ll-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-2);
+}
+.ll-stat-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(232,201,106,0.5);
+}
+
+/* ── Right form panel ── */
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  position: relative;
+}
+.login-right::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%);
+  pointer-events: none;
+}
+.login-right::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: -80px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%);
+  pointer-events: none;
+}
+
+.login-form-wrap {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 420px);
+}
+
+.lf-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  color: #fff;
+  margin: 0 0 6px;
+}
+.lf-sub {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 28px;
+}
+
+/* Input fields */
+.lf-field { margin-bottom: 18px; }
+.lf-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.lf-input-wrap { position: relative; }
+.lf-input {
+  width: 100%;
+  padding: 13px 14px 13px 44px;
+  border: 1.5px solid rgba(201,168,76,0.2);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.lf-input::placeholder { color: rgba(255,255,255,0.28); }
+.lf-input:focus {
+  border-color: var(--gold);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.14);
+}
+.lf-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+.lf-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+.lf-eye:hover { color: var(--gold-2); }
+
+/* Submit button */
+.lf-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #120e08;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  box-shadow: 0 16px 40px rgba(201,168,76,0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+.lf-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 48px rgba(201,168,76,0.36);
+}
+
+.lf-footer {
+  margin-top: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+.lf-footer a {
+  color: var(--gold-2);
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.lf-footer a:hover { color: #fff; }
+
+.lf-note {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* Divider line */
+.lf-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.lf-divider::before,
+.lf-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+}
+
+/* ── Mobile: stack vertically ── */
+@media (max-width: 767px) {
+  .login-shell { flex-direction: column; }
+  .login-left {
+    flex: none;
+    padding: 48px 24px 36px;
+    min-height: auto;
+  }
+  .ll-ring-1 { width: 240px; height: 240px; }
+  .ll-ring-2 { width: 380px; height: 380px; }
+  .ll-logo-wrap { width: 90px; height: 90px; }
+  .ll-logo { width: 90px; height: 90px; }
+  .ll-stats { gap: 20px; }
+  .login-right { padding: 40px 20px 60px; }
+  .login-form-wrap { width: 100%; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="auth-shell">
-  <div class="auth-orb auth-orb-1"></div>
-  <div class="auth-orb auth-orb-2"></div>
+<div class="login-shell">
 
-  <div class="auth-card reveal-up">
-
-    <div class="auth-brand">
-      <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="auth-logo"/>
-      <div>
-        <div class="auth-brand-name">New <span>Shades</span></div>
-        <div class="auth-brand-sub">Premium Salon</div>
+  <!-- Left branded panel -->
+  <div class="login-left">
+    <div class="ll-ring ll-ring-1"></div>
+    <div class="ll-ring ll-ring-2"></div>
+    <div class="ll-content">
+      <div class="ll-logo-wrap">
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="ll-logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div style="display:none;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:900;font-size:2rem;align-items:center;justify-content:center;">NS</div>
+        <div class="ll-logo-glow"></div>
       </div>
-    </div>
-
-    <h2 class="auth-title">Welcome Back</h2>
-    <p class="auth-subtitle">Sign in to book your next appointment</p>
-
-    <div class="auth-divider"><span>Login</span></div>
-
-    <form method="POST" action="{{ url_for('auth.login') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="auth-field">
-        <label class="auth-label">Username or Email</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-user auth-icon"></i>
-          <input type="text" name="identifier" class="auth-input" placeholder="@username or you@email.com" required autocomplete="username"/>
+      <h1 class="ll-name">New Shades</h1>
+      <p class="ll-sub">Family Salon</p>
+      <p class="ll-tag">Beauty &nbsp;·&nbsp; Wellness &nbsp;·&nbsp; Care</p>
+      <div class="ll-divider"></div>
+      <div class="ll-stats">
+        <div class="ll-stat">
+          <span class="ll-stat-num">500+</span>
+          <span class="ll-stat-label">Clients</span>
+        </div>
+        <div class="ll-stat">
+          <span class="ll-stat-num">15+</span>
+          <span class="ll-stat-label">Services</span>
+        </div>
+        <div class="ll-stat">
+          <span class="ll-stat-num">5 ★</span>
+          <span class="ll-stat-label">Rated</span>
         </div>
       </div>
-
-      <div class="auth-field">
-        <label class="auth-label">Password</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-lock auth-icon"></i>
-          <input type="password" name="password" id="loginPw" class="auth-input" placeholder="Your password" required autocomplete="current-password"/>
-          <button type="button" class="auth-eye" onclick="togglePw('loginPw','loginEye')">
-            <i class="fas fa-eye" id="loginEye"></i>
-          </button>
-        </div>
-      </div>
-
-      <button type="submit" class="auth-btn">
-        <i class="fas fa-sign-in-alt me-2"></i>Sign In
-      </button>
-    </form>
-
-    <a class="auth-link" href="{{ url_for('auth.signup') }}">
-      Don't have an account? <span style="color:var(--gold-2);font-weight:700;">Sign Up</span>
-    </a>
-
-    <div class="auth-note">
-      <i class="fas fa-shield-alt me-1" style="color:var(--gold);"></i>
-      Admin access uses the same login page.
     </div>
-
   </div>
+
+  <!-- Right form panel -->
+  <div class="login-right">
+    <div class="login-form-wrap reveal-up">
+      <h2 class="lf-title">Welcome Back</h2>
+      <p class="lf-sub">Sign in to book your next appointment</p>
+
+      <div class="lf-divider"><span>Login</span></div>
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="lf-field">
+          <label class="lf-label">Username or Email</label>
+          <div class="lf-input-wrap">
+            <i class="fas fa-user lf-icon"></i>
+            <input type="text" name="identifier" class="lf-input"
+                   placeholder="@username or you@email.com"
+                   required autocomplete="username"/>
+          </div>
+        </div>
+
+        <div class="lf-field">
+          <label class="lf-label">Password</label>
+          <div class="lf-input-wrap">
+            <i class="fas fa-lock lf-icon"></i>
+            <input type="password" name="password" id="loginPw" class="lf-input"
+                   placeholder="Your password"
+                   required autocomplete="current-password"/>
+            <button type="button" class="lf-eye" onclick="togglePw('loginPw','loginEye')">
+              <i class="fas fa-eye" id="loginEye"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="lf-btn">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+        </button>
+      </form>
+
+      <div class="lf-footer mt-3">
+        Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+      </div>
+
+      <div class="lf-note">
+        <i class="fas fa-shield-alt me-1" style="color:var(--gold);"></i>
+        Admin access uses the same login page.
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
