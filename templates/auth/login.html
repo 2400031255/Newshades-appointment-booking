@@ -19,7 +19,7 @@
   align-items: center;
   justify-content: center;
   padding: 60px 48px;
-  background: radial-gradient(ellipse at 40% 35%, #2d1a00 0%, #1a1000 35%, #0c0b10 100%);
+  background: radial-gradient(ellipse at 40% 35%, #2a0e0c 0%, #1a0908 35%, #0f0a0a 100%);
   overflow: hidden;
 }
 .login-left::before {
@@ -27,19 +27,19 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 30% 25%, rgba(201,168,76,0.18) 0%, transparent 50%),
-    radial-gradient(circle at 75% 80%, rgba(201,168,76,0.10) 0%, transparent 45%);
+    radial-gradient(circle at 30% 25%, rgba(212,132,122,0.20) 0%, transparent 50%),
+    radial-gradient(circle at 75% 80%, rgba(244,184,176,0.10) 0%, transparent 45%);
   pointer-events: none;
 }
 .ll-ring {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(201,168,76,0.12);
+  border: 1px solid rgba(212,132,122,0.14);
   pointer-events: none;
   animation: llRing 5s ease-in-out infinite;
 }
 .ll-ring-1 { width: 320px; height: 320px; animation-delay: 0s; }
-.ll-ring-2 { width: 500px; height: 500px; animation-delay: 0.8s; border-color: rgba(201,168,76,0.06); }
+.ll-ring-2 { width: 500px; height: 500px; animation-delay: 0.8s; border-color: rgba(212,132,122,0.07); }
 @keyframes llRing {
   0%,100% { transform: scale(1); opacity: 1; }
   50%      { transform: scale(1.04); opacity: 0.5; }
@@ -66,8 +66,8 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid rgba(201,168,76,0.5);
-  box-shadow: 0 0 40px rgba(201,168,76,0.3), 0 0 80px rgba(201,168,76,0.10);
+  border: 3px solid rgba(212,132,122,0.55);
+  box-shadow: 0 0 40px rgba(212,132,122,0.30), 0 0 80px rgba(244,184,176,0.10);
   animation: llLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 @keyframes llLogoIn {
@@ -78,7 +78,7 @@
   position: absolute;
   inset: -18px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.22) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(212,132,122,0.22) 0%, transparent 70%);
   animation: llGlow 3s ease-in-out infinite;
   pointer-events: none;
 }
@@ -98,14 +98,14 @@
   font-family: 'Playfair Display', serif;
   font-size: clamp(0.95rem, 2vw, 1.25rem);
   font-style: italic;
-  color: var(--gold-2);
+  color: #F4B8B0;
   margin: 0;
 }
 .ll-tag {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.22em;
-  color: rgba(232,201,106,0.6);
+  color: rgba(244,184,176,0.55);
   margin: 8px 0 28px;
   text-transform: uppercase;
 }
@@ -113,7 +113,7 @@
 .ll-divider {
   width: 60px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212,132,122,0.55), transparent);
   margin: 4px 0 24px;
 }
 
@@ -134,13 +134,13 @@
   font-family: 'Playfair Display', serif;
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--gold-2);
+  color: #F4B8B0;
 }
 .ll-stat-label {
   font-size: 0.62rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(232,201,106,0.5);
+  color: rgba(244,184,176,0.45);
 }
 
 /* ── Right form panel ── */
@@ -159,7 +159,7 @@
   top: -100px; right: -100px;
   width: 300px; height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.10), transparent 70%);
+  background: radial-gradient(circle, rgba(244,184,176,0.10), transparent 70%);
   pointer-events: none;
 }
 .login-right::after {
@@ -240,7 +240,7 @@
   padding: 4px;
   transition: color 0.2s;
 }
-.lf-eye:hover { color: var(--gold-2); }
+.lf-eye:hover { color: #F4B8B0; }
 
 /* Submit button */
 .lf-btn {
@@ -270,7 +270,7 @@
   font-size: 0.88rem;
 }
 .lf-footer a {
-  color: var(--gold-2);
+  color: #F4B8B0;
   font-weight: 700;
   transition: color 0.2s;
 }
@@ -303,7 +303,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(212,132,122,0.30), transparent);
 }
 
 /* ── Mobile: stack vertically ── */
