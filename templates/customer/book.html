@@ -261,6 +261,183 @@
   .time-slots-wrap { gap: 8px; }
   .time-chip { padding: 9px 12px; font-size: 0.82rem; min-height: 42px; }
 }
+
+/* ── Mini Calendar ── */
+.mini-cal-wrap {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 18px;
+  padding: 18px;
+}
+.mini-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.mini-cal-nav {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.25);
+  background: rgba(201,168,76,0.07);
+  color: var(--gold-2);
+  display: grid; place-items: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.mini-cal-nav:hover { background: rgba(201,168,76,0.18); }
+.mini-cal-month-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 700;
+}
+.mini-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.mini-cal-dow {
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  padding: 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.mini-cal-day {
+  aspect-ratio: 1;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+  border: 1.5px solid transparent;
+  color: rgba(240,230,211,0.85);
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.mini-cal-day.empty { cursor: default; }
+.mini-cal-day.past  { color: rgba(255,255,255,0.18); cursor: not-allowed; }
+.mini-cal-day.closed { color: rgba(255,255,255,0.18); cursor: not-allowed; background: rgba(239,68,68,0.06); }
+.mini-cal-day.full  { color: rgba(255,255,255,0.3); cursor: not-allowed; background: rgba(239,68,68,0.08); }
+.mini-cal-day.full::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:#ef4444; }
+.mini-cal-day.limited { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.2); color: #fbbf24; }
+.mini-cal-day.limited::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:#f59e0b; }
+.mini-cal-day.available:hover { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.35); color: var(--gold-2); transform: scale(1.08); }
+.mini-cal-day.available::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:#22c55e; }
+.mini-cal-day.selected { background: linear-gradient(135deg, var(--gold-2), var(--gold)) !important; color: #120e08 !important; border-color: transparent !important; box-shadow: 0 4px 14px rgba(201,168,76,0.4); transform: scale(1.1); }
+.mini-cal-day.today-ring { box-shadow: 0 0 0 2px rgba(201,168,76,0.5); }
+.cal-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+.cal-legend-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+
+/* ── AI Recommendations ── */
+.ai-rec-wrap {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(201,168,76,0.05));
+  border: 1px solid rgba(139,92,246,0.2);
+}
+.ai-rec-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ai-rec-icon {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(201,168,76,0.15));
+  display: grid; place-items: center;
+  font-size: 0.7rem;
+  color: #a78bfa;
+}
+.ai-rec-label { font-size: 0.72rem; font-weight: 800; color: #a78bfa; letter-spacing: 0.1em; text-transform: uppercase; }
+.ai-rec-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.ai-rec-chip {
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(139,92,246,0.1);
+  border: 1px solid rgba(139,92,246,0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.ai-rec-chip:hover, .ai-rec-chip.selected {
+  background: rgba(139,92,246,0.22);
+  border-color: rgba(139,92,246,0.5);
+  transform: translateY(-1px);
+}
+.ai-rec-chip-date { font-size: 0.72rem; color: #a78bfa; font-weight: 700; }
+.ai-rec-chip-time { font-size: 0.8rem; color: #fff; font-weight: 600; margin-top: 1px; }
+.ai-rec-chip-spots { font-size: 0.65rem; color: rgba(240,230,211,0.5); margin-top: 1px; }
+
+/* ── Slot chips ── */
+.slots-section { margin-top: 16px; }
+.slots-date-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.slots-date-label strong { color: var(--gold-2); }
+.slot-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-chip {
+  padding: 9px 14px;
+  border-radius: 11px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid rgba(201,168,76,0.2);
+  background: rgba(255,255,255,0.04);
+  color: rgba(240,230,211,0.85);
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.slot-chip:hover:not(.unavailable) { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.4); color: var(--gold-2); }
+.slot-chip.selected { background: linear-gradient(135deg, var(--gold-2), var(--gold)); color: #120e08; border-color: transparent; box-shadow: 0 4px 14px rgba(201,168,76,0.35); }
+.slot-chip.unavailable { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+.slot-chip.limited-chip { border-color: rgba(245,158,11,0.35); color: #fbbf24; }
+.slot-loading { color: var(--text-muted); font-size: 0.82rem; padding: 8px 0; }
+.selected-date-display {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.25);
+  color: var(--gold-2);
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+}
 .offers-book-banner {
   position: relative;
   padding: 22px 26px;
@@ -374,6 +551,7 @@
     </div>
 
     <!-- Offers banner -->
+    <div id="offersBannerContainer">
     {% if today_offers %}
     <div class="offers-book-banner reveal-up mb-4" style="animation-delay:0.08s">
       <div class="offers-book-head">
@@ -392,6 +570,7 @@
       </div>
     </div>
     {% endif %}
+    </div>
 
     <!-- Progress -->
     <div class="booking-progress reveal-up" id="bookingProgress" style="animation-delay:0.1s">
@@ -414,6 +593,7 @@
       <!-- Main form -->
       <div class="col-lg-8">
         <form method="POST" action="{{ url_for('customer.book') }}" id="bookingForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- Step 1: Services -->
           <div class="booking-step reveal-up" style="animation-delay:0.15s">
@@ -442,9 +622,9 @@
                 <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}">
                   <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}"
                     class="d-none"
-                    {% if rebook_services and svc.service_name in rebook_services %}checked{% endif %}/>
+                    {% if rebook_ids and svc.id|string in rebook_ids %}checked{% endif %}/>
                   <!-- Desktop card -->
-                  <div class="svc-select-card d-none d-md-flex flex-column {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
+                  <div class="svc-select-card d-none d-md-flex flex-column {% if rebook_ids and svc.id|string in rebook_ids %}selected{% endif %}"
                        data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
                        data-name="{{ svc.service_name }}"
                        data-discounted="{{ svc.discounted_price }}"
@@ -476,7 +656,7 @@
                     </div>
                   </div>
                   <!-- Mobile compact row -->
-                  <div class="svc-mobile-row d-flex d-md-none {% if rebook_services and svc.service_name in rebook_services %}selected{% endif %}"
+                  <div class="svc-mobile-row d-flex d-md-none {% if rebook_ids and svc.id|string in rebook_ids %}selected{% endif %}"
                        data-id="{{ svc.id }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}"
                        data-name="{{ svc.service_name }}"
                        data-discounted="{{ svc.discounted_price }}"
@@ -517,33 +697,44 @@
               <span class="step-num">2</span> Pick Date & Time
             </div>
             <div class="glass-card">
+              <input type="hidden" name="preferred_date" id="preferred_date" required/>
+              <input type="hidden" name="preferred_time" id="preferred_time"/>
+
               <div class="row g-4">
-                <div class="col-md-5">
-                  <label class="field-label">Preferred Date <span class="text-danger">*</span></label>
-                  <div class="d-flex gap-2 mt-2">
-                    <select id="sel_day" class="premium-input" style="flex:1;">
-                      <option value="">Day</option>
-                      {% for d in range(1, 32) %}
-                      <option value="{{ '%02d'|format(d) }}">{{ '%02d'|format(d) }}</option>
-                      {% endfor %}
-                    </select>
-                    <select id="sel_month" class="premium-input" style="flex:1.5;">
-                      <option value="">Month</option>
-                      {% for m, mname in [(1,'January'),(2,'February'),(3,'March'),(4,'April'),(5,'May'),(6,'June'),(7,'July'),(8,'August'),(9,'September'),(10,'October'),(11,'November'),(12,'December')] %}
-                      <option value="{{ '%02d'|format(m) }}">{{ mname }}</option>
-                      {% endfor %}
-                    </select>
-                    <input type="number" id="sel_year" class="premium-input" style="flex:1.2;" placeholder="Year" min="2026" max="2099"/>
+                <!-- Calendar -->
+                <div class="col-md-6 col-12">
+                  <label class="field-label mb-3">Select Date <span class="text-danger">*</span></label>
+                  <div class="mini-cal-wrap">
+                    <div class="mini-cal-header">
+                      <button type="button" class="mini-cal-nav" id="calPrev"><i class="fas fa-chevron-left"></i></button>
+                      <span class="mini-cal-month-label" id="calMonthLabel"></span>
+                      <button type="button" class="mini-cal-nav" id="calNext"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="mini-cal-grid" id="calGrid"></div>
+                    <div class="cal-legend">
+                      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#22c55e"></div>Available</div>
+                      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#f59e0b"></div>Limited</div>
+                      <div class="cal-legend-item"><div class="cal-legend-dot" style="background:#ef4444"></div>Full/Closed</div>
+                    </div>
                   </div>
-                  <input type="hidden" name="preferred_date" id="preferred_date" required/>
+
+                  <!-- AI Recommendations -->
+                  <div class="ai-rec-wrap" id="aiRecWrap" style="display:none;">
+                    <div class="ai-rec-header">
+                      <div class="ai-rec-icon"><i class="fas fa-magic"></i></div>
+                      <span class="ai-rec-label">AI Best Slots</span>
+                    </div>
+                    <div class="ai-rec-chips" id="aiRecChips"></div>
+                  </div>
                 </div>
-                <div class="col-md-7">
-                  <label class="field-label">Preferred Time <span style="color:var(--text-muted);font-size:0.78rem;">(Optional)</span></label>
-                  <input type="hidden" name="preferred_time" id="preferred_time"/>
-                  <div class="time-slots-wrap mt-2">
-                    {% for t in ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'] %}
-                    <span class="time-chip" data-time="{{ t }}">{{ t }}</span>
-                    {% endfor %}
+
+                <!-- Slot picker -->
+                <div class="col-md-6 col-12">
+                  <label class="field-label mb-3">Select Time <span style="color:var(--text-muted);font-size:0.78rem;">(Optional)</span></label>
+                  <div id="slotsSection">
+                    <div style="color:var(--text-muted);font-size:0.85rem;padding:20px 0;text-align:center;">
+                      <i class="far fa-calendar me-2"></i>Pick a date to see available slots
+                    </div>
                   </div>
                 </div>
               </div>
@@ -618,6 +809,285 @@
 
 {% block extra_js %}
 <script>
+/* ── Mini Calendar ── */
+(function() {
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let curYear, curMonth, availMap = {}, selectedDate = null, selectedTime = null;
+
+  const today = new Date();
+  curYear  = today.getFullYear();
+  curMonth = today.getMonth() + 1; // 1-based
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  function isoToday() {
+    return `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  }
+
+  function fetchMonth(year, month) {
+    fetch(`/api/calendar/month-availability?year=${year}&month=${month}`)
+      .then(r => r.json())
+      .then(data => { availMap = data.days || {}; renderGrid(); })
+      .catch(() => { availMap = {}; renderGrid(); });
+  }
+
+  function renderGrid() {
+    const label = document.getElementById('calMonthLabel');
+    const grid  = document.getElementById('calGrid');
+    if (!label || !grid) return;
+    label.textContent = `${MONTHS[curMonth-1]} ${curYear}`;
+    grid.innerHTML = '';
+
+    // Day-of-week headers
+    DAYS.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'mini-cal-dow';
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    const firstDow = new Date(curYear, curMonth-1, 1).getDay();
+    const daysInMonth = new Date(curYear, curMonth, 0).getDate();
+    const todayStr = isoToday();
+
+    // Empty cells
+    for (let i = 0; i < firstDow; i++) {
+      const el = document.createElement('div');
+      el.className = 'mini-cal-day empty';
+      grid.appendChild(el);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const ds = `${curYear}-${pad(curMonth)}-${pad(d)}`;
+      const status = availMap[ds] || 'available';
+      const el = document.createElement('div');
+      el.className = 'mini-cal-day';
+      el.textContent = d;
+
+      if (ds === todayStr) el.classList.add('today-ring');
+      if (ds === selectedDate) el.classList.add('selected');
+
+      if (['past','closed','full'].includes(status)) {
+        el.classList.add(status);
+      } else if (status === 'limited') {
+        el.classList.add('limited');
+        el.addEventListener('click', () => selectDate(ds));
+      } else {
+        el.classList.add('available');
+        el.addEventListener('click', () => selectDate(ds));
+      }
+      grid.appendChild(el);
+    }
+  }
+
+  function selectDate(ds) {
+    selectedDate = ds;
+    selectedTime = null;
+    document.getElementById('preferred_date').value = ds;
+    document.getElementById('preferred_time').value = '';
+    renderGrid();
+    loadSlots(ds);
+    loadOffers(ds);
+    updateSidebar();
+  }
+
+  function loadSlots(ds) {
+    const sec = document.getElementById('slotsSection');
+    if (!sec) return;
+    // Format display date dd/mm/yyyy
+    const [y,m,d] = ds.split('-');
+    const displayDate = `${d}/${m}/${y}`;
+    sec.innerHTML = `<div class="slot-loading"><i class="fas fa-spinner fa-spin me-2"></i>Loading slots…</div>`;
+
+    fetch(`/api/calendar/slots?date=${ds}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.blocked || data.past) {
+          sec.innerHTML = `<div style="color:#ef4444;font-size:0.85rem;padding:12px 0;"><i class="fas fa-ban me-2"></i>${data.message || 'Not available'}</div>`;
+          return;
+        }
+        const slots = data.slots || [];
+        if (!slots.length) {
+          sec.innerHTML = `<div style="color:var(--text-muted);font-size:0.85rem;padding:12px 0;">No slots available for this date.</div>`;
+          return;
+        }
+        let html = `<div class="selected-date-display"><i class="far fa-calendar-check"></i>${displayDate}</div>`;
+        html += `<div class="slot-chips-wrap" id="slotChipsWrap">`;
+        slots.forEach(s => {
+          const unavail = !s.available;
+          const limited = s.remaining === 1;
+          let cls = 'slot-chip';
+          if (unavail) cls += ' unavailable';
+          else if (limited) cls += ' limited-chip';
+          if (s.time === selectedTime) cls += ' selected';
+          const badge = limited && !unavail ? `<span style="font-size:0.6rem;margin-left:4px;color:#f59e0b;">1 left</span>` : '';
+          html += `<div class="${cls}" data-time="${s.time}">${s.time}${badge}</div>`;
+        });
+        html += `</div>`;
+        sec.innerHTML = html;
+
+        // Wire slot clicks
+        sec.querySelectorAll('.slot-chip:not(.unavailable)').forEach(chip => {
+          chip.addEventListener('click', () => {
+            selectedTime = chip.dataset.time;
+            document.getElementById('preferred_time').value = selectedTime;
+            sec.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('selected'));
+            chip.classList.add('selected');
+            // Deselect AI rec chips
+            document.querySelectorAll('.ai-rec-chip').forEach(c => c.classList.remove('selected'));
+            updateSidebar();
+          });
+        });
+      })
+      .catch(() => {
+        sec.innerHTML = `<div style="color:var(--text-muted);font-size:0.85rem;">Could not load slots.</div>`;
+      });
+  }
+
+  function loadOffers(ds) {
+    const container = document.getElementById('offersBannerContainer');
+    if (!container) return;
+    fetch(`/api/calendar/offers?date=${ds}`)
+      .then(r => r.json())
+      .then(data => {
+        const offers = data.offers || [];
+        if (!offers.length) {
+          // If selected date is today, keep server-rendered banner; otherwise clear
+          const todayIso = isoToday();
+          if (ds === todayIso) return;
+          container.innerHTML = '';
+          // Remove any applied offers from service cards
+          document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
+            card.dataset.offerPct = 0;
+            card.dataset.discounted = card.dataset.price || 0;
+            card.dataset.offerText = '';
+          });
+          updateSidebar();
+          return;
+        }
+        let html = `<div class="offers-book-banner reveal-up mb-4" style="animation-delay:0.08s">`;
+        html += `<div class="offers-book-head"><div class="offers-book-fire"><i class="fas fa-fire"></i></div><span class="offers-book-label">Offers</span>`;
+        html += `<span style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;border-radius:999px;padding:2px 10px;font-size:0.68rem;font-weight:900;">${offers.length}</span></div>`;
+        html += `<div class="offer-book-chips">`;
+        offers.forEach((offer, idx) => {
+          html += `<div class="offer-book-chip" style="animation-delay:${idx*0.08}s">`;
+          if (offer.discount_text) html += `<span class="offer-pill-sm">${offer.discount_text}</span>`;
+          html += `<span class="offer-chip-title">${offer.title}</span>`;
+          if (offer.description) html += `<span class="offer-chip-desc">— ${offer.description}</span>`;
+          html += `</div>`;
+        });
+        html += `</div></div>`;
+        container.innerHTML = html;
+
+        // Apply offers to service cards so prices update dynamically
+        try {
+          const offerMap = {};
+          let globalOffer = null;
+          offers.forEach(o => {
+            const pct = parseFloat(o.discount_percent || 0);
+            if (!pct) return;
+            const app = (o.applicable_services || '').trim();
+            if (!app) {
+              if (!globalOffer) globalOffer = o;
+              return;
+            }
+            app.split(',').forEach(name => {
+              const key = name.trim().toLowerCase();
+              if (key) offerMap[key] = o;
+            });
+          });
+
+          document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
+            const name = (card.dataset.name || '').toLowerCase();
+            const origPrice = parseFloat(card.dataset.price || 0);
+            const matched = offerMap[name] || globalOffer;
+            if (matched) {
+              const pct = parseFloat(matched.discount_percent || 0);
+              const discPrice = Math.round(origPrice * (1 - pct/100));
+              card.dataset.discounted = discPrice;
+              card.dataset.offerPct = pct;
+              card.dataset.offerText = matched.discount_text || matched.title || '';
+            } else {
+              card.dataset.discounted = origPrice;
+              card.dataset.offerPct = 0;
+              card.dataset.offerText = '';
+            }
+          });
+          // Refresh sidebar and summary
+          updateSidebar();
+        } catch (e) { console.error('applyOffersError', e); }
+      })
+      .catch(() => {});
+  }
+
+  function loadAiRecs() {
+    fetch('/api/calendar/ai-recommend')
+      .then(r => r.json())
+      .then(data => {
+        const recs = data.recommendations || [];
+        const wrap = document.getElementById('aiRecWrap');
+        const chips = document.getElementById('aiRecChips');
+        if (!recs.length || !wrap || !chips) return;
+        chips.innerHTML = '';
+        recs.forEach(rec => {
+          const [y,m,d] = rec.date.split('-');
+          const chip = document.createElement('div');
+          chip.className = 'ai-rec-chip';
+          chip.innerHTML = `<div class="ai-rec-chip-date">${d}/${m}/${y}</div><div class="ai-rec-chip-time">${rec.time}</div><div class="ai-rec-chip-spots">${rec.remaining} spot${rec.remaining!==1?'s':''} left</div>`;
+          chip.addEventListener('click', () => {
+            // Navigate to correct month if needed
+            const recYear = parseInt(y), recMonth = parseInt(m);
+            if (recYear !== curYear || recMonth !== curMonth) {
+              curYear = recYear; curMonth = recMonth;
+              fetchMonth(curYear, curMonth);
+            }
+            selectDate(rec.date);
+            // Pre-select time
+            selectedTime = rec.time;
+            document.getElementById('preferred_time').value = rec.time;
+            document.querySelectorAll('.ai-rec-chip').forEach(c => c.classList.remove('selected'));
+            chip.classList.add('selected');
+            // After slots load, select the chip
+            setTimeout(() => {
+              const slotChip = document.querySelector(`.slot-chip[data-time="${rec.time}"]`);
+              if (slotChip && !slotChip.classList.contains('unavailable')) {
+                document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('selected'));
+                slotChip.classList.add('selected');
+              }
+            }, 600);
+            updateSidebar();
+          });
+          chips.appendChild(chip);
+        });
+        wrap.style.display = '';
+      })
+      .catch(() => {});
+  }
+
+  document.getElementById('calPrev')?.addEventListener('click', () => {
+    curMonth--;
+    if (curMonth < 1) { curMonth = 12; curYear--; }
+    fetchMonth(curYear, curMonth);
+  });
+  document.getElementById('calNext')?.addEventListener('click', () => {
+    curMonth++;
+    if (curMonth > 12) { curMonth = 1; curYear++; }
+    fetchMonth(curYear, curMonth);
+  });
+
+  // Init
+  fetchMonth(curYear, curMonth);
+  loadAiRecs();
+  loadOffers(isoToday());
+})();
+
+// Force reveal all elements immediately (fix opacity:0 stuck issue)
+document.querySelectorAll('.reveal-up').forEach(el => el.classList.add('revealed'));
+setTimeout(() => {
+  document.querySelectorAll('.reveal-up').forEach(el => el.classList.add('revealed'));
+}, 100);
+
 /* ── Sidebar live update ── */
 function updateSidebar() {
   const items      = document.getElementById('sidebarItems');
@@ -726,10 +1196,6 @@ document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(el => {
   });
 });
 document.getElementById('preferred_date')?.addEventListener('change', updateSidebar);
-['sel_day','sel_month','sel_year'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) { el.addEventListener('change', updateSidebar); el.addEventListener('input', updateSidebar); }
-});
 updateSidebar();
 </script>
 {% endblock %}

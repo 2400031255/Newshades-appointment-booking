@@ -29,4 +29,4 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_COOKIE_HTTPONLY    = True
     SESSION_COOKIE_SAMESITE    = 'Lax'
-    SESSION_COOKIE_SECURE      = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('1', 'true', 'yes')
+    SESSION_COOKIE_SECURE      = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() in ('1', 'true', 'yes')

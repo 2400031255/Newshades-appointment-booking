@@ -48,6 +48,7 @@
             <i class="fas fa-edit me-2 text-gold"></i>Edit Details
           </h6>
           <form method="POST" action="{{ url_for('customer.profile') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="auth-field">
               <label class="auth-label">Full Name</label>
               <div class="auth-input-wrap">

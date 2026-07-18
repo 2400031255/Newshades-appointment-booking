@@ -237,7 +237,7 @@
           {% endif %}
           {% if offer.valid_until %}
           <div class="offer-home-expiry">
-            <i class="fas fa-clock"></i> Valid until {{ offer.valid_until }}
+            <i class="fas fa-clock"></i> Valid until {% set d = offer.valid_until|string %}{% if d|length >= 10 %}{{ d[8:10] }} {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d[5:7]|int] }} {{ d[0:4] }}{% else %}{{ d }}{% endif %}
           </div>
           {% endif %}
           <div class="offer-home-footer">

@@ -21,8 +21,12 @@ const revealObserver = new IntersectionObserver((entries) => {
       revealObserver.unobserve(e.target);
     }
   });
-}, { threshold: 0.1 });
+}, { threshold: 0.05, rootMargin: '0px 0px -20px 0px' });
 document.querySelectorAll('.reveal-up').forEach(el => revealObserver.observe(el));
+// Fallback: reveal anything still hidden after 800ms
+setTimeout(() => {
+  document.querySelectorAll('.reveal-up:not(.revealed)').forEach(el => el.classList.add('revealed'));
+}, 800);
 
 /* ── Particle Canvas ── */
 const canvas = document.getElementById('particleCanvas');

@@ -497,6 +497,10 @@ def save_offer():
     valid_from  = parse_date(request.form.get('valid_from'))
     valid_until = parse_date(request.form.get('valid_until'))
 
+    # If admin does not supply a starting date, make the offer effective immediately
+    if not valid_from:
+        valid_from = datetime.today().strftime('%Y-%m-%d')
+
     if not title:
         flash('Offer title is required.', 'danger')
         return redirect(url_for('admin.offers'))

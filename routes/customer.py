@@ -1,11 +1,28 @@
 import math
 from datetime import date
 import uuid
+import time
+import threading
+from collections import defaultdict
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from functools import wraps
 from db import query, execute
 from sms import sms_new_booking, sms_confirmed, sms_rejected
 from email_service import send_booking_received_email, send_confirmation_email, send_rejection_email
+
+# Thread-safe rate limiter: max 5 bookings per IP per 10 minutes
+_booking_attempts = defaultdict(list)
+_booking_lock = threading.Lock()
+
+def _is_booking_rate_limited(ip):
+    now = time.time()
+    with _booking_lock:
+        attempts = [t for t in _booking_attempts[ip] if now - t < 600]
+        _booking_attempts[ip] = attempts
+        if len(attempts) >= 5:
+            return True
+        _booking_attempts[ip].append(now)
+    return False
 
 
 def _safe_pct(val):
@@ -47,13 +64,6 @@ def login_required(f):
     return decorated
 
 
-@customer.route('/calendar')
-@login_required
-def calendar_page():
-    services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
-    return render_template('customer/calendar.html', services=services)
-
-
 @customer.route('/dashboard')
 @login_required
 def dashboard():
@@ -68,8 +78,16 @@ def dashboard():
     total     = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s", (session['user_id'],), one=True)['c']
     pending   = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
     confirmed = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Confirmed'", (session['user_id'],), one=True)['c']
+    today_str = date.today().isoformat()
+    today_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 "
+        "AND (valid_from IS NULL OR valid_from <= %s) "
+        "AND (valid_until IS NULL OR valid_until >= %s)",
+        (today_str, today_str)
+    )
     return render_template('customer/dashboard.html', user=user, recent_appts=appts,
-                           total=total, pending=pending, confirmed=confirmed)
+                           total=total, pending=pending, confirmed=confirmed,
+                           today_offers=today_offers)
 
 
 @customer.route('/book')
@@ -77,7 +95,13 @@ def dashboard():
 def book_page():
     services   = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
     categories = list(dict.fromkeys(s['category'] for s in services))
-    rebook_services = session.pop('rebook_services', None)
+    rebook_names = session.pop('rebook_services', None)
+
+    # Convert comma-separated service names → list of IDs for pre-selection
+    rebook_ids = []
+    if rebook_names:
+        name_list = [n.strip().lower() for n in rebook_names.split(',')]
+        rebook_ids = [str(s['id']) for s in services if s['service_name'].lower() in name_list]
 
     # Build offer map: service_name (lower) → best offer
     today_str = date.today().isoformat()
@@ -105,12 +129,17 @@ def book_page():
             svc['discounted_price'] = float(svc['price'])
 
     return render_template('customer/book.html', services=services, categories=categories,
-                           rebook_services=rebook_services, active_offers=active_offers)
+                           rebook_ids=rebook_ids, today_offers=active_offers)
 
 
 @customer.route('/book', methods=['POST'])
 @login_required
 def book():
+    ip = request.remote_addr
+    if _is_booking_rate_limited(ip):
+        flash('Too many booking attempts. Please wait a few minutes.', 'danger')
+        return redirect(url_for('customer.book_page'))
+
     user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
     if not user:
         session.clear()
@@ -142,10 +171,11 @@ def book():
     total_price   = sum(float(s['price'] or 0) for s in services)
 
     # Find best active offer — discount ONLY on matching services
-    today_str = date.today().isoformat()
+    # Use the booking date to find offers applicable to that date
+    offer_date = preferred_date
     active_offers = query(
         "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
-        (today_str, today_str)
+        (offer_date, offer_date)
     )
     offer_map, global_offer = _build_offer_map(active_offers)
 
@@ -238,6 +268,7 @@ def rebook(aid):
     appt = query("SELECT * FROM appointments WHERE id=%s AND user_id=%s", (aid, session['user_id']), one=True)
     if not appt:
         return redirect(url_for('customer.book_page'))
+    # Store service names; book_page will match them to IDs by name
     session['rebook_services'] = appt['selected_services']
     return redirect(url_for('customer.book_page'))
 

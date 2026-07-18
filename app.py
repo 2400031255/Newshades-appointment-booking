@@ -1,27 +1,35 @@
 from flask import Flask, render_template, session, redirect, url_for, current_app
 from flask_socketio import SocketIO, emit
+from flask_wtf.csrf import CSRFProtect
 from config import Config
 from db import close_db
 import os
 
 socketio = SocketIO()
+csrf = CSRFProtect()
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
-    app.config['WTF_CSRF_ENABLED'] = False
+    app.config['WTF_CSRF_ENABLED'] = True
 
-    # Init Socket.IO
+    # Init Socket.IO — use gevent on Render, threading locally
+    try:
+        import gevent  # noqa
+        _async_mode = 'gevent'
+    except ImportError:
+        _async_mode = 'threading'
     socketio.init_app(
         app,
         cors_allowed_origins='*',
-        async_mode='gevent',
+        async_mode=_async_mode,
         logger=False,
         engineio_logger=False,
         manage_session=False
     )
+    csrf.init_app(app)
 
     @app.before_request
     def make_session_permanent():
@@ -78,6 +86,17 @@ def create_app():
     app.register_blueprint(customer)
     app.register_blueprint(admin)
     app.register_blueprint(cal_api)
+    # Calendar API uses JSON + session auth — exempt from CSRF form token check
+    try:
+        from flask_wtf.csrf import exempt as csrf_exempt
+        csrf_exempt(cal_api)
+    except Exception:
+        pass
+    csrf.exempt(cal_api)
+
+    @app.route('/ping')
+    def ping():
+        return 'ok', 200
 
     @app.route('/')
     def index():

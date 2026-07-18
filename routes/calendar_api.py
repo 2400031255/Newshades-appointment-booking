@@ -7,6 +7,11 @@ from flask import Blueprint, jsonify, request, session
 from functools import wraps
 from db import query, execute
 
+try:
+    from flask_wtf.csrf import exempt as csrf_exempt
+except ImportError:
+    csrf_exempt = None
+
 cal_api = Blueprint('cal_api', __name__, url_prefix='/api/calendar')
 
 # ── Salon schedule constants ──────────────────────────────────────────────────
@@ -22,7 +27,7 @@ MAX_PER_SLOT = 3   # configurable via salon_config
 
 
 def _get_config(key, default):
-    row = query("SELECT value FROM salon_config WHERE key=%s", (key,), one=True)
+    row = query("SELECT value FROM salon_config WHERE `key`=%s", (key,), one=True)
     return row['value'] if row else default
 
 
@@ -58,7 +63,21 @@ def _blocked_times(date_str: str) -> set:
         "SELECT block_time FROM blocked_slots WHERE block_date=%s",
         (date_str,)
     )
-    return {r['block_time'] for r in rows if r['block_time']}
+    result = set()
+    for r in rows:
+        t = r['block_time']
+        if not t:
+            continue
+        # Normalise HH:MM (24h) → 'H:MM AM/PM' to match WEEKDAY_SLOTS format
+        try:
+            from datetime import datetime as _dt
+            import platform
+            parsed = _dt.strptime(t, '%H:%M')
+            fmt = '%#I:%M %p' if platform.system() == 'Windows' else '%-I:%M %p'
+            result.add(parsed.strftime(fmt))  # e.g. '9:00 AM'
+        except Exception:
+            result.add(t)  # already in correct format
+    return result
 
 
 def _is_date_blocked(date_str: str) -> bool:
@@ -237,6 +256,33 @@ def ai_recommend():
     return jsonify({'recommendations': top})
 
 
+@cal_api.route('/offers')
+def offers():
+    """GET /api/calendar/offers?date=YYYY-MM-DD
+    Returns offers active for the given date.
+    """
+    date_str = request.args.get('date', '')
+    if not date_str:
+        return jsonify({'error': 'date required'}), 400
+
+    rows = query(
+        "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
+        (date_str, date_str)
+    )
+    result = []
+    for r in rows:
+        result.append({
+            'id': r['id'],
+            'title': r.get('title'),
+            'description': r.get('description') or '',
+            'discount_text': r.get('discount_text') or '',
+            'discount_percent': float(r.get('discount_percent') or 0),
+            'applicable_services': r.get('applicable_services') or ''
+        })
+
+    return jsonify({'date': date_str, 'offers': result})
+
+
 # ── Admin-only endpoints ──────────────────────────────────────────────────────
 
 def _admin_required(f):
@@ -377,7 +423,9 @@ def admin_action():
     Body: {id, action}  — accept/reject/checkin/complete
     """
     import uuid as _uuid
+    from flask import current_app
     from email_service import send_confirmation_email, send_rejection_email
+    from sms import sms_confirmed, sms_rejected
 
     data   = request.get_json() or {}
     aid    = data.get('id')
@@ -402,7 +450,6 @@ def admin_action():
 
     if action == 'accept':
         ticket_id = str(_uuid.uuid4())[:8].upper()
-        # Ticket expires at end of appointment date
         try:
             appt_date = date.fromisoformat(str(appt['preferred_date'])[:10])
             expires_at = datetime.combine(appt_date, datetime.max.time()).isoformat()
@@ -413,17 +460,25 @@ def admin_action():
             (ticket_id, expires_at, aid)
         )
         try:
+            sms_confirmed(appt['phone'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('SMS error: %s', e)
+        try:
             send_confirmation_email(appt['email'], appt['full_name'],
                                     fmt_date, fmt_time, appt['selected_services'])
-        except Exception:
-            pass
+        except Exception as e:
+            current_app.logger.error('Email error: %s', e)
 
     elif action == 'reject':
         execute("UPDATE appointments SET status='Rejected' WHERE id=%s", (aid,))
         try:
+            sms_rejected(appt['phone'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('SMS error: %s', e)
+        try:
             send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
-        except Exception:
-            pass
+        except Exception as e:
+            current_app.logger.error('Email error: %s', e)
 
     elif action == 'checkin':
         execute("UPDATE appointments SET status='Checked In' WHERE id=%s", (aid,))
@@ -441,12 +496,11 @@ def salon_config():
     if request.method == 'POST':
         data = request.get_json() or {}
         for k, v in data.items():
-            # Use the same upsert pattern as settings (works across all DB backends)
-            existing = query("SELECT key FROM salon_config WHERE key=%s", (k,), one=True)
+            existing = query("SELECT `key` FROM salon_config WHERE `key`=%s", (k,), one=True)
             if existing:
-                execute("UPDATE salon_config SET value=%s WHERE key=%s", (str(v), k))
+                execute("UPDATE salon_config SET value=%s WHERE `key`=%s", (str(v), k))
             else:
-                execute("INSERT INTO salon_config (key, value) VALUES (%s,%s)", (k, str(v)))
+                execute("INSERT INTO salon_config (`key`, value) VALUES (%s,%s)", (k, str(v)))
         return jsonify({'ok': True})
     keys = ['max_per_slot', 'slot_duration', 'lunch_start', 'lunch_end']
     cfg  = {}
@@ -476,10 +530,7 @@ def blocked_dates():
 def _emit_calendar_update():
     """Broadcast calendar_update event to all connected clients."""
     try:
-        # Import at call-time to avoid circular import at module load
-        import sys
-        sio = sys.modules.get('app') and getattr(sys.modules['app'], 'socketio', None)
-        if sio:
-            sio.emit('calendar_update', {'ts': datetime.now().isoformat()})
+        from app import socketio
+        socketio.emit('calendar_update', {'ts': datetime.now().isoformat()})
     except Exception:
         pass

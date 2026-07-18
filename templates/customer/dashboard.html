@@ -428,7 +428,7 @@
           <div class="offer-desc">{{ offer.description }}</div>
           {% endif %}
           {% if offer.valid_until %}
-          <div class="offer-expiry"><i class="fas fa-clock"></i>Valid until {{ offer.valid_until }}</div>
+          <div class="offer-expiry"><i class="fas fa-clock"></i>Valid until {% set d = offer.valid_until|string %}{% if d|length >= 10 %}{{ d[8:10] }} {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d[5:7]|int] }} {{ d[0:4] }}{% else %}{{ d }}{% endif %}</div>
           {% endif %}
           <a href="{{ url_for('customer.book_page') }}" class="offer-cta">
             Book Now <i class="fas fa-arrow-right"></i>

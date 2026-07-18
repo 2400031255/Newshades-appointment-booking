@@ -132,8 +132,8 @@
           <button class="view-btn" data-view="timeGridDay">Day</button>
           <button class="view-btn" data-view="listWeek">List</button>
         </div>
-        <button class="btn-outline-gold" style="padding:8px 16px;font-size:.8rem;" onclick="document.getElementById('blockPanel').scrollIntoView({behavior:'smooth'})">
-          <i class="fas fa-ban me-2"></i>Block Slots
+        <button class="btn-outline-gold" style="padding:8px 16px;font-size:.8rem;" onclick="window.location.href='{{ url_for('admin.schedule') }}'">
+          <i class="fas fa-ban me-2"></i>Manage Schedule
         </button>
       </div>
     </div>
@@ -150,46 +150,6 @@
     <!-- Calendar -->
     <div class="reveal-up" style="animation-delay:.1s;">
       <div id="adminCal"></div>
-    </div>
-
-    <!-- Block Slots Panel -->
-    <div class="row g-4 mt-2" id="blockPanel">
-      <div class="col-lg-6 reveal-up" style="animation-delay:.15s;">
-        <div class="block-panel">
-          <div class="block-panel-title"><i class="fas fa-ban me-2"></i>Block Date / Time Slot</div>
-          <div class="row g-3">
-            <div class="col-md-5">
-              <label class="field-label mb-1">Date (DD/MM/YYYY)</label>
-              <input type="text" id="blockDate" class="premium-input" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off"/>
-            </div>
-            <div class="col-md-4">
-              <label class="field-label mb-1">Time (optional)</label>
-              <select id="blockTime" class="premium-input">
-                <option value="">Full Day</option>
-                {% for t in ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'] %}
-                <option value="{{ t }}">{{ t }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-md-3 d-flex align-items-end">
-              <button class="btn-gold-hero w-100" style="padding:10px;" onclick="blockSlot()">
-                <i class="fas fa-lock me-1"></i>Block
-              </button>
-            </div>
-            <div class="col-12">
-              <input type="text" id="blockReason" class="premium-input" placeholder="Reason (e.g. Holiday, Staff leave)"/>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6 reveal-up" style="animation-delay:.2s;">
-        <div class="glass-card">
-          <div style="font-size:.85rem;font-weight:700;color:rgba(240,230,211,.7);margin-bottom:14px;"><i class="fas fa-list me-2 text-gold"></i>Blocked Slots</div>
-          <div id="blockedList" style="max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
-            <div style="color:rgba(240,230,211,.3);font-size:.8rem;text-align:center;padding:12px;">Loading…</div>
-          </div>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -344,64 +304,6 @@ function formatDate(d) {
   return p.length === 3 ? `${p[2]}/${p[1]}/${p[0].slice(2)}` : d;
 }
 
-/* ── Block slot ── */
-async function blockSlot() {
-  const rawDate = document.getElementById('blockDate').value.trim();
-  const time    = document.getElementById('blockTime').value || null;
-  const reason  = document.getElementById('blockReason').value;
-  if (!rawDate) { showToast('Please enter a date.', 'warning'); return; }
-
-  // Convert dd/mm/yyyy → yyyy-mm-dd for API
-  const parts = rawDate.split('/');
-  if (parts.length !== 3) { showToast('Use DD/MM/YYYY format.', 'warning'); return; }
-  const date = `${parts[2]}-${parts[1]}-${parts[0]}`;
-
-  const res  = await fetch('/api/calendar/admin/block', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({date, time, reason})
-  });
-  const data = await res.json();
-  if (data.ok) {
-    showToast('Slot blocked successfully.', 'success');
-    document.getElementById('blockDate').value = '';
-    loadBlockedList();
-    calendar.refetchEvents();
-  }
-}
-
-async function unblockSlot(date, time) {
-  await fetch('/api/calendar/admin/unblock', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({date, time})
-  });
-  loadBlockedList();
-  calendar.refetchEvents();
-  showToast('Slot unblocked.', 'success');
-}
-
-async function loadBlockedList() {
-  const res  = await fetch('/api/calendar/admin/blocked-dates');
-  const data = await res.json();
-  const list = document.getElementById('blockedList');
-  if (!data.length) {
-    list.innerHTML = '<div style="color:rgba(240,230,211,.3);font-size:.8rem;text-align:center;padding:12px;">No blocked slots.</div>';
-    return;
-  }
-  list.innerHTML = data.map(b => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);">
-      <div>
-        <div style="font-size:.82rem;color:#fff;font-weight:600;">${formatDate(b.block_date)}${b.block_time ? ' · '+b.block_time : ' (Full Day)'}</div>
-        ${b.reason ? `<div style="font-size:.7rem;color:rgba(240,230,211,.4);">${b.reason}</div>` : ''}
-      </div>
-      <button onclick="unblockSlot('${b.block_date}','${b.block_time||''}')" style="background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:8px;padding:4px 10px;font-size:.72rem;cursor:pointer;">
-        <i class="fas fa-unlock"></i>
-      </button>
-    </div>
-  `).join('');
-}
-
 /* ── Modal close ── */
 function closeModal() {
   document.getElementById('apptModal').classList.remove('show');
@@ -411,19 +313,10 @@ document.getElementById('apptModal').addEventListener('click', e => {
   if (e.target === document.getElementById('apptModal')) closeModal();
 });
 
-/* ── Auto-format date input DD/MM/YYYY ── */
-document.getElementById('blockDate').addEventListener('input', function() {
-  let v = this.value.replace(/\D/g,'');
-  if (v.length >= 3 && v.length <= 4) v = v.slice(0,2)+'/'+v.slice(2);
-  else if (v.length >= 5) v = v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4,8);
-  this.value = v;
-});
-
 /* ── Socket.IO real-time ── */
 const socket = io();
 socket.on('calendar_update', () => {
   calendar.refetchEvents();
-  loadBlockedList();
 });
 
 /* ── Toast helper ── */

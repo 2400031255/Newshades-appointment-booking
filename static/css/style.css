@@ -1,31 +1,31 @@
 :root {
-  /* Gold palette */
-  --gold:        #c9a84c;
-  --gold-2:      #e8c96a;
-  --gold-light:  #f5e0a0;
-  --gold-deep:   #7a5c1e;
-  --gold-glow:   rgba(201,168,76,0.22);
+  /* Dark Gold palette */
+  --gold:        #C9A84C;
+  --gold-2:      #E8C96A;
+  --gold-light:  #f5e6c0;
+  --gold-deep:   #a07830;
+  --gold-glow:   rgba(201,168,76,0.08);
 
   /* Dark backgrounds */
-  --ink:         #080608;
-  --ink-2:       #0f0d12;
-  --ink-3:       #161219;
-  --ink-4:       #1e1820;
+  --ink:         #0c0b10;
+  --ink-2:       #100e14;
+  --ink-3:       #131118;
+  --ink-4:       #17141c;
 
   /* Glass panels */
-  --panel:       rgba(255,255,255,0.05);
-  --panel-md:    rgba(255,255,255,0.08);
-  --border:      rgba(201,168,76,0.22);
+  --panel:       rgba(255,255,255,0.07);
+  --panel-md:    rgba(255,255,255,0.05);
+  --border:      rgba(201,168,76,0.16);
   --border-soft: rgba(255,255,255,0.06);
 
   /* Text */
-  --text:        #f0e6d3;
-  --text-soft:   #c8b99a;
-  --text-muted:  #8a7a62;
+  --text:        rgba(240,230,211,0.9);
+  --text-soft:   rgba(240,230,211,0.7);
+  --text-muted:  rgba(240,230,211,0.45);
 
   /* Shadows */
-  --shadow:      0 20px 60px rgba(0,0,0,0.4);
-  --shadow-gold: 0 16px 40px rgba(201,168,76,0.2);
+  --shadow:      0 18px 48px rgba(0,0,0,0.35);
+  --shadow-gold: 0 12px 32px rgba(201,168,76,0.18);
 
   /* Radius */
   --radius-xl:   26px;
@@ -33,6 +33,7 @@
   --radius-md:   12px;
   --radius-sm:   8px;
 }
+
 
 * {
   box-sizing: border-box;
@@ -53,6 +54,19 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+
+body.admin-body {
+  background: linear-gradient(180deg, rgba(8,8,12,0.98) 0%, rgba(13,13,18,1) 100%);
+  color: rgba(240,230,211,0.9);
+}
+
+body.admin-body h1,
+body.admin-body h2,
+body.admin-body h3,
+body.admin-body h4,
+body.admin-body h5,
+body.admin-body h6 { color: #fff; }
+body.admin-body .text-muted { color: rgba(240,230,211,0.5) !important; }
 
 body::before {
   content: '';
@@ -1193,7 +1207,7 @@ a {
 .profile-avatar-ring { position:absolute; inset:-6px; border-radius:50%; border:2px dashed rgba(201,168,76,0.28); animation: spin 12s linear infinite; }
 
 /* nav scrolled state */
-.nav-scrolled, #mainNav.nav-scrolled { padding: 8px 0; background: rgba(6,6,10,0.95) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.35); border-bottom-width: 1px; }
+.nav-scrolled, #mainNav.nav-scrolled { padding: 8px 0; background: rgba(255,255,255,0.92) !important; box-shadow: var(--shadow); border-bottom: 1px solid var(--border); }
 
 #particleCanvas {
   position: absolute;
@@ -1203,6 +1217,8 @@ a {
   pointer-events: none;
   z-index: 0;
 }
+
+/* end theme overrides */
 
 .hero {
   position: relative;
@@ -1712,6 +1728,7 @@ a {
   background: rgba(8,8,12,0.8);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(201,168,76,0.12);
+  color: rgba(240,230,211,0.9);
 }
 
 .badge-status-pending {
@@ -2128,13 +2145,13 @@ a {
 
 .admin-table td {
   padding: 14px;
-  color: var(--text);
+  color: rgba(240,230,211,0.85);
   font-size: 0.92rem;
   vertical-align: middle;
 }
 
 .admin-td-muted {
-  color: var(--text-muted) !important;
+  color: rgba(240,230,211,0.5) !important;
   font-size: 0.88rem;
 }
 
@@ -2263,7 +2280,7 @@ a {
 .admin-card .table-light {
   --bs-table-bg: transparent;
   --bs-table-hover-bg: rgba(255,255,255,0.03);
-  color: var(--text);
+  color: rgba(240,230,211,0.85);
 }
 
 .admin-card .table thead th {
@@ -2275,7 +2292,7 @@ a {
 .admin-card .table td,
 .admin-card .table th {
   border-color: rgba(255,255,255,0.04);
-  color: var(--text);
+  color: rgba(240,230,211,0.85);
 }
 
 .admin-card .form-select {

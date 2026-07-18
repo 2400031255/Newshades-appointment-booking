@@ -29,7 +29,12 @@ CREATE TABLE IF NOT EXISTS appointments (
     selected_services TEXT NOT NULL,
     preferred_date DATE NOT NULL,
     preferred_time VARCHAR(20),
-    status ENUM('Pending','Confirmed','Cancelled') DEFAULT 'Pending',
+    status ENUM('Pending','Confirmed','Cancelled','Rejected','Checked In','Completed') DEFAULT 'Pending',
+    ticket_id VARCHAR(20),
+    ticket_expires_at DATETIME,
+    total_price DECIMAL(10,2) DEFAULT 0,
+    discount_percent DECIMAL(5,2) DEFAULT 0,
+    offer_applied VARCHAR(150) DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -44,6 +49,41 @@ CREATE TABLE IF NOT EXISTS gallery (
 CREATE TABLE IF NOT EXISTS settings (
     `key` VARCHAR(100) PRIMARY KEY,
     value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS blocked_slots (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    block_date DATE NOT NULL,
+    block_time VARCHAR(20),
+    reason VARCHAR(255) DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS salon_config (
+    `key` VARCHAR(100) PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    rating INT NOT NULL CHECK(rating BETWEEN 1 AND 5),
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS offers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(150) NOT NULL,
+    description TEXT DEFAULT '',
+    discount_text VARCHAR(100) DEFAULT '',
+    discount_percent DECIMAL(5,2) DEFAULT 0,
+    applicable_services TEXT DEFAULT '',
+    valid_from DATE,
+    valid_until DATE,
+    is_active TINYINT(1) DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Admin account: username=komali | password=komali123

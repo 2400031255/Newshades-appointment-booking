@@ -370,6 +370,25 @@
           <span class="status-val"><i class="fas fa-hourglass-half" style="font-size:0.7rem;"></i> Pending</span>
         </span>
       </div>
+      {% if discount_amount and discount_amount > 0 %}
+      <div class="confirm-row">
+        <span class="confirm-key"><i class="fas fa-tag"></i> Original Price</span>
+        <span class="confirm-val" style="text-decoration:line-through;color:rgba(240,230,211,0.45);">₹{{ '%.0f'|format(total_price) }}</span>
+      </div>
+      <div class="confirm-row">
+        <span class="confirm-key"><i class="fas fa-bolt"></i> Discount{% if applied_offer %} ({{ applied_offer.title }}){% endif %}</span>
+        <span class="confirm-val" style="color:#7ce0aa;">−₹{{ '%.0f'|format(discount_amount) }}</span>
+      </div>
+      <div class="confirm-row" style="border-top:1px solid rgba(201,168,76,0.2);">
+        <span class="confirm-key"><i class="fas fa-rupee-sign"></i> Total Payable</span>
+        <span class="confirm-val" style="color:var(--gold-2);font-size:1rem;">₹{{ '%.0f'|format(final_price) }}</span>
+      </div>
+      {% else %}
+      <div class="confirm-row">
+        <span class="confirm-key"><i class="fas fa-rupee-sign"></i> Total</span>
+        <span class="confirm-val" style="color:var(--gold-2);">₹{{ '%.0f'|format(final_price) }}</span>
+      </div>
+      {% endif %}
     </div>
 
     <!-- Email notice -->

@@ -22,6 +22,7 @@
     <div class="auth-divider"><span>Sign Up</span></div>
 
     <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3">
         <div class="col-sm-6 auth-field">
           <label class="auth-label">Full Name</label>
