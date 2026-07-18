@@ -446,6 +446,26 @@
   border: 1px solid rgba(201,168,76,0.28);
   overflow: hidden;
 }
+
+/* ── Show More button ── */
+.show-more-btn {
+  width: 100%;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1.5px dashed rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.04);
+  color: var(--gold-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+.show-more-btn:hover {
+  background: rgba(201,168,76,0.1);
+  border-color: rgba(201,168,76,0.5);
+  transform: translateY(-1px);
+}
 .offers-book-banner::before {
   content: '';
   position: absolute;
@@ -617,9 +637,11 @@
                   </div>
                 </div>
               </div>
+              <!-- Service count badge -->
+              <div id="svcCountBadge" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;"></div>
               <div class="row g-3" id="servicesGrid">
                 {% for svc in services %}
-                <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}">
+                <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}"
                   <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}"
                     class="d-none"
                     {% if rebook_ids and svc.id|string in rebook_ids %}checked{% endif %}/>
@@ -1184,7 +1206,7 @@ function updateSidebar() {
   }
 }
 
-/* Wire up service selection — single source of truth, no double-toggle */
+/* ── Service selection ── */
 document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(el => {
   el.addEventListener('click', () => {
     const id = el.dataset.id;
@@ -1196,6 +1218,104 @@ document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(el => {
   });
 });
 document.getElementById('preferred_date')?.addEventListener('change', updateSidebar);
+
+/* ── Smart filter + show-more for large service lists ── */
+(function() {
+  const SHOW_PER_CAT = 6;
+  const grid = document.getElementById('servicesGrid');
+  const searchInput = document.getElementById('serviceSearch');
+  const catBtns = document.querySelectorAll('.cat-btn');
+  const badge = document.getElementById('svcCountBadge');
+  let activeCat = 'all';
+  let searchQ = '';
+
+  // Remove any existing show-more buttons on re-render
+  function clearShowMore() {
+    grid.querySelectorAll('.show-more-row').forEach(el => el.remove());
+  }
+
+  function applyFilter() {
+    clearShowMore();
+    const cols = Array.from(grid.querySelectorAll('.service-col'));
+    const q = searchQ.toLowerCase();
+
+    // Group by category for show-more logic
+    const catCounts = {};
+
+    cols.forEach(col => {
+      const cat = col.dataset.cat;
+      const card = col.querySelector('.svc-select-card, .svc-mobile-row');
+      const name = (card?.dataset.name || '').toLowerCase();
+      const catMatch = activeCat === 'all' || activeCat === cat;
+      const searchMatch = !q || name.includes(q);
+      col.style.display = (catMatch && searchMatch) ? '' : 'none';
+      if (catMatch && searchMatch) {
+        catCounts[cat] = (catCounts[cat] || 0) + 1;
+      }
+    });
+
+    // Show-more: only when no search query and showing all or single category
+    if (!q) {
+      const catsToLimit = activeCat === 'all'
+        ? Object.keys(catCounts)
+        : [activeCat];
+
+      catsToLimit.forEach(cat => {
+        const catCols = cols.filter(c => c.dataset.cat === cat && c.style.display !== 'none');
+        if (catCols.length <= SHOW_PER_CAT) return;
+
+        // Hide beyond SHOW_PER_CAT
+        catCols.slice(SHOW_PER_CAT).forEach(c => c.style.display = 'none');
+
+        // Insert show-more button after last visible in this cat
+        const lastVisible = catCols[SHOW_PER_CAT - 1];
+        const btn = document.createElement('div');
+        btn.className = 'col-12 show-more-row';
+        btn.dataset.cat = cat;
+        btn.innerHTML = `<button type="button" class="show-more-btn" data-cat="${cat}" data-shown="${SHOW_PER_CAT}" data-total="${catCols.length}">
+          <i class="fas fa-chevron-down me-2"></i>Show more ${cat} services (<span class="remaining">${catCols.length - SHOW_PER_CAT}</span> more)
+        </button>`;
+        lastVisible.insertAdjacentElement('afterend', btn);
+
+        btn.querySelector('.show-more-btn').addEventListener('click', function() {
+          const shown = parseInt(this.dataset.shown);
+          const total = parseInt(this.dataset.total);
+          const nextBatch = Math.min(shown + SHOW_PER_CAT, total);
+          catCols.slice(shown, nextBatch).forEach(c => c.style.display = '');
+          this.dataset.shown = nextBatch;
+          this.querySelector('.remaining').textContent = total - nextBatch;
+          if (nextBatch >= total) this.closest('.show-more-row').remove();
+        });
+      });
+    }
+
+    // Update count badge
+    const visible = cols.filter(c => c.style.display !== 'none').length;
+    const total = cols.length;
+    if (badge) badge.textContent = q || activeCat !== 'all'
+      ? `Showing ${visible} of ${total} services`
+      : `${total} services available`;
+  }
+
+  // Category filter
+  catBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCat = btn.dataset.cat;
+      applyFilter();
+    });
+  });
+
+  // Search
+  searchInput?.addEventListener('input', function() {
+    searchQ = this.value.trim();
+    applyFilter();
+  });
+
+  applyFilter();
+})();
+
 updateSidebar();
 </script>
 {% endblock %}
