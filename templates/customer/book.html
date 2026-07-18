@@ -641,7 +641,7 @@
               <div id="svcCountBadge" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;"></div>
               <div class="row g-3" id="servicesGrid">
                 {% for svc in services %}
-                <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}"
+                <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}">
                   <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}"
                     class="d-none"
                     {% if rebook_ids and svc.id|string in rebook_ids %}checked{% endif %}/>

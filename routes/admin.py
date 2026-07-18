@@ -466,9 +466,13 @@ def unblock_date():
 @admin.route('/offers')
 @admin_required
 def offers():
+    from datetime import date as _date
     all_offers = query("SELECT * FROM offers ORDER BY created_at DESC")
     all_services = query("SELECT id, service_name, price FROM services WHERE is_active=1 ORDER BY category, service_name")
-    return render_template('admin/offers.html', offers=all_offers, all_services=all_services)
+    today_str = _date.today().isoformat()
+    upcoming_offers = [o for o in all_offers if o.get('valid_from') and str(o['valid_from'])[:10] > today_str]
+    return render_template('admin/offers.html', offers=all_offers, all_services=all_services,
+                           now_date=today_str, upcoming_offers=upcoming_offers)
 
 @admin.route('/offers/save', methods=['POST'])
 @admin_required

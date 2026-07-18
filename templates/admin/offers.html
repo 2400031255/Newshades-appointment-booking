@@ -632,6 +632,11 @@ textarea.of-input { resize: vertical; min-height: 80px; }
         {% if active_count > 0 %}
         <div class="offer-status-live">{{ active_count }} Live Now</div>
         {% endif %}
+        {% if upcoming_offers %}
+        <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;font-size:0.72rem;font-weight:700;">
+          <i class="fas fa-calendar-alt" style="font-size:0.65rem;"></i>{{ upcoming_offers|length }} Upcoming
+        </div>
+        {% endif %}
       </div>
 
       {% if offers %}
@@ -652,6 +657,8 @@ textarea.of-input { resize: vertical; min-height: 80px; }
                   {% endif %}
                   {% if o.is_active and is_valid %}
                   <span class="offer-status-live">Live</span>
+                  {% elif o.is_active and o.valid_from and o.valid_from > now_date %}
+                  <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;font-size:0.68rem;font-weight:700;"><i class="fas fa-calendar-alt" style="font-size:0.6rem;"></i>Upcoming</span>
                   {% elif not o.is_active %}
                   <span class="offer-status-inactive"><i class="fas fa-eye-slash" style="font-size:0.65rem;"></i>Inactive</span>
                   {% else %}

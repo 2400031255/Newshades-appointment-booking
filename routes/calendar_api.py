@@ -124,11 +124,11 @@ def slots():
             result.append({'time': t, 'available': False, 'reason': 'blocked',
                            'booked': 0, 'max': max_slot})
             continue
-        # For today, skip past times
+        # For today, skip slots that have already started (with 15-min buffer)
         if req_date == today:
             try:
                 slot_dt = datetime.strptime(f"{date_str} {t}", "%Y-%m-%d %I:%M %p")
-                if slot_dt <= now:
+                if slot_dt <= now + timedelta(minutes=15):
                     result.append({'time': t, 'available': False, 'reason': 'past',
                                    'booked': max_slot, 'max': max_slot})
                     continue

@@ -13,6 +13,192 @@
 </head>
 <body>
 
+<!-- ── Splash Intro ── -->
+<div id="salonSplash">
+  <div class="splash-bg"></div>
+  <div class="splash-rings">
+    <div class="splash-ring r1"></div>
+    <div class="splash-ring r2"></div>
+    <div class="splash-ring r3"></div>
+  </div>
+  <div class="splash-center">
+    <div class="splash-logo-wrap">
+      <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="splash-logo"
+           onerror="this.style.display='none';document.getElementById('splashFallback').style.display='flex';"/>
+      <div id="splashFallback" style="display:none;width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:900;font-size:2rem;align-items:center;justify-content:center;">NS</div>
+      <div class="splash-logo-glow"></div>
+    </div>
+    <h1 class="splash-name">New Shades</h1>
+    <p class="splash-sub">Family Salon</p>
+    <p class="splash-tagline">BEAUTY &nbsp;·&nbsp; WELLNESS &nbsp;·&nbsp; CARE</p>
+    <div class="splash-bar-wrap">
+      <div class="splash-bar" id="splashBar"></div>
+    </div>
+    <p class="splash-loading-text">LOADING EXPERIENCE</p>
+  </div>
+</div>
+
+<style>
+#salonSplash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.7s ease, visibility 0.7s ease;
+}
+#salonSplash.splash-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #2d0a4e 0%, #1a0630 40%, #0a0010 100%);
+}
+.splash-rings {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.splash-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(168,85,247,0.15);
+  animation: splashRingPulse 4s ease-in-out infinite;
+}
+.splash-ring.r1 { width: min(340px,80vw); height: min(340px,80vw); animation-delay: 0s; }
+.splash-ring.r2 { width: min(520px,125vw); height: min(520px,125vw); animation-delay: 0.6s; border-color: rgba(168,85,247,0.09); }
+.splash-ring.r3 { width: min(700px,165vw); height: min(700px,165vw); animation-delay: 1.2s; border-color: rgba(168,85,247,0.05); }
+@keyframes splashRingPulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.04); opacity: 0.6; }
+}
+.splash-center {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.splash-logo-wrap {
+  position: relative;
+  width: clamp(100px,28vw,130px);
+  height: clamp(100px,28vw,130px);
+  margin-bottom: 18px;
+}
+.splash-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(168,85,247,0.5);
+  box-shadow: 0 0 40px rgba(168,85,247,0.4), 0 0 80px rgba(168,85,247,0.15);
+  animation: splashLogoIn 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes splashLogoIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.splash-logo-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168,85,247,0.25) 0%, transparent 70%);
+  animation: splashGlowPulse 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes splashGlowPulse {
+  0%,100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.7; }
+}
+.splash-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  animation: splashTextIn 0.7s 0.3s ease both;
+}
+.splash-sub {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  font-style: italic;
+  color: #c084fc;
+  margin: 0;
+  animation: splashTextIn 0.7s 0.45s ease both;
+}
+.splash-tagline {
+  font-size: clamp(0.58rem,1.8vw,0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: rgba(192,132,252,0.7);
+  margin: 6px 0 20px;
+  animation: splashTextIn 0.7s 0.6s ease both;
+}
+@keyframes splashTextIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.splash-bar-wrap {
+  width: clamp(160px,50vw,200px);
+  height: 2px;
+  background: rgba(168,85,247,0.15);
+  border-radius: 999px;
+  overflow: hidden;
+  animation: splashTextIn 0.5s 0.7s ease both;
+}
+.splash-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #7c3aed, #c084fc, #7c3aed);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  transition: width 1.8s cubic-bezier(0.4,0,0.2,1);
+  animation: splashBarShimmer 1.5s linear infinite;
+}
+@keyframes splashBarShimmer {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+.splash-loading-text {
+  font-size: clamp(0.52rem,1.6vw,0.62rem);
+  letter-spacing: 0.28em;
+  color: rgba(192,132,252,0.45);
+  margin-top: 8px;
+  animation: splashTextIn 0.5s 0.8s ease both;
+}
+</style>
+
+<script>
+(function(){
+  // Only show splash once per session
+  if (sessionStorage.getItem('splashShown')) {
+    document.getElementById('salonSplash').style.display = 'none';
+    return;
+  }
+  sessionStorage.setItem('splashShown', '1');
+  // Animate bar to 100% then hide
+  setTimeout(function() {
+    document.getElementById('splashBar').style.width = '100%';
+  }, 100);
+  setTimeout(function() {
+    document.getElementById('salonSplash').classList.add('splash-hidden');
+  }, 2200);
+  setTimeout(function() {
+    document.getElementById('salonSplash').style.display = 'none';
+  }, 2900);
+})();
+</script>
+
 <!-- Cursor glow -->
 <div class="cursor-glow" id="cursorGlow"></div>
 
