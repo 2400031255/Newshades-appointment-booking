@@ -293,24 +293,27 @@ def _init_mysql_schema(conn):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4""",
     ]
-    # Add missing columns to existing appointments table (safe ALTER)
-    alter_stmts = [
-        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ticket_expires_at DATETIME",
-        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2) DEFAULT 0",
-        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS discount_percent DECIMAL(5,2) DEFAULT 0",
-        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS offer_applied VARCHAR(150) DEFAULT ''",
-        "ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ticket_id VARCHAR(20)",
-    ]
     for stmt in stmts:
         try:
             cur.execute(stmt)
         except Exception:
-            pass  # column may already exist
-    for stmt in alter_stmts:
-        try:
-            cur.execute(stmt)
-        except Exception:
-            pass  # column may already exist
+            pass
+    # Add missing columns — use SHOW COLUMNS for MySQL 5.7 compatibility
+    cur.execute("SHOW COLUMNS FROM appointments")
+    existing_cols = {row['Field'] for row in cur.fetchall()}
+    alter_stmts = [
+        ("ALTER TABLE appointments ADD COLUMN ticket_expires_at DATETIME", "ticket_expires_at"),
+        ("ALTER TABLE appointments ADD COLUMN total_price DECIMAL(10,2) DEFAULT 0", "total_price"),
+        ("ALTER TABLE appointments ADD COLUMN discount_percent DECIMAL(5,2) DEFAULT 0", "discount_percent"),
+        ("ALTER TABLE appointments ADD COLUMN offer_applied VARCHAR(150) DEFAULT ''", "offer_applied"),
+        ("ALTER TABLE appointments ADD COLUMN ticket_id VARCHAR(20)", "ticket_id"),
+    ]
+    for stmt, col in alter_stmts:
+        if col not in existing_cols:
+            try:
+                cur.execute(stmt)
+            except Exception:
+                pass
     # Seed admin
     cur.execute(
         "INSERT IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s)",

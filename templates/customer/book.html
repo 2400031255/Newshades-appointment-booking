@@ -553,7 +553,7 @@
     <!-- Offers banner -->
     <div id="offersBannerContainer">
     {% if today_offers %}
-    <div class="offers-book-banner reveal-up mb-4" style="animation-delay:0.08s">
+    <div class="offers-book-banner mb-4" style="animation-delay:0.08s">
       <div class="offers-book-head">
         <div class="offers-book-fire"><i class="fas fa-fire"></i></div>
         <span class="offers-book-label">Today's Offers</span>
@@ -966,7 +966,7 @@
           updateSidebar();
           return;
         }
-        let html = `<div class="offers-book-banner reveal-up mb-4" style="animation-delay:0.08s">`;
+        let html = `<div class="offers-book-banner mb-4">`;
         html += `<div class="offers-book-head"><div class="offers-book-fire"><i class="fas fa-fire"></i></div><span class="offers-book-label">Offers</span>`;
         html += `<span style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;border-radius:999px;padding:2px 10px;font-size:0.68rem;font-weight:900;">${offers.length}</span></div>`;
         html += `<div class="offer-book-chips">`;
