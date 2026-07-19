@@ -41,8 +41,9 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: hidden;   /* ← stops the page from shifting sideways on mobile */
+  overflow-x: hidden;
   max-width: 100%;
+  background-color: #0c0b10;
 }
 
 body {
