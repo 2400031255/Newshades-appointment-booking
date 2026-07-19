@@ -16,6 +16,7 @@
         </div>
       </div>
       <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="action" value="username"/>
         <div class="auth-field">
           <label class="auth-label">Current Password <span style="color:#ff6b6b;">*</span></label>
@@ -52,6 +53,7 @@
         </div>
       </div>
       <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="action" value="password"/>
         <div class="auth-field">
           <label class="auth-label">Current Password <span style="color:#ff6b6b;">*</span></label>

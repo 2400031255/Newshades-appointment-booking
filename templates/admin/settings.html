@@ -21,6 +21,7 @@
       </div>
     </div>
     <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <input type="hidden" name="action" value="shop"/>
       <div class="row g-3">
         <div class="col-md-6 auth-field">
@@ -110,6 +111,7 @@
       </div>
     </div>
     <form method="POST" id="waForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <input type="hidden" name="action" value="whatsapp"/>
       <input type="hidden" name="whatsapp_number" id="whatsapp_number"/>
       <div class="auth-field">
@@ -161,6 +163,7 @@
       Current username: <strong style="color:var(--gold-2);">{{ admin_user.username }}</strong>
     </div>
     <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <input type="hidden" name="action" value="account"/>
       <div class="auth-field">
         <label class="auth-label">Current Password <span style="color:#ff9a9a;font-size:0.75rem;">*required</span></label>
@@ -223,6 +226,7 @@
     </div>
     {% endif %}
     <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <input type="hidden" name="action" value="maintenance"/>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
         background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:20px;">

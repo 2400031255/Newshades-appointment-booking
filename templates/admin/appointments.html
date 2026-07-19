@@ -76,20 +76,24 @@
             <div class="d-flex gap-1 flex-wrap align-items-center">
               {% if a.status == 'Pending' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="accept"/>
                 <button type="submit" class="appt-action-btn btn-accept" title="Confirm"><i class="fas fa-check"></i></button>
               </form>
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="reject"/>
                 <button type="submit" class="appt-action-btn btn-reject" title="Reject"><i class="fas fa-times"></i></button>
               </form>
               {% elif a.status == 'Confirmed' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="checkin"/>
                 <button type="submit" class="appt-action-btn btn-checkin" title="Check In"><i class="fas fa-sign-in-alt"></i></button>
               </form>
               {% elif a.status == 'Checked In' %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="complete"/>
                 <button type="submit" class="appt-action-btn btn-complete" title="Complete"><i class="fas fa-flag-checkered"></i></button>
               </form>
@@ -98,6 +102,7 @@
               <span class="ticket-badge">#{{ a.ticket_id }}</span>
               {% endif %}
               <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}" onsubmit="return confirm('Delete this appointment?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="action" value="delete"/>
                 <button type="submit" class="appt-action-btn btn-delete" title="Delete"><i class="fas fa-trash"></i></button>
               </form>
@@ -136,25 +141,30 @@
       <div class="appt-card-actions">
         {% if a.status == 'Pending' %}
         <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="action" value="accept"/>
           <button class="appt-mob-btn btn-accept"><i class="fas fa-check me-1"></i>Confirm</button>
         </form>
         <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="action" value="reject"/>
           <button class="appt-mob-btn btn-reject"><i class="fas fa-times me-1"></i>Reject</button>
         </form>
         {% elif a.status == 'Confirmed' %}
         <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="action" value="checkin"/>
           <button class="appt-mob-btn btn-checkin"><i class="fas fa-sign-in-alt me-1"></i>Check In</button>
         </form>
         {% elif a.status == 'Checked In' %}
         <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="action" value="complete"/>
           <button class="appt-mob-btn btn-complete"><i class="fas fa-flag-checkered me-1"></i>Complete</button>
         </form>
         {% endif %}
         <form method="POST" action="{{ url_for('admin.appointment_action', aid=a.id) }}" onsubmit="return confirm('Delete this appointment?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="action" value="delete"/>
           <button class="appt-mob-btn btn-delete"><i class="fas fa-trash me-1"></i>Delete</button>
         </form>

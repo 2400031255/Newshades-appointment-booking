@@ -14,6 +14,7 @@
     </div>
   </div>
   <form method="POST" action="{{ url_for('admin.gallery_upload') }}" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
     <div class="auth-field">
       <label class="auth-label">Caption (optional)</label>
       <div class="auth-input-wrap">
@@ -47,6 +48,7 @@
         <div class="gallery-admin-caption">{{ photo.caption }}</div>
         {% endif %}
         <form method="POST" action="{{ url_for('admin.gallery_delete', gid=photo.id) }}" onsubmit="return confirm('Delete this photo?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <button type="submit" class="gallery-admin-del" title="Delete">
             <i class="fas fa-trash"></i>
           </button>

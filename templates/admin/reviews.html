@@ -52,6 +52,7 @@
               {% for i in range(5 - r.rating) %}<i class="far fa-star" style="opacity:0.3;"></i>{% endfor %}
             </span>
             <form method="POST" action="{{ url_for('admin.delete_review', rid=r.id) }}" onsubmit="return confirm('Delete this review?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
               <button type="submit" class="admin-action-btn admin-action-danger" title="Delete">
                 <i class="fas fa-trash-alt" style="font-size:0.75rem;"></i>
               </button>

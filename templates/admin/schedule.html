@@ -36,6 +36,7 @@
     <h6 class="sched-section-title"><i class="fas fa-plus-circle me-2" style="color:var(--gold);"></i>Block a Date / Slot</h6>
 
     <form method="POST" action="{{ url_for('admin.add_block') }}" id="blockForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
       <!-- Date picker -->
       <div class="sched-field">
@@ -97,6 +98,7 @@
     <div class="sched-divider"></div>
     <h6 class="sched-section-title mt-0"><i class="fas fa-unlock me-2" style="color:#7ce0aa;"></i>Unblock Entire Date</h6>
     <form method="POST" action="{{ url_for('admin.unblock_date') }}" class="d-flex gap-2 align-items-end flex-wrap">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="sched-field mb-0" style="flex:1;min-width:160px;">
         <div class="sched-date-wrap">
           <i class="fas fa-calendar-alt sched-field-icon"></i>
@@ -143,6 +145,7 @@
             {% endif %}
           </div>
           <form method="POST" action="{{ url_for('admin.delete_block', bid=b.id) }}" onsubmit="return confirm('Remove this block?')">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="sched-del-btn" title="Remove block">
               <i class="fas fa-trash-alt"></i>
             </button>

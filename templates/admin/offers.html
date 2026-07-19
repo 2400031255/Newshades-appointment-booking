@@ -524,6 +524,7 @@ textarea.of-input { resize: vertical; min-height: 80px; }
       </div>
 
       <form method="POST" action="{{ url_for('admin.save_offer') }}" id="offerForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="offer_id" id="offerId" value="">
 
         <div class="of-field">
@@ -687,6 +688,7 @@ textarea.of-input { resize: vertical; min-height: 80px; }
                 <i class="fas fa-edit"></i>
               </button>
               <form method="POST" action="{{ url_for('admin.delete_offer', oid=o.id) }}" onsubmit="return confirm('Delete this offer?')" style="margin:0;">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="offer-action-btn offer-action-del" title="Delete">
                   <i class="fas fa-trash"></i>
                 </button>
