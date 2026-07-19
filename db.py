@@ -10,10 +10,10 @@ def _seed_admin_params():
     """Return admin seed params from env or safe defaults (no real password hardcoded)."""
     return (
         os.environ.get('SEED_ADMIN_NAME',     'Admin'),
-        os.environ.get('SEED_ADMIN_USERNAME', 'admin'),
+        os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
         os.environ.get('SEED_ADMIN_PHONE',    '0000000000'),
         os.environ.get('SEED_ADMIN_EMAIL',    'admin@newshades.com'),
-        os.environ.get('SEED_ADMIN_HASH',     '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe'),
+        os.environ.get('SEED_ADMIN_HASH',     '$2b$12$LFWGIXUQsah6hZ7aha530O2anxb1K8h4VC3izN1LB9LG9RpG7lwr.'),
     )
 
 _DEFAULT_SERVICES = [
@@ -206,6 +206,10 @@ def _init_pg_schema(conn):
         VALUES (%s,%s,%s,%s,%s,%s)
         ON CONFLICT (username) DO NOTHING
     """, (*params, 1))
+    # Also update any existing admin user to use the seeded credentials
+    cur.execute("""
+        UPDATE users SET username=%s, password_hash=%s WHERE is_admin=1
+    """, (params[1], params[4]))
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
@@ -322,6 +326,11 @@ def _init_mysql_schema(conn):
     cur.execute(
         "INSERT IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s)",
         (*params, 1)
+    )
+    # Also update any existing admin user to use the seeded credentials
+    cur.execute(
+        "UPDATE users SET username=%s, password_hash=%s WHERE is_admin=1",
+        (params[1], params[4])
     )
     cur.execute("SELECT COUNT(*) as c FROM services")
     if cur.fetchone()['c'] == 0:
