@@ -141,10 +141,15 @@ def delete_service(sid):
 def appointments():
     status_filter = request.args.get('status', '')
     search        = request.args.get('q', '').strip()
+    page          = max(1, int(request.args.get('page', 1) or 1))
+    per_page      = 20
+    offset        = (page - 1) * per_page
+
     base_sql = (
         "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
         "JOIN users u ON a.user_id=u.id"
     )
+    count_sql = "SELECT COUNT(*) as c FROM appointments a JOIN users u ON a.user_id=u.id"
     conditions, args = [], []
     if status_filter:
         conditions.append("a.status=%s"); args.append(status_filter)
@@ -152,11 +157,16 @@ def appointments():
         conditions.append("(u.full_name LIKE %s OR u.phone LIKE %s OR a.selected_services LIKE %s)")
         args += [f'%{search}%', f'%{search}%', f'%{search}%']
     if conditions:
-        base_sql += ' WHERE ' + ' AND '.join(conditions)
-    base_sql += ' ORDER BY a.created_at DESC'
-    appts = query(base_sql, tuple(args))
+        where = ' WHERE ' + ' AND '.join(conditions)
+        base_sql  += where
+        count_sql += where
+    base_sql += ' ORDER BY a.created_at DESC LIMIT %s OFFSET %s'
+    total_count = query(count_sql, tuple(args), one=True)['c']
+    appts       = query(base_sql, tuple(args) + (per_page, offset))
+    total_pages = max(1, math.ceil(total_count / per_page))
     return render_template('admin/appointments.html', appointments=appts,
-                           status_filter=status_filter, search=search)
+                           status_filter=status_filter, search=search,
+                           page=page, total_pages=total_pages, total_count=total_count)
 
 
 @admin.route('/appointments/action/<int:aid>', methods=['POST'])
@@ -225,6 +235,10 @@ def appointment_action(aid):
     elif action == 'delete':
         execute("DELETE FROM appointments WHERE id=%s", (aid,))
         flash('Appointment deleted.', 'success')
+        try:
+            send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('Email error on delete: %s', e)
 
     return redirect(url_for('admin.appointments'))
 
@@ -326,7 +340,9 @@ def profile():
                 return redirect(url_for('admin.profile'))
             execute("UPDATE users SET password_hash=%s WHERE id=%s",
                     (bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode(), session['user_id']))
-            flash('Password updated.', 'success')
+            session.clear()
+            flash('Password updated. Please log in again.', 'success')
+            return redirect(url_for('auth.login'))
         return redirect(url_for('admin.profile'))
     return render_template('admin/profile.html', admin=admin_user)
 

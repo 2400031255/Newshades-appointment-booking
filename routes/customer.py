@@ -268,12 +268,29 @@ def ticket(aid):
 @customer.route('/cancel/<int:aid>', methods=['POST'])
 @login_required
 def cancel_appointment(aid):
-    appt = query("SELECT * FROM appointments WHERE id=%s AND user_id=%s", (aid, session['user_id']), one=True)
-    if appt and appt['status'] == 'Pending':
+    appt = query(
+        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
+        "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
+        (aid, session['user_id']), one=True
+    )
+    if appt and appt['status'] in ('Pending', 'Confirmed'):
         execute("UPDATE appointments SET status='Cancelled' WHERE id=%s", (aid,))
         flash('Appointment cancelled successfully.', 'success')
+        # Notify admin
+        try:
+            admin_email = current_app.config.get('ADMIN_EMAIL', '')
+            if admin_email:
+                from email_service import _send, _base_html
+                import html as _html
+                n = _html.escape(appt['full_name'])
+                d = _html.escape(str(appt['preferred_date']))
+                t = _html.escape(str(appt['preferred_time'] or 'Flexible'))
+                content = f"<p>Customer <strong style='color:#e8c96a;'>{n}</strong> has cancelled their appointment.</p><div class='detail-box'><div class='detail-row'><span class='detail-label'>Date</span><span class='detail-val'>{d}</span></div><div class='detail-row'><span class='detail-label'>Time</span><span class='detail-val'>{t}</span></div></div>"
+                _send(admin_email, f'Appointment Cancelled – {n}', _base_html(content))
+        except Exception as e:
+            logger.error('Cancel notify error: %s', e)
     else:
-        flash('Only pending appointments can be cancelled.', 'danger')
+        flash('Only pending or confirmed appointments can be cancelled.', 'danger')
     return redirect(url_for('customer.appointments'))
 
 

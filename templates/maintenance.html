@@ -114,21 +114,17 @@
     </div>
 
     <h1>Website is under<br>maintenance</h1>
-    <p>For bookings and enquiries, please text<br>us on WhatsApp.</p>
+    <p>We'll be back shortly. For bookings and enquiries, reach us on WhatsApp.</p>
 
     {% if whatsapp %}
     <a href="https://wa.me/{{ whatsapp }}" class="btn-wa" target="_blank" rel="noopener noreferrer">
-      <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> Text Us on WhatsApp
+      <i class="fab fa-whatsapp" style="font-size:1.2rem;"></i> Chat on WhatsApp
     </a>
     {% endif %}
 
     <a href="/login" class="btn-login">
       <i class="fas fa-sign-in-alt"></i> Login
     </a>
-
-    {% if phone %}
-    <div class="phone"><a href="tel:{{ phone }}">+{{ phone }}</a></div>
-    {% endif %}
 
     <div class="note">Admin can turn this off from the Maintenance tab.</div>
   </div>

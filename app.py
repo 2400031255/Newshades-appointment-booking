@@ -24,7 +24,8 @@ def create_app():
     except ImportError:
         _async_mode = 'threading'
 
-    socketio.init_app(app, cors_allowed_origins='*', async_mode=_async_mode,
+    socketio.init_app(app, cors_allowed_origins=app.config.get('CORS_ORIGINS', 'http://localhost:5000'),
+                      async_mode=_async_mode,
                       logger=False, engineio_logger=False, manage_session=False)
     csrf.init_app(app)
 
@@ -46,7 +47,7 @@ def create_app():
         from db import query
         if not request.endpoint:
             return
-        allowed_endpoints = {'auth.login', 'auth.logout', 'static', 'ping'}
+        allowed_endpoints = {'auth.login', 'auth.login_post', 'auth.logout', 'static', 'ping'}
         if request.endpoint in allowed_endpoints:
             return
         if session.get('is_admin'):
@@ -54,11 +55,12 @@ def create_app():
         try:
             row = query("SELECT value FROM settings WHERE `key`='maintenance_mode'", one=True)
             if row and row['value'] == '1':
-                wa    = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
-                phone = query("SELECT value FROM settings WHERE `key`='shop_phone'", one=True)
+                # Log out any non-admin user who is logged in
+                if session.get('user_id'):
+                    session.clear()
+                wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
                 return render_template('maintenance.html',
-                    whatsapp=wa['value'] if wa else '',
-                    phone=phone['value'] if phone else ''), 503
+                    whatsapp=wa['value'] if wa else ''), 503
         except Exception:
             pass
 

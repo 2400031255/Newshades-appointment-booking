@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 import bcrypt
+import re
 import logging
 from db import query, execute
 from collections import defaultdict
@@ -48,6 +49,9 @@ def _validate_signup(form):
         return 'Username is too long.'
     if len(email) > 100:
         return 'Email is too long.'
+    digits = re.sub(r'[\s\+\-\(\)]', '', phone)
+    if not digits.isdigit() or not (7 <= len(digits) <= 15):
+        return 'Enter a valid phone number.'
     if password != confirm:
         return 'Passwords do not match.'
     if len(password) < 6:

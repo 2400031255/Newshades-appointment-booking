@@ -36,3 +36,6 @@ class Config:
 
     # Limit upload size to 16 MB total per request
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+
+    # CORS origins for Socket.IO
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5000')
