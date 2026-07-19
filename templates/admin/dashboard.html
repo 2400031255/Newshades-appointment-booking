@@ -23,6 +23,18 @@
     </div>
   </div>
   {% endfor %}
+  <div class="col-lg-3 col-md-6">
+    <div class="stat-card" style="border-left-color:#22c55e;margin:0;">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="text-muted small mb-1">Revenue This Month</div>
+          <div class="stat-number">₹{{ '%.0f'|format(revenue_month) }}</div>
+        </div>
+        <div class="stat-icon" style="color:#22c55e;"><i class="fas fa-rupee-sign"></i></div>
+      </div>
+      <div style="font-size:0.75rem;color:rgba(240,230,211,0.45);margin-top:4px;">Total: ₹{{ '%.0f'|format(revenue_total) }}</div>
+    </div>
+  </div>
 </div>
 
 <!-- Recent Appointments -->

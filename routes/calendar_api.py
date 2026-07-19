@@ -78,15 +78,12 @@ def _blocked_times(date_str: str) -> set:
         t = r['block_time']
         if not t:
             continue
-        # Normalise HH:MM (24h) → 'H:MM AM/PM' to match WEEKDAY_SLOTS format
         try:
             from datetime import datetime as _dt
-            import platform
             parsed = _dt.strptime(t, '%H:%M')
-            fmt = '%#I:%M %p' if platform.system() == 'Windows' else '%-I:%M %p'
-            result.add(parsed.strftime(fmt))  # e.g. '9:00 AM'
+            result.add(parsed.strftime('%-I:%M %p'))  # e.g. '9:00 AM'
         except Exception:
-            result.add(t)  # already in correct format
+            result.add(t)
     return result
 
 
@@ -461,16 +458,39 @@ def reschedule():
     """POST /api/calendar/admin/reschedule
     Body: {id, date, time}  — drag-drop reschedule
     """
+    from flask import current_app
+    from email_service import send_reschedule_email
+    from sms import send_sms
     data = request.get_json() or {}
     aid  = data.get('id')
     new_date = data.get('date', '')
     new_time = data.get('time', '')
     if not aid or not new_date:
         return jsonify({'error': 'id and date required'}), 400
+    appt = query(
+        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
+        "JOIN users u ON a.user_id=u.id WHERE a.id=%s", (aid,), one=True
+    )
     execute(
         "UPDATE appointments SET preferred_date=%s, preferred_time=%s WHERE id=%s",
         (new_date, new_time or None, aid)
     )
+    if appt:
+        try:
+            fmt_date = date.fromisoformat(new_date).strftime('%d %b %Y')
+        except Exception:
+            fmt_date = new_date
+        fmt_time = new_time or 'Flexible'
+        try:
+            send_sms(appt['phone'],
+                f"Hello {appt['full_name']}, your New Shades appointment has been rescheduled "
+                f"to {fmt_date} at {fmt_time}. Please log in to view your updated ticket.")
+        except Exception as e:
+            current_app.logger.error('Reschedule SMS error: %s', e)
+        try:
+            send_reschedule_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
+        except Exception as e:
+            current_app.logger.error('Reschedule email error: %s', e)
     _emit_calendar_update()
     return jsonify({'ok': True})
 

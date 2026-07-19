@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Server Error – New Shades{% endblock %}
+{% block content %}
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:100px 20px 60px;
+  background:radial-gradient(ellipse at 50% 30%,rgba(226,93,93,0.10),transparent 60%),linear-gradient(135deg,#0c0b10,#17141c);">
+  <div style="text-align:center;max-width:480px;">
+    <div style="font-family:'Playfair Display',serif;font-size:clamp(5rem,18vw,9rem);font-weight:700;
+      background:linear-gradient(135deg,#ff9a9a,#e25d5d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;line-height:1;margin-bottom:16px;">500</div>
+    <h2 style="font-family:'Playfair Display',serif;color:#fff;font-size:clamp(1.3rem,3vw,1.8rem);margin-bottom:10px;">Something Went Wrong</h2>
+    <p style="color:rgba(240,230,211,0.6);font-size:0.95rem;line-height:1.7;margin-bottom:32px;">
+      We're experiencing a technical issue. Please try again in a moment.
+    </p>
+    <a href="{{ url_for('index') }}" style="display:inline-flex;align-items:center;gap:9px;padding:13px 32px;
+      border-radius:999px;background:linear-gradient(135deg,#e8c96a,#c9a84c);color:#120e08;
+      font-weight:700;font-size:0.95rem;text-decoration:none;box-shadow:0 12px 32px rgba(201,168,76,0.3);">
+      <i class="fas fa-home"></i> Go Home
+    </a>
+  </div>
+</div>
+{% endblock %}

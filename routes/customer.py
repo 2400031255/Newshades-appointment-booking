@@ -212,6 +212,16 @@ def book():
     except Exception as e:
         current_app.logger.error('SMS error: %s', e)
 
+    # Email admin
+    try:
+        admin_email = current_app.config.get('ADMIN_EMAIL', '')
+        if admin_email:
+            from email_service import send_admin_new_booking_email
+            send_admin_new_booking_email(admin_email, user['full_name'], user['phone'],
+                                         formatted_date, preferred_time, services_str)
+    except Exception as e:
+        current_app.logger.error('Admin email error: %s', e)
+
     # Email customer
     try:
         if user.get('email'):
@@ -237,6 +247,7 @@ def book():
 @customer.route('/ticket/<int:aid>')
 @login_required
 def ticket(aid):
+    from datetime import datetime as _dt
     appt = query(
         "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
         "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
@@ -245,6 +256,15 @@ def ticket(aid):
     if not appt or appt['status'] not in ('Confirmed', 'Checked In', 'Completed'):
         flash('Ticket not available.', 'danger')
         return redirect(url_for('customer.appointments'))
+    # Check ticket expiry (only for Confirmed — allow Completed/Checked In always)
+    if appt['status'] == 'Confirmed' and appt.get('ticket_expires_at'):
+        try:
+            exp = _dt.fromisoformat(str(appt['ticket_expires_at']))
+            if _dt.now() > exp:
+                flash('This ticket has expired.', 'danger')
+                return redirect(url_for('customer.appointments'))
+        except Exception:
+            pass
     shop_name = query("SELECT value FROM settings WHERE `key`='shop_name'", one=True)
     shop_name = shop_name['value'] if shop_name else 'New Shades'
     return render_template('customer/ticket.html', appt=appt, shop_name=shop_name)

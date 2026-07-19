@@ -36,17 +36,26 @@ def calendar():
 @admin.route('/')
 @admin_required
 def dashboard():
+    from datetime import date as _date
     total_users    = query("SELECT COUNT(*) as c FROM users WHERE is_admin=0", one=True)['c']
     total_services = query("SELECT COUNT(*) as c FROM services", one=True)['c']
     total_appts    = query("SELECT COUNT(*) as c FROM appointments", one=True)['c']
     pending        = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)['c']
+    revenue_total  = query("SELECT COALESCE(SUM(total_price),0) as r FROM appointments WHERE status='Completed'", one=True)['r']
+    month_start    = _date.today().replace(day=1).isoformat()
+    revenue_month  = query(
+        "SELECT COALESCE(SUM(total_price),0) as r FROM appointments WHERE status='Completed' AND preferred_date>=%s",
+        (month_start,), one=True
+    )['r']
     recent = query(
         "SELECT a.*, u.full_name, u.phone FROM appointments a "
         "JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 5"
     )
     return render_template('admin/dashboard.html', total_users=total_users,
                            total_services=total_services, total_appts=total_appts,
-                           pending=pending, recent=recent)
+                           pending=pending, recent=recent,
+                           revenue_total=float(revenue_total or 0),
+                           revenue_month=float(revenue_month or 0))
 
 
 # ── Services ───────────────────────────────────────────────────────────────
@@ -238,6 +247,20 @@ def customers():
     return render_template('admin/customers.html', users=users)
 
 
+@admin.route('/customers/<int:uid>')
+@admin_required
+def customer_detail(uid):
+    user = query("SELECT * FROM users WHERE id=%s AND is_admin=0", (uid,), one=True)
+    if not user:
+        flash('Customer not found.', 'danger')
+        return redirect(url_for('admin.customers'))
+    appts = query(
+        "SELECT * FROM appointments WHERE user_id=%s ORDER BY created_at DESC",
+        (uid,)
+    )
+    return render_template('admin/customer_detail.html', user=user, appointments=appts)
+
+
 # ── Profile ────────────────────────────────────────────────────────────────
 @admin.route('/profile', methods=['GET', 'POST'])
 @admin_required
@@ -304,6 +327,11 @@ def settings():
                     execute("INSERT INTO settings (`key`, value) VALUES ('whatsapp_number',%s)", (wa,))
                 flash('WhatsApp number updated.', 'success')
         elif action == 'account':
+            current_pw = request.form.get('current_password', '')
+            admin_user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
+            if not admin_user or not bcrypt.checkpw(current_pw.encode(), admin_user['password_hash'].encode()):
+                flash('Current password is incorrect.', 'danger')
+                return redirect(url_for('admin.settings'))
             new_username = request.form.get('new_username', '').strip().lower()
             new_password = request.form.get('new_password', '')
             confirm      = request.form.get('confirm_password', '')
@@ -353,7 +381,10 @@ def gallery_upload():
     count = 0
     for f in files:
         if f and allowed_file(f.filename):
-            base, ext = os.path.splitext(secure_filename(f.filename))
+            safe = secure_filename(f.filename)
+            if not safe:
+                continue
+            base, ext = os.path.splitext(safe)
             filename  = f"{base}_{int(time.time()*1000)}{ext}"
             f.save(os.path.join(upload_dir, filename))
             execute("INSERT INTO gallery (filename, caption) VALUES (%s,%s)", (filename, caption))

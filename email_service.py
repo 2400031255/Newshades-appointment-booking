@@ -128,3 +128,43 @@ def send_rejection_email(to_email: str, customer_name: str,
 <p>Thank you.</p>
 """
     return _send(to_email, 'Appointment Update – New Shades', _base_html(content))
+
+
+def send_admin_new_booking_email(to_email: str, customer_name: str, customer_phone: str,
+                                  appt_date: str, appt_time: str, services: str) -> bool:
+    time_display = appt_time or 'Flexible'
+    n = html.escape(customer_name)
+    p = html.escape(customer_phone)
+    d = html.escape(str(appt_date))
+    t = html.escape(str(time_display))
+    s = html.escape(str(services))
+    content = f"""
+<p>A new appointment request has been submitted and is <strong style="color:#f5c842;">awaiting your review</strong>.</p>
+<div class="detail-box">
+  <div class="detail-row"><span class="detail-label">👤 Customer</span><span class="detail-val">{n}</span></div>
+  <div class="detail-row"><span class="detail-label">📞 Phone</span><span class="detail-val">{p}</span></div>
+  <div class="detail-row"><span class="detail-label">✂️ Services</span><span class="detail-val">{s}</span></div>
+  <div class="detail-row"><span class="detail-label">📅 Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-val">{t}</span></div>
+</div>
+<p>Please log in to the <strong>Admin Dashboard</strong> to accept or reject this appointment.</p>
+"""
+    return _send(to_email, f'New Booking Request – {n}', _base_html(content))
+
+
+def send_reschedule_email(to_email: str, customer_name: str,
+                          new_date: str, new_time: str) -> bool:
+    n = html.escape(customer_name)
+    d = html.escape(str(new_date))
+    t = html.escape(str(new_time or 'Flexible'))
+    content = f"""
+<p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
+<p>Your appointment has been <strong style="color:#9dc0ff;">rescheduled</strong> by our team.</p>
+<div class="detail-box">
+  <div class="detail-row"><span class="detail-label">📅 New Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">🕐 New Time</span><span class="detail-val">{t}</span></div>
+</div>
+<p>Please log in to your account to view your updated appointment details and ticket.</p>
+<p>We apologise for any inconvenience. Thank you for choosing New Shades!</p>
+"""
+    return _send(to_email, 'Appointment Rescheduled – New Shades', _base_html(content))

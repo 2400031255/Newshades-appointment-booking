@@ -11,7 +11,7 @@
   <div class="table-responsive">
     <table class="admin-table">
       <thead>
-        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Joined</th></tr>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Bookings</th><th>Joined</th><th></th></tr>
       </thead>
       <tbody>
         {% for u in users %}
@@ -22,6 +22,7 @@
           <td class="admin-td-muted">{{ u.phone }}</td>
           <td><span class="admin-badge">{{ u.appt_count }} bookings</span></td>
           <td class="admin-td-muted">{{ u.created_at }}</td>
+          <td><a href="{{ url_for('admin.customer_detail', uid=u.id) }}" class="admin-action-btn"><i class="fas fa-eye me-1"></i>View</a></td>
         </tr>
         {% endfor %}
       </tbody>

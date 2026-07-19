@@ -1,0 +1,71 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}{{ user.full_name }} – New Shades Admin{% endblock %}
+{% block page_title %}Customer Detail{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{{ url_for('admin.customers') }}" class="admin-filter-btn">
+    <i class="fas fa-arrow-left me-1"></i>Back to Customers
+  </a>
+</div>
+
+<!-- Customer Info Card -->
+<div class="admin-card mb-4" style="max-width:600px;">
+  <h6 class="fw-bold mb-3" style="color:#fff;">
+    <i class="fas fa-user me-2" style="color:var(--gold);"></i>{{ user.full_name }}
+  </h6>
+  <div class="row g-2" style="font-size:0.9rem;">
+    <div class="col-sm-6">
+      <span style="color:var(--text-muted);">Username:</span>
+      <span style="color:#fff;font-weight:600;margin-left:8px;">{{ user.username }}</span>
+    </div>
+    <div class="col-sm-6">
+      <span style="color:var(--text-muted);">Phone:</span>
+      <span style="color:#fff;font-weight:600;margin-left:8px;">{{ user.phone }}</span>
+    </div>
+    <div class="col-sm-6">
+      <span style="color:var(--text-muted);">Email:</span>
+      <span style="color:#fff;font-weight:600;margin-left:8px;">{{ user.email }}</span>
+    </div>
+    <div class="col-sm-6">
+      <span style="color:var(--text-muted);">Joined:</span>
+      <span style="color:#fff;font-weight:600;margin-left:8px;">{{ user.created_at }}</span>
+    </div>
+  </div>
+</div>
+
+<!-- Appointments -->
+<div class="admin-card">
+  <h6 class="fw-bold mb-3" style="color:#fff;">
+    Appointments <span style="color:var(--gold);">({{ appointments|length }})</span>
+  </h6>
+  {% if appointments %}
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead>
+        <tr><th>#</th><th>Services</th><th>Date</th><th>Time</th><th>Status</th><th>Total</th><th>Booked At</th></tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td class="admin-td-muted">{{ a.id }}</td>
+          <td class="admin-td-bold" style="max-width:200px;">{{ a.selected_services }}</td>
+          <td class="admin-td-muted">{{ a.preferred_date }}</td>
+          <td class="admin-td-muted">{{ a.preferred_time or 'Flexible' }}</td>
+          <td>
+            <span class="admin-status-badge admin-status-{{ a.status|lower|replace(' ','-') }}">
+              {{ a.status }}
+            </span>
+          </td>
+          <td style="color:var(--gold-2);font-weight:700;">₹{{ '%.0f'|format(a.total_price or 0) }}</td>
+          <td class="admin-td-muted">{{ a.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-center py-4" style="color:var(--text-muted);">No appointments yet.</p>
+  {% endif %}
+</div>
+{% endblock %}
