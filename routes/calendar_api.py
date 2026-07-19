@@ -15,6 +15,9 @@ except ImportError:
 cal_api = Blueprint('cal_api', __name__, url_prefix='/api/calendar')
 
 # ── Salon schedule constants ──────────────────────────────────────────────────
+# Default slots — overridable via salon_config keys:
+#   weekday_slots  (comma-separated, e.g. "9:00 AM,10:00 AM,...")
+#   sunday_slots
 WEEKDAY_SLOTS = [
     '9:00 AM','10:00 AM','11:00 AM','12:00 PM',
     '2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'
@@ -39,12 +42,19 @@ def _max_per_slot():
 
 
 def _slots_for_date(date_str: str):
-    """Return base slot list for a given date string (YYYY-MM-DD)."""
+    """Return base slot list for a given date string (YYYY-MM-DD).
+    Respects custom slots stored in salon_config (weekday_slots / sunday_slots).
+    """
     try:
         d = date.fromisoformat(date_str)
     except ValueError:
         return []
-    return SUNDAY_SLOTS if d.weekday() == 6 else WEEKDAY_SLOTS
+    is_sunday = d.weekday() == 6
+    cfg_key   = 'sunday_slots' if is_sunday else 'weekday_slots'
+    custom    = _get_config(cfg_key, '')
+    if custom:
+        return [s.strip() for s in custom.split(',') if s.strip()]
+    return SUNDAY_SLOTS if is_sunday else WEEKDAY_SLOTS
 
 
 def _booked_counts(date_str: str) -> dict:
@@ -124,11 +134,11 @@ def slots():
             result.append({'time': t, 'available': False, 'reason': 'blocked',
                            'booked': 0, 'max': max_slot})
             continue
-        # For today, skip slots that have already started (with 15-min buffer)
+        # For today, skip slots that are at or before current time
         if req_date == today:
             try:
                 slot_dt = datetime.strptime(f"{date_str} {t}", "%Y-%m-%d %I:%M %p")
-                if slot_dt <= now + timedelta(minutes=15):
+                if slot_dt <= now:
                     result.append({'time': t, 'available': False, 'reason': 'past',
                                    'booked': max_slot, 'max': max_slot})
                     continue
@@ -215,44 +225,93 @@ def month_availability():
 
 @cal_api.route('/ai-recommend')
 def ai_recommend():
-    """GET /api/calendar/ai-recommend?duration=30
-    Returns the best 3 upcoming slots based on lowest booking density.
+    """GET /api/calendar/ai-recommend?duration=30&count=4
+    Returns the best upcoming slots based on:
+    - Lowest booking density (most remaining capacity)
+    - Soonest date (prefer tomorrow over next week)
+    - Preferred morning/afternoon spread
+    - Avoids fully-booked and blocked slots
     """
     try:
         duration = int(request.args.get('duration', 30))
     except ValueError:
         duration = 30
+    try:
+        count = min(int(request.args.get('count', 4)), 6)
+    except ValueError:
+        count = 4
 
-    today = date.today()
+    today    = date.today()
+    now      = datetime.now()
     max_slot = _max_per_slot()
     candidates = []
 
-    for offset in range(1, 15):  # look 14 days ahead
-        d = today + timedelta(days=offset)
+    for offset in range(1, 21):  # look 20 days ahead for better variety
+        d  = today + timedelta(days=offset)
         ds = d.isoformat()
         if _is_date_blocked(ds):
             continue
-        base   = _slots_for_date(ds)
-        booked = _booked_counts(ds)
+        base      = _slots_for_date(ds)
+        booked    = _booked_counts(ds)
         blocked_t = _blocked_times(ds)
+
         for t in base:
             if t in blocked_t:
                 continue
-            count = booked.get(t, 0)
-            if count < max_slot:
-                score = count + (offset * 0.1)  # prefer sooner + less booked
-                candidates.append({
-                    'date': ds,
-                    'time': t,
-                    'remaining': max_slot - count,
-                    'score': score,
-                    'day_label': d.strftime('%A, %d %b')
-                })
+            count_booked = booked.get(t, 0)
+            remaining    = max_slot - count_booked
+            if remaining <= 0:
+                continue
+
+            # Score: lower = better
+            # Weight: remaining capacity (inverse), offset (sooner = better)
+            capacity_score = (max_slot - remaining) / max_slot  # 0=empty, 1=full
+            time_score     = offset * 0.08
+            # Slight preference for morning slots (9-12) and afternoon (2-5)
+            try:
+                slot_hour = datetime.strptime(t, '%I:%M %p').hour
+                peak_bonus = -0.05 if slot_hour in (9, 10, 11, 14, 15, 16) else 0
+            except Exception:
+                peak_bonus = 0
+
+            score = capacity_score + time_score + peak_bonus
+
+            # Determine time-of-day label
+            try:
+                h = datetime.strptime(t, '%I:%M %p').hour
+                if h < 12:   tod = 'Morning'
+                elif h < 17: tod = 'Afternoon'
+                else:        tod = 'Evening'
+            except Exception:
+                tod = ''
+
+            candidates.append({
+                'date':      ds,
+                'time':      t,
+                'remaining': remaining,
+                'score':     score,
+                'day_label': d.strftime('%A'),
+                'date_label': d.strftime('%d %b'),
+                'tod':       tod,
+                'is_today':  False,
+                'is_tomorrow': offset == 1,
+            })
 
     candidates.sort(key=lambda x: x['score'])
-    top = candidates[:3]
-    for c in top:
+
+    # Pick top N ensuring date variety (max 2 per date)
+    seen_dates: dict = {}
+    top = []
+    for c in candidates:
+        if len(top) >= count:
+            break
+        dc = seen_dates.get(c['date'], 0)
+        if dc >= 2:
+            continue
+        seen_dates[c['date']] = dc + 1
         del c['score']
+        top.append(c)
+
     return jsonify({'recommendations': top})
 
 
@@ -502,11 +561,17 @@ def salon_config():
             else:
                 execute("INSERT INTO salon_config (`key`, value) VALUES (%s,%s)", (k, str(v)))
         return jsonify({'ok': True})
-    keys = ['max_per_slot', 'slot_duration', 'lunch_start', 'lunch_end']
-    cfg  = {}
-    for k in keys:
-        cfg[k] = _get_config(k, {'max_per_slot': '3', 'slot_duration': '30',
-                                  'lunch_start': '1:00 PM', 'lunch_end': '2:00 PM'}.get(k, ''))
+    keys = ['max_per_slot', 'slot_duration', 'lunch_start', 'lunch_end',
+            'weekday_slots', 'sunday_slots']
+    defaults = {
+        'max_per_slot':   '3',
+        'slot_duration':  '60',
+        'lunch_start':    '1:00 PM',
+        'lunch_end':      '2:00 PM',
+        'weekday_slots':  ','.join(WEEKDAY_SLOTS),
+        'sunday_slots':   ','.join(SUNDAY_SLOTS),
+    }
+    cfg = {k: _get_config(k, defaults.get(k, '')) for k in keys}
     return jsonify(cfg)
 
 

@@ -35,12 +35,14 @@
 }
 
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;   /* ← stops the page from shifting sideways on mobile */
+  max-width: 100%;
 }
 
 body {
@@ -53,6 +55,8 @@ body {
     linear-gradient(160deg, var(--ink) 0%, var(--ink-2) 40%, var(--ink-3) 70%, var(--ink-4) 100%);
   min-height: 100vh;
   overflow-x: hidden;
+  max-width: 100%;
+  position: relative;
 }
 
 body.admin-body {
@@ -216,6 +220,10 @@ a {
   background: radial-gradient(circle, rgba(201,168,76,0.22), transparent 68%);
   filter: blur(6px);
   opacity: 0.9;
+}
+/* Hide cursor glow on touch devices — it causes layout jitter */
+@media (hover: none) {
+  .cursor-glow { display: none !important; }
 }
 
 .reveal-up {
@@ -503,6 +511,7 @@ a {
   position: relative;
   padding: 122px 0 72px;
   overflow: hidden;
+  max-width: 100%;
   background: linear-gradient(135deg, rgba(11,10,15,0.96), rgba(24,20,20,0.96));
   border-bottom: 1px solid rgba(201,168,76,0.14);
 }
@@ -1096,21 +1105,21 @@ a {
    Hero / Services / CTA
    ---------------------- */
 
-.hero-orb { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(28px); opacity: 0.6; z-index: 0; max-width: 100vw; max-height: 100vw; }
-.hero-orb-1 { width: 520px; height: 520px; top: -160px; right: -160px; background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 60%); }
-.hero-orb-2 { width: 420px; height: 420px; left: -120px; bottom: -140px; background: radial-gradient(circle, rgba(255,107,138,0.12), transparent 60%); }
-.hero-orb-3 { width: 300px; height: 300px; right: 8%; top: 20%; background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 68%); }
+.hero-orb { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(28px); opacity: 0.6; z-index: 0; max-width: 100vw; max-height: 100vw; overflow: hidden; }
+.hero-orb-1 { width: min(520px,100vw); height: min(520px,100vw); top: -160px; right: -160px; background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 60%); }
+.hero-orb-2 { width: min(420px,90vw); height: min(420px,90vw); left: -120px; bottom: -140px; background: radial-gradient(circle, rgba(255,107,138,0.12), transparent 60%); }
+.hero-orb-3 { width: min(300px,70vw); height: min(300px,70vw); right: 8%; top: 20%; background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 68%); }
 
 .hero-visual { position: relative; display: grid; place-items: center; z-index: 1; width: 100%; }
 .hero-circle-main { width: clamp(260px, 30vw, 360px); height: clamp(260px, 30vw, 360px); border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 35%, rgba(201,168,76,0.1), transparent 55%), linear-gradient(135deg, rgba(201,168,76,0.06), rgba(255,255,255,0.01)); border: 1.5px solid rgba(201,168,76,0.25); box-shadow: 0 0 0 14px rgba(201,168,76,0.04), 0 0 0 32px rgba(201,168,76,0.02), 0 40px 100px rgba(0,0,0,0.5); animation: float 6s ease-in-out infinite; position: relative; }
 .hero-ring-1, .hero-ring-2, .hero-ring-3 { position: absolute; border-radius: 50%; border: 1px dashed rgba(201,168,76,0.1); pointer-events: none; }
-.hero-ring-1 { width: clamp(340px,44vw,480px); height: clamp(340px,44vw,480px); opacity: 0.6; animation: ringRotate 30s linear infinite; }
-.hero-ring-2 { width: clamp(290px,38vw,420px); height: clamp(290px,38vw,420px); opacity: 0.4; animation: ringRotate 20s linear infinite reverse; }
-.hero-ring-3 { width: clamp(210px,28vw,310px); height: clamp(210px,28vw,310px); opacity: 0.2; }
+.hero-ring-1 { width: clamp(240px,80vw,480px); height: clamp(240px,80vw,480px); opacity: 0.6; animation: ringRotate 30s linear infinite; }
+.hero-ring-2 { width: clamp(200px,68vw,420px); height: clamp(200px,68vw,420px); opacity: 0.4; animation: ringRotate 20s linear infinite reverse; }
+.hero-ring-3 { width: clamp(150px,52vw,310px); height: clamp(150px,52vw,310px); opacity: 0.2; }
 @keyframes ringRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .hero-float-badge { position: absolute; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: rgba(10,9,14,0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201,168,76,0.25); box-shadow: 0 8px 24px rgba(0,0,0,0.4); color: #fff; font-weight:700; font-size:0.82rem; z-index:2; white-space:nowrap; }
-.hfb-1 { right: -14px; top: 16%; }
-.hfb-2 { left: -14px; bottom: 16%; }
+.hfb-1 { right: 0; top: 16%; }
+.hfb-2 { left: 0; bottom: 16%; }
 
 .hero-stat { display: inline-flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .hero-stat-num { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: var(--gold-2); font-weight:700; }
@@ -1223,6 +1232,7 @@ a {
   display: flex;
   align-items: center;
   overflow: hidden;
+  max-width: 100%;
 }
 
 /* ── Hero layout container ── */
@@ -3170,8 +3180,8 @@ a {
 
 .about-story-orb {
   position: absolute;
-  width: 420px;
-  height: 420px;
+  width: min(420px, 90vw);
+  height: min(420px, 90vw);
   border-radius: 50%;
   border: 1px dashed rgba(201,168,76,0.12);
   pointer-events: none;
@@ -3219,6 +3229,7 @@ a {
   border: 1px solid rgba(201,168,76,0.2);
   background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   box-shadow: 0 30px 80px rgba(0,0,0,0.35);
+  max-width: 100%;
 }
 
 @media (max-width: 767px) {
@@ -3736,6 +3747,27 @@ a {
   .auth-card { padding: 24px 16px; }
   .about-circle { width: 200px; height: 200px; }
   .gallery-card { padding: 28px 14px; }
+  /* About page mobile fixes */
+  .about-story-visual { min-height: 280px; }
+  .about-story-img-wrap { width: min(260px, 80vw); height: min(260px, 80vw); }
+  .about-story-orb { display: none; }
+  .founders-names-row { flex-direction: column; gap: 12px; }
+  .founders-amp { display: none; }
+  .founders-content-side { padding: 24px 18px; }
+  /* Hero float badges — keep inside viewport */
+  .hero-float-badge { font-size: 0.72rem; padding: 6px 10px; }
+  .hfb-1 { right: 4px; }
+  .hfb-2 { left: 4px; }
+  /* Section padding */
+  .section-services, .section-why, .section-cta { padding: 48px 0; }
+  .booking-section { padding: 32px 0 60px; }
+  /* CTA card */
+  .glass-card[style*="padding:56px"] { padding: 32px 18px !important; }
+  /* Stat cards equal height on 2-col */
+  .about-stat-card { padding: 20px 14px; }
+  .about-stat-num { font-size: 1.3rem; }
+  /* Why cards full width */
+  .why-card { padding: 20px 16px; }
 }
 
 /* Small phones (≤ 480px) */
@@ -3751,6 +3783,14 @@ a {
   .admin-page-body { padding: 14px 10px 0; }
   .cat-btn { padding: 6px 12px; font-size: 0.78rem; }
   .bp-label { display: none; }
+  /* Prevent any element from causing horizontal scroll */
+  .hero-orb, .hero-ring-1, .hero-ring-2, .hero-ring-3,
+  .page-header-orb, .cta-orb-1, .cta-orb-2,
+  .why-bg-glow, .footer-glow { opacity: 0.4; }
+  .hero-float-badge { display: none; }
+  .welcome-banner { padding: 28px 20px; }
+  .welcome-name { font-size: 1.6rem; }
+  .founders-img-wrap { min-height: 220px; }
 }
 
 /* Touch device improvements */
@@ -3764,4 +3804,14 @@ a {
   .cat-btn { min-height: 40px; }
   .sidebar-nav a { min-height: 48px; }
   .nav-link { min-height: 44px; display: flex; align-items: center; }
+  /* Disable 3D tilt on touch — causes jitter */
+  .tilt-card { transform: none !important; }
+}
+
+/* ── Global overflow guard — nothing should ever cause horizontal scroll ── */
+section, .hero, .page-header, .booking-section,
+.section-services, .section-why, .section-cta,
+.cust-shell, .book-shell, .auth-split, .ticket-shell {
+  overflow-x: hidden;
+  max-width: 100%;
 }

@@ -295,20 +295,14 @@ async function downloadPDF() {
   const btn = document.getElementById('pdfBtn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating…';
   btn.disabled = true;
-
   const card = document.getElementById('ticketCard');
   const actionsEl = document.getElementById('ticketActions');
-  const expiryBar = document.getElementById('expiryBar');
-
-  // Apply light theme
-  card.classList.add('ticket-card-light');
   actionsEl.style.display = 'none';
-
   try {
-    await new Promise(r => setTimeout(r, 80)); // let CSS apply
+    await new Promise(r => setTimeout(r, 60));
     const canvas = await html2canvas(card, {
       scale:3, useCORS:true, allowTaint:true,
-      backgroundColor:'#ffffff', logging:false
+      backgroundColor:'#1a1510', logging:false
     });
     const imgData = canvas.toDataURL('image/png', 1.0);
     const { jsPDF } = window.jspdf;
@@ -318,9 +312,6 @@ async function downloadPDF() {
   } catch(e) {
     alert('PDF generation failed. Please try Save Image instead.');
   }
-
-  // Restore dark theme
-  card.classList.remove('ticket-card-light');
   actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Download PDF';
   btn.disabled = false;
@@ -331,30 +322,20 @@ async function downloadImage() {
   const btn = document.getElementById('imgBtn');
   btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   btn.disabled = true;
-
   const card = document.getElementById('ticketCard');
   const actionsEl = document.getElementById('ticketActions');
-
-  // Apply light theme
-  card.classList.add('ticket-card-light');
   actionsEl.style.display = 'none';
-
   try {
-    await new Promise(r => setTimeout(r, 80));
+    await new Promise(r => setTimeout(r, 60));
     const canvas = await html2canvas(card, {
       scale:3, useCORS:true, allowTaint:true,
-      backgroundColor:'#ffffff', logging:false
+      backgroundColor:'#1a1510', logging:false
     });
     const a = document.createElement('a');
     a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
     a.href = canvas.toDataURL('image/png', 1.0);
     a.click();
-  } catch(e) {
-    console.error(e);
-  }
-
-  // Restore dark theme
-  card.classList.remove('ticket-card-light');
+  } catch(e) { console.error(e); }
   actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-image me-2"></i>Save Image';
   btn.disabled = false;
