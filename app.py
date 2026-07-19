@@ -35,6 +35,27 @@ def create_app():
     def make_session_permanent():
         session.permanent = True
 
+    @app.before_request
+    def check_maintenance():
+        from db import query
+        # Allow: admin users, login/logout routes, static files, ping
+        allowed_endpoints = {'auth.login', 'auth.logout', 'static', 'ping'}
+        if request.endpoint in allowed_endpoints:
+            return
+        if session.get('is_admin'):
+            return
+        try:
+            row = query("SELECT value FROM settings WHERE `key`='maintenance_mode'", one=True)
+            if row and row['value'] == '1':
+                from flask import render_template
+                wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
+                phone = query("SELECT value FROM settings WHERE `key`='shop_phone'", one=True)
+                return render_template('maintenance.html',
+                    whatsapp=wa['value'] if wa else '',
+                    phone=phone['value'] if phone else ''), 503
+        except Exception:
+            pass
+
     app.teardown_appcontext(close_db)
 
     @app.context_processor

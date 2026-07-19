@@ -7,6 +7,7 @@
   <button class="settings-tab active" data-tab="shop"><i class="fas fa-store me-2"></i>Shop Info</button>
   <button class="settings-tab" data-tab="whatsapp"><i class="fab fa-whatsapp me-2"></i>WhatsApp</button>
   <button class="settings-tab" data-tab="account"><i class="fas fa-user-shield me-2"></i>Admin Account</button>
+  <button class="settings-tab" data-tab="maintenance"><i class="fas fa-tools me-2"></i>Maintenance</button>
 </div>
 
 <!-- Shop Info -->
@@ -200,12 +201,60 @@
   </div>
 </div>
 
+<!-- Maintenance Mode -->
+<div class="settings-panel" id="tab-maintenance">
+  <div class="admin-card" style="max-width:520px;">
+    <div class="settings-card-head">
+      <div class="settings-card-icon" style="background:rgba(255,170,77,0.12);border-color:rgba(255,170,77,0.25);color:#ffc36b;"><i class="fas fa-tools"></i></div>
+      <div>
+        <h6 class="settings-card-title">Maintenance Mode</h6>
+        <p class="settings-card-sub">When enabled, visitors see a maintenance page. Admins can still log in.</p>
+      </div>
+    </div>
+    {% if maintenance_mode == '1' %}
+    <div class="settings-info-box" style="background:rgba(255,170,77,0.10);border-color:rgba(255,170,77,0.3);color:#ffc36b;margin-bottom:20px;">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      <strong>Maintenance mode is ON.</strong> Your website is hidden from customers.
+    </div>
+    {% else %}
+    <div class="settings-info-box settings-info-green" style="margin-bottom:20px;">
+      <i class="fas fa-check-circle me-2"></i>
+      <strong>Website is live.</strong> Customers can access all pages normally.
+    </div>
+    {% endif %}
+    <form method="POST">
+      <input type="hidden" name="action" value="maintenance"/>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;
+        background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:14px;margin-bottom:20px;">
+        <div>
+          <div style="color:#fff;font-weight:600;font-size:0.95rem;">Enable Maintenance Mode</div>
+          <div style="color:var(--text-muted);font-size:0.8rem;margin-top:3px;">Hides the site from all non-admin visitors</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0;cursor:pointer;">
+          <input type="checkbox" name="maintenance_mode" value="1"
+            {% if maintenance_mode == '1' %}checked{% endif %}
+            style="opacity:0;width:0;height:0;" onchange="this.form.submit()">
+          <span style="position:absolute;inset:0;border-radius:999px;transition:background 0.3s;
+            background:{% if maintenance_mode == '1' %}#ffc36b{% else %}rgba(255,255,255,0.15){% endif %}">
+            <span style="position:absolute;height:20px;width:20px;bottom:4px;border-radius:50%;background:#fff;
+              transition:left 0.3s;display:block;
+              left:{% if maintenance_mode == '1' %}28px{% else %}4px{% endif %};"></span>
+          </span>
+        </label>
+      </div>
+    </form>
+    <div style="padding:14px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:0.82rem;color:var(--text-muted);line-height:1.7;">
+      <i class="fas fa-info-circle me-2" style="color:var(--gold);"></i>
+      The maintenance page shows your <strong style="color:rgba(240,230,211,0.8);">WhatsApp</strong> and <strong style="color:rgba(240,230,211,0.8);">phone number</strong> so customers can still reach you.
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  // Tab switching
   document.querySelectorAll('.settings-tab').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.settings-tab').forEach(b => b.classList.remove('active'));
@@ -214,8 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
     });
   });
-
-  // Auto-combine country code + local number before submit
   const waForm = document.getElementById('waForm');
   if (waForm) {
     waForm.addEventListener('submit', function () {
@@ -225,7 +272,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
-
 function togglePw(id, iconId) {
   const inp = document.getElementById(id);
   const ico = document.getElementById(iconId);

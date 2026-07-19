@@ -349,6 +349,15 @@ def settings():
                 execute("UPDATE users SET password_hash=%s WHERE id=%s",
                         (bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode(), session['user_id']))
                 flash('Password updated.', 'success')
+        elif action == 'maintenance':
+            val = '1' if request.form.get('maintenance_mode') else '0'
+            existing = query("SELECT `key` FROM settings WHERE `key`='maintenance_mode'", one=True)
+            if existing:
+                execute("UPDATE settings SET value=%s WHERE `key`='maintenance_mode'", (val,))
+            else:
+                execute("INSERT INTO settings (`key`, value) VALUES ('maintenance_mode',%s)", (val,))
+            state = 'enabled' if val == '1' else 'disabled'
+            flash(f'Maintenance mode {state}.', 'success' if val == '0' else 'warning')
         return redirect(url_for('admin.settings'))
 
     def gs(key, default=''):
@@ -361,7 +370,8 @@ def settings():
         ('shop_hours_weekday',''), ('shop_hours_saturday',''), ('shop_hours_sunday',''), ('map_embed','')
     ]}
     admin_user = query("SELECT username, email FROM users WHERE id=%s", (session['user_id'],), one=True)
-    return render_template('admin/settings.html', s=s, admin_user=admin_user)
+    maintenance_mode = gs('maintenance_mode', '0')
+    return render_template('admin/settings.html', s=s, admin_user=admin_user, maintenance_mode=maintenance_mode)
 
 
 # ── Gallery ────────────────────────────────────────────────────────────────
