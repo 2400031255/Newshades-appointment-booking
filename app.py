@@ -52,10 +52,12 @@ def create_app():
             return
         if session.get('is_admin'):
             return
+        # Allow env override to force maintenance OFF (useful for Render cold starts)
+        if os.environ.get('MAINTENANCE_OVERRIDE') == 'off':
+            return
         try:
             row = query("SELECT value FROM settings WHERE `key`='maintenance_mode'", one=True)
             if row and row['value'] == '1':
-                # Log out any non-admin user who is logged in
                 if session.get('user_id'):
                     session.clear()
                 wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
