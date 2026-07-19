@@ -81,7 +81,8 @@ def _blocked_times(date_str: str) -> set:
         try:
             from datetime import datetime as _dt
             parsed = _dt.strptime(t, '%H:%M')
-            result.add(parsed.strftime('%-I:%M %p'))  # e.g. '9:00 AM'
+            # Use lstrip to avoid platform-specific %-I issues
+            result.add(parsed.strftime('%I:%M %p').lstrip('0'))
         except Exception:
             result.add(t)
     return result
@@ -99,17 +100,16 @@ def _is_date_blocked(date_str: str) -> bool:
 
 @cal_api.route('/slots')
 def slots():
-    """GET /api/calendar/slots?date=YYYY-MM-DD
-    Returns slot availability for a given date.
-    """
     date_str = request.args.get('date', '')
     if not date_str:
         return jsonify({'error': 'date required'}), 400
-
     try:
         req_date = date.fromisoformat(date_str)
     except ValueError:
         return jsonify({'error': 'invalid date'}), 400
+    # Reject dates more than 1 year in the future
+    if req_date > date.today() + timedelta(days=365):
+        return jsonify({'error': 'date too far in future'}), 400
 
     today = date.today()
     if req_date < today:
@@ -155,14 +155,13 @@ def slots():
 
 @cal_api.route('/month-availability')
 def month_availability():
-    """GET /api/calendar/month-availability?year=YYYY&month=MM
-    Returns per-day availability summary for the calendar grid.
-    """
     try:
         year  = int(request.args.get('year',  date.today().year))
         month = int(request.args.get('month', date.today().month))
     except ValueError:
         return jsonify({'error': 'invalid params'}), 400
+    if not (1 <= month <= 12) or not (2020 <= year <= date.today().year + 2):
+        return jsonify({'error': 'invalid year or month'}), 400
 
     today = date.today()
     # First and last day of month
@@ -314,12 +313,13 @@ def ai_recommend():
 
 @cal_api.route('/offers')
 def offers():
-    """GET /api/calendar/offers?date=YYYY-MM-DD
-    Returns offers active for the given date.
-    """
     date_str = request.args.get('date', '')
     if not date_str:
         return jsonify({'error': 'date required'}), 400
+    try:
+        date.fromisoformat(date_str)
+    except ValueError:
+        return jsonify({'error': 'invalid date'}), 400
 
     rows = query(
         "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
@@ -421,15 +421,16 @@ def admin_appointments():
 @cal_api.route('/admin/block', methods=['POST'])
 @_admin_required
 def block_slot():
-    """POST /api/calendar/admin/block
-    Body: {date, time (optional), reason}
-    """
-    data   = request.get_json() or {}
+    data   = request.get_json(silent=True) or {}
     bdate  = data.get('date', '')
     btime  = data.get('time') or None
-    reason = data.get('reason', '')
+    reason = str(data.get('reason', ''))[:255]
     if not bdate:
         return jsonify({'error': 'date required'}), 400
+    try:
+        date.fromisoformat(bdate)
+    except ValueError:
+        return jsonify({'error': 'invalid date'}), 400
     execute(
         "INSERT INTO blocked_slots (block_date, block_time, reason) VALUES (%s,%s,%s)",
         (bdate, btime, reason)
@@ -441,9 +442,11 @@ def block_slot():
 @cal_api.route('/admin/unblock', methods=['POST'])
 @_admin_required
 def unblock_slot():
-    data  = request.get_json() or {}
+    data  = request.get_json(silent=True) or {}
     bdate = data.get('date', '')
     btime = data.get('time') or None
+    if not bdate:
+        return jsonify({'error': 'date required'}), 400
     if btime:
         execute("DELETE FROM blocked_slots WHERE block_date=%s AND block_time=%s", (bdate, btime))
     else:
@@ -455,13 +458,10 @@ def unblock_slot():
 @cal_api.route('/admin/reschedule', methods=['POST'])
 @_admin_required
 def reschedule():
-    """POST /api/calendar/admin/reschedule
-    Body: {id, date, time}  — drag-drop reschedule
-    """
     from flask import current_app
     from email_service import send_reschedule_email
     from sms import send_sms
-    data = request.get_json() or {}
+    data = request.get_json(silent=True) or {}
     aid  = data.get('id')
     new_date = data.get('date', '')
     new_time = data.get('time', '')
@@ -506,7 +506,7 @@ def admin_action():
     from email_service import send_confirmation_email, send_rejection_email
     from sms import sms_confirmed, sms_rejected
 
-    data   = request.get_json() or {}
+    data   = request.get_json(silent=True) or {}
     aid    = data.get('id')
     action = data.get('action', '')
     if not aid:
@@ -573,8 +573,12 @@ def admin_action():
 @_admin_required
 def salon_config():
     if request.method == 'POST':
-        data = request.get_json() or {}
+        data = request.get_json(silent=True) or {}
+        allowed_keys = {'max_per_slot', 'slot_duration', 'lunch_start', 'lunch_end',
+                        'weekday_slots', 'sunday_slots'}
         for k, v in data.items():
+            if k not in allowed_keys:
+                continue
             existing = query("SELECT `key` FROM salon_config WHERE `key`=%s", (k,), one=True)
             if existing:
                 execute("UPDATE salon_config SET value=%s WHERE `key`=%s", (str(v), k))

@@ -4,6 +4,27 @@ import sqlite3
 import pymysql
 from flask import g, current_app
 
+# ── Seed data (no hardcoded credentials) ─────────────────────────────────────
+
+def _seed_admin_params():
+    """Return admin seed params from env or safe defaults (no real password hardcoded)."""
+    return (
+        os.environ.get('SEED_ADMIN_NAME',     'Admin'),
+        os.environ.get('SEED_ADMIN_USERNAME', 'admin'),
+        os.environ.get('SEED_ADMIN_PHONE',    '0000000000'),
+        os.environ.get('SEED_ADMIN_EMAIL',    'admin@newshades.com'),
+        os.environ.get('SEED_ADMIN_HASH',     '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe'),
+    )
+
+_DEFAULT_SERVICES = [
+    ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
+    ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
+    ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
+    ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
+    ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
+    ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
+]
+
 
 # ── Schema helpers ────────────────────────────────────────────────────────────
 
@@ -86,28 +107,20 @@ def _init_sqlite_schema(conn):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
+    params = _seed_admin_params()
     conn.execute(
         "INSERT OR IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (?,?,?,?,?,?)",
-        ('Komali', 'komali', '0000000000', 'komali@newshades.com',
-         '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1),
+        (*params, 1),
     )
     if conn.execute("SELECT COUNT(*) FROM services").fetchone()[0] == 0:
         conn.executemany(
             "INSERT INTO services (service_name, description, price, duration, category) VALUES (?,?,?,?,?)",
-            [
-                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
-                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
-                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
-                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
-                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
-                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
-            ],
+            _DEFAULT_SERVICES,
         )
     conn.commit()
 
 
 def _init_pg_schema(conn):
-    """Create tables in PostgreSQL if they don't exist and seed default data."""
     cur = conn.cursor()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -187,33 +200,23 @@ def _init_pg_schema(conn):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
-    # Seed admin user
+    params = _seed_admin_params()
     cur.execute("""
         INSERT INTO users (full_name, username, phone, email, password_hash, is_admin)
         VALUES (%s,%s,%s,%s,%s,%s)
         ON CONFLICT (username) DO NOTHING
-    """, ('Komali', 'komali', '0000000000', 'komali@newshades.com',
-          '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1))
-    # Seed services if empty
+    """, (*params, 1))
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
             "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
-            [
-                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
-                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
-                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
-                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
-                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
-                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
-            ],
+            _DEFAULT_SERVICES,
         )
     conn.commit()
     cur.close()
 
 
 def _init_mysql_schema(conn):
-    """Create/alter tables in MySQL to ensure all columns and tables exist."""
     cur = conn.cursor()
     stmts = [
         """CREATE TABLE IF NOT EXISTS users (
@@ -296,42 +299,35 @@ def _init_mysql_schema(conn):
     for stmt in stmts:
         try:
             cur.execute(stmt)
-        except Exception:
-            pass
-    # Add missing columns — use SHOW COLUMNS for MySQL 5.7 compatibility
+        except pymysql.err.OperationalError as e:
+            current_app.logger.warning('Schema stmt failed: %s', e)
+
     cur.execute("SHOW COLUMNS FROM appointments")
     existing_cols = {row['Field'] for row in cur.fetchall()}
     alter_stmts = [
-        ("ALTER TABLE appointments ADD COLUMN ticket_expires_at DATETIME", "ticket_expires_at"),
+        ("ALTER TABLE appointments ADD COLUMN ticket_expires_at DATETIME",          "ticket_expires_at"),
         ("ALTER TABLE appointments ADD COLUMN total_price DECIMAL(10,2) DEFAULT 0", "total_price"),
         ("ALTER TABLE appointments ADD COLUMN discount_percent DECIMAL(5,2) DEFAULT 0", "discount_percent"),
         ("ALTER TABLE appointments ADD COLUMN offer_applied VARCHAR(150) DEFAULT ''", "offer_applied"),
-        ("ALTER TABLE appointments ADD COLUMN ticket_id VARCHAR(20)", "ticket_id"),
+        ("ALTER TABLE appointments ADD COLUMN ticket_id VARCHAR(20)",               "ticket_id"),
     ]
     for stmt, col in alter_stmts:
         if col not in existing_cols:
             try:
                 cur.execute(stmt)
-            except Exception:
-                pass
-    # Seed admin
+            except pymysql.err.OperationalError as e:
+                current_app.logger.warning('ALTER failed (%s): %s', col, e)
+
+    params = _seed_admin_params()
     cur.execute(
         "INSERT IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s)",
-        ('Komali', 'komali', '0000000000', 'komali@newshades.com',
-         '$2b$12$zA9WEAEz5EdojsMEXZZ7iuUxep7B/inOz.kiEWIZeDVB9pl1VttYe', 1)
+        (*params, 1)
     )
     cur.execute("SELECT COUNT(*) as c FROM services")
     if cur.fetchone()['c'] == 0:
         cur.executemany(
             "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
-            [
-                ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
-                ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
-                ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
-                ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
-                ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
-                ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
-            ]
+            _DEFAULT_SERVICES
         )
     cur.close()
 
@@ -346,26 +342,26 @@ def _connect_sqlite():
     conn.execute('PRAGMA foreign_keys = ON')
     try:
         _init_sqlite_schema(conn)
-    except Exception as e:
+        return conn
+    except sqlite3.DatabaseError:
         conn.close()
         raise
-    return conn
 
 
 def get_db():
     if 'db' not in g:
-        cfg = current_app.config
+        cfg    = current_app.config
         db_url = cfg.get('DATABASE_URL', '')
 
-        # 1. Try PostgreSQL (Render)
+        # 1. PostgreSQL (Render / production)
         if db_url:
             try:
                 import psycopg2
                 import psycopg2.extras
-                # Render gives postgres:// but psycopg2 needs postgresql://
                 if db_url.startswith('postgres://'):
                     db_url = db_url.replace('postgres://', 'postgresql://', 1)
-                g.db = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor)
+                g.db = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor,
+                                        connect_timeout=10)
                 g.db.autocommit = False
                 g.db_backend = 'postgres'
                 _init_pg_schema(g.db)
@@ -373,7 +369,7 @@ def get_db():
             except Exception as e:
                 current_app.logger.warning('PostgreSQL connection failed: %s', e)
 
-        # 2. Try MySQL (local dev)
+        # 2. MySQL (local dev)
         try:
             conn = pymysql.connect(
                 host=cfg['MYSQL_HOST'],
@@ -382,6 +378,7 @@ def get_db():
                 database=cfg['MYSQL_DB'],
                 cursorclass=pymysql.cursors.DictCursor,
                 autocommit=True,
+                connect_timeout=5,
             )
             _init_mysql_schema(conn)
             g.db = conn
@@ -395,10 +392,13 @@ def get_db():
         g.db_backend = 'sqlite'
 
     else:
+        # Health-check existing connection
         backend = g.get('db_backend')
         if backend == 'postgres':
             try:
-                g.db.cursor().execute('SELECT 1')
+                cur = g.db.cursor()
+                cur.execute('SELECT 1')
+                cur.close()
             except Exception:
                 g.pop('db', None)
                 g.pop('db_backend', None)
@@ -417,17 +417,18 @@ def get_db():
 def close_db(e=None):
     db = g.pop('db', None)
     if db:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            pass
     g.pop('db_backend', None)
 
 
 # ── SQL normalisation (SQLite only) ──────────────────────────────────────────
 
 def _normalize_sql(sql):
-    """Convert MySQL-style SQL to SQLite-compatible SQL."""
     sql = sql.replace('%s', '?')
     sql = re.sub(r'ON DUPLICATE KEY UPDATE\s+\S+\s*=\s*\?', '', sql)
-    # Only convert bare INSERT INTO (not INSERT OR REPLACE/IGNORE already)
     sql = re.sub(r'\bINSERT INTO\b', 'INSERT OR IGNORE INTO', sql)
     sql = re.sub(r'`(\w+)`', r'\1', sql)
     return sql
@@ -436,18 +437,16 @@ def _normalize_sql(sql):
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def query(sql, args=(), one=False):
-    conn = get_db()
+    conn    = get_db()
     backend = g.get('db_backend')
 
     if backend == 'sqlite':
-        cur = conn.execute(_normalize_sql(sql), tuple(args))
+        cur  = conn.execute(_normalize_sql(sql), tuple(args))
         rows = [dict(r) for r in cur.fetchall()]
         return (rows[0] if rows else None) if one else rows
 
     if backend == 'postgres':
-        # Convert backtick-quoted identifiers for PostgreSQL
         sql = re.sub(r'`(\w+)`', r'"\1"', sql)
-        # Convert INSERT ... ON DUPLICATE KEY UPDATE to INSERT ... ON CONFLICT DO UPDATE
         sql = _pg_upsert(sql)
         cur = conn.cursor()
         cur.execute(sql, args)
@@ -458,13 +457,13 @@ def query(sql, args=(), one=False):
     # MySQL
     cur = conn.cursor()
     cur.execute(sql, args)
-    rv = cur.fetchall()
+    rv  = cur.fetchall()
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
 
 def execute(sql, args=()):
-    conn = get_db()
+    conn    = get_db()
     backend = g.get('db_backend')
 
     if backend == 'sqlite':
@@ -476,7 +475,6 @@ def execute(sql, args=()):
         sql = re.sub(r'`(\w+)`', r'"\1"', sql)
         sql = _pg_upsert(sql)
         cur = conn.cursor()
-        # Get last inserted id for INSERT statements
         if sql.strip().upper().startswith('INSERT'):
             cur.execute(sql + ' RETURNING id', args)
             row = cur.fetchone()
@@ -489,7 +487,7 @@ def execute(sql, args=()):
         return None
 
     # MySQL
-    cur = conn.cursor()
+    cur     = conn.cursor()
     cur.execute(sql, args)
     last_id = cur.lastrowid
     cur.close()
@@ -497,7 +495,6 @@ def execute(sql, args=()):
 
 
 def _pg_upsert(sql):
-    """Convert MySQL ON DUPLICATE KEY UPDATE to PostgreSQL ON CONFLICT DO UPDATE."""
     pattern = re.compile(
         r"INSERT INTO\s+(`?\w+`?)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)\s*ON DUPLICATE KEY UPDATE\s+(.+)",
         re.IGNORECASE | re.DOTALL
@@ -509,7 +506,6 @@ def _pg_upsert(sql):
     cols    = [c.strip().strip('`"') for c in m.group(2).split(',')]
     vals    = m.group(3)
     updates = m.group(4).strip()
-    # Build SET clause for ON CONFLICT
     set_parts = []
     for part in re.split(r',\s*(?=\w)', updates):
         col_match = re.match(r'`?(\w+)`?\s*=\s*(.+)', part.strip())

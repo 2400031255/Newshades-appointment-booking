@@ -1,12 +1,23 @@
 import logging
-import html
+import html as _html
+import re
 from flask import current_app
 
 logger = logging.getLogger(__name__)
 
+_EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 
-def _send(to_email: str, subject: str, html: str) -> bool:
+
+def _valid_email(addr):
+    return bool(addr and _EMAIL_RE.match(addr))
+
+
+def _send(to_email: str, subject: str, body_html: str) -> bool:
     """Send an email via Resend. Returns True on success, False on failure."""
+    if not _valid_email(to_email):
+        logger.warning('[EMAIL SKIPPED] Invalid address: %s', to_email)
+        return False
+
     api_key = current_app.config.get('RESEND_API_KEY', '')
     from_   = current_app.config.get('EMAIL_FROM', 'New Shades <noreply@yourdomain.com>')
 
@@ -21,7 +32,7 @@ def _send(to_email: str, subject: str, html: str) -> bool:
             'from':    from_,
             'to':      [to_email],
             'subject': subject,
-            'html':    html,
+            'html':    body_html,
         })
         logger.info('[EMAIL SENT] To: %s | Subject: %s', to_email, subject)
         return True
@@ -31,7 +42,6 @@ def _send(to_email: str, subject: str, html: str) -> bool:
 
 
 def _base_html(content: str) -> str:
-    """Wrap content in a branded HTML email shell."""
     return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -50,7 +60,6 @@ def _base_html(content: str) -> str:
   .detail-row:last-child {{ border-bottom:none; }}
   .detail-label {{ color:rgba(240,230,211,0.5); }}
   .detail-val   {{ color:#fff; font-weight:600; }}
-  .btn {{ display:inline-block; margin-top:8px; padding:12px 28px; border-radius:999px; background:linear-gradient(135deg,#e8c96a,#c9a84c); color:#120e08; font-weight:700; text-decoration:none; font-size:0.92rem; }}
   .footer {{ padding:20px 32px; border-top:1px solid rgba(255,255,255,0.05); text-align:center; color:rgba(240,230,211,0.35); font-size:0.75rem; }}
 </style>
 </head>
@@ -61,110 +70,104 @@ def _base_html(content: str) -> str:
     <p>Premium Salon &amp; Studio</p>
   </div>
   <div class="body">{content}</div>
-  <div class="footer">© 2026 New Shades. All rights reserved.</div>
+  <div class="footer">&copy; 2026 New Shades. All rights reserved.</div>
 </div>
 </body>
 </html>"""
 
 
 def send_booking_received_email(to_email: str, customer_name: str,
-                                 appt_date: str, appt_time: str, services: str) -> bool:
-    time_display = appt_time or 'Flexible'
-    n = html.escape(customer_name)
-    d = html.escape(str(appt_date))
-    t = html.escape(str(time_display))
-    s = html.escape(str(services))
+                                appt_date: str, appt_time: str, services: str) -> bool:
+    n = _html.escape(customer_name)
+    d = _html.escape(str(appt_date))
+    t = _html.escape(str(appt_time or 'Flexible'))
+    s = _html.escape(str(services))
     content = f"""
 <p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
-<p>We've received your appointment request and it is currently <strong style="color:#f5c842;">pending review</strong>. You'll receive another email once it's confirmed.</p>
+<p>We've received your appointment request — it is currently <strong style="color:#f5c842;">pending review</strong>. You'll receive another email once confirmed.</p>
 <div class="detail-box">
-  <div class="detail-row"><span class="detail-label">📅 Date</span><span class="detail-val">{d}</span></div>
-  <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-val">{t}</span></div>
-  <div class="detail-row"><span class="detail-label">✂️ Services</span><span class="detail-val">{s}</span></div>
-  <div class="detail-row"><span class="detail-label">📋 Status</span><span class="detail-val" style="color:#f5c842;">Pending Confirmation</span></div>
+  <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">Services</span><span class="detail-val">{s}</span></div>
+  <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val" style="color:#f5c842;">Pending</span></div>
 </div>
-<p>Our team will review and confirm your booking shortly. Thank you for choosing New Shades! ✨</p>
+<p>Thank you for choosing New Shades! ✨</p>
 """
     return _send(to_email, 'Booking Received – New Shades', _base_html(content))
 
 
 def send_confirmation_email(to_email: str, customer_name: str,
-                             appt_date: str, appt_time: str, services: str) -> bool:
-    time_display = appt_time or 'Flexible'
-    n = html.escape(customer_name)
-    d = html.escape(str(appt_date))
-    t = html.escape(str(time_display))
-    s = html.escape(str(services))
+                            appt_date: str, appt_time: str, services: str) -> bool:
+    n = _html.escape(customer_name)
+    d = _html.escape(str(appt_date))
+    t = _html.escape(str(appt_time or 'Flexible'))
+    s = _html.escape(str(services))
     content = f"""
 <p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
 <p>Your appointment has been <strong style="color:#7ce0aa;">confirmed</strong>. We look forward to seeing you!</p>
 <div class="detail-box">
-  <div class="detail-row"><span class="detail-label">📅 Date</span><span class="detail-val">{d}</span></div>
-  <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-val">{t}</span></div>
-  <div class="detail-row"><span class="detail-label">✂️ Services</span><span class="detail-val">{s}</span></div>
+  <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">Services</span><span class="detail-val">{s}</span></div>
 </div>
-<p>Your <strong>digital appointment ticket</strong> is now available in your <em>My Appointments</em> section.</p>
-<p>Please log in to the website and show your digital ticket at the salon during check-in.</p>
+<p>Your digital ticket is available in <em>My Appointments</em>. Please show it at the salon during check-in.</p>
 <p>Thank you for choosing New Shades. See you soon! ✨</p>
 """
     return _send(to_email, 'Appointment Confirmed – New Shades', _base_html(content))
 
 
 def send_rejection_email(to_email: str, customer_name: str,
-                          appt_date: str, appt_time: str) -> bool:
-    time_display = appt_time or 'Flexible'
-    n = html.escape(customer_name)
-    d = html.escape(str(appt_date))
-    t = html.escape(str(time_display))
+                         appt_date: str, appt_time: str) -> bool:
+    n = _html.escape(customer_name)
+    d = _html.escape(str(appt_date))
+    t = _html.escape(str(appt_time or 'Flexible'))
     content = f"""
 <p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
 <p>We regret to inform you that your appointment request has been <strong style="color:#ff9a9a;">rejected</strong>.</p>
 <div class="detail-box">
-  <div class="detail-row"><span class="detail-label">📅 Requested Date</span><span class="detail-val">{d}</span></div>
-  <div class="detail-row"><span class="detail-label">🕐 Requested Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">Requested Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">Requested Time</span><span class="detail-val">{t}</span></div>
 </div>
-<p>Please log in to the website and book another available appointment at your convenience.</p>
-<p>We apologise for any inconvenience and hope to serve you soon.</p>
-<p>Thank you.</p>
+<p>Please log in and book another available appointment at your convenience.</p>
+<p>We apologise for any inconvenience. Thank you.</p>
 """
     return _send(to_email, 'Appointment Update – New Shades', _base_html(content))
 
 
 def send_admin_new_booking_email(to_email: str, customer_name: str, customer_phone: str,
-                                  appt_date: str, appt_time: str, services: str) -> bool:
-    time_display = appt_time or 'Flexible'
-    n = html.escape(customer_name)
-    p = html.escape(customer_phone)
-    d = html.escape(str(appt_date))
-    t = html.escape(str(time_display))
-    s = html.escape(str(services))
+                                 appt_date: str, appt_time: str, services: str) -> bool:
+    n = _html.escape(customer_name)
+    p = _html.escape(customer_phone)
+    d = _html.escape(str(appt_date))
+    t = _html.escape(str(appt_time or 'Flexible'))
+    s = _html.escape(str(services))
     content = f"""
-<p>A new appointment request has been submitted and is <strong style="color:#f5c842;">awaiting your review</strong>.</p>
+<p>A new appointment request is <strong style="color:#f5c842;">awaiting your review</strong>.</p>
 <div class="detail-box">
-  <div class="detail-row"><span class="detail-label">👤 Customer</span><span class="detail-val">{n}</span></div>
-  <div class="detail-row"><span class="detail-label">📞 Phone</span><span class="detail-val">{p}</span></div>
-  <div class="detail-row"><span class="detail-label">✂️ Services</span><span class="detail-val">{s}</span></div>
-  <div class="detail-row"><span class="detail-label">📅 Date</span><span class="detail-val">{d}</span></div>
-  <div class="detail-row"><span class="detail-label">🕐 Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-val">{n}</span></div>
+  <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">{p}</span></div>
+  <div class="detail-row"><span class="detail-label">Services</span><span class="detail-val">{s}</span></div>
+  <div class="detail-row"><span class="detail-label">Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">Time</span><span class="detail-val">{t}</span></div>
 </div>
 <p>Please log in to the <strong>Admin Dashboard</strong> to accept or reject this appointment.</p>
 """
-    return _send(to_email, f'New Booking Request – {n}', _base_html(content))
+    return _send(to_email, f'New Booking – {n}', _base_html(content))
 
 
 def send_reschedule_email(to_email: str, customer_name: str,
                           new_date: str, new_time: str) -> bool:
-    n = html.escape(customer_name)
-    d = html.escape(str(new_date))
-    t = html.escape(str(new_time or 'Flexible'))
+    n = _html.escape(customer_name)
+    d = _html.escape(str(new_date))
+    t = _html.escape(str(new_time or 'Flexible'))
     content = f"""
 <p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
 <p>Your appointment has been <strong style="color:#9dc0ff;">rescheduled</strong> by our team.</p>
 <div class="detail-box">
-  <div class="detail-row"><span class="detail-label">📅 New Date</span><span class="detail-val">{d}</span></div>
-  <div class="detail-row"><span class="detail-label">🕐 New Time</span><span class="detail-val">{t}</span></div>
+  <div class="detail-row"><span class="detail-label">New Date</span><span class="detail-val">{d}</span></div>
+  <div class="detail-row"><span class="detail-label">New Time</span><span class="detail-val">{t}</span></div>
 </div>
-<p>Please log in to your account to view your updated appointment details and ticket.</p>
+<p>Please log in to view your updated appointment details and ticket.</p>
 <p>We apologise for any inconvenience. Thank you for choosing New Shades!</p>
 """
     return _send(to_email, 'Appointment Rescheduled – New Shades', _base_html(content))

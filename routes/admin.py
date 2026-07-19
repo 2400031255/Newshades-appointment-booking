@@ -69,11 +69,27 @@ def services():
 @admin_required
 def add_service():
     if request.method == 'POST':
+        name     = request.form.get('service_name', '').strip()
+        desc     = request.form.get('description', '').strip()
+        category = request.form.get('category', '').strip()
+        duration = request.form.get('duration', '').strip()
+        img_url  = request.form.get('image_url', '').strip()
+        try:
+            price = float(request.form.get('price', 0))
+            if price < 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            flash('Enter a valid price.', 'danger')
+            return render_template('admin/service_form.html', service=None)
+        if not name or len(name) > 100:
+            flash('Service name is required (max 100 chars).', 'danger')
+            return render_template('admin/service_form.html', service=None)
+        if not category or len(category) > 50:
+            flash('Category is required (max 50 chars).', 'danger')
+            return render_template('admin/service_form.html', service=None)
         execute(
             "INSERT INTO services (service_name, description, price, duration, category, image_url) VALUES (%s,%s,%s,%s,%s,%s)",
-            (request.form['service_name'], request.form['description'],
-             request.form['price'], request.form['duration'],
-             request.form['category'], request.form.get('image_url', ''))
+            (name, desc[:500], price, duration[:50], category, img_url[:255])
         )
         flash('Service added.', 'success')
         return redirect(url_for('admin.services'))
@@ -83,12 +99,28 @@ def add_service():
 @admin_required
 def edit_service(sid):
     svc = query("SELECT * FROM services WHERE id=%s", (sid,), one=True)
+    if not svc:
+        flash('Service not found.', 'danger')
+        return redirect(url_for('admin.services'))
     if request.method == 'POST':
+        name     = request.form.get('service_name', '').strip()
+        desc     = request.form.get('description', '').strip()
+        category = request.form.get('category', '').strip()
+        duration = request.form.get('duration', '').strip()
+        img_url  = request.form.get('image_url', '').strip()
+        try:
+            price = float(request.form.get('price', 0))
+            if price < 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            flash('Enter a valid price.', 'danger')
+            return render_template('admin/service_form.html', service=svc)
+        if not name or len(name) > 100:
+            flash('Service name is required (max 100 chars).', 'danger')
+            return render_template('admin/service_form.html', service=svc)
         execute(
             "UPDATE services SET service_name=%s, description=%s, price=%s, duration=%s, category=%s, image_url=%s, is_active=%s WHERE id=%s",
-            (request.form['service_name'], request.form['description'],
-             request.form['price'], request.form['duration'],
-             request.form['category'], request.form.get('image_url', ''),
+            (name, desc[:500], price, duration[:50], category[:50], img_url[:255],
              1 if request.form.get('is_active') else 0, sid)
         )
         flash('Service updated.', 'success')
@@ -381,24 +413,40 @@ def gallery():
     photos = query("SELECT * FROM gallery ORDER BY created_at DESC")
     return render_template('admin/gallery.html', photos=photos)
 
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8 MB per file
+
 @admin.route('/gallery/upload', methods=['POST'])
 @admin_required
 def gallery_upload():
     files      = request.files.getlist('photos')
-    caption    = request.form.get('caption', '').strip()
+    caption    = request.form.get('caption', '').strip()[:255]
     upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
     os.makedirs(upload_dir, exist_ok=True)
     count = 0
     for f in files:
-        if f and allowed_file(f.filename):
-            safe = secure_filename(f.filename)
-            if not safe:
-                continue
-            base, ext = os.path.splitext(safe)
-            filename  = f"{base}_{int(time.time()*1000)}{ext}"
-            f.save(os.path.join(upload_dir, filename))
-            execute("INSERT INTO gallery (filename, caption) VALUES (%s,%s)", (filename, caption))
-            count += 1
+        if not f or not f.filename:
+            continue
+        if not allowed_file(f.filename):
+            continue
+        safe = secure_filename(f.filename)
+        if not safe:
+            continue
+        # Check file size
+        f.seek(0, 2)
+        size = f.tell()
+        f.seek(0)
+        if size > MAX_UPLOAD_BYTES:
+            flash(f'File {safe} exceeds 8 MB limit and was skipped.', 'warning')
+            continue
+        base, ext = os.path.splitext(safe)
+        filename  = f"{base}_{int(time.time()*1000)}{ext}"
+        dest = os.path.join(upload_dir, filename)
+        # Path traversal guard
+        if not os.path.abspath(dest).startswith(os.path.abspath(upload_dir)):
+            continue
+        f.save(dest)
+        execute("INSERT INTO gallery (filename, caption) VALUES (%s,%s)", (filename, caption))
+        count += 1
     flash(f'{count} photo(s) uploaded.', 'success')
     return redirect(url_for('admin.gallery'))
 
@@ -546,8 +594,8 @@ def save_offer():
     if not valid_from:
         valid_from = datetime.today().strftime('%Y-%m-%d')
 
-    if not title:
-        flash('Offer title is required.', 'danger')
+    if not title or len(title) > 150:
+        flash('Offer title is required (max 150 chars).', 'danger')
         return redirect(url_for('admin.offers'))
     try:
         discount_percent = float(discount_percent)
@@ -556,6 +604,8 @@ def save_offer():
     except (ValueError, TypeError):
         flash('Discount % must be between 0 and 100.', 'danger')
         return redirect(url_for('admin.offers'))
+    description   = description[:1000]
+    discount_text = discount_text[:100]
 
     if oid:
         execute(

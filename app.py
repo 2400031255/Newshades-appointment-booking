@@ -1,12 +1,15 @@
-from flask import Flask, render_template, session, redirect, url_for, current_app
+from flask import Flask, render_template, session, redirect, url_for, request, current_app
 from flask_socketio import SocketIO, emit
 from flask_wtf.csrf import CSRFProtect
 from config import Config
 from db import close_db
 import os
+import logging
+from datetime import timezone
 
 socketio = SocketIO()
 csrf = CSRFProtect()
+logger = logging.getLogger(__name__)
 
 
 def create_app():
@@ -15,21 +18,24 @@ def create_app():
     app.permanent_session_lifetime = app.config['PERMANENT_SESSION_LIFETIME']
     app.config['WTF_CSRF_ENABLED'] = True
 
-    # Init Socket.IO — use gevent on Render, threading locally
     try:
         import gevent  # noqa
         _async_mode = 'gevent'
     except ImportError:
         _async_mode = 'threading'
-    socketio.init_app(
-        app,
-        cors_allowed_origins='*',
-        async_mode=_async_mode,
-        logger=False,
-        engineio_logger=False,
-        manage_session=False
-    )
+
+    socketio.init_app(app, cors_allowed_origins='*', async_mode=_async_mode,
+                      logger=False, engineio_logger=False, manage_session=False)
     csrf.init_app(app)
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options']         = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection']        = '1; mode=block'
+        response.headers['Referrer-Policy']          = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy']       = 'geolocation=(), microphone=(), camera=()'
+        return response
 
     @app.before_request
     def make_session_permanent():
@@ -38,7 +44,8 @@ def create_app():
     @app.before_request
     def check_maintenance():
         from db import query
-        # Allow: admin users, login/logout routes, static files, ping
+        if not request.endpoint:
+            return
         allowed_endpoints = {'auth.login', 'auth.logout', 'static', 'ping'}
         if request.endpoint in allowed_endpoints:
             return
@@ -47,8 +54,7 @@ def create_app():
         try:
             row = query("SELECT value FROM settings WHERE `key`='maintenance_mode'", one=True)
             if row and row['value'] == '1':
-                from flask import render_template
-                wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
+                wa    = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
                 phone = query("SELECT value FROM settings WHERE `key`='shop_phone'", one=True)
                 return render_template('maintenance.html',
                     whatsapp=wa['value'] if wa else '',
@@ -65,30 +71,36 @@ def create_app():
             try:
                 row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
                 return row['value'] if row else default
-            except Exception as e:
+            except (OSError, RuntimeError) as e:
                 current_app.logger.warning('get_setting(%s) failed: %s', key, e)
                 return default
+
         pending_appts = 0
         if session.get('is_admin'):
             try:
                 r = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)
                 pending_appts = r['c'] if r else 0
-            except Exception as e:
+            except (OSError, RuntimeError) as e:
                 current_app.logger.warning('pending_appts query failed: %s', e)
+
         today_offers = []
         try:
             from datetime import date
             today = date.today().isoformat()
             today_offers = query(
-                "SELECT * FROM offers WHERE is_active=1 AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
+                "SELECT * FROM offers WHERE is_active=1 "
+                "AND (valid_from IS NULL OR valid_from <= %s) "
+                "AND (valid_until IS NULL OR valid_until >= %s)",
                 (today, today)
             )
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.warning('today_offers query failed: %s', e)
+
+        import datetime as _dt
         return dict(
             pending_appts=pending_appts,
             today_offers=today_offers,
-            now_date=__import__('datetime').date.today().isoformat(),
+            now_date=_dt.date.today().isoformat(),
             shop={
                 'name':           get_setting('shop_name', 'New Shades'),
                 'phone':          get_setting('shop_phone', ''),
@@ -107,11 +119,10 @@ def create_app():
     app.register_blueprint(customer)
     app.register_blueprint(admin)
     app.register_blueprint(cal_api)
-    # Calendar API uses JSON + session auth — exempt from CSRF form token check
     try:
         from flask_wtf.csrf import exempt as csrf_exempt
         csrf_exempt(cal_api)
-    except Exception:
+    except ImportError:
         pass
     csrf.exempt(cal_api)
 
@@ -121,11 +132,37 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found(e):
-        return render_template('errors/404.html'), 404
+        try:
+            return render_template('errors/404.html'), 404
+        except Exception:
+            return '<h1 style="color:#fff;background:#0c0b10;text-align:center;padding:80px;font-family:serif;">404 – Page Not Found</h1>', 404
+
+    @app.errorhandler(413)
+    def request_too_large(e):
+        try:
+            return render_template('errors/404.html'), 413
+        except Exception:
+            return '<h1 style="color:#fff;background:#0c0b10;text-align:center;padding:80px;font-family:serif;">413 – Request Too Large</h1>', 413
 
     @app.errorhandler(500)
     def server_error(e):
-        return render_template('errors/500.html'), 500
+        try:
+            import os as _os
+            path = _os.path.join(app.root_path, 'templates', 'errors', '500.html')
+            with open(path, 'r') as f:
+                return f.read(), 500
+        except Exception:
+            return '<h1 style="color:#fff;background:#0c0b10;text-align:center;padding:80px;font-family:serif;">500 – Server Error</h1>', 500
+
+    @app.errorhandler(503)
+    def service_unavailable(e):
+        try:
+            import os as _os
+            path = _os.path.join(app.root_path, 'templates', 'errors', '500.html')
+            with open(path, 'r') as f:
+                return f.read(), 503
+        except Exception:
+            return '<h1 style="color:#fff;background:#0c0b10;text-align:center;padding:80px;font-family:serif;">503 – Service Unavailable</h1>', 503
 
     @app.route('/')
     def index():
@@ -139,7 +176,7 @@ def create_app():
                 "SELECT r.rating, r.comment, r.created_at, u.full_name FROM reviews r "
                 "JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC LIMIT 6"
             )
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             app.logger.warning('reviews query failed: %s', e)
             reviews = []
         return render_template('index.html', reviews=reviews)
@@ -155,7 +192,7 @@ def create_app():
             try:
                 row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
                 return row['value'] if row else default
-            except Exception:
+            except (OSError, RuntimeError):
                 return default
         shop = {
             'name':           get_setting('shop_name', 'New Shades'),
@@ -177,7 +214,7 @@ def create_app():
         try:
             svcs = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
             categories = list(dict.fromkeys(s['category'] for s in svcs))
-        except Exception:
+        except (OSError, RuntimeError):
             svcs, categories = [], []
         return render_template('services.html', services=svcs, categories=categories)
 
@@ -186,18 +223,18 @@ def create_app():
         from db import query
         try:
             photos = query("SELECT * FROM gallery ORDER BY created_at DESC")
-        except Exception:
+        except (OSError, RuntimeError):
             photos = []
         return render_template('gallery.html', photos=photos)
 
-    # ── Socket.IO events ──────────────────────────────────────────────────────
     @socketio.on('connect')
     def on_connect():
         emit('connected', {'status': 'ok'})
 
     @socketio.on('ping_calendar')
     def on_ping():
-        emit('pong_calendar', {'ts': __import__('datetime').datetime.now().isoformat()})
+        import datetime as _dt
+        emit('pong_calendar', {'ts': _dt.datetime.now(tz=timezone.utc).isoformat()})
 
     return app
 
