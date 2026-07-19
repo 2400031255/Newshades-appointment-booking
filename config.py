@@ -31,8 +31,8 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
     SESSION_COOKIE_HTTPONLY    = True
     SESSION_COOKIE_SAMESITE    = 'Lax'
-    SESSION_COOKIE_SECURE      = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() in ('1', 'true', 'yes')
-    SESSION_COOKIE_NAME        = '__Host-session' if os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() in ('1', 'true', 'yes') else 'session'
+    SESSION_COOKIE_SECURE      = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('1', 'true', 'yes')
+    SESSION_COOKIE_NAME        = '__Host-session' if os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('1', 'true', 'yes') else 'session'
 
     # Limit upload size to 16 MB total per request
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024

@@ -286,10 +286,10 @@ def _init_mysql_schema(conn):
         """CREATE TABLE IF NOT EXISTS offers (
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(150) NOT NULL,
-            description TEXT DEFAULT '',
+            description TEXT,
             discount_text VARCHAR(100) DEFAULT '',
             discount_percent DECIMAL(5,2) DEFAULT 0,
-            applicable_services TEXT DEFAULT '',
+            applicable_services TEXT,
             valid_from DATE,
             valid_until DATE,
             is_active TINYINT(1) DEFAULT 1,
