@@ -1,91 +1,334 @@
 {% extends 'base.html' %}
 {% block title %}Sign Up – New Shades{% endblock %}
 
+{% block extra_css %}
+<style>
+.auth-split { min-height: 100vh; display: flex; align-items: stretch; }
+
+/* ── Left panel ── */
+.as-left {
+  flex: 0 0 44%;
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 60px 48px;
+  background: radial-gradient(ellipse at 40% 35%, #1e1500 0%, #120e00 35%, #0c0b10 100%);
+  overflow: hidden;
+}
+.as-left::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(201,168,76,0.18) 0%, transparent 48%),
+    radial-gradient(circle at 72% 78%, rgba(201,168,76,0.10) 0%, transparent 42%);
+  pointer-events: none;
+}
+.as-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.10);
+  pointer-events: none;
+  animation: asRing 5s ease-in-out infinite;
+}
+.as-ring-1 { width: min(340px,80vw); height: min(340px,80vw); animation-delay: 0s; }
+.as-ring-2 { width: min(520px,120vw); height: min(520px,120vw); animation-delay: 0.9s; border-color: rgba(201,168,76,0.05); }
+@keyframes asRing { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.04);opacity:0.45;} }
+
+.as-brand {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 5px;
+}
+.as-logo-wrap {
+  position: relative;
+  width: clamp(100px,22vw,130px); height: clamp(100px,22vw,130px);
+  margin-bottom: 22px;
+}
+.as-logo-spin {
+  position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%; border: 1.5px dashed rgba(201,168,76,0.30);
+  animation: asSpin 10s linear infinite;
+}
+@keyframes asSpin { to { transform: rotate(360deg); } }
+.as-logo {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+  border: 3px solid rgba(201,168,76,0.55);
+  box-shadow: 0 0 0 7px rgba(201,168,76,0.07), 0 0 48px rgba(201,168,76,0.30);
+  animation: asLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes asLogoIn { from{transform:scale(0.55);opacity:0;} to{transform:scale(1);opacity:1;} }
+.as-logo-glow {
+  position: absolute; top: -22px; left: -22px; right: -22px; bottom: -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 68%);
+  animation: asGlow 3s ease-in-out infinite; pointer-events: none;
+}
+@keyframes asGlow { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.18);opacity:0.55;} }
+
+.as-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 14px; border-radius: 999px;
+  border: 1px solid rgba(201,168,76,0.30);
+  background: rgba(201,168,76,0.07);
+  color: rgba(232,201,106,0.80);
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em;
+  margin-bottom: 6px;
+  animation: asFadeUp 0.6s 0.2s ease both;
+}
+.as-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold-2); animation: asDot 1.8s infinite;
+}
+@keyframes asDot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.5);} }
+
+.as-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.7rem,3.5vw,2.4rem);
+  font-weight: 700; color: #fff; margin: 0;
+  animation: asFadeUp 0.7s 0.3s ease both;
+}
+.as-sub {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.95rem,2vw,1.2rem);
+  font-style: italic; color: var(--gold-2); margin: 0;
+  animation: asFadeUp 0.7s 0.42s ease both;
+}
+.as-line {
+  width: 55px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.55), transparent);
+  margin: 10px 0 8px;
+  animation: asFadeUp 0.5s 0.52s ease both;
+}
+.as-tag {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.22em;
+  color: rgba(232,201,106,0.50); margin: 0 0 28px;
+  animation: asFadeUp 0.6s 0.6s ease both;
+}
+@keyframes asFadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+
+.as-stats { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+.as-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.as-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem; font-weight: 700; color: var(--gold-2);
+}
+.as-stat-lbl {
+  font-size: 0.6rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: rgba(232,201,106,0.45);
+}
+
+/* ── Right form panel ── */
+.as-right {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 48px 48px;
+  position: relative;
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  overflow-y: auto;
+}
+.as-right::before {
+  content: ''; position: absolute;
+  top: -80px; right: -80px;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.09), transparent 70%);
+  pointer-events: none;
+}
+.as-form-wrap { position: relative; z-index: 1; width: min(100%, 420px); }
+
+.af-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem,3vw,2rem);
+  color: #fff; margin: 0 0 5px;
+}
+.af-sub { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 24px; }
+
+.af-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 0 20px;
+  color: var(--text-muted); font-size: 0.7rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.af-divider::before, .af-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.28), transparent);
+}
+
+.af-field { margin-bottom: 14px; }
+.af-label {
+  display: block; margin-bottom: 6px;
+  font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted); font-weight: 600;
+}
+.af-wrap { position: relative; }
+.af-input {
+  width: 100%;
+  padding: 12px 14px 12px 44px;
+  border: 1.5px solid rgba(201,168,76,0.18);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  color: #fff; font-size: 0.93rem; outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+.af-input::placeholder { color: rgba(255,255,255,0.25); }
+.af-input:focus {
+  border-color: var(--gold);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.13);
+}
+.af-icon {
+  position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold); font-size: 0.88rem; pointer-events: none;
+}
+.af-eye {
+  position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%);
+  border: 0; background: transparent;
+  color: var(--text-muted); cursor: pointer; padding: 4px;
+  transition: color 0.2s;
+}
+.af-eye:hover { color: var(--gold-2); }
+
+.strength-bar {
+  height: 3px; border-radius: 99px;
+  background: rgba(255,255,255,0.08); overflow: hidden;
+}
+.strength-fill {
+  height: 100%; width: 0; border-radius: 99px;
+  background: var(--gold); transition: width 0.3s, background 0.3s;
+}
+
+.af-btn {
+  width: 100%; margin-top: 8px;
+  padding: 14px 20px; border: 0; border-radius: 999px;
+  font-size: 0.97rem; font-weight: 700; letter-spacing: 0.04em;
+  color: #120e08;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  box-shadow: 0 14px 36px rgba(201,168,76,0.28);
+  transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+  font-family: inherit;
+}
+.af-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 44px rgba(201,168,76,0.36); }
+
+.af-footer {
+  margin-top: 18px; text-align: center;
+  color: var(--text-muted); font-size: 0.86rem;
+}
+.af-footer a { color: var(--gold-2); font-weight: 700; transition: color 0.2s; }
+.af-footer a:hover { color: #fff; }
+
+/* Mobile */
+@media (max-width: 767px) {
+  .auth-split { flex-direction: column; }
+  .as-left { flex: none; padding: 44px 24px 32px; }
+  .as-right { padding: 36px 20px 56px; }
+  .as-form-wrap { width: 100%; }
+  .as-ring-1 { width: 220px; height: 220px; }
+  .as-ring-2 { width: 360px; height: 360px; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="auth-shell">
-  <div class="auth-orb auth-orb-1"></div>
-  <div class="auth-orb auth-orb-2"></div>
+<div class="auth-split">
 
-  <div class="auth-card reveal-up" style="width:min(100%,580px);">
-
-    <div class="auth-brand">
-      <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades" class="auth-logo"/>
-      <div>
-        <div class="auth-brand-name">New <span>Shades</span></div>
-        <div class="auth-brand-sub">Premium Salon</div>
+  <!-- Left branded panel -->
+  <div class="as-left">
+    <div class="as-ring as-ring-1"></div>
+    <div class="as-ring as-ring-2"></div>
+    <div class="as-brand">
+      <div class="as-logo-wrap">
+        <div class="as-logo-spin"></div>
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="as-logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div style="display:none;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:900;font-size:2rem;align-items:center;justify-content:center;">NS</div>
+        <div class="as-logo-glow"></div>
+      </div>
+      <div class="as-badge"><span class="as-badge-dot"></span>PREMIUM SALON<span class="as-badge-dot"></span></div>
+      <h1 class="as-name">New Shades</h1>
+      <p class="as-sub">Family Salon</p>
+      <div class="as-line"></div>
+      <p class="as-tag">BEAUTY &nbsp;·&nbsp; WELLNESS &nbsp;·&nbsp; CARE</p>
+      <div class="as-stats">
+        <div class="as-stat"><span class="as-stat-num">500+</span><span class="as-stat-lbl">Clients</span></div>
+        <div class="as-stat"><span class="as-stat-num">15+</span><span class="as-stat-lbl">Services</span></div>
+        <div class="as-stat"><span class="as-stat-num">5 ★</span><span class="as-stat-lbl">Rated</span></div>
       </div>
     </div>
-
-    <h2 class="auth-title">Create Account</h2>
-    <p class="auth-subtitle">Join the New Shades experience</p>
-
-    <div class="auth-divider"><span>Sign Up</span></div>
-
-    <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="row g-3">
-        <div class="col-sm-6 auth-field">
-          <label class="auth-label">Full Name</label>
-          <div class="auth-input-wrap">
-            <i class="fas fa-user auth-icon"></i>
-            <input type="text" name="full_name" class="auth-input" placeholder="Your full name" required autocomplete="name"/>
-          </div>
-        </div>
-        <div class="col-sm-6 auth-field">
-          <label class="auth-label">Username</label>
-          <div class="auth-input-wrap">
-            <i class="fas fa-at auth-icon"></i>
-            <input type="text" name="username" class="auth-input" placeholder="@username" required autocomplete="username"/>
-          </div>
-        </div>
-      </div>
-
-      <div class="auth-field">
-        <label class="auth-label">Email Address</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-envelope auth-icon"></i>
-          <input type="email" name="email" class="auth-input" placeholder="you@email.com" required autocomplete="email"/>
-        </div>
-      </div>
-
-      <div class="auth-field">
-        <label class="auth-label">Phone Number</label>
-        <div class="auth-input-wrap">
-          <i class="fas fa-phone auth-icon"></i>
-          <input type="tel" name="phone" class="auth-input" placeholder="+91 98765 43210" required autocomplete="tel"/>
-        </div>
-      </div>
-
-      <div class="row g-3">
-        <div class="col-sm-6 auth-field">
-          <label class="auth-label">Password</label>
-          <div class="auth-input-wrap">
-            <i class="fas fa-lock auth-icon"></i>
-            <input type="password" name="password" id="pw" class="auth-input" placeholder="Min. 6 characters" minlength="6" required autocomplete="new-password"/>
-            <button type="button" class="auth-eye" onclick="togglePw('pw','eyePw')"><i class="fas fa-eye" id="eyePw"></i></button>
-          </div>
-          <div class="strength-bar mt-2"><div class="strength-fill" id="strengthFill"></div></div>
-        </div>
-        <div class="col-sm-6 auth-field">
-          <label class="auth-label">Confirm Password</label>
-          <div class="auth-input-wrap">
-            <i class="fas fa-shield-alt auth-icon"></i>
-            <input type="password" name="confirm_password" id="cpw" class="auth-input" placeholder="Re-enter password" minlength="6" required autocomplete="new-password"/>
-            <button type="button" class="auth-eye" onclick="togglePw('cpw','eyeCpw')"><i class="fas fa-eye" id="eyeCpw"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <button type="submit" class="auth-btn mt-2">
-        <i class="fas fa-user-plus me-2"></i>Create Account
-      </button>
-    </form>
-
-    <a class="auth-link" href="{{ url_for('auth.login') }}">
-      Already have an account? <span style="color:var(--gold-2);font-weight:700;">Sign In</span>
-    </a>
-
   </div>
+
+  <!-- Right form panel -->
+  <div class="as-right">
+    <div class="as-form-wrap reveal-up">
+      <h2 class="af-title">Create Account</h2>
+      <p class="af-sub">Join the New Shades experience</p>
+      <div class="af-divider"><span>Sign Up</span></div>
+
+      <form method="POST" action="{{ url_for('auth.signup') }}" id="signupForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="row g-3 mb-0">
+          <div class="col-sm-6 af-field">
+            <label class="af-label">Full Name</label>
+            <div class="af-wrap">
+              <i class="fas fa-user af-icon"></i>
+              <input type="text" name="full_name" class="af-input" placeholder="Your full name" required autocomplete="name"/>
+            </div>
+          </div>
+          <div class="col-sm-6 af-field">
+            <label class="af-label">Username</label>
+            <div class="af-wrap">
+              <i class="fas fa-at af-icon"></i>
+              <input type="text" name="username" class="af-input" placeholder="@username" required autocomplete="username"/>
+            </div>
+          </div>
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Email Address</label>
+          <div class="af-wrap">
+            <i class="fas fa-envelope af-icon"></i>
+            <input type="email" name="email" class="af-input" placeholder="you@email.com" required autocomplete="email"/>
+          </div>
+        </div>
+
+        <div class="af-field">
+          <label class="af-label">Phone Number</label>
+          <div class="af-wrap">
+            <i class="fas fa-phone af-icon"></i>
+            <input type="tel" name="phone" class="af-input" placeholder="+91 98765 43210" required autocomplete="tel"/>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-0">
+          <div class="col-sm-6 af-field">
+            <label class="af-label">Password</label>
+            <div class="af-wrap">
+              <i class="fas fa-lock af-icon"></i>
+              <input type="password" name="password" id="pw" class="af-input" placeholder="Min. 6 characters" minlength="6" required autocomplete="new-password"/>
+              <button type="button" class="af-eye" onclick="togglePw('pw','eyePw')"><i class="fas fa-eye" id="eyePw"></i></button>
+            </div>
+            <div class="strength-bar mt-2"><div class="strength-fill" id="strengthFill"></div></div>
+          </div>
+          <div class="col-sm-6 af-field">
+            <label class="af-label">Confirm Password</label>
+            <div class="af-wrap">
+              <i class="fas fa-shield-alt af-icon"></i>
+              <input type="password" name="confirm_password" id="cpw" class="af-input" placeholder="Re-enter password" minlength="6" required autocomplete="new-password"/>
+              <button type="button" class="af-eye" onclick="togglePw('cpw','eyeCpw')"><i class="fas fa-eye" id="eyeCpw"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="af-btn">
+          <i class="fas fa-user-plus me-2"></i>Create Account
+        </button>
+      </form>
+
+      <div class="af-footer">
+        Already have an account? <a href="{{ url_for('auth.login') }}">Sign In</a>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 

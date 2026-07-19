@@ -3,407 +3,319 @@
 
 {% block extra_css %}
 <style>
-/* ── Split shell ── */
-.login-shell {
-  min-height: 100vh;
-  display: flex;
-  align-items: stretch;
-}
+.auth-split { min-height: 100vh; display: flex; align-items: stretch; }
 
-/* ── Left branded panel ── */
-.login-left {
-  flex: 0 0 42%;
+/* ── Left panel ── */
+.as-left {
+  flex: 0 0 44%;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 48px;
-  background: radial-gradient(ellipse at 40% 35%, #2a0e0c 0%, #1a0908 35%, #0f0a0a 100%);
+  background: radial-gradient(ellipse at 40% 35%, #1e1500 0%, #120e00 35%, #0c0b10 100%);
   overflow: hidden;
 }
-.login-left::before {
+.as-left::after {
   content: '';
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background:
-    radial-gradient(circle at 30% 25%, rgba(212,132,122,0.20) 0%, transparent 50%),
-    radial-gradient(circle at 75% 80%, rgba(244,184,176,0.10) 0%, transparent 45%);
+    radial-gradient(circle at 28% 22%, rgba(201,168,76,0.18) 0%, transparent 48%),
+    radial-gradient(circle at 72% 78%, rgba(201,168,76,0.10) 0%, transparent 42%);
   pointer-events: none;
 }
-.ll-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(212,132,122,0.14);
+.as-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.10);
   pointer-events: none;
-  animation: llRing 5s ease-in-out infinite;
+  animation: asRing 5s ease-in-out infinite;
 }
-.ll-ring-1 { width: 320px; height: 320px; animation-delay: 0s; }
-.ll-ring-2 { width: 500px; height: 500px; animation-delay: 0.8s; border-color: rgba(212,132,122,0.07); }
-@keyframes llRing {
-  0%,100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.04); opacity: 0.5; }
-}
+.as-ring-1 { width: min(340px,80vw); height: min(340px,80vw); animation-delay: 0s; }
+.as-ring-2 { width: min(520px,120vw); height: min(520px,120vw); animation-delay: 0.9s; border-color: rgba(201,168,76,0.05); }
+@keyframes asRing { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.04);opacity:0.45;} }
 
-.ll-content {
+.as-brand {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center; gap: 5px;
+}
+.as-logo-wrap {
   position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
+  width: clamp(100px,22vw,130px);
+  height: clamp(100px,22vw,130px);
+  margin-bottom: 22px;
 }
-
-.ll-logo-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-.ll-logo {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(212,132,122,0.55);
-  box-shadow: 0 0 40px rgba(212,132,122,0.30), 0 0 80px rgba(244,184,176,0.10);
-  animation: llLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both;
-}
-@keyframes llLogoIn {
-  from { transform: scale(0.6); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
-}
-.ll-logo-glow {
+.as-logo-spin {
   position: absolute;
-  inset: -18px;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(212,132,122,0.22) 0%, transparent 70%);
-  animation: llGlow 3s ease-in-out infinite;
-  pointer-events: none;
+  border: 1.5px dashed rgba(201,168,76,0.30);
+  animation: asSpin 10s linear infinite;
 }
-@keyframes llGlow {
-  0%,100% { transform: scale(1);    opacity: 1; }
-  50%      { transform: scale(1.15); opacity: 0.6; }
+@keyframes asSpin { to { transform: rotate(360deg); } }
+.as-logo {
+  width: 100%; height: 100%;
+  border-radius: 50%; object-fit: cover;
+  border: 3px solid rgba(201,168,76,0.55);
+  box-shadow: 0 0 0 7px rgba(201,168,76,0.07), 0 0 48px rgba(201,168,76,0.30);
+  animation: asLogoIn 0.9s cubic-bezier(0.34,1.56,0.64,1) both;
 }
+@keyframes asLogoIn { from{transform:scale(0.55);opacity:0;} to{transform:scale(1);opacity:1;} }
+.as-logo-glow {
+  position: absolute;
+  top: -22px; left: -22px; right: -22px; bottom: -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.18) 0%, transparent 68%);
+  animation: asGlow 3s ease-in-out infinite; pointer-events: none;
+}
+@keyframes asGlow { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.18);opacity:0.55;} }
 
-.ll-name {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(1.6rem, 3vw, 2.2rem);
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
+.as-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 4px 14px; border-radius: 999px;
+  border: 1px solid rgba(201,168,76,0.30);
+  background: rgba(201,168,76,0.07);
+  color: rgba(232,201,106,0.80);
+  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.22em;
+  margin-bottom: 6px;
+  animation: asFadeUp 0.6s 0.2s ease both;
 }
-.ll-sub {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(0.95rem, 2vw, 1.25rem);
-  font-style: italic;
-  color: #F4B8B0;
-  margin: 0;
+.as-badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--gold-2);
+  animation: asDot 1.8s infinite;
 }
-.ll-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: rgba(244,184,176,0.55);
-  margin: 8px 0 28px;
-  text-transform: uppercase;
-}
+@keyframes asDot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.5);} }
 
-.ll-divider {
-  width: 60px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,132,122,0.55), transparent);
-  margin: 4px 0 24px;
-}
-
-/* Stats row */
-.ll-stats {
-  display: flex;
-  gap: 28px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.ll-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-.ll-stat-num {
+.as-name {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #F4B8B0;
+  font-size: clamp(1.7rem,3.5vw,2.4rem);
+  font-weight: 700; color: #fff; margin: 0;
+  animation: asFadeUp 0.7s 0.3s ease both;
 }
-.ll-stat-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: rgba(244,184,176,0.45);
+.as-sub {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.95rem,2vw,1.2rem);
+  font-style: italic; color: var(--gold-2); margin: 0;
+  animation: asFadeUp 0.7s 0.42s ease both;
+}
+.as-line {
+  width: 55px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.55), transparent);
+  margin: 10px 0 8px;
+  animation: asFadeUp 0.5s 0.52s ease both;
+}
+.as-tag {
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.22em;
+  color: rgba(232,201,106,0.50); margin: 0 0 28px;
+  animation: asFadeUp 0.6s 0.6s ease both;
+}
+@keyframes asFadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
+
+.as-stats { display: flex; gap: 32px; justify-content: center; flex-wrap: wrap; }
+.as-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.as-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem; font-weight: 700; color: var(--gold-2);
+}
+.as-stat-lbl {
+  font-size: 0.6rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: rgba(232,201,106,0.45);
 }
 
 /* ── Right form panel ── */
-.login-right {
+.as-right {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 40px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 48px 48px;
   position: relative;
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
 }
-.login-right::before {
-  content: '';
-  position: absolute;
-  top: -100px; right: -100px;
-  width: 300px; height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(244,184,176,0.10), transparent 70%);
+.as-right::before {
+  content: ''; position: absolute;
+  top: -80px; right: -80px;
+  width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.09), transparent 70%);
   pointer-events: none;
 }
-.login-right::after {
-  content: '';
-  position: absolute;
-  bottom: -80px; left: -80px;
-  width: 240px; height: 240px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,255,0.04), transparent 70%);
-  pointer-events: none;
-}
+.as-form-wrap { position: relative; z-index: 1; width: min(100%, 400px); }
 
-.login-form-wrap {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 420px);
-}
-
-.lf-title {
+.af-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(1.6rem, 3vw, 2rem);
-  color: #fff;
-  margin: 0 0 6px;
+  font-size: clamp(1.6rem,3vw,2rem);
+  color: #fff; margin: 0 0 5px;
 }
-.lf-sub {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin: 0 0 28px;
+.af-sub { color: var(--text-muted); font-size: 0.88rem; margin: 0 0 28px; }
+
+.af-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 0 0 24px;
+  color: var(--text-muted); font-size: 0.7rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.af-divider::before, .af-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.28), transparent);
 }
 
-/* Input fields */
-.lf-field { margin-bottom: 18px; }
-.lf-label {
-  display: block;
-  margin-bottom: 7px;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 600;
+.af-field { margin-bottom: 16px; }
+.af-label {
+  display: block; margin-bottom: 6px;
+  font-size: 0.7rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--text-muted); font-weight: 600;
 }
-.lf-input-wrap { position: relative; }
-.lf-input {
+.af-wrap { position: relative; }
+.af-input {
   width: 100%;
   padding: 13px 14px 13px 44px;
-  border: 1.5px solid rgba(201,168,76,0.2);
+  border: 1.5px solid rgba(201,168,76,0.18);
   border-radius: 14px;
   background: rgba(255,255,255,0.05);
-  color: #fff;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  color: #fff; font-size: 0.93rem; outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  font-family: inherit;
 }
-.lf-input::placeholder { color: rgba(255,255,255,0.28); }
-.lf-input:focus {
+.af-input::placeholder { color: rgba(255,255,255,0.25); }
+.af-input:focus {
   border-color: var(--gold);
   background: rgba(255,255,255,0.08);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.14);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.13);
 }
-.lf-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
+.af-icon {
+  position: absolute; left: 14px; top: 50%;
   transform: translateY(-50%);
-  color: var(--gold);
-  font-size: 0.9rem;
-  pointer-events: none;
+  color: var(--gold); font-size: 0.88rem; pointer-events: none;
 }
-.lf-eye {
-  position: absolute;
-  right: 12px;
-  top: 50%;
+.af-eye {
+  position: absolute; right: 12px; top: 50%;
   transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  padding: 4px;
+  border: 0; background: transparent;
+  color: var(--text-muted); cursor: pointer; padding: 4px;
   transition: color 0.2s;
 }
-.lf-eye:hover { color: #F4B8B0; }
+.af-eye:hover { color: var(--gold-2); }
 
-/* Submit button */
-.lf-btn {
-  width: 100%;
-  margin-top: 6px;
-  padding: 14px 20px;
-  border: 0;
-  border-radius: 999px;
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+.af-btn {
+  width: 100%; margin-top: 8px;
+  padding: 14px 20px; border: 0; border-radius: 999px;
+  font-size: 0.97rem; font-weight: 700; letter-spacing: 0.04em;
   color: #120e08;
   background: linear-gradient(135deg, var(--gold-2), var(--gold));
-  box-shadow: 0 16px 40px rgba(201,168,76,0.28);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  cursor: pointer;
+  box-shadow: 0 14px 36px rgba(201,168,76,0.28);
+  transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+  font-family: inherit;
 }
-.lf-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 22px 48px rgba(201,168,76,0.36);
-}
+.af-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 44px rgba(201,168,76,0.36); }
 
-.lf-footer {
-  margin-top: 20px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.88rem;
+.af-footer {
+  margin-top: 20px; text-align: center;
+  color: var(--text-muted); font-size: 0.86rem;
 }
-.lf-footer a {
-  color: #F4B8B0;
-  font-weight: 700;
-  transition: color 0.2s;
-}
-.lf-footer a:hover { color: #fff; }
+.af-footer a { color: var(--gold-2); font-weight: 700; transition: color 0.2s; }
+.af-footer a:hover { color: #fff; }
 
-.lf-note {
-  margin-top: 16px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.04);
+.af-note {
+  margin-top: 14px; padding: 10px 14px; border-radius: 12px;
+  background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
-  color: var(--text-muted);
-  font-size: 0.82rem;
-  text-align: center;
+  color: var(--text-muted); font-size: 0.8rem; text-align: center;
 }
+.af-flash {
+  padding: 10px 14px; border-radius: 12px; margin-bottom: 16px;
+  font-size: 0.85rem; font-weight: 500;
+}
+.af-flash-error   { background: rgba(226,93,93,0.12);  border: 1px solid rgba(226,93,93,0.3);  color: #ff9a9a; }
+.af-flash-success { background: rgba(37,211,102,0.10); border: 1px solid rgba(37,211,102,0.3); color: #7ce0aa; }
+.af-flash-warning { background: rgba(255,170,77,0.10); border: 1px solid rgba(255,170,77,0.3); color: #ffc36b; }
 
-/* Divider line */
-.lf-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 22px 0;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-.lf-divider::before,
-.lf-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212,132,122,0.30), transparent);
-}
-
-/* ── Mobile: stack vertically ── */
+/* Mobile */
 @media (max-width: 767px) {
-  .login-shell { flex-direction: column; }
-  .login-left {
-    flex: none;
-    padding: 48px 24px 36px;
-    min-height: auto;
-  }
-  .ll-ring-1 { width: 240px; height: 240px; }
-  .ll-ring-2 { width: 380px; height: 380px; }
-  .ll-logo-wrap { width: 90px; height: 90px; }
-  .ll-logo { width: 90px; height: 90px; }
-  .ll-stats { gap: 20px; }
-  .login-right { padding: 40px 20px 60px; }
-  .login-form-wrap { width: 100%; }
+  .auth-split { flex-direction: column; }
+  .as-left { flex: none; padding: 44px 24px 32px; }
+  .as-right { padding: 36px 20px 56px; }
+  .as-form-wrap { width: 100%; }
+  .as-ring-1 { width: 220px; height: 220px; }
+  .as-ring-2 { width: 360px; height: 360px; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="login-shell">
+<div class="auth-split">
 
   <!-- Left branded panel -->
-  <div class="login-left">
-    <div class="ll-ring ll-ring-1"></div>
-    <div class="ll-ring ll-ring-2"></div>
-    <div class="ll-content">
-      <div class="ll-logo-wrap">
-        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="ll-logo"
+  <div class="as-left">
+    <div class="as-ring as-ring-1"></div>
+    <div class="as-ring as-ring-2"></div>
+    <div class="as-brand">
+      <div class="as-logo-wrap">
+        <div class="as-logo-spin"></div>
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="as-logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
         <div style="display:none;width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:900;font-size:2rem;align-items:center;justify-content:center;">NS</div>
-        <div class="ll-logo-glow"></div>
+        <div class="as-logo-glow"></div>
       </div>
-      <h1 class="ll-name">New Shades</h1>
-      <p class="ll-sub">Family Salon</p>
-      <p class="ll-tag">Beauty &nbsp;·&nbsp; Wellness &nbsp;·&nbsp; Care</p>
-      <div class="ll-divider"></div>
-      <div class="ll-stats">
-        <div class="ll-stat">
-          <span class="ll-stat-num">500+</span>
-          <span class="ll-stat-label">Clients</span>
-        </div>
-        <div class="ll-stat">
-          <span class="ll-stat-num">15+</span>
-          <span class="ll-stat-label">Services</span>
-        </div>
-        <div class="ll-stat">
-          <span class="ll-stat-num">5 ★</span>
-          <span class="ll-stat-label">Rated</span>
-        </div>
+      <div class="as-badge"><span class="as-badge-dot"></span>PREMIUM SALON<span class="as-badge-dot"></span></div>
+      <h1 class="as-name">New Shades</h1>
+      <p class="as-sub">Family Salon</p>
+      <div class="as-line"></div>
+      <p class="as-tag">BEAUTY &nbsp;·&nbsp; WELLNESS &nbsp;·&nbsp; CARE</p>
+      <div class="as-stats">
+        <div class="as-stat"><span class="as-stat-num">500+</span><span class="as-stat-lbl">Clients</span></div>
+        <div class="as-stat"><span class="as-stat-num">15+</span><span class="as-stat-lbl">Services</span></div>
+        <div class="as-stat"><span class="as-stat-num">5 ★</span><span class="as-stat-lbl">Rated</span></div>
       </div>
     </div>
   </div>
 
   <!-- Right form panel -->
-  <div class="login-right">
-    <div class="login-form-wrap reveal-up">
-      <h2 class="lf-title">Welcome Back</h2>
-      <p class="lf-sub">Sign in to book your next appointment</p>
-
-      <div class="lf-divider"><span>Login</span></div>
+  <div class="as-right">
+    <div class="as-form-wrap reveal-up">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="af-flash af-flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      <h2 class="af-title">Welcome Back</h2>
+      <p class="af-sub">Sign in to book your next appointment</p>
+      <div class="af-divider"><span>Login</span></div>
 
       <form method="POST" action="{{ url_for('auth.login') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="lf-field">
-          <label class="lf-label">Username or Email</label>
-          <div class="lf-input-wrap">
-            <i class="fas fa-user lf-icon"></i>
-            <input type="text" name="identifier" class="lf-input"
+        <div class="af-field">
+          <label class="af-label">Username or Email</label>
+          <div class="af-wrap">
+            <i class="fas fa-user af-icon"></i>
+            <input type="text" name="identifier" class="af-input"
                    placeholder="@username or you@email.com"
                    required autocomplete="username"/>
           </div>
         </div>
 
-        <div class="lf-field">
-          <label class="lf-label">Password</label>
-          <div class="lf-input-wrap">
-            <i class="fas fa-lock lf-icon"></i>
-            <input type="password" name="password" id="loginPw" class="lf-input"
+        <div class="af-field">
+          <label class="af-label">Password</label>
+          <div class="af-wrap">
+            <i class="fas fa-lock af-icon"></i>
+            <input type="password" name="password" id="loginPw" class="af-input"
                    placeholder="Your password"
                    required autocomplete="current-password"/>
-            <button type="button" class="lf-eye" onclick="togglePw('loginPw','loginEye')">
+            <button type="button" class="af-eye" onclick="togglePw('loginPw','loginEye')">
               <i class="fas fa-eye" id="loginEye"></i>
             </button>
           </div>
         </div>
 
-        <button type="submit" class="lf-btn">
+        <button type="submit" class="af-btn">
           <i class="fas fa-sign-in-alt me-2"></i>Sign In
         </button>
       </form>
 
-      <div class="lf-footer mt-3">
+      <div class="af-footer mt-3">
         Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
       </div>
-
-      <div class="lf-note">
+      <div class="af-note">
         <i class="fas fa-shield-alt me-1" style="color:var(--gold);"></i>
         Admin access uses the same login page.
       </div>
