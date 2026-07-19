@@ -589,6 +589,7 @@ def save_offer():
     discount_text        = request.form.get('discount_text', '').strip()
     discount_percent     = request.form.get('discount_percent', '0').strip() or '0'
     applicable_services  = ','.join(request.form.getlist('applicable_services'))
+    coupon_code          = request.form.get('coupon_code', '').strip().upper()[:30]
     is_active            = 1 if request.form.get('is_active') else 0
 
     # Parse dd/mm/yyyy → yyyy-mm-dd for DB storage
@@ -606,7 +607,6 @@ def save_offer():
     valid_from  = parse_date(request.form.get('valid_from'))
     valid_until = parse_date(request.form.get('valid_until'))
 
-    # If admin does not supply a starting date, make the offer effective immediately
     if not valid_from:
         valid_from = datetime.today().strftime('%Y-%m-%d')
 
@@ -626,17 +626,17 @@ def save_offer():
     if oid:
         execute(
             "UPDATE offers SET title=%s, description=%s, discount_text=%s, discount_percent=%s, "
-            "applicable_services=%s, valid_from=%s, valid_until=%s, is_active=%s WHERE id=%s",
+            "applicable_services=%s, coupon_code=%s, valid_from=%s, valid_until=%s, is_active=%s WHERE id=%s",
             (title, description, discount_text, discount_percent,
-             applicable_services, valid_from, valid_until, is_active, int(oid))
+             applicable_services, coupon_code, valid_from, valid_until, is_active, int(oid))
         )
         flash('Offer updated.', 'success')
     else:
         execute(
             "INSERT INTO offers (title, description, discount_text, discount_percent, "
-            "applicable_services, valid_from, valid_until, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+            "applicable_services, coupon_code, valid_from, valid_until, is_active) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)",
             (title, description, discount_text, discount_percent,
-             applicable_services, valid_from, valid_until, is_active)
+             applicable_services, coupon_code, valid_from, valid_until, is_active)
         )
         flash('Offer created.', 'success')
     return redirect(url_for('admin.offers'))

@@ -339,6 +339,56 @@ def offers():
     return jsonify({'date': date_str, 'offers': result})
 
 
+@cal_api.route('/coupon/validate', methods=['POST'])
+def validate_coupon():
+    """POST {code, date, services:[]} — returns discount info or error."""
+    data     = request.get_json(silent=True) or {}
+    code     = (data.get('code') or '').strip().upper()
+    date_str = (data.get('date') or date.today().isoformat())[:10]
+    services = [s.strip().lower() for s in (data.get('services') or [])]
+
+    if not code:
+        return jsonify({'valid': False, 'message': 'Please enter a coupon code.'})
+
+    try:
+        date.fromisoformat(date_str)
+    except ValueError:
+        date_str = date.today().isoformat()
+
+    offer = query(
+        "SELECT * FROM offers WHERE is_active=1 "
+        "AND UPPER(coupon_code)=%s "
+        "AND (valid_from IS NULL OR valid_from <= %s) "
+        "AND (valid_until IS NULL OR valid_until >= %s)",
+        (code, date_str, date_str), one=True
+    )
+
+    if not offer:
+        return jsonify({'valid': False, 'message': 'Invalid or expired coupon code.'})
+
+    pct = float(offer.get('discount_percent') or 0)
+    if not pct:
+        return jsonify({'valid': False, 'message': 'This coupon has no discount value.'})
+
+    # Check if applicable to selected services
+    app_svcs = (offer.get('applicable_services') or '').strip()
+    if app_svcs and services:
+        allowed = [s.strip().lower() for s in app_svcs.split(',')]
+        matched = [s for s in services if s in allowed]
+        if not matched:
+            return jsonify({'valid': False,
+                'message': f'This coupon applies only to: {app_svcs}'})
+
+    return jsonify({
+        'valid': True,
+        'discount_percent': pct,
+        'discount_text': offer.get('discount_text') or f'{pct:.0f}% OFF',
+        'title': offer.get('title'),
+        'applicable_services': app_svcs,
+        'message': f'Coupon applied! {offer.get("discount_text") or str(int(pct))+"% OFF"}'
+    })
+
+
 # ── Admin-only endpoints ──────────────────────────────────────────────────────
 
 def _admin_required(f):

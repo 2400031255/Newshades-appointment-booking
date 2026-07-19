@@ -543,6 +543,15 @@ textarea.of-input { resize: vertical; min-height: 80px; }
         </div>
 
         <div class="of-field">
+          <label class="of-label">Coupon Code <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(optional — leave blank for auto-apply)</span></label>
+          <div style="position:relative;">
+            <i class="fas fa-ticket-alt" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.8rem;"></i>
+            <input type="text" name="coupon_code" id="offerCouponCode" class="of-input" style="padding-left:34px;text-transform:uppercase;letter-spacing:0.1em;" placeholder="e.g. SAVE20, WELCOME10" maxlength="30">
+          </div>
+          <div style="font-size:0.7rem;color:rgba(240,230,211,0.35);margin-top:4px;"><i class="fas fa-info-circle me-1"></i>If set, customers must enter this code to get the discount. If blank, discount applies automatically.</div>
+        </div>
+
+        <div class="of-field">
           <label class="of-label">Applicable Services <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(leave blank = all)</span></label>
 
           <!-- Search box -->

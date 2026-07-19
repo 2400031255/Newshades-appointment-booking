@@ -315,9 +315,10 @@
       <div class="af-footer mt-3">
         Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
       </div>
-      <div class="af-note">
-        <i class="fas fa-shield-alt me-1" style="color:var(--gold);"></i>
-        Admin access uses the same login page.
+      <div class="af-note" style="cursor:default;user-select:none;" id="adminHintWrap">
+        <i class="fas fa-lock me-1" style="color:var(--gold);"></i>
+        <span style="color:var(--text-muted);font-size:0.78rem;">Secure &nbsp;·&nbsp; Encrypted &nbsp;·&nbsp; Protected</span>
+        <span id="adminTapCount" style="display:none;"></span>
       </div>
     </div>
   </div>
@@ -334,5 +335,22 @@ function togglePw(id, iconId) {
   inp.type = inp.type === 'password' ? 'text' : 'password';
   ico.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
 }
+
+/* ── Hidden admin hint: tap the lock badge 5 times ── */
+(function() {
+  const wrap = document.getElementById('adminHintWrap');
+  if (!wrap) return;
+  let taps = 0, timer;
+  wrap.addEventListener('click', () => {
+    taps++;
+    clearTimeout(timer);
+    timer = setTimeout(() => { taps = 0; }, 2000);
+    if (taps >= 5) {
+      taps = 0;
+      wrap.innerHTML = '<i class="fas fa-user-shield me-1" style="color:var(--gold);"></i>' +
+        '<span style="color:rgba(232,201,106,0.7);font-size:0.78rem;">Staff & admin can log in with their credentials.</span>';
+    }
+  });
+})();
 </script>
 {% endblock %}
