@@ -3,7 +3,7 @@
 
 {% block extra_css %}
 <style>
-.auth-split { min-height: 100vh; display: flex; align-items: stretch; }
+.auth-split { min-height: 100vh; display: flex; align-items: stretch; padding-top: 70px; }
 
 /* ── Left panel ── */
 .as-left {
@@ -217,9 +217,9 @@
 
 /* Mobile */
 @media (max-width: 767px) {
-  .auth-split { flex-direction: column; }
-  .as-left { flex: none; padding: 44px 24px 32px; }
-  .as-right { padding: 36px 20px 56px; }
+  .auth-split { flex-direction: column; min-height: calc(100vh - 70px); margin-top: 70px; padding-top: 0; }
+  .as-left { flex: none; padding: 40px 24px 28px; }
+  .as-right { padding: 32px 20px 56px; }
   .as-form-wrap { width: 100%; }
   .as-ring-1 { width: 220px; height: 220px; }
   .as-ring-2 { width: 360px; height: 360px; }
