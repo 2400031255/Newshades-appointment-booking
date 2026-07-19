@@ -83,40 +83,90 @@
 /* ── Actions ── */
 .ticket-actions { display:flex; gap:10px; padding:0 28px 28px; flex-wrap:wrap; background:#1a1510; }
 
-/* ── Print / Download light theme ── */
+/* ── Download / Print — real colourful ticket theme ── */
 .ticket-card-light {
-  background:#fff !important;
-  border:2px solid #c9a84c !important;
+  background: linear-gradient(160deg, #fdf6e3 0%, #fef9ee 50%, #f0faf4 100%) !important;
+  border: 2px solid #c9a84c !important;
+  box-shadow: none !important;
 }
-.ticket-card-light .ticket-body { background:#fff !important; }
-.ticket-card-light .ticket-qr-section { background:#fff !important; }
-.ticket-card-light .ticket-actions { background:#fff !important; }
-.ticket-card-light .ticket-id-val { color:#8a6a1a !important; }
-.ticket-card-light .ticket-field-val { color:#1a1510 !important; }
-.ticket-card-light .ticket-field-label { color:#888 !important; }
-.ticket-card-light .ticket-services-block { background:#fdf6e3 !important; border-color:#e8c96a !important; }
-.ticket-card-light .ticket-service-tag { background:#fdf0c8 !important; border-color:#c9a84c !important; color:#7a5010 !important; }
-.ticket-card-light .ticket-hint { color:#555 !important; }
-.ticket-card-light .ticket-hint strong { color:#8a6a1a !important; }
-.ticket-card-light .ticket-expiry-bar.expiry-valid { background:#f0fdf4 !important; border-color:#86efac !important; color:#166534 !important; }
-.ticket-card-light .ticket-expiry-bar.expiry-today { background:#fffbeb !important; border-color:#fcd34d !important; color:#92400e !important; }
+.ticket-card-light .ticket-body {
+  background: linear-gradient(160deg, #fdf6e3 0%, #fef9ee 60%, #f0faf4 100%) !important;
+}
+.ticket-card-light .ticket-qr-section {
+  background: linear-gradient(135deg, #fef3c7 0%, #ecfdf5 100%) !important;
+  border-top: 1px dashed rgba(201,168,76,.4) !important;
+}
+.ticket-card-light .ticket-actions     { background:#fdf6e3 !important; }
+.ticket-card-light .ticket-id-row      { border-bottom-color:rgba(201,168,76,.4) !important; }
+.ticket-card-light .ticket-id-val      { color:#92580a !important; }
+.ticket-card-light .ticket-id-label    { color:#b07820 !important; }
+.ticket-card-light .ticket-field-val   { color:#1c1208 !important; font-weight:700 !important; }
+.ticket-card-light .ticket-field-label { color:#b07820 !important; }
+/* booked-on date inline style override */
+.ticket-card-light .ticket-id-row [style] { color:#6b5a3a !important; }
+.ticket-card-light .ticket-services-block {
+  background: linear-gradient(135deg, #fef3c7, #fde68a44) !important;
+  border-color: #d4a843 !important;
+}
+.ticket-card-light .ticket-services-label { color:#92580a !important; }
+.ticket-card-light .ticket-service-tag {
+  background: linear-gradient(135deg, #fde68a, #fbbf24) !important;
+  border-color: #c9a84c !important;
+  color: #431407 !important;
+  font-weight: 700 !important;
+}
+.ticket-card-light .ticket-hint        { color:#374151 !important; }
+.ticket-card-light .ticket-hint strong { color:#92580a !important; }
+.ticket-card-light .ticket-expiry-bar.expiry-valid {
+  background: #d1fae5 !important;
+  border-color: #34d399 !important;
+  color: #065f46 !important;
+  font-weight: 600 !important;
+}
+.ticket-card-light .ticket-expiry-bar.expiry-today {
+  background: #fef3c7 !important;
+  border-color: #f59e0b !important;
+  color: #78350f !important;
+  font-weight: 600 !important;
+}
+.ticket-card-light .ticket-expiry-bar.expiry-expired {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #991b1b !important;
+}
+.ticket-card-light .ticket-tear        { background: transparent !important; }
+.ticket-card-light .ticket-tear::before { border-top-color: rgba(201,168,76,.5) !important; }
 .ticket-card-light .ticket-tear-circle-l,
-.ticket-card-light .ticket-tear-circle-r { background:#f5f5f5 !important; border-color:#e8c96a !important; }
-.ticket-card-light .ticket-qr-wrap { background:#fff !important; border:1px solid #e8c96a; }
+.ticket-card-light .ticket-tear-circle-r {
+  background: #e8f5e9 !important;
+  border-color: #c9a84c !important;
+}
+.ticket-card-light .ticket-qr-wrap     { background:#fff !important; border:2px solid #d4a843 !important; }
+/* total amount row */
+.ticket-card-light .ticket-total-row {
+  background: linear-gradient(135deg, #fef3c7, #fde68a55) !important;
+  border-color: #d4a843 !important;
+}
+.ticket-card-light .ticket-total-label { color:#92580a !important; }
+.ticket-card-light .ticket-total-val   { color:#92580a !important; }
 
 @media print {
   body * { visibility:hidden; }
   .ticket-card, .ticket-card * { visibility:visible; }
   .ticket-card { position:fixed; inset:0; margin:auto; box-shadow:none; }
   .ticket-actions, .ticket-back-btn, .ticket-expired-overlay { display:none !important; }
-  /* Light theme for print */
-  .ticket-card { background:#fff !important; border:2px solid #c9a84c !important; }
-  .ticket-body, .ticket-qr-section { background:#fff !important; }
-  .ticket-field-val { color:#1a1510 !important; }
-  .ticket-id-val { color:#8a6a1a !important; }
-  .ticket-services-block { background:#fdf6e3 !important; }
-  .ticket-service-tag { background:#fdf0c8 !important; color:#7a5010 !important; }
-  .ticket-hint { color:#555 !important; }
+  .ticket-card { background:linear-gradient(160deg,#fdf6e3,#fef9ee,#f0faf4) !important; border:2px solid #c9a84c !important; }
+  .ticket-body  { background:linear-gradient(160deg,#fdf6e3,#fef9ee,#f0faf4) !important; }
+  .ticket-qr-section { background:linear-gradient(135deg,#fef3c7,#ecfdf5) !important; }
+  .ticket-field-val   { color:#1c1208 !important; }
+  .ticket-field-label { color:#b07820 !important; }
+  .ticket-id-val      { color:#92580a !important; }
+  .ticket-services-block { background:linear-gradient(135deg,#fef3c7,#fde68a44) !important; border-color:#d4a843 !important; }
+  .ticket-service-tag { background:linear-gradient(135deg,#fde68a,#fbbf24) !important; color:#431407 !important; }
+  .ticket-hint { color:#374151 !important; }
+  .ticket-total-row { background:linear-gradient(135deg,#fef3c7,#fde68a55) !important; border-color:#d4a843 !important; }
+  .ticket-total-label { color:#92580a !important; }
+  .ticket-total-val   { color:#92580a !important; }
 }
 </style>
 {% endblock %}
@@ -207,9 +257,9 @@
         </div>
 
         {% if appt.total_price %}
-        <div style="display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);">
-          <span style="font-size:.78rem;color:rgba(240,230,211,.5);">Total Amount</span>
-          <span style="font-family:'Playfair Display',serif;color:var(--gold-2);font-weight:700;">₹{{ "%.0f"|format(appt.total_price) }}</span>
+        <div class="ticket-total-row" style="display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);">
+          <span class="ticket-total-label" style="font-size:.78rem;color:rgba(240,230,211,.5);">Total Amount</span>
+          <span class="ticket-total-val" style="font-family:'Playfair Display',serif;color:var(--gold-2);font-weight:700;">₹{{ "%.0f"|format(appt.total_price) }}</span>
         </div>
         {% endif %}
       </div>
@@ -298,20 +348,24 @@ async function downloadPDF() {
   const card = document.getElementById('ticketCard');
   const actionsEl = document.getElementById('ticketActions');
   actionsEl.style.display = 'none';
+  card.classList.add('ticket-card-light');
   try {
-    await new Promise(r => setTimeout(r, 60));
+    await new Promise(r => setTimeout(r, 120));
     const canvas = await html2canvas(card, {
-      scale:3, useCORS:true, allowTaint:true,
-      backgroundColor:'#1a1510', logging:false
+      scale: 3, useCORS: true, allowTaint: true,
+      backgroundColor: '#fdf6e3', logging: false
     });
     const imgData = canvas.toDataURL('image/png', 1.0);
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ orientation:'portrait', unit:'px', format:[520, canvas.height/3] });
-    pdf.addImage(imgData, 'PNG', 0, 0, 520, canvas.height/3);
+    const pdfW = 520;
+    const pdfH = Math.round(canvas.height / canvas.width * pdfW);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [pdfW, pdfH] });
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
     pdf.save('NewShades-Ticket-{{ appt.ticket_id }}.pdf');
   } catch(e) {
     alert('PDF generation failed. Please try Save Image instead.');
   }
+  card.classList.remove('ticket-card-light');
   actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-file-pdf me-2"></i>Download PDF';
   btn.disabled = false;
@@ -325,17 +379,19 @@ async function downloadImage() {
   const card = document.getElementById('ticketCard');
   const actionsEl = document.getElementById('ticketActions');
   actionsEl.style.display = 'none';
+  card.classList.add('ticket-card-light');
   try {
-    await new Promise(r => setTimeout(r, 60));
+    await new Promise(r => setTimeout(r, 120));
     const canvas = await html2canvas(card, {
-      scale:3, useCORS:true, allowTaint:true,
-      backgroundColor:'#1a1510', logging:false
+      scale: 3, useCORS: true, allowTaint: true,
+      backgroundColor: '#fdf6e3', logging: false
     });
     const a = document.createElement('a');
     a.download = 'NewShades-Ticket-{{ appt.ticket_id }}.png';
     a.href = canvas.toDataURL('image/png', 1.0);
     a.click();
   } catch(e) { console.error(e); }
+  card.classList.remove('ticket-card-light');
   actionsEl.style.display = '';
   btn.innerHTML = '<i class="fas fa-image me-2"></i>Save Image';
   btn.disabled = false;

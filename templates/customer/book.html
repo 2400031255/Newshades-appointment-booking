@@ -454,6 +454,66 @@
   overflow: hidden;
 }
 
+/* ── Safety banner ── */
+.safety-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(37,211,102,0.08), rgba(201,168,76,0.05));
+  border: 1px solid rgba(37,211,102,0.25);
+  flex-wrap: wrap;
+}
+.safety-banner-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: rgba(37,211,102,0.12);
+  border: 1px solid rgba(37,211,102,0.25);
+  display: grid; place-items: center;
+  color: #25d366;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  animation: shieldPulse 3s ease-in-out infinite;
+}
+@keyframes shieldPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(37,211,102,0.25); }
+  50%      { box-shadow: 0 0 0 6px rgba(37,211,102,0); }
+}
+.safety-banner-text {
+  flex: 1;
+  font-size: 0.82rem;
+  color: rgba(240,230,211,0.75);
+  line-height: 1.5;
+  min-width: 200px;
+}
+.safety-banner-text strong { color: #7ce0aa; }
+.safety-banner-sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: rgba(240,230,211,0.5);
+}
+.safety-banner-sub strong { color: #7ce0aa; }
+.safety-banner-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(37,211,102,0.8);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(37,211,102,0.2);
+  background: rgba(37,211,102,0.07);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.safety-banner-link:hover {
+  background: rgba(37,211,102,0.15);
+  border-color: rgba(37,211,102,0.4);
+  color: #7ce0aa;
+}
+
 /* ── Show More button ── */
 .show-more-btn {
   width: 100%;
@@ -597,6 +657,19 @@
       </div>
     </div>
     {% endif %}
+    </div>
+
+    <!-- Safety banner -->
+    <div class="safety-banner reveal-up mb-4">
+      <div class="safety-banner-icon"><i class="fas fa-shield-alt"></i></div>
+      <div class="safety-banner-text">
+        <strong>100% Safe &amp; Secure</strong> — This app is for <strong>appointment booking only</strong>.
+        No payments, no card details, no UPI — ever.
+        <span class="safety-banner-sub">All payments are made <strong>only at the salon</strong> after your service.</span>
+      </div>
+      <a href="{{ url_for('customer.how_it_works') }}" class="safety-banner-link">
+        <i class="fas fa-info-circle me-1"></i>Learn more
+      </a>
     </div>
 
     <!-- Progress -->
@@ -764,6 +837,22 @@
                   <div id="slotsSection">
                     <div style="color:var(--text-muted);font-size:0.85rem;padding:20px 0;text-align:center;">
                       <i class="far fa-calendar me-2"></i>Pick a date to see available slots
+                    </div>
+                  </div>
+                  <!-- Manual time entry -->
+                  <div id="manualTimeWrap" style="margin-top:14px;">
+                    <button type="button" id="toggleManualTime"
+                      style="background:rgba(201,168,76,0.07);border:1.5px dashed rgba(201,168,76,0.3);color:var(--gold-2);border-radius:12px;padding:9px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;width:100%;transition:all 0.2s;">
+                      <i class="fas fa-pencil-alt me-2"></i>Enter a custom time instead
+                    </button>
+                    <div id="manualTimeInput" style="display:none;margin-top:10px;">
+                      <div style="position:relative;">
+                        <i class="fas fa-clock" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gold-2);font-size:0.85rem;"></i>
+                        <input type="time" id="customTimeField"
+                          style="width:100%;padding:11px 14px 11px 38px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.3);color:#fff;font-size:0.9rem;font-weight:600;outline:none;"
+                          placeholder="e.g. 10:30 AM"/>
+                      </div>
+                      <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;"><i class="fas fa-info-circle me-1"></i>We'll try our best to accommodate your preferred time.</div>
                     </div>
                   </div>
                 </div>
@@ -1332,5 +1421,42 @@ document.getElementById('preferred_date')?.addEventListener('change', updateSide
 })();
 
 updateSidebar();
+
+/* ── Manual time entry ── */
+(function() {
+  const toggleBtn   = document.getElementById('toggleManualTime');
+  const inputWrap   = document.getElementById('manualTimeInput');
+  const customField = document.getElementById('customTimeField');
+  const hiddenTime  = document.getElementById('preferred_time');
+  if (!toggleBtn) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const open = inputWrap.style.display !== 'none';
+    inputWrap.style.display = open ? 'none' : '';
+    toggleBtn.innerHTML = open
+      ? '<i class="fas fa-pencil-alt me-2"></i>Enter a custom time instead'
+      : '<i class="fas fa-times me-2"></i>Cancel custom time';
+    if (open) {
+      // clear custom time if closed
+      customField.value = '';
+      if (hiddenTime.value === (customField._lastVal || '')) hiddenTime.value = '';
+    }
+  });
+
+  customField.addEventListener('change', () => {
+    if (!customField.value) return;
+    // Convert HH:MM (24h) to 12h display
+    const [hh, mm] = customField.value.split(':').map(Number);
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    const h12  = hh % 12 || 12;
+    const formatted = `${h12}:${String(mm).padStart(2,'0')} ${ampm}`;
+    customField._lastVal = formatted;
+    hiddenTime.value = formatted;
+    // Deselect any slot chip
+    document.querySelectorAll('.slot-chip').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.ai-rec-chip').forEach(c => c.classList.remove('selected'));
+    updateSidebar();
+  });
+})();
 </script>
 {% endblock %}

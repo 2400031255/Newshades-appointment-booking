@@ -157,6 +157,7 @@
 .qa-hist   .quick-action-icon { background: rgba(105,152,255,0.14); color: #9dc0ff; }
 .qa-prof   .quick-action-icon { background: rgba(201,168,76,0.12);  color: var(--gold-2); }
 .qa-wa     .quick-action-icon { background: rgba(37,211,102,0.12);  color: #7ce0aa; }
+.qa-guide  .quick-action-icon { background: rgba(139,92,246,0.14);  color: #c4b5fd; }
 .quick-action-title {
   font-weight: 700;
   font-size: 0.95rem;
@@ -502,6 +503,14 @@
                 <div class="quick-action-sub">WhatsApp for quick help</div>
               </div>
               <i class="fas fa-arrow-right ms-auto" style="color:#7ce0aa;opacity:0.6;"></i>
+            </a>
+            <a href="{{ url_for('customer.how_it_works') }}" class="quick-action qa-guide">
+              <div class="quick-action-icon"><i class="fas fa-book-open"></i></div>
+              <div>
+                <div class="quick-action-title">How It Works</div>
+                <div class="quick-action-sub">Guide, offers &amp; policies</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:#c4b5fd;opacity:0.6;"></i>
             </a>
           </div>
         </div>

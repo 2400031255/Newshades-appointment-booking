@@ -32,22 +32,78 @@
 .c-orb-3 { width:200px;height:200px;top:40%;left:5%;background:radial-gradient(circle,rgba(201,168,76,0.08),transparent 65%);animation-delay:.5s; }
 @keyframes orbFadeIn { to { opacity:1; } }
 
-/* card */
+/* card — vibrant ticket style */
 .confirm-card {
   position: relative;
   z-index: 1;
   width: min(100%, 580px);
-  padding: 48px 40px 40px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
-  border: 1px solid rgba(201,168,76,0.25);
+  padding: 0 0 36px;
+  background: linear-gradient(160deg, #1a1408 0%, #0f0d15 50%, #0d1a12 100%);
+  border: 1.5px solid rgba(201,168,76,0.45);
   border-radius: 32px;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  box-shadow:
+    0 40px 100px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 0 60px rgba(201,168,76,0.08);
   backdrop-filter: blur(24px);
+  overflow: hidden;
   opacity: 0;
   transform: translateY(48px) scale(0.96);
   animation: cardIn 0.75s cubic-bezier(0.22,1,0.36,1) 0.25s forwards;
 }
 @keyframes cardIn { to { opacity:1; transform:translateY(0) scale(1); } }
+
+/* Ticket header band */
+.confirm-card::before {
+  content: '';
+  display: block;
+  height: 8px;
+  background: linear-gradient(90deg, #c9a84c, #e8c96a, #7ce0aa, #e8c96a, #c9a84c);
+  background-size: 200% 100%;
+  animation: shimmerBand 3s linear infinite;
+}
+@keyframes shimmerBand {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Ticket top section */
+.ticket-top {
+  padding: 36px 40px 28px;
+  background: linear-gradient(160deg, rgba(201,168,76,0.12) 0%, rgba(124,224,170,0.06) 60%, transparent 100%);
+  border-bottom: 1.5px dashed rgba(201,168,76,0.25);
+  position: relative;
+}
+.ticket-top::after {
+  content: '';
+  position: absolute;
+  bottom: -12px; left: -12px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #0a090e;
+  border: 1.5px solid rgba(201,168,76,0.3);
+  z-index: 2;
+}
+.ticket-top::before {
+  content: '';
+  position: absolute;
+  bottom: -12px; right: -12px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #0a090e;
+  border: 1.5px solid rgba(201,168,76,0.3);
+  z-index: 2;
+}
+
+/* Ticket body */
+.ticket-body {
+  padding: 28px 40px 0;
+}
+
+@media (max-width: 576px) {
+  .ticket-top  { padding: 28px 20px 22px; }
+  .ticket-body { padding: 22px 20px 0; }
+}
 
 /* check icon */
 .check-wrap {
@@ -159,16 +215,16 @@
 .confirm-summary {
   border-radius: 18px;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  border: 1px solid rgba(201,168,76,0.18);
   overflow: hidden;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 .confirm-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 13px 18px;
   border-bottom: 1px solid rgba(255,255,255,0.05);
   opacity: 0;
   transform: translateX(-20px);
@@ -181,14 +237,22 @@
 .confirm-row:nth-child(5) { animation: rowIn 0.45s ease 1.83s forwards; }
 @keyframes rowIn { to { opacity:1; transform:translateX(0); } }
 .confirm-key {
-  color: rgba(240,230,211,0.5);
+  color: rgba(240,230,211,0.55);
   font-size: 0.82rem;
   display: flex;
   align-items: center;
   gap: 9px;
   white-space: nowrap;
 }
-.confirm-key i { color: var(--gold); width: 14px; text-align: center; }
+.confirm-key i {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  background: rgba(201,168,76,0.12);
+  color: var(--gold-2);
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
 .confirm-val {
   color: #fff;
   font-weight: 700;
@@ -199,8 +263,8 @@
   display: inline-block;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(201,168,76,0.12);
-  border: 1px solid rgba(201,168,76,0.25);
+  background: linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.08));
+  border: 1px solid rgba(201,168,76,0.35);
   color: var(--gold-2);
   font-size: 0.78rem;
   font-weight: 600;
@@ -212,8 +276,8 @@
   gap: 6px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(245,200,66,0.1);
-  border: 1px solid rgba(245,200,66,0.25);
+  background: rgba(245,200,66,0.12);
+  border: 1px solid rgba(245,200,66,0.3);
   color: #f5c842;
   font-size: 0.82rem;
   font-weight: 700;
@@ -224,11 +288,11 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-radius: 14px;
-  background: rgba(201,168,76,0.07);
-  border: 1px solid rgba(201,168,76,0.2);
-  margin-bottom: 28px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.09), rgba(124,224,170,0.05));
+  border: 1px solid rgba(201,168,76,0.25);
+  margin-bottom: 24px;
   opacity: 0;
   animation: fadeUp 0.5s ease 1.95s forwards;
 }
@@ -320,9 +384,9 @@
 
   <div class="confirm-card">
 
-    <!-- Animated checkmark -->
-    <div class="text-center">
-      <div class="check-wrap">
+    <!-- Ticket top: checkmark + title -->
+    <div class="ticket-top text-center">
+      <div class="check-wrap" style="margin:0 auto 20px;">
         <div class="check-glow"></div>
         <div class="check-bg"></div>
         <div class="check-ring"></div>
@@ -341,6 +405,9 @@
         We'll confirm it shortly and send you an email.
       </p>
     </div>
+
+    <!-- Ticket body: summary + actions -->
+    <div class="ticket-body">
 
     <!-- Summary -->
     <div class="confirm-summary">
@@ -410,6 +477,7 @@
       </a>
     </div>
 
+    </div><!-- /ticket-body -->
   </div>
 </div>
 {% endblock %}

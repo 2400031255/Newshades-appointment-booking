@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% block title %}How It Works – New Shades{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="page-header" style="padding:130px 0 80px;">
+  <div class="page-header-orb"></div>
+  <div class="page-header-orb" style="left:-80px;top:auto;bottom:-60px;width:320px;height:320px;background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);"></div>
+  <div class="container text-center">
+    <div class="reveal-up">
+      <div class="section-badge mb-3"><span class="badge-dot"></span> Guide</div>
+      <h1 class="page-header-title" style="font-size:clamp(2.2rem,4.5vw,3.6rem);">
+        How It <span>Works</span>
+      </h1>
+      <p class="page-header-sub" style="margin:0 auto;text-align:center;max-width:580px;">
+        Everything you need to know about booking, offers, payments, and our policies — all in one place.
+      </p>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+
+    <!-- ── PAYMENT SAFETY BANNER ── -->
+    <div class="reveal-up mb-5">
+      <div class="glass-card" style="border-color:rgba(37,211,102,0.35);background:linear-gradient(135deg,rgba(37,211,102,0.07),rgba(201,168,76,0.04));padding:32px 28px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(37,211,102,0.12),transparent 70%);pointer-events:none;"></div>
+        <div class="d-flex align-items-start gap-4 flex-wrap">
+          <div style="width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,rgba(37,211,102,0.2),rgba(37,211,102,0.08));border:1px solid rgba(37,211,102,0.3);display:grid;place-items:center;flex-shrink:0;">
+            <i class="fas fa-shield-alt" style="font-size:1.4rem;color:#25d366;"></i>
+          </div>
+          <div style="flex:1;">
+            <h4 style="font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">100% Safe — No Payments in the App</h4>
+            <p style="color:rgba(240,230,211,0.75);margin-bottom:14px;line-height:1.7;">
+              This app is <strong style="color:#7ce0aa;">only for booking appointments</strong>. We do <strong style="color:#7ce0aa;">not</strong> collect any payment, card details, or UPI information here. All payments are made <strong style="color:#7ce0aa;">only at the salon</strong> after your service is done — in cash or via the salon's payment machine.
+            </p>
+            <div class="d-flex gap-3 flex-wrap">
+              {% for icon, text in [
+                ('fas fa-lock',        'No card details collected'),
+                ('fas fa-ban',         'No online payments'),
+                ('fas fa-store',       'Pay only at the salon'),
+                ('fas fa-user-shield', 'Your data is safe')
+              ] %}
+              <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);font-size:0.78rem;color:#7ce0aa;font-weight:600;">
+                <i class="{{ icon }}" style="font-size:0.7rem;"></i>{{ text }}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HOW TO BOOK ── -->
+    <div class="reveal-up mb-5">
+      <div class="section-head mb-4">
+        <div class="section-badge">Step by Step</div>
+        <h2 class="section-title mt-2">How to <span>Book</span></h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="row g-4">
+        {% for num, icon, title, desc in [
+          ('1', 'fas fa-user-plus',      'Create an Account',    'Sign up with your name, phone, and email. It takes less than a minute and your details are kept private.'),
+          ('2', 'fas fa-concierge-bell', 'Choose Your Services', 'Browse all available services — Hair, Beard, Skin, Wellness and more. Select one or multiple services in a single booking.'),
+          ('3', 'fas fa-calendar-alt',   'Pick a Date & Time',   'Use the calendar to pick your preferred date. Choose from available time slots or enter a custom time if your preferred slot is not listed.'),
+          ('4', 'fas fa-calendar-check', 'Submit & Wait',        'Hit Book Appointment. You will get a confirmation email. Our team will confirm your slot and send you another email shortly.'),
+          ('5', 'fas fa-ticket-alt',     'Get Your Ticket',      'Once confirmed, a digital ticket is generated. Show it at the salon during check-in — the staff will scan your QR code.'),
+          ('6', 'fas fa-rupee-sign',     'Pay at the Salon',     'After your service is done, pay at the salon counter. Cash or card — no online payment needed ever.')
+        ] %}
+        <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.07 }}s">
+          <div class="why-card" style="position:relative;">
+            <div style="position:absolute;top:16px;right:16px;font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:rgba(201,168,76,0.08);line-height:1;">{{ num }}</div>
+            <div class="why-icon"><i class="{{ icon }}"></i></div>
+            <h6 class="why-title">{{ title }}</h6>
+            <p class="why-desc">{{ desc }}</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── HOW OFFERS WORK ── -->
+    <div class="reveal-up mb-5">
+      <div class="section-head mb-4">
+        <div class="section-badge">Savings</div>
+        <h2 class="section-title mt-2">How <span>Offers</span> Work</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="row g-4 align-items-start">
+        <div class="col-lg-6">
+          <div class="about-values" style="gap:18px;">
+            {% for icon, title, desc in [
+              ('fas fa-bolt',       'Auto-Applied',         'Offers are automatically applied when you book. You do not need any coupon code — the discount shows up directly on your booking summary.'),
+              ('fas fa-calendar',   'Date-Based Offers',    'Some offers are valid only on specific dates or date ranges. When you pick a date on the calendar, active offers for that day are shown instantly.'),
+              ('fas fa-concierge-bell', 'Service-Specific', 'Certain offers apply only to selected services (e.g. 20% off Haircut). Others are global and apply to your entire booking.'),
+              ('fas fa-layer-group','Best Offer Wins',      'If multiple offers are active, the best applicable discount is applied to each service automatically.')
+            ] %}
+            <div class="about-value-item" style="align-items:flex-start;gap:14px;">
+              <div class="about-value-icon" style="flex-shrink:0;margin-top:2px;"><i class="{{ icon }}"></i></div>
+              <div>
+                <div style="color:#fff;font-weight:700;font-size:0.9rem;margin-bottom:4px;">{{ title }}</div>
+                <div style="color:rgba(240,230,211,0.65);font-size:0.85rem;line-height:1.6;">{{ desc }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <!-- Upcoming Offers -->
+          <div class="glass-card" style="padding:24px;">
+            <div class="d-flex align-items-center gap-3 mb-4">
+              <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,rgba(255,140,0,0.2),rgba(201,168,76,0.1));border:1px solid rgba(255,140,0,0.25);display:grid;place-items:center;color:#ff8c00;">
+                <i class="fas fa-fire"></i>
+              </div>
+              <div>
+                <div style="font-weight:800;color:var(--gold-2);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;">Upcoming & Active Offers</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);">Auto-applied when you book</div>
+              </div>
+            </div>
+            {% if upcoming_offers %}
+              {% for offer in upcoming_offers %}
+              <div style="padding:14px;border-radius:14px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);margin-bottom:10px;">
+                <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                  <div style="font-weight:700;color:#fff;font-size:0.88rem;">{{ offer.title }}</div>
+                  {% if offer.discount_text %}
+                  <span style="padding:3px 10px;border-radius:999px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-size:0.68rem;font-weight:900;white-space:nowrap;">{{ offer.discount_text }}</span>
+                  {% endif %}
+                </div>
+                {% if offer.description %}
+                <div style="color:rgba(240,230,211,0.55);font-size:0.78rem;margin-top:5px;">{{ offer.description }}</div>
+                {% endif %}
+                <div class="d-flex gap-3 mt-2 flex-wrap">
+                  {% if offer.valid_from %}
+                  <span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-calendar-alt me-1" style="color:var(--gold);"></i>From {{ offer.valid_from }}</span>
+                  {% endif %}
+                  {% if offer.valid_until %}
+                  <span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-calendar-check me-1" style="color:#7ce0aa;"></i>Until {{ offer.valid_until }}</span>
+                  {% endif %}
+                  {% if offer.applicable_services %}
+                  <span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-concierge-bell me-1" style="color:var(--gold);"></i>{{ offer.applicable_services }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            {% else %}
+            <div style="text-align:center;padding:24px 0;color:var(--text-muted);font-size:0.85rem;">
+              <i class="fas fa-tag mb-2" style="font-size:1.5rem;display:block;opacity:0.3;"></i>
+              No active offers right now.<br>Check back soon!
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TERMS & POLICIES ── -->
+    <div class="reveal-up mb-5">
+      <div class="section-head mb-4">
+        <div class="section-badge">Policies</div>
+        <h2 class="section-title mt-2">Terms & <span>Policies</span></h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="row g-4">
+        {% for icon, color, title, points in [
+          ('fas fa-calendar-times', 'rgba(239,68,68,0.7)', 'Cancellation Policy', [
+            'You can cancel a Pending or Confirmed appointment anytime from My Appointments.',
+            'Cancellations made less than 2 hours before the appointment may not be eligible for priority rebooking.',
+            'Repeated last-minute cancellations may affect your booking priority.'
+          ]),
+          ('fas fa-clock', 'rgba(245,158,11,0.7)', 'Punctuality', [
+            'Please arrive 5 minutes before your appointment time.',
+            'If you are more than 15 minutes late, your slot may be given to a walk-in customer.',
+            'In such cases, we will try our best to accommodate you at the next available slot.'
+          ]),
+          ('fas fa-rupee-sign', 'rgba(37,211,102,0.7)', 'Payment Policy', [
+            'All payments are made at the salon only — cash or card at the counter.',
+            'This app does not process any payments. No card or UPI details are ever asked.',
+            'Prices shown in the app are indicative. Final price is confirmed at the salon.'
+          ]),
+          ('fas fa-user-lock', 'rgba(139,92,246,0.7)', 'Privacy & Data', [
+            'Your name, phone, and email are used only for booking and communication purposes.',
+            'We do not share your data with any third party.',
+            'You can request deletion of your account by contacting us on WhatsApp.'
+          ]),
+          ('fas fa-redo', 'rgba(201,168,76,0.7)', 'Rescheduling', [
+            'To reschedule, cancel your existing booking and create a new one.',
+            'You can rebook any past appointment with one tap from My Appointments.',
+            'Rescheduling is free and unlimited.'
+          ]),
+          ('fas fa-star', 'rgba(201,168,76,0.7)', 'Reviews', [
+            'You can leave a review only after a confirmed or completed appointment.',
+            'Reviews are public and help other customers make informed decisions.',
+            'You can edit your review anytime from My Appointments.'
+          ])
+        ] %}
+        <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.07 }}s">
+          <div class="why-card" style="height:100%;">
+            <div class="why-icon" style="background:linear-gradient(135deg,{{ color }},transparent);border-color:{{ color }};"><i class="{{ icon }}"></i></div>
+            <h6 class="why-title">{{ title }}</h6>
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">
+              {% for point in points %}
+              <li style="display:flex;gap:9px;align-items:flex-start;font-size:0.82rem;color:rgba(240,230,211,0.65);line-height:1.55;">
+                <i class="fas fa-check-circle" style="color:var(--gold);margin-top:3px;flex-shrink:0;font-size:0.72rem;"></i>{{ point }}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── FAQ ── -->
+    <div class="reveal-up mb-5">
+      <div class="section-head mb-4">
+        <div class="section-badge">FAQ</div>
+        <h2 class="section-title mt-2">Common <span>Questions</span></h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="row g-3">
+        {% for q, a in [
+          ('Do I need to pay anything to book?',            'No. Booking is completely free. You only pay at the salon after your service is done.'),
+          ('Can I book for someone else?',                  'Yes. You can book using your account and mention the person\'s name in the notes or inform the salon staff on arrival.'),
+          ('What if my preferred time slot is not shown?',  'Use the "Enter a custom time" option on the booking page. We will try our best to accommodate your preferred time.'),
+          ('How will I know my booking is confirmed?',      'You will receive an email when you book and another email once our team confirms your appointment.'),
+          ('Can I book multiple services at once?',         'Yes. You can select as many services as you want in a single booking. The total time and price will be shown before you confirm.'),
+          ('Is my personal data safe?',                     'Absolutely. We only store your name, phone, and email for booking purposes. No payment data is ever collected.')
+        ] %}
+        <div class="col-lg-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.06 }}s">
+          <div class="glass-card" style="padding:20px 22px;">
+            <div style="font-weight:700;color:#fff;font-size:0.9rem;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;">
+              <i class="fas fa-question-circle" style="color:var(--gold-2);margin-top:2px;flex-shrink:0;"></i>{{ q }}
+            </div>
+            <div style="color:rgba(240,230,211,0.65);font-size:0.84rem;line-height:1.65;padding-left:24px;">{{ a }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- ── CTA ── -->
+    <div class="glass-card text-center reveal-up mt-2" style="padding:56px 32px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-60px;right:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);pointer-events:none;"></div>
+      <div class="section-badge mb-3">Ready?</div>
+      <h3 style="font-family:'Playfair Display',serif;color:#fff;font-size:clamp(1.5rem,2.5vw,2rem);margin-bottom:12px;">
+        Book Your <em style="color:var(--gold-2);">Appointment Now</em>
+      </h3>
+      <p style="color:var(--text-muted);margin-bottom:32px;max-width:460px;margin-left:auto;margin-right:auto;">
+        It's free, fast, and takes less than 2 minutes. Pay only at the salon after your service.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="{{ url_for('customer.book_page') }}" class="btn-gold-hero">
+          <i class="fas fa-calendar-check me-2"></i>Book Appointment
+        </a>
+        <a href="{{ url_for('customer.appointments') }}" class="btn-outline-gold">
+          <i class="fas fa-history me-2"></i>My Appointments
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}

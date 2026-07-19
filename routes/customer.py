@@ -350,6 +350,20 @@ def submit_review():
     return redirect(url_for('customer.appointments'))
 
 
+# ── How It Works ─────────────────────────────────────────────────────────────
+
+@customer.route('/how-it-works')
+@login_required
+def how_it_works():
+    today_str = date.today().isoformat()
+    upcoming_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 "
+        "AND (valid_until IS NULL OR valid_until >= %s) ORDER BY valid_from ASC",
+        (today_str,)
+    )
+    return render_template('customer/how_it_works.html', upcoming_offers=upcoming_offers)
+
+
 # ── Profile ───────────────────────────────────────────────────────────────────
 
 @customer.route('/profile', methods=['GET'])
