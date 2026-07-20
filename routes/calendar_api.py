@@ -358,55 +358,43 @@ def offers():
 
 @cal_api.route('/coupon/validate', methods=['POST'])
 def validate_coupon():
-    """POST {code, date, services:[]} — returns discount info or error."""
+    """POST {code} — validates against coupons table, returns discount info."""
     ip = request.remote_addr
     if _coupon_rate_limited(ip):
         return jsonify({'valid': False, 'message': 'Too many attempts. Please wait.'}), 429
 
-    data     = request.get_json(silent=True) or {}
-    code     = (data.get('code') or '').strip().upper()
-    date_str = (data.get('date') or date.today().isoformat())[:10]
-    services = [s.strip().lower() for s in (data.get('services') or [])]
+    data = request.get_json(silent=True) or {}
+    code = (data.get('code') or '').strip().upper()
 
     if not code:
         return jsonify({'valid': False, 'message': 'Please enter a coupon code.'})
 
-    try:
-        date.fromisoformat(date_str)
-    except ValueError:
-        date_str = date.today().isoformat()
+    today_str = date.today().isoformat()
 
-    offer = query(
-        "SELECT * FROM offers WHERE is_active=1 "
-        "AND UPPER(coupon_code)=%s "
-        "AND (valid_from IS NULL OR valid_from <= %s) "
+    coupon = query(
+        "SELECT * FROM coupons WHERE UPPER(code)=%s AND is_active=1 "
         "AND (valid_until IS NULL OR valid_until >= %s)",
-        (code, date_str, date_str), one=True
+        (code, today_str), one=True
     )
 
-    if not offer:
+    if not coupon:
         return jsonify({'valid': False, 'message': 'Invalid or expired coupon code.'})
 
-    pct = float(offer.get('discount_percent') or 0)
+    pct = float(coupon.get('discount_percent') or 0)
     if not pct:
         return jsonify({'valid': False, 'message': 'This coupon has no discount value.'})
 
-    # Check if applicable to selected services
-    app_svcs = (offer.get('applicable_services') or '').strip()
-    if app_svcs and services:
-        allowed = [s.strip().lower() for s in app_svcs.split(',')]
-        matched = [s for s in services if s in allowed]
-        if not matched:
-            return jsonify({'valid': False,
-                'message': f'This coupon applies only to: {app_svcs}'})
+    max_uses  = int(coupon.get('max_uses') or 0)
+    used      = int(coupon.get('used_count') or 0)
+    if max_uses > 0 and used >= max_uses:
+        return jsonify({'valid': False, 'message': 'This coupon has reached its usage limit.'})
 
     return jsonify({
         'valid': True,
         'discount_percent': pct,
-        'discount_text': offer.get('discount_text') or f'{pct:.0f}% OFF',
-        'title': offer.get('title'),
-        'applicable_services': app_svcs,
-        'message': f'Coupon applied! {offer.get("discount_text") or str(int(pct))+"% OFF"}'
+        'discount_text': f'{pct:.0f}% OFF',
+        'applicable_services': '',
+        'message': f'Coupon applied! {pct:.0f}% OFF your total bill'
     })
 
 

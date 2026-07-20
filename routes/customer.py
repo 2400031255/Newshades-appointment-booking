@@ -179,6 +179,25 @@ def book():
     services_str  = ', '.join(service_names)
     total_price   = sum(float(s['price'] or 0) for s in services)
 
+    # Check coupon code submitted with form
+    coupon_code_input = (request.form.get('coupon_code') or '').strip().upper()
+    coupon_discount   = 0.0
+    coupon_applied    = None
+    if coupon_code_input:
+        today_str2 = preferred_date_str
+        coupon_row = query(
+            "SELECT * FROM coupons WHERE UPPER(code)=%s AND is_active=1 "
+            "AND (valid_until IS NULL OR valid_until >= %s)",
+            (coupon_code_input, today_str2), one=True
+        )
+        if coupon_row:
+            pct = float(coupon_row.get('discount_percent') or 0)
+            max_uses = int(coupon_row.get('max_uses') or 0)
+            used     = int(coupon_row.get('used_count') or 0)
+            if pct and (max_uses == 0 or used < max_uses):
+                coupon_discount = round(total_price * pct / 100, 2)
+                coupon_applied  = coupon_row
+
     active_offers = query(
         "SELECT * FROM offers WHERE is_active=1 "
         "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
@@ -188,15 +207,23 @@ def book():
 
     discount_amount = 0.0
     applied_offer   = None
-    for svc in services:
-        matched = offer_map.get(svc['service_name'].lower()) or global_offer
-        if matched:
-            applied_offer    = matched
-            discount_amount += float(svc['price'] or 0) * _safe_pct(matched['discount_percent']) / 100
+    if not coupon_applied:  # only auto-apply offer if no coupon used
+        for svc in services:
+            matched = offer_map.get(svc['service_name'].lower()) or global_offer
+            if matched:
+                applied_offer    = matched
+                discount_amount += float(svc['price'] or 0) * _safe_pct(matched['discount_percent']) / 100
 
-    discount_amount  = round(discount_amount, 2)
-    discount_percent = _safe_pct(applied_offer['discount_percent']) if applied_offer else 0.0
-    final_price      = round(total_price - discount_amount, 2)
+    if coupon_applied:
+        discount_amount  = coupon_discount
+        discount_percent = float(coupon_applied['discount_percent'])
+        offer_label      = f'Coupon: {coupon_code_input}'
+    else:
+        discount_amount  = round(discount_amount, 2)
+        discount_percent = _safe_pct(applied_offer['discount_percent']) if applied_offer else 0.0
+        offer_label      = applied_offer['title'] if applied_offer else ''
+
+    final_price = round(total_price - discount_amount, 2)
 
     try:
         formatted_date = booking_date.strftime('%d %b %Y')
@@ -207,8 +234,10 @@ def book():
         "INSERT INTO appointments (user_id, selected_services, preferred_date, preferred_time, "
         "total_price, discount_percent, offer_applied) VALUES (%s,%s,%s,%s,%s,%s,%s)",
         (session['user_id'], services_str, preferred_date_str, preferred_time or None,
-         final_price, discount_percent, applied_offer['title'] if applied_offer else '')
+         final_price, discount_percent, offer_label)
     )
+    if coupon_applied:
+        execute("UPDATE coupons SET used_count=used_count+1 WHERE id=%s", (coupon_applied['id'],))
 
     try:
         admin_phone = current_app.config.get('ADMIN_PHONE', '')
@@ -237,7 +266,7 @@ def book():
         user=user, service_names=service_names,
         preferred_date=formatted_date, preferred_time=preferred_time,
         total_price=total_price, discount_amount=discount_amount,
-        final_price=final_price, applied_offer=applied_offer)
+        final_price=final_price, applied_offer=coupon_applied or applied_offer)
 
 
 # ── Ticket ────────────────────────────────────────────────────────────────────

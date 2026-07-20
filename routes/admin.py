@@ -574,10 +574,11 @@ def offers():
     from datetime import date as _date
     all_offers = query("SELECT * FROM offers ORDER BY created_at DESC")
     all_services = query("SELECT id, service_name, price, category FROM services WHERE is_active=1 ORDER BY category, service_name")
+    all_coupons = query("SELECT * FROM coupons ORDER BY created_at DESC")
     today_str = _date.today().isoformat()
     upcoming_offers = [o for o in all_offers if o.get('valid_from') and str(o['valid_from'])[:10] > today_str]
     return render_template('admin/offers.html', offers=all_offers, all_services=all_services,
-                           now_date=today_str, upcoming_offers=upcoming_offers)
+                           all_coupons=all_coupons, now_date=today_str, upcoming_offers=upcoming_offers)
 
 @admin.route('/offers/save', methods=['POST'])
 @admin_required
@@ -646,4 +647,55 @@ def save_offer():
 def delete_offer(oid):
     execute("DELETE FROM offers WHERE id=%s", (oid,))
     flash('Offer deleted.', 'success')
+    return redirect(url_for('admin.offers'))
+
+
+# ── Coupons ───────────────────────────────────────────────────────────────────
+@admin.route('/coupons/save', methods=['POST'])
+@admin_required
+def save_coupon():
+    code             = request.form.get('code', '').strip().upper()[:30]
+    discount_percent = request.form.get('discount_percent', '0').strip() or '0'
+    max_uses         = request.form.get('max_uses', '0').strip() or '0'
+    valid_until      = request.form.get('valid_until', '').strip() or None
+    is_active        = 1 if request.form.get('is_active') else 0
+
+    if not code:
+        flash('Coupon code is required.', 'danger')
+        return redirect(url_for('admin.offers'))
+    try:
+        discount_percent = float(discount_percent)
+        if not (0 < discount_percent <= 100):
+            raise ValueError
+    except (ValueError, TypeError):
+        flash('Discount % must be between 1 and 100.', 'danger')
+        return redirect(url_for('admin.offers'))
+    try:
+        max_uses = int(max_uses)
+        if max_uses < 0:
+            raise ValueError
+    except (ValueError, TypeError):
+        max_uses = 0
+
+    existing = query("SELECT id FROM coupons WHERE UPPER(code)=%s", (code,), one=True)
+    if existing:
+        execute(
+            "UPDATE coupons SET discount_percent=%s, max_uses=%s, valid_until=%s, is_active=%s WHERE UPPER(code)=%s",
+            (discount_percent, max_uses, valid_until, is_active, code)
+        )
+        flash(f'Coupon {code} updated.', 'success')
+    else:
+        execute(
+            "INSERT INTO coupons (code, discount_percent, max_uses, valid_until, is_active) VALUES (%s,%s,%s,%s,%s)",
+            (code, discount_percent, max_uses, valid_until, is_active)
+        )
+        flash(f'Coupon {code} created.', 'success')
+    return redirect(url_for('admin.offers'))
+
+
+@admin.route('/coupons/delete/<int:cid>', methods=['POST'])
+@admin_required
+def delete_coupon(cid):
+    execute("DELETE FROM coupons WHERE id=%s", (cid,))
+    flash('Coupon deleted.', 'success')
     return redirect(url_for('admin.offers'))

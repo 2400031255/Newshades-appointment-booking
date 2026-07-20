@@ -630,6 +630,204 @@ textarea.of-input { resize: vertical; min-height: 80px; }
   letter-spacing: 0.1em;
   font-family: monospace;
 }
+
+/* ── Coupon Manager Panel ── */
+.cpn-panel {
+  border-radius: 20px;
+  padding: 22px;
+  background: linear-gradient(145deg, rgba(201,168,76,0.08), rgba(255,255,255,0.03));
+  border: 1.5px solid rgba(201,168,76,0.25);
+  position: sticky;
+  top: 90px;
+}
+.cpn-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.cpn-panel-icon {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.cpn-panel-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.cpn-panel-sub   { font-size: 0.72rem; color: rgba(240,230,211,0.4); }
+.cpn-field { margin-bottom: 14px; }
+.cpn-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240,230,211,0.45);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.cpn-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 0.86rem;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cpn-input:focus {
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.cpn-input::placeholder { color: rgba(255,255,255,0.2); }
+.cpn-code-wrap {
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(201,168,76,0.3);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cpn-code-wrap:focus-within {
+  border-color: rgba(201,168,76,0.6);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.cpn-code-icon { padding: 0 8px 0 12px; color: var(--gold); font-size: 0.75rem; flex-shrink: 0; }
+.cpn-code-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 9px 6px 9px 0;
+  font-family: 'DM Sans', monospace;
+}
+.cpn-code-input::placeholder { color: rgba(255,255,255,0.2); font-weight:400; letter-spacing:0.04em; text-transform:none; }
+.cpn-gen-btn {
+  padding: 0 12px;
+  align-self: stretch;
+  background: rgba(201,168,76,0.1);
+  border: none;
+  border-left: 1px solid rgba(201,168,76,0.2);
+  color: var(--gold-2);
+  cursor: pointer;
+  font-size: 0.78rem;
+  display: grid; place-items: center;
+  transition: background 0.2s;
+}
+.cpn-gen-btn:hover { background: rgba(201,168,76,0.2); }
+.cpn-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 14px;
+}
+.cpn-submit-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-weight: 800;
+  font-size: 0.88rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cpn-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(201,168,76,0.35); }
+
+/* Coupon list */
+.cpn-list-card {
+  border-radius: 20px;
+  padding: 22px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(201,168,76,0.14);
+}
+.cpn-list-head {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.cpn-list-title { font-size: 1rem; font-weight: 700; color: #fff; }
+.cpn-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(201,168,76,0.15);
+  transition: border-color 0.2s;
+  flex-wrap: wrap;
+}
+.cpn-item:hover { border-color: rgba(201,168,76,0.3); }
+.cpn-item.cpn-dead { opacity: 0.45; filter: grayscale(0.4); }
+.cpn-item-code {
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--gold-2);
+  letter-spacing: 0.1em;
+  min-width: 90px;
+}
+.cpn-item-pct {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.25);
+  color: var(--gold-2);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.cpn-item-uses { font-size: 0.75rem; color: rgba(240,230,211,0.45); }
+.cpn-uses-warn { color: #ffc107; }
+.cpn-item-expiry { font-size: 0.72rem; color: rgba(240,230,211,0.4); flex: 1; }
+.cpn-badge-live {
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.25);
+  color: #7ce0aa; font-size: 0.65rem; font-weight: 700;
+}
+.cpn-badge-off {
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,99,99,0.08); border: 1px solid rgba(255,99,99,0.2);
+  color: #ff8a8a; font-size: 0.65rem; font-weight: 700;
+}
+.cpn-badge-exp {
+  padding: 2px 8px; border-radius: 999px;
+  background: rgba(255,193,7,0.08); border: 1px solid rgba(255,193,7,0.2);
+  color: #ffc107; font-size: 0.65rem; font-weight: 700;
+}
+.cpn-del-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  background: rgba(255,99,99,0.06);
+  border: 1px solid rgba(255,99,99,0.15);
+  color: rgba(255,99,99,0.5);
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.cpn-del-btn:hover { background: rgba(255,99,99,0.15); color: #ff6b6b; border-color: rgba(255,99,99,0.35); }
 </style>
 
 <!-- Page Header -->
@@ -881,6 +1079,112 @@ textarea.of-input { resize: vertical; min-height: 80px; }
   </div>
 
 </div>
+
+<!-- ── Coupon Manager ── -->
+<div class="row g-4 mt-2">
+  <div class="col-lg-4">
+    <div class="cpn-panel">
+      <div class="cpn-panel-head">
+        <div class="cpn-panel-icon"><i class="fas fa-ticket-alt"></i></div>
+        <div>
+          <div class="cpn-panel-title">Coupon Manager</div>
+          <div class="cpn-panel-sub">Create discount codes for customers</div>
+        </div>
+      </div>
+      <form method="POST" action="{{ url_for('admin.save_coupon') }}" id="couponForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="cpn-field">
+          <label class="cpn-label">Coupon Code *</label>
+          <div class="cpn-code-wrap">
+            <i class="fas fa-hashtag cpn-code-icon"></i>
+            <input type="text" name="code" id="cpnCode" class="cpn-code-input"
+              placeholder="e.g. SAVE20" maxlength="30" required
+              oninput="this.value=this.value.toUpperCase()" autocomplete="off">
+            <button type="button" class="cpn-gen-btn" onclick="genCpnCode()" title="Generate">
+              <i class="fas fa-magic"></i>
+            </button>
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="cpn-field">
+              <label class="cpn-label">Discount %</label>
+              <input type="number" name="discount_percent" class="cpn-input"
+                placeholder="e.g. 20" min="1" max="100" step="0.01" required>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="cpn-field">
+              <label class="cpn-label">Max Uses <span style="color:rgba(240,230,211,0.35);font-size:0.68rem;">(0=unlimited)</span></label>
+              <input type="number" name="max_uses" class="cpn-input" placeholder="0" min="0" value="0">
+            </div>
+          </div>
+        </div>
+        <div class="cpn-field">
+          <label class="cpn-label">Expires On <span style="color:rgba(240,230,211,0.35);font-size:0.68rem;">(optional)</span></label>
+          <input type="date" name="valid_until" class="cpn-input">
+        </div>
+        <div class="cpn-toggle-row">
+          <span style="font-size:0.82rem;color:rgba(240,230,211,0.7);font-weight:600;"><i class="fas fa-eye me-2" style="color:var(--gold);opacity:0.7;"></i>Active</span>
+          <label class="of-toggle-switch">
+            <input type="checkbox" name="is_active" checked>
+            <span class="of-toggle-slider"></span>
+          </label>
+        </div>
+        <button type="submit" class="cpn-submit-btn">
+          <i class="fas fa-plus-circle me-2"></i>Create Coupon
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="cpn-list-card">
+      <div class="cpn-list-head">
+        <div class="cpn-list-title"><i class="fas fa-ticket-alt me-2" style="color:var(--gold);"></i>Active Coupons <span style="color:var(--gold);">({{ all_coupons|length }})</span></div>
+      </div>
+      {% if all_coupons %}
+      <div class="d-flex flex-column gap-2" id="couponsList">
+        {% for c in all_coupons %}
+        {% set is_expired = c.valid_until and c.valid_until < now_date %}
+        {% set is_maxed = c.max_uses and c.max_uses > 0 and c.used_count >= c.max_uses %}
+        <div class="cpn-item {{ 'cpn-dead' if not c.is_active or is_expired or is_maxed }}">
+          <div class="cpn-item-code">{{ c.code }}</div>
+          <div class="cpn-item-pct">{{ c.discount_percent|int }}% OFF</div>
+          <div class="cpn-item-uses">
+            {% if c.max_uses and c.max_uses > 0 %}
+              <span class="{{ 'cpn-uses-warn' if c.used_count >= c.max_uses * 0.8 }}">{{ c.used_count }}/{{ c.max_uses }}</span>
+            {% else %}
+              {{ c.used_count }} used
+            {% endif %}
+          </div>
+          <div class="cpn-item-expiry">
+            {% if c.valid_until %}
+              {% if is_expired %}<span style="color:#f87171;">Expired</span>
+              {% else %}<span>Until {{ c.valid_until }}</span>{% endif %}
+            {% else %}<span style="color:rgba(240,230,211,0.35);">No expiry</span>{% endif %}
+          </div>
+          <div class="cpn-item-status">
+            {% if not c.is_active %}<span class="cpn-badge-off">Off</span>
+            {% elif is_expired or is_maxed %}<span class="cpn-badge-exp">Done</span>
+            {% else %}<span class="cpn-badge-live">Live</span>{% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('admin.delete_coupon', cid=c.id) }}" onsubmit="return confirm('Delete coupon {{ c.code }}?')" style="margin:0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="cpn-del-btn" title="Delete"><i class="fas fa-trash"></i></button>
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:40px 20px;color:rgba(240,230,211,0.35);">
+        <i class="fas fa-ticket-alt" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+        No coupons yet. Create your first one.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -1008,7 +1312,16 @@ function generateCoupon() {
   inp.value = code;
   onCouponInput(inp);
   inp.focus();
-  // flash animation
+  inp.style.color = 'var(--gold-2)';
+  setTimeout(() => inp.style.color = '', 800);
+}
+
+function genCpnCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  const inp = document.getElementById('cpnCode');
+  inp.value = code;
   inp.style.color = 'var(--gold-2)';
   setTimeout(() => inp.style.color = '', 800);
 }

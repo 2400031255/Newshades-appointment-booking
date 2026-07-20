@@ -109,6 +109,16 @@ def _init_sqlite_schema(conn):
             is_active INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS coupons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT NOT NULL UNIQUE,
+            discount_percent REAL NOT NULL DEFAULT 0,
+            max_uses INTEGER DEFAULT 0,
+            used_count INTEGER DEFAULT 0,
+            valid_until DATE,
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     params = _seed_admin_params()
     conn.execute(
@@ -217,6 +227,16 @@ def _init_pg_schema(conn):
             is_active SMALLINT DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS coupons (
+            id SERIAL PRIMARY KEY,
+            code VARCHAR(50) NOT NULL UNIQUE,
+            discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0,
+            max_uses INTEGER DEFAULT 0,
+            used_count INTEGER DEFAULT 0,
+            valid_until DATE,
+            is_active SMALLINT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     params = _seed_admin_params()
     cur.execute("""
@@ -313,6 +333,17 @@ def _init_mysql_schema(conn):
             valid_until DATE,
             is_active TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS coupons (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            code VARCHAR(50) NOT NULL,
+            discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0,
+            max_uses INT DEFAULT 0,
+            used_count INT DEFAULT 0,
+            valid_until DATE,
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY uq_coupon_code (code)
         ) CHARACTER SET utf8mb4""",
     ]
     for stmt in stmts:
