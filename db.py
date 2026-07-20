@@ -4,10 +4,11 @@ import sqlite3
 import pymysql
 from flask import g, current_app
 
-# ── Seed data (no hardcoded credentials) ─────────────────────────────────────
+_schema_initialized = False
+
+# ── Seed data ─────────────────────────────────────────────────────────────────
 
 def _seed_admin_params():
-    """Return admin seed params from env or safe defaults (no real password hardcoded)."""
     return (
         os.environ.get('SEED_ADMIN_NAME',     'Admin'),
         os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
@@ -206,12 +207,8 @@ def _init_pg_schema(conn):
     cur.execute("""
         INSERT INTO users (full_name, username, phone, email, password_hash, is_admin)
         VALUES (%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (username) DO NOTHING
-    """, (*params, 1))
-    # Also update any existing admin user to use the seeded credentials
-    cur.execute("""
-        UPDATE users SET username=%s, password_hash=%s WHERE is_admin=1
-    """, (params[1], params[4]))
+        ON CONFLICT (email) DO UPDATE SET username=%s, password_hash=%s
+    """, (*params, 1, params[1], params[4]))
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
@@ -327,8 +324,9 @@ def _init_mysql_schema(conn):
 
     params = _seed_admin_params()
     cur.execute(
-        "INSERT IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s)",
-        (*params, 1)
+        "INSERT INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s) "
+        "ON DUPLICATE KEY UPDATE username=%s, password_hash=%s",
+        (*params, 1, params[1], params[4])
     )
     # Also update any existing admin user to use the seeded credentials
     cur.execute(
@@ -361,6 +359,7 @@ def _connect_sqlite():
 
 
 def get_db():
+    global _schema_initialized
     if 'db' not in g:
         cfg    = current_app.config
         db_url = cfg.get('DATABASE_URL', '')
@@ -372,11 +371,14 @@ def get_db():
                 import psycopg2.extras
                 if db_url.startswith('postgres://'):
                     db_url = db_url.replace('postgres://', 'postgresql://', 1)
-                g.db = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor,
+                conn = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor,
                                         connect_timeout=10)
-                g.db.autocommit = False
+                conn.autocommit = False
+                g.db = conn
                 g.db_backend = 'postgres'
-                _init_pg_schema(g.db)
+                if not _schema_initialized:
+                    _init_pg_schema(conn)
+                    _schema_initialized = True
                 return g.db
             except Exception as e:
                 current_app.logger.warning('PostgreSQL connection failed: %s', e)
@@ -392,7 +394,9 @@ def get_db():
                 autocommit=True,
                 connect_timeout=5,
             )
-            _init_mysql_schema(conn)
+            if not _schema_initialized:
+                _init_mysql_schema(conn)
+                _schema_initialized = True
             g.db = conn
             g.db_backend = 'mysql'
             return g.db
@@ -404,7 +408,6 @@ def get_db():
         g.db_backend = 'sqlite'
 
     else:
-        # Health-check existing connection
         backend = g.get('db_backend')
         if backend == 'postgres':
             try:
@@ -440,8 +443,9 @@ def close_db(e=None):
 
 def _normalize_sql(sql):
     sql = sql.replace('%s', '?')
-    sql = re.sub(r'ON DUPLICATE KEY UPDATE\s+\S+\s*=\s*\?', '', sql)
-    sql = re.sub(r'\bINSERT INTO\b', 'INSERT OR IGNORE INTO', sql)
+    # Convert INSERT ... ON DUPLICATE KEY UPDATE to INSERT OR REPLACE for SQLite
+    sql = re.sub(r'\s+ON DUPLICATE KEY UPDATE.+', '', sql, flags=re.IGNORECASE | re.DOTALL)
+    sql = re.sub(r'\bINSERT\s+INTO\b', 'INSERT OR IGNORE INTO', sql, flags=re.IGNORECASE)
     sql = re.sub(r'`(\w+)`', r'\1', sql)
     return sql
 
@@ -487,16 +491,17 @@ def execute(sql, args=()):
         sql = re.sub(r'`(\w+)`', r'"\1"', sql)
         sql = _pg_upsert(sql)
         cur = conn.cursor()
-        if sql.strip().upper().startswith('INSERT'):
-            cur.execute(sql + ' RETURNING id', args)
-            row = cur.fetchone()
-            conn.commit()
-            cur.close()
-            return row['id'] if row else None
         cur.execute(sql, args)
+        last_id = None
+        if sql.strip().upper().startswith('INSERT'):
+            try:
+                row = cur.fetchone()
+                last_id = row['id'] if row else None
+            except Exception:
+                pass
         conn.commit()
         cur.close()
-        return None
+        return last_id
 
     # MySQL
     cur     = conn.cursor()
