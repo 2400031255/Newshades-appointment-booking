@@ -36,6 +36,18 @@ def create_app():
         response.headers['X-XSS-Protection']        = '1; mode=block'
         response.headers['Referrer-Policy']          = 'strict-origin-when-cross-origin'
         response.headers['Permissions-Policy']       = 'geolocation=(), microphone=(), camera=()'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
+            "https://cdn.socket.io https://unpkg.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com "
+            "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: blob:; "
+            "connect-src 'self' wss: ws:; "
+            "frame-ancestors 'self';"
+        )
         return response
 
     @app.before_request
@@ -105,6 +117,7 @@ def create_app():
             pending_appts=pending_appts,
             today_offers=today_offers,
             now_date=_dt.date.today().isoformat(),
+            asset_v=current_app.config.get('APP_VERSION', '1'),
             shop={
                 'name':           get_setting('shop_name', 'New Shades'),
                 'phone':          get_setting('shop_phone', ''),

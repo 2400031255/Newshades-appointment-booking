@@ -1,11 +1,24 @@
 import os
 import secrets
+import subprocess
 from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
+try:
+    _git_hash = subprocess.check_output(
+        ['git', 'rev-parse', '--short', 'HEAD'],
+        stderr=subprocess.DEVNULL
+    ).decode().strip()
+except Exception:
+    _git_hash = '1'
+
+
 class Config:
+    # Static asset version — stable git hash, not random (prevents cache miss every load)
+    APP_VERSION = _git_hash
+
     # Secret key — must be set via env in production
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 

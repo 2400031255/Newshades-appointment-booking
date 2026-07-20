@@ -4,7 +4,8 @@ import sqlite3
 import pymysql
 from flask import g, current_app
 
-_schema_initialized = False
+_schema_initialized = set()  # tracks which backends have been initialized
+_backend_unavailable = set()  # tracks permanently failed backends this process lifetime
 
 # ── Seed data ─────────────────────────────────────────────────────────────────
 
@@ -121,6 +122,20 @@ def _init_sqlite_schema(conn):
         )
     conn.commit()
 
+    # Migrate existing appointments table if columns are missing
+    existing_cols = {row[1] for row in conn.execute('PRAGMA table_info(appointments)')}
+    migrations = [
+        ('ticket_id',         'ALTER TABLE appointments ADD COLUMN ticket_id TEXT'),
+        ('ticket_expires_at', 'ALTER TABLE appointments ADD COLUMN ticket_expires_at TEXT'),
+        ('total_price',       'ALTER TABLE appointments ADD COLUMN total_price REAL DEFAULT 0'),
+        ('discount_percent',  'ALTER TABLE appointments ADD COLUMN discount_percent REAL DEFAULT 0'),
+        ('offer_applied',     'ALTER TABLE appointments ADD COLUMN offer_applied TEXT DEFAULT ""'),
+    ]
+    for col, stmt in migrations:
+        if col not in existing_cols:
+            conn.execute(stmt)
+    conn.commit()
+
 
 def _init_pg_schema(conn):
     cur = conn.cursor()
@@ -207,8 +222,8 @@ def _init_pg_schema(conn):
     cur.execute("""
         INSERT INTO users (full_name, username, phone, email, password_hash, is_admin)
         VALUES (%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (email) DO UPDATE SET username=%s, password_hash=%s
-    """, (*params, 1, params[1], params[4]))
+        ON CONFLICT (email) DO NOTHING
+    """, (*params, 1))
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
@@ -325,13 +340,8 @@ def _init_mysql_schema(conn):
     params = _seed_admin_params()
     cur.execute(
         "INSERT INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s) "
-        "ON DUPLICATE KEY UPDATE username=%s, password_hash=%s",
-        (*params, 1, params[1], params[4])
-    )
-    # Also update any existing admin user to use the seeded credentials
-    cur.execute(
-        "UPDATE users SET username=%s, password_hash=%s WHERE is_admin=1",
-        (params[1], params[4])
+        "ON DUPLICATE KEY UPDATE is_admin=1",
+        (*params, 1)
     )
     cur.execute("SELECT COUNT(*) as c FROM services")
     if cur.fetchone()['c'] == 0:
@@ -359,13 +369,13 @@ def _connect_sqlite():
 
 
 def get_db():
-    global _schema_initialized
+    global _schema_initialized, _backend_unavailable
     if 'db' not in g:
         cfg    = current_app.config
         db_url = cfg.get('DATABASE_URL', '')
 
         # 1. PostgreSQL (Render / production)
-        if db_url:
+        if db_url and 'postgres' not in _backend_unavailable:
             try:
                 import psycopg2
                 import psycopg2.extras
@@ -376,32 +386,35 @@ def get_db():
                 conn.autocommit = False
                 g.db = conn
                 g.db_backend = 'postgres'
-                if not _schema_initialized:
+                if 'postgres' not in _schema_initialized:
                     _init_pg_schema(conn)
-                    _schema_initialized = True
+                    _schema_initialized.add('postgres')
                 return g.db
             except Exception as e:
                 current_app.logger.warning('PostgreSQL connection failed: %s', e)
+                _backend_unavailable.add('postgres')
 
         # 2. MySQL (local dev)
-        try:
-            conn = pymysql.connect(
-                host=cfg['MYSQL_HOST'],
-                user=cfg['MYSQL_USER'],
-                password=cfg['MYSQL_PASSWORD'],
-                database=cfg['MYSQL_DB'],
-                cursorclass=pymysql.cursors.DictCursor,
-                autocommit=True,
-                connect_timeout=5,
-            )
-            if not _schema_initialized:
-                _init_mysql_schema(conn)
-                _schema_initialized = True
-            g.db = conn
-            g.db_backend = 'mysql'
-            return g.db
-        except Exception as e:
-            current_app.logger.warning('MySQL connection failed: %s', e)
+        if 'mysql' not in _backend_unavailable:
+            try:
+                conn = pymysql.connect(
+                    host=cfg['MYSQL_HOST'],
+                    user=cfg['MYSQL_USER'],
+                    password=cfg['MYSQL_PASSWORD'],
+                    database=cfg['MYSQL_DB'],
+                    cursorclass=pymysql.cursors.DictCursor,
+                    autocommit=True,
+                    connect_timeout=5,
+                )
+                if 'mysql' not in _schema_initialized:
+                    _init_mysql_schema(conn)
+                    _schema_initialized.add('mysql')
+                g.db = conn
+                g.db_backend = 'mysql'
+                return g.db
+            except Exception as e:
+                current_app.logger.warning('MySQL connection failed: %s', e)
+                _backend_unavailable.add('mysql')
 
         # 3. SQLite fallback
         g.db = _connect_sqlite()
@@ -488,17 +501,19 @@ def execute(sql, args=()):
         return cur.lastrowid
 
     if backend == 'postgres':
-        sql = re.sub(r'`(\w+)`', r'"\1"', sql)
-        sql = _pg_upsert(sql)
+        sql_clean = re.sub(r'`(\w+)`', r'"\1"', sql)
+        sql_clean = _pg_upsert(sql_clean)
         cur = conn.cursor()
-        cur.execute(sql, args)
+        _NO_ID_TABLES = re.compile(r'INSERT\s+INTO\s+"?(settings|salon_config)"?', re.IGNORECASE)
+        is_insert = sql_clean.strip().upper().startswith('INSERT')
+        has_id = is_insert and not _NO_ID_TABLES.search(sql_clean)
+        if has_id and 'RETURNING' not in sql_clean.upper():
+            sql_clean += ' RETURNING id'
+        cur.execute(sql_clean, args)
         last_id = None
-        if sql.strip().upper().startswith('INSERT'):
-            try:
-                row = cur.fetchone()
-                last_id = row['id'] if row else None
-            except Exception:
-                pass
+        if has_id:
+            row = cur.fetchone()
+            last_id = row['id'] if row else None
         conn.commit()
         cur.close()
         return last_id
@@ -523,6 +538,9 @@ def _pg_upsert(sql):
     cols    = [c.strip().strip('`"') for c in m.group(2).split(',')]
     vals    = m.group(3)
     updates = m.group(4).strip()
+    # Determine conflict column — key-based tables use 'key', others use first col
+    _PK_MAP = {'settings': 'key', 'salon_config': 'key', 'users': 'email', 'offers': 'id'}
+    pk = _PK_MAP.get(table, cols[0])
     set_parts = []
     for part in re.split(r',\s*(?=\w)', updates):
         col_match = re.match(r'`?(\w+)`?\s*=\s*(.+)', part.strip())
@@ -531,5 +549,5 @@ def _pg_upsert(sql):
     cols_quoted = ', '.join(f'"{c}"' for c in cols)
     return (
         f'INSERT INTO "{table}" ({cols_quoted}) VALUES ({vals}) '
-        f'ON CONFLICT ("{cols[0]}") DO UPDATE SET {", ".join(set_parts)}'
+        f'ON CONFLICT ("{pk}") DO UPDATE SET {", ".join(set_parts)}'
     )

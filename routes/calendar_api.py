@@ -6,6 +6,9 @@ from datetime import date, datetime, timedelta
 from flask import Blueprint, jsonify, request, session
 from functools import wraps
 from db import query, execute
+from collections import defaultdict
+import threading
+import time
 
 try:
     from flask_wtf.csrf import exempt as csrf_exempt
@@ -13,6 +16,20 @@ except ImportError:
     csrf_exempt = None
 
 cal_api = Blueprint('cal_api', __name__, url_prefix='/api/calendar')
+
+# ── Rate limiting for public endpoints ───────────────────────────────────────
+_coupon_attempts = defaultdict(list)
+_coupon_lock     = threading.Lock()
+
+def _coupon_rate_limited(ip):
+    now = time.time()
+    with _coupon_lock:
+        attempts = [t for t in _coupon_attempts[ip] if now - t < 300]
+        _coupon_attempts[ip] = attempts
+        if len(attempts) >= 10:
+            return True
+        _coupon_attempts[ip].append(now)
+    return False
 
 # ── Salon schedule constants ──────────────────────────────────────────────────
 # Default slots — overridable via salon_config keys:
@@ -342,6 +359,10 @@ def offers():
 @cal_api.route('/coupon/validate', methods=['POST'])
 def validate_coupon():
     """POST {code, date, services:[]} — returns discount info or error."""
+    ip = request.remote_addr
+    if _coupon_rate_limited(ip):
+        return jsonify({'valid': False, 'message': 'Too many attempts. Please wait.'}), 429
+
     data     = request.get_json(silent=True) or {}
     code     = (data.get('code') or '').strip().upper()
     date_str = (data.get('date') or date.today().isoformat())[:10]
@@ -396,6 +417,16 @@ def _admin_required(f):
     def decorated(*args, **kwargs):
         if not session.get('is_admin'):
             return jsonify({'error': 'unauthorized'}), 403
+        # CSRF protection for state-changing requests on the CSRF-exempt blueprint:
+        # validate that the request originates from our own origin
+        if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+            origin  = request.headers.get('Origin', '')
+            referer = request.headers.get('Referer', '')
+            host    = request.host_url.rstrip('/')
+            if origin and not origin.startswith(host):
+                return jsonify({'error': 'forbidden'}), 403
+            if not origin and referer and not referer.startswith(host):
+                return jsonify({'error': 'forbidden'}), 403
         return f(*args, **kwargs)
     return decorated
 

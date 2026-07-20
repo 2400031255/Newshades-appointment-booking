@@ -10,18 +10,22 @@ import threading
 auth   = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
 
-_login_attempts = defaultdict(list)
-_login_lock     = threading.Lock()
+_login_attempts  = defaultdict(list)
+_signup_attempts = defaultdict(list)
+_login_lock      = threading.Lock()
+
+# Dummy hash used to prevent timing attacks when user is not found
+_DUMMY_HASH = bcrypt.hashpw(b'dummy', bcrypt.gensalt()).decode()
 
 
-def _is_rate_limited(ip):
+def _is_rate_limited(ip, store, window=300, limit=10):
     now = time.time()
     with _login_lock:
-        attempts = [t for t in _login_attempts[ip] if now - t < 300]
-        _login_attempts[ip] = attempts
-        if len(attempts) >= 10:
+        attempts = [t for t in store[ip] if now - t < window]
+        store[ip] = attempts
+        if len(attempts) >= limit:
             return True
-        _login_attempts[ip].append(now)
+        store[ip].append(now)
     return False
 
 
@@ -70,6 +74,11 @@ def signup():
 
 @auth.route('/signup', methods=['POST'])
 def signup_post():
+    ip = request.remote_addr
+    if _is_rate_limited(ip, _signup_attempts, window=600, limit=5):
+        flash('Too many signup attempts. Please wait 10 minutes.', 'danger')
+        return render_template('auth/signup.html')
+
     error = _validate_signup(request.form)
     if error:
         flash(error, 'danger')
@@ -81,11 +90,12 @@ def signup_post():
     phone     = request.form.get('phone', '').strip()
     password  = request.form.get('password', '')
 
-    if query("SELECT id FROM users WHERE email=%s", (email,), one=True):
-        flash('Email already registered.', 'danger')
-        return render_template('auth/signup.html')
-    if query("SELECT id FROM users WHERE username=%s", (username,), one=True):
-        flash('Username already taken.', 'danger')
+    conflict = query(
+        "SELECT id FROM users WHERE email=%s OR username=%s", (email, username), one=True
+    )
+    if conflict:
+        # Generic message — don't reveal which field exists
+        flash('An account with those details already exists.', 'danger')
         return render_template('auth/signup.html')
 
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -107,7 +117,7 @@ def login():
 @auth.route('/login', methods=['POST'])
 def login_post():
     ip = request.remote_addr
-    if _is_rate_limited(ip):
+    if _is_rate_limited(ip, _login_attempts, window=300, limit=10):
         flash('Too many login attempts. Please wait 5 minutes.', 'danger')
         return render_template('auth/login.html')
 
@@ -123,7 +133,11 @@ def login_post():
 
     user = query("SELECT * FROM users WHERE email=%s OR username=%s", (identifier, identifier), one=True)
 
-    if user and bcrypt.checkpw(password.encode(), user['password_hash'].encode()):
+    # Always run bcrypt to prevent timing-based username enumeration
+    stored_hash = user['password_hash'].encode() if user else _DUMMY_HASH.encode()
+    password_ok = bcrypt.checkpw(password.encode(), stored_hash)
+
+    if user and password_ok:
         session.clear()
         session.permanent = True
         session['user_id']   = user['id']
