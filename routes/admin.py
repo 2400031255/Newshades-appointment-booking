@@ -573,7 +573,7 @@ def unblock_date():
 def offers():
     from datetime import date as _date
     all_offers = query("SELECT * FROM offers ORDER BY created_at DESC")
-    all_services = query("SELECT id, service_name, price FROM services WHERE is_active=1 ORDER BY category, service_name")
+    all_services = query("SELECT id, service_name, price, category FROM services WHERE is_active=1 ORDER BY category, service_name")
     today_str = _date.today().isoformat()
     upcoming_offers = [o for o in all_offers if o.get('valid_from') and str(o['valid_from'])[:10] > today_str]
     return render_template('admin/offers.html', offers=all_offers, all_services=all_services,

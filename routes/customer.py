@@ -39,9 +39,12 @@ def _safe_pct(val):
 
 
 def _build_offer_map(active_offers):
+    """Only includes offers with blank coupon_code (auto-apply). Coupon-gated offers are skipped."""
     offer_map, global_offer = {}, None
     for o in active_offers:
         if not _safe_pct(o.get('discount_percent')):
+            continue
+        if (o.get('coupon_code') or '').strip():  # skip coupon-gated offers
             continue
         app_svcs = (o.get('applicable_services') or '').strip()
         if not app_svcs:
