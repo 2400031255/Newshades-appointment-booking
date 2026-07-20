@@ -614,6 +614,170 @@
   color: rgba(240,230,211,0.55);
   font-size: 0.76rem;
 }
+
+/* ── Coupon Box ── */
+.coupon-box {
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.07) 0%, rgba(255,255,255,0.03) 100%);
+  border: 1.5px solid rgba(201,168,76,0.25);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.coupon-box::after {
+  content: '';
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 70%);
+  pointer-events: none;
+}
+.coupon-box-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.coupon-box-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.coupon-box-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+}
+.coupon-box-sub {
+  font-size: 0.7rem;
+  color: rgba(240,230,211,0.4);
+}
+.coupon-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.coupon-field-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(201,168,76,0.22);
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.coupon-field-wrap:focus-within {
+  border-color: rgba(201,168,76,0.6);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+}
+.coupon-field-icon {
+  padding: 0 10px 0 13px;
+  color: var(--gold);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+.coupon-field {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 11px 10px 11px 0;
+  font-family: 'DM Sans', sans-serif;
+}
+.coupon-field::placeholder {
+  color: rgba(255,255,255,0.2);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.coupon-apply-btn {
+  padding: 11px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-weight: 800;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
+}
+.coupon-apply-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.35); }
+.coupon-apply-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.coupon-applied-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(37,211,102,0.07);
+  border: 1px solid rgba(37,211,102,0.2);
+  animation: couponIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes couponIn {
+  from { opacity:0; transform: scale(0.95) translateY(4px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.coupon-applied-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(37,211,102,0.12);
+  border: 1px dashed rgba(37,211,102,0.4);
+  color: #7ce0aa;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  font-family: monospace;
+}
+.coupon-applied-desc {
+  flex: 1;
+  font-size: 0.78rem;
+  color: #7ce0aa;
+  font-weight: 600;
+}
+.coupon-remove-btn {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #f87171;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.coupon-remove-btn:hover { background: rgba(239,68,68,0.18); }
+.coupon-msg {
+  margin-top: 8px;
+  font-size: 0.76rem;
+  padding: 7px 10px;
+  border-radius: 8px;
+}
+.coupon-msg.ok  { background: rgba(37,211,102,0.07); color: #7ce0aa; border: 1px solid rgba(37,211,102,0.2); }
+.coupon-msg.err { background: rgba(239,68,68,0.07);  color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
 </style>
 {% endblock %}
 
@@ -867,26 +1031,36 @@
             </div>
 
             <!-- Coupon code -->
-            <div class="glass-card mb-3" style="padding:18px 20px;">
-              <div style="font-size:0.78rem;font-weight:700;color:var(--gold-2);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;">
-                <i class="fas fa-ticket-alt me-2"></i>Have a Coupon Code?
-              </div>
-              <div class="d-flex gap-2">
-                <div style="position:relative;flex:1;">
-                  <i class="fas fa-tag" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold-2);font-size:0.8rem;"></i>
-                  <input type="text" id="couponInput" name="coupon_code"
-                    style="width:100%;padding:10px 12px 10px 34px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;outline:none;text-transform:uppercase;letter-spacing:0.08em;"
-                    placeholder="ENTER CODE" autocomplete="off" maxlength="30"/>
+            <div class="coupon-box mb-3">
+              <div class="coupon-box-header">
+                <div class="coupon-box-icon"><i class="fas fa-ticket-alt"></i></div>
+                <div>
+                  <div class="coupon-box-title">Have a Coupon Code?</div>
+                  <div class="coupon-box-sub">Enter your code to unlock a discount</div>
                 </div>
-                <button type="button" id="couponApplyBtn"
-                  style="padding:10px 18px;border-radius:12px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:800;font-size:0.82rem;border:none;cursor:pointer;white-space:nowrap;transition:all 0.2s;">
-                  Apply
-                </button>
-                <button type="button" id="couponRemoveBtn" style="display:none;padding:10px 14px;border-radius:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:#f87171;font-size:0.82rem;cursor:pointer;">
-                  <i class="fas fa-times"></i>
+              </div>
+              <div class="coupon-input-row" id="couponInputRow">
+                <div class="coupon-field-wrap">
+                  <i class="fas fa-hashtag coupon-field-icon"></i>
+                  <input type="text" id="couponInput" name="coupon_code"
+                    class="coupon-field" placeholder="ENTER CODE"
+                    autocomplete="off" maxlength="30"/>
+                </div>
+                <button type="button" id="couponApplyBtn" class="coupon-apply-btn">
+                  <i class="fas fa-arrow-right"></i> Apply
                 </button>
               </div>
-              <div id="couponMsg" style="margin-top:8px;font-size:0.78rem;display:none;"></div>
+              <div class="coupon-applied-row" id="couponAppliedRow" style="display:none;">
+                <div class="coupon-applied-chip">
+                  <i class="fas fa-check-circle"></i>
+                  <span id="couponAppliedCode"></span>
+                </div>
+                <span id="couponAppliedText" class="coupon-applied-desc"></span>
+                <button type="button" id="couponRemoveBtn" class="coupon-remove-btn">
+                  <i class="fas fa-times"></i> Remove
+                </button>
+              </div>
+              <div id="couponMsg" class="coupon-msg" style="display:none;"></div>
             </div>
 
             <div class="booking-summary-bar">
@@ -1490,18 +1664,22 @@ updateSidebar();
 (function() {
   let appliedCoupon = null;
 
-  const input      = document.getElementById('couponInput');
-  const applyBtn   = document.getElementById('couponApplyBtn');
-  const removeBtn  = document.getElementById('couponRemoveBtn');
-  const msgEl      = document.getElementById('couponMsg');
-  const summaryRow = document.getElementById('couponSummaryRow');
-  const summaryTxt = document.getElementById('couponSummaryText');
+  const input       = document.getElementById('couponInput');
+  const applyBtn    = document.getElementById('couponApplyBtn');
+  const removeBtn   = document.getElementById('couponRemoveBtn');
+  const msgEl       = document.getElementById('couponMsg');
+  const inputRow    = document.getElementById('couponInputRow');
+  const appliedRow  = document.getElementById('couponAppliedRow');
+  const appliedCode = document.getElementById('couponAppliedCode');
+  const appliedText = document.getElementById('couponAppliedText');
+  const summaryRow  = document.getElementById('couponSummaryRow');
+  const summaryTxt  = document.getElementById('couponSummaryText');
   if (!input) return;
 
   function showMsg(text, ok) {
     msgEl.style.display = '';
-    msgEl.style.color   = ok ? '#7ce0aa' : '#f87171';
-    msgEl.innerHTML     = (ok ? '<i class="fas fa-check-circle me-1"></i>' : '<i class="fas fa-times-circle me-1"></i>') + text;
+    msgEl.className = 'coupon-msg ' + (ok ? 'ok' : 'err');
+    msgEl.innerHTML = (ok ? '<i class="fas fa-check-circle me-1"></i>' : '<i class="fas fa-times-circle me-1"></i>') + text;
   }
 
   function getSelectedServices() {
@@ -1519,7 +1697,8 @@ updateSidebar();
     const code = input.value.trim().toUpperCase();
     if (!code) { showMsg('Please enter a coupon code.', false); return; }
     applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    applyBtn.disabled  = true;
+    applyBtn.disabled = true;
+    msgEl.style.display = 'none';
     try {
       const res = await fetch('/api/calendar/coupon/validate', {
         method: 'POST',
@@ -1529,15 +1708,14 @@ updateSidebar();
       const data = await res.json();
       if (data.valid) {
         appliedCoupon = data;
-        input.disabled    = true;
-        applyBtn.style.display  = 'none';
-        removeBtn.style.display = '';
-        showMsg(data.message, true);
+        inputRow.style.display = 'none';
+        appliedRow.style.display = '';
+        appliedCode.textContent = code;
+        appliedText.textContent = data.discount_text || data.message;
         if (summaryRow && summaryTxt) {
           summaryTxt.textContent = `Coupon "${code}" — ${data.discount_text}`;
           summaryRow.style.display = '';
         }
-        // Apply coupon discount to all selected service cards
         document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
           const name = (card.dataset.name||'').toLowerCase();
           const origPrice = parseFloat(card.dataset.price||0);
@@ -1556,19 +1734,17 @@ updateSidebar();
     } catch(e) {
       showMsg('Could not validate coupon. Try again.', false);
     }
-    applyBtn.innerHTML = 'Apply';
-    applyBtn.disabled  = false;
+    applyBtn.innerHTML = '<i class="fas fa-arrow-right"></i> Apply';
+    applyBtn.disabled = false;
   });
 
   removeBtn.addEventListener('click', () => {
     appliedCoupon = null;
-    input.value   = '';
-    input.disabled = false;
-    applyBtn.style.display  = '';
-    removeBtn.style.display = 'none';
-    msgEl.style.display     = 'none';
+    input.value = '';
+    inputRow.style.display = '';
+    appliedRow.style.display = 'none';
+    msgEl.style.display = 'none';
     if (summaryRow) summaryRow.style.display = 'none';
-    // Reset discounts back to offer-based prices
     document.querySelectorAll('.svc-select-card, .svc-mobile-row').forEach(card => {
       card.dataset.discounted = card.dataset.price;
       card.dataset.offerPct   = 0;
@@ -1577,7 +1753,6 @@ updateSidebar();
     updateSidebar();
   });
 
-  // Allow pressing Enter in coupon field
   input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyBtn.click(); } });
 })();
 </script>
