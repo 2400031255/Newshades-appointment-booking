@@ -489,147 +489,6 @@ textarea.of-input { resize: vertical; min-height: 80px; }
 }
 .svc-selected-tag button:hover { color: #ff6b6b; }
 
-/* ── Coupon Section ── */
-.coupon-section-wrap {
-  margin-bottom: 18px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(255,255,255,0.03) 100%);
-  border: 1.5px solid rgba(201,168,76,0.28);
-  padding: 16px;
-  position: relative;
-  overflow: hidden;
-}
-.coupon-section-wrap::before {
-  content: '';
-  position: absolute;
-  right: -30px; top: -30px;
-  width: 100px; height: 100px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.15), transparent 70%);
-  pointer-events: none;
-}
-.coupon-section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-.coupon-section-icon {
-  width: 34px; height: 34px;
-  border-radius: 10px;
-  display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--gold-2), var(--gold));
-  color: #120e08;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-}
-.coupon-section-title {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.04em;
-}
-.coupon-section-sub {
-  font-size: 0.68rem;
-  color: rgba(240,230,211,0.4);
-  margin-top: 1px;
-}
-.coupon-mode-badge {
-  margin-left: auto;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: rgba(37,211,102,0.12);
-  border: 1px solid rgba(37,211,102,0.3);
-  color: #7ce0aa;
-  transition: all 0.3s ease;
-}
-.coupon-mode-badge.manual {
-  background: rgba(201,168,76,0.12);
-  border-color: rgba(201,168,76,0.35);
-  color: var(--gold-2);
-}
-.coupon-input-wrap { margin-bottom: 10px; }
-.coupon-input-inner {
-  display: flex;
-  align-items: center;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.05);
-  border: 1.5px solid rgba(201,168,76,0.25);
-  overflow: hidden;
-  transition: border-color 0.25s, box-shadow 0.25s;
-}
-.coupon-input-inner:focus-within {
-  border-color: rgba(201,168,76,0.6);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
-}
-.coupon-input-icon {
-  padding: 0 10px 0 13px;
-  color: var(--gold);
-  font-size: 0.78rem;
-  flex-shrink: 0;
-}
-.coupon-code-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  color: #fff;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 10px 0;
-  font-family: 'DM Sans', monospace;
-}
-.coupon-code-input::placeholder {
-  color: rgba(255,255,255,0.2);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: none;
-}
-.coupon-gen-btn {
-  padding: 0 13px;
-  height: 100%;
-  background: rgba(201,168,76,0.1);
-  border: none;
-  border-left: 1px solid rgba(201,168,76,0.2);
-  color: var(--gold-2);
-  cursor: pointer;
-  font-size: 0.78rem;
-  transition: background 0.2s, color 0.2s;
-  align-self: stretch;
-  display: grid; place-items: center;
-}
-.coupon-gen-btn:hover { background: rgba(201,168,76,0.2); color: #fff; }
-.coupon-mode-info {
-  font-size: 0.72rem;
-  color: rgba(240,230,211,0.45);
-  padding: 7px 10px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  line-height: 1.5;
-}
-
-/* Coupon badge on offer list item */
-.offer-coupon-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 9px;
-  border-radius: 6px;
-  background: rgba(201,168,76,0.1);
-  border: 1px dashed rgba(201,168,76,0.35);
-  color: var(--gold-2);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  font-family: monospace;
-}
 
 /* ── Coupon Manager Panel ── */
 .cpn-panel {
@@ -882,33 +741,6 @@ textarea.of-input { resize: vertical; min-height: 80px; }
           <input type="number" name="discount_percent" id="offerDiscountPct" class="of-input" placeholder="e.g. 20" min="0" max="100" step="0.01">
         </div>
 
-        <!-- ── Coupon Code Section ── -->
-        <div class="coupon-section-wrap">
-          <div class="coupon-section-header">
-            <div class="coupon-section-icon"><i class="fas fa-ticket-alt"></i></div>
-            <div>
-              <div class="coupon-section-title">Coupon Code</div>
-              <div class="coupon-section-sub">Optional — leave blank for auto-apply</div>
-            </div>
-            <div class="coupon-mode-badge" id="couponModeBadge">Auto</div>
-          </div>
-          <div class="coupon-input-wrap">
-            <div class="coupon-input-inner">
-              <i class="fas fa-hashtag coupon-input-icon"></i>
-              <input type="text" name="coupon_code" id="offerCouponCode" class="coupon-code-input"
-                placeholder="e.g. SAVE20" maxlength="30"
-                oninput="onCouponInput(this)" autocomplete="off">
-              <button type="button" class="coupon-gen-btn" onclick="generateCoupon()" title="Generate random code">
-                <i class="fas fa-magic"></i>
-              </button>
-            </div>
-          </div>
-          <div class="coupon-mode-info" id="couponModeInfo">
-            <i class="fas fa-bolt me-1" style="color:var(--gold);"></i>
-            <span id="couponModeText">Discount applies <strong>automatically</strong> — no code needed by customer.</span>
-          </div>
-        </div>
-
         <div class="of-field">
           <label class="of-label">Applicable Services <span style="color:rgba(240,230,211,0.4);font-size:0.7rem;">(leave blank = all)</span></label>
 
@@ -1020,9 +852,6 @@ textarea.of-input { resize: vertical; min-height: 80px; }
               <div class="flex-1 min-w-0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
                   <span class="offer-item-name">{{ o.title }}</span>
-                  {% if o.coupon_code %}
-                  <span class="offer-coupon-chip"><i class="fas fa-ticket-alt" style="font-size:0.6rem;"></i>{{ o.coupon_code }}</span>
-                  {% endif %}
                   {% if o.discount_text %}
                   <span class="offer-discount-tag"><i class="fas fa-bolt" style="font-size:0.65rem;"></i>{{ o.discount_text }}</span>
                   {% endif %}
@@ -1053,7 +882,7 @@ textarea.of-input { resize: vertical; min-height: 80px; }
               </div>
             </div>
             <div class="offer-actions">
-              <button onclick="editOffer({{ o.id }}, {{ o.title|tojson }}, {{ (o.description or '')|tojson }}, {{ (o.discount_text or '')|tojson }}, {{ (o.discount_percent or 0)|tojson }}, {{ (o.applicable_services or '')|tojson }}, '{{ o.valid_from or '' }}', '{{ o.valid_until or '' }}', {{ o.is_active }}, {{ (o.coupon_code or '')|tojson }})"
+              <button onclick="editOffer({{ o.id }}, {{ o.title|tojson }}, {{ (o.description or '')|tojson }}, {{ (o.discount_text or '')|tojson }}, {{ (o.discount_percent or 0)|tojson }}, {{ (o.applicable_services or '')|tojson }}, '{{ o.valid_from or '' }}', '{{ o.valid_until or '' }}', {{ o.is_active }})"
                       class="offer-action-btn" title="Edit">
                 <i class="fas fa-edit"></i>
               </button>
@@ -1253,13 +1082,12 @@ function toDisplayDate(iso) {
   return iso;
 }
 
-function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until, active, couponCode) {
+function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until, active) {
   document.getElementById('offerId').value = id;
   document.getElementById('offerTitle').value = title;
   document.getElementById('offerDesc').value = desc;
   document.getElementById('offerDiscount').value = discount;
   document.getElementById('offerDiscountPct').value = discountPct || '';
-  document.getElementById('offerCouponCode').value = couponCode || '';
   document.getElementById('offerFrom').value = toDisplayDate(from);
   document.getElementById('offerUntil').value = toDisplayDate(until);
   document.getElementById('offerActive').checked = active == 1;
@@ -1271,7 +1099,6 @@ function editOffer(id, title, desc, discount, discountPct, appSvcs, from, until,
   document.getElementById('formCardTitle').textContent = 'Edit Offer';
   document.getElementById('formBtnText').textContent = 'Update Offer';
   document.getElementById('offerFormCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  onCouponInput(document.getElementById('offerCouponCode'));
   const card = document.getElementById('offerFormCard');
   card.style.borderColor = 'rgba(201,168,76,0.5)';
   card.style.boxShadow = '0 0 0 2px rgba(201,168,76,0.15), 0 24px 60px rgba(0,0,0,0.3)';
@@ -1286,34 +1113,6 @@ function resetForm() {
   document.getElementById('formCardTitle').textContent = 'New Offer';
   document.getElementById('formBtnText').textContent = 'Create Offer';
   document.getElementById('offerActive').checked = true;
-  onCouponInput(document.getElementById('offerCouponCode'));
-}
-
-function onCouponInput(inp) {
-  const val = inp.value.trim();
-  const badge = document.getElementById('couponModeBadge');
-  const infoText = document.getElementById('couponModeText');
-  if (val) {
-    badge.textContent = 'Manual';
-    badge.classList.add('manual');
-    infoText.innerHTML = `Customers must enter <strong style="color:var(--gold-2);letter-spacing:0.08em;">${val.toUpperCase()}</strong> to unlock this discount.`;
-  } else {
-    badge.textContent = 'Auto';
-    badge.classList.remove('manual');
-    infoText.innerHTML = '<i class="fas fa-bolt me-1" style="color:var(--gold);"></i>Discount applies <strong>automatically</strong> — no code needed by customer.';
-  }
-}
-
-function generateCoupon() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  const inp = document.getElementById('offerCouponCode');
-  inp.value = code;
-  onCouponInput(inp);
-  inp.focus();
-  inp.style.color = 'var(--gold-2)';
-  setTimeout(() => inp.style.color = '', 800);
 }
 
 function genCpnCode() {
