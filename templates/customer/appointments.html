@@ -75,7 +75,10 @@
           <div class="appt-card-top">
             <div>
               <div class="appt-id"><i class="fas fa-hashtag me-1" style="font-size:0.8rem;"></i>Booking {{ appt.id }}</div>
-              <div class="appt-date-created">{{ appt.created_at }}</div>
+              <div class="appt-date-created">
+                {% set ca = appt.created_at | string %}
+                Booked: {% if ca | length >= 10 %}{{ ca[:10] }}{% else %}{{ ca }}{% endif %}
+              </div>
             </div>
             <span class="appt-status appt-status-{{ appt.status.lower() }}">{{ appt.status }}</span>
           </div>

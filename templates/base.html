@@ -229,12 +229,12 @@
 
 <script>
 (function(){
-  if(sessionStorage.getItem('ns_splash_v2')){
+  if(localStorage.getItem('ns_splash_v2')){
     var s=document.getElementById('salonSplash');
     if(s){ s.style.opacity='0'; s.style.visibility='hidden'; s.style.display='none'; }
     return;
   }
-  sessionStorage.setItem('ns_splash_v2','1');
+  localStorage.setItem('ns_splash_v2','1');
 
   /* Floating gold particles */
   var pc=document.getElementById('splashParticles');
@@ -354,8 +354,7 @@
         <p class="footer-desc">Premium salon services crafted for your style, comfort and confidence.</p>
         <div class="footer-socials">
           <a href="https://www.instagram.com/newshades_eluru?igsh=eXU1MDh3aXFvdmh2" class="social-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
-          <a href="#" class="social-btn"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://wa.me/{{ shop.whatsapp }}" class="social-btn"><i class="fab fa-whatsapp"></i></a>
+          <a href="https://wa.me/{{ shop.whatsapp }}" class="social-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>
         </div>
       </div>
       <div class="col-lg-2 col-6">

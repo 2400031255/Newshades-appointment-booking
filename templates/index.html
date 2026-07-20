@@ -77,21 +77,20 @@
       <div class="section-line"></div>
     </div>
     <div class="row g-4 mt-2">
-      {% set preview = [
-        ('fas fa-cut',        'Hair',         'Cuts, trims, styling & more'),
-        ('fas fa-palette',    'Hair Color',   'Highlights, balayage & full color'),
-        ('fas fa-magic',      'Hair Spa',     'Nourishing & repair treatments'),
-        ('fas fa-spa',        'Facial',       'Glow, cleanup & skin care'),
-        ('fas fa-hands',      'Massage',      'Head, body & relaxation therapy'),
-        ('fas fa-female',     'Bridal',       'Complete bridal packages')
-      ] %}
-      {% for icon, name, desc in preview %}
+      {% set icon_map = {
+        'Hair': 'fas fa-cut',
+        'Beard': 'fas fa-user-tie',
+        'Skin': 'fas fa-spa',
+        'Wellness': 'fas fa-hands',
+        'Bridal': 'fas fa-female'
+      } %}
+      {% for svc in services[:6] %}
       <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
         <div class="svc-card tilt-card">
           <div class="svc-card-glow"></div>
-          <div class="svc-icon"><i class="{{ icon }}"></i></div>
-          <h5 class="svc-name">{{ name }}</h5>
-          <p class="svc-desc">{{ desc }}</p>
+          <div class="svc-icon"><i class="{{ icon_map.get(svc.category, 'fas fa-magic') }}"></i></div>
+          <h5 class="svc-name">{{ svc.service_name }}</h5>
+          <p class="svc-desc">{{ svc.description or 'Professional service tailored for you' }}</p>
         </div>
       </div>
       {% endfor %}

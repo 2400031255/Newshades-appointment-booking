@@ -196,7 +196,11 @@ def create_app():
         except (OSError, RuntimeError) as e:
             app.logger.warning('reviews query failed: %s', e)
             reviews = []
-        return render_template('index.html', reviews=reviews)
+        try:
+            services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name LIMIT 6")
+        except (OSError, RuntimeError):
+            services = []
+        return render_template('index.html', reviews=reviews, services=services)
 
     @app.route('/about')
     def about():

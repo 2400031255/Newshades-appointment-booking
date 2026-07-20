@@ -219,7 +219,10 @@
           </div>
           <div style="text-align:right;">
             <div class="ticket-id-label">Booked On</div>
-            <div style="color:rgba(240,230,211,.7);font-size:.82rem;">{{ appt.created_at }}</div>
+            <div style="color:rgba(240,230,211,.7);font-size:.82rem;">
+              {% set ca = appt.created_at | string %}
+              {% if ca | length >= 10 %}{{ ca[:10] }}{% else %}{{ ca }}{% endif %}
+            </div>
           </div>
         </div>
 
