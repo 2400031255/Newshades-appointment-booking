@@ -168,7 +168,7 @@ def book():
 
     placeholders = ','.join(['%s'] * len(service_ids))
     services = query(
-        f"SELECT service_name, price FROM services WHERE id IN ({placeholders}) AND is_active=1",
+        f"SELECT service_name, price, price_on_request FROM services WHERE id IN ({placeholders}) AND is_active=1",
         tuple(service_ids)
     )
     if not services:
@@ -177,7 +177,7 @@ def book():
 
     service_names = [s['service_name'] for s in services]
     services_str  = ', '.join(service_names)
-    total_price   = sum(float(s['price'] or 0) for s in services)
+    total_price   = sum(float(s['price'] or 0) for s in services if not s.get('price_on_request'))
 
     # Check coupon code submitted with form
     coupon_code_input = (request.form.get('coupon_code') or '').strip().upper()
@@ -209,6 +209,8 @@ def book():
     applied_offer   = None
     if not coupon_applied:  # only auto-apply offer if no coupon used
         for svc in services:
+            if svc.get('price_on_request'):  # skip — price decided at salon
+                continue
             matched = offer_map.get(svc['service_name'].lower()) or global_offer
             if matched:
                 applied_offer    = matched

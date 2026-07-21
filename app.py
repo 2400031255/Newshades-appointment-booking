@@ -120,12 +120,15 @@ def create_app():
             asset_v=current_app.config.get('APP_VERSION', '1'),
             shop={
                 'name':           get_setting('shop_name', 'New Shades'),
+                'tagline':        get_setting('shop_tagline', 'Premium Salon & Studio'),
                 'phone':          get_setting('shop_phone', ''),
+                'email':          get_setting('shop_email', ''),
                 'whatsapp':       get_setting('whatsapp_number', ''),
                 'address':        get_setting('shop_address', ''),
                 'hours_weekday':  get_setting('shop_hours_weekday', ''),
                 'hours_saturday': get_setting('shop_hours_saturday', ''),
                 'hours_sunday':   get_setting('shop_hours_sunday', ''),
+                'map_embed':      get_setting('map_embed', ''),
             })
 
     from routes.auth import auth
@@ -193,12 +196,11 @@ def create_app():
                 "SELECT r.rating, r.comment, r.created_at, u.full_name FROM reviews r "
                 "JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC LIMIT 6"
             )
-        except (OSError, RuntimeError) as e:
-            app.logger.warning('reviews query failed: %s', e)
+        except Exception:
             reviews = []
         try:
             services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name LIMIT 6")
-        except (OSError, RuntimeError):
+        except Exception:
             services = []
         return render_template('index.html', reviews=reviews, services=services)
 
@@ -208,26 +210,7 @@ def create_app():
 
     @app.route('/contact')
     def contact():
-        from db import query
-        def get_setting(key, default=''):
-            try:
-                row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
-                return row['value'] if row else default
-            except (OSError, RuntimeError):
-                return default
-        shop = {
-            'name':           get_setting('shop_name', 'New Shades'),
-            'tagline':        get_setting('shop_tagline', 'Premium Salon & Studio'),
-            'address':        get_setting('shop_address', ''),
-            'phone':          get_setting('shop_phone', ''),
-            'email':          get_setting('shop_email', ''),
-            'hours_weekday':  get_setting('shop_hours_weekday', ''),
-            'hours_saturday': get_setting('shop_hours_saturday', ''),
-            'hours_sunday':   get_setting('shop_hours_sunday', ''),
-            'whatsapp':       get_setting('whatsapp_number', ''),
-            'map_embed':      get_setting('map_embed', ''),
-        }
-        return render_template('contact.html', shop=shop)
+        return render_template('contact.html')
 
     @app.route('/services')
     def services():
