@@ -450,6 +450,11 @@
         <span class="confirm-key"><i class="fas fa-rupee-sign"></i> Total Payable</span>
         <span class="confirm-val" style="color:var(--gold-2);font-size:1rem;">₹{{ '%.0f'|format(final_price) }}</span>
       </div>
+      {% elif total_price == 0 %}
+      <div class="confirm-row">
+        <span class="confirm-key"><i class="fas fa-rupee-sign"></i> Total</span>
+        <span class="confirm-val" style="color:#7ce0aa;">Pay at Salon</span>
+      </div>
       {% else %}
       <div class="confirm-row">
         <span class="confirm-key"><i class="fas fa-rupee-sign"></i> Total</span>

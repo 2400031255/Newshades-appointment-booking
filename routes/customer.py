@@ -5,6 +5,7 @@ import time
 import threading
 from collections import defaultdict
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask_wtf.csrf import validate_csrf, ValidationError
 from functools import wraps
 from db import query, execute
 from sms import sms_new_booking
@@ -302,6 +303,11 @@ def ticket(aid):
 @customer.route('/cancel/<int:aid>', methods=['POST'])
 @login_required
 def cancel_appointment(aid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('customer.appointments'))
     appt = query(
         "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
         "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
@@ -392,6 +398,11 @@ def appointments():
 @customer.route('/review', methods=['POST'])
 @login_required
 def submit_review():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('customer.appointments'))
     rating  = request.form.get('rating', '').strip()
     comment = request.form.get('comment', '').strip()
     if not rating.isdigit() or not (1 <= int(rating) <= 5):
@@ -448,6 +459,11 @@ def profile():
 @customer.route('/profile', methods=['POST'])
 @login_required
 def profile_post():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('customer.profile'))
     user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
     if not user:
         session.clear()

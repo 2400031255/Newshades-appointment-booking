@@ -196,6 +196,11 @@ def appointments():
 @admin.route('/appointments/action/<int:aid>', methods=['POST'])
 @admin_required
 def appointment_action(aid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.appointments'))
     action = request.form.get('action')
     appt   = query(
         "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.id=%s",

@@ -31,7 +31,12 @@
             <div class="profile-avatar-ring"></div>
           </div>
           <h4 class="profile-name mt-3">{{ user.full_name }}</h4>
-          <p class="profile-since">Member since {{ user.created_at }}</p>
+          <p class="profile-since">Member since
+            {% set ca = user.created_at | string %}
+            {% if ca | length >= 10 %}
+              {{ ca[8:10] }} {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][ca[5:7]|int] }} {{ ca[0:4] }}
+            {% else %}{{ ca }}{% endif %}
+          </p>
           <div class="d-flex justify-content-center gap-3 mt-3">
             <div class="text-center">
               <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold-2);font-weight:700;">

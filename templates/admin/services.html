@@ -4,11 +4,19 @@
 
 {% block content %}
 <div class="admin-card">
-  <div class="d-flex justify-content-between align-items-center mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h6 class="fw-bold mb-0" style="color:#fff;">All Services <span style="color:var(--gold);">({{ services|length }})</span></h6>
-    <a href="{{ url_for('admin.add_service') }}" class="btn-gold">
-      <i class="fas fa-plus me-2"></i>Add Service
-    </a>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <div style="position:relative;">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.8rem;"></i>
+        <input type="text" id="svcSearch" placeholder="Search services…"
+          style="padding:8px 12px 8px 34px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;width:200px;"
+          oninput="filterServices(this.value)"/>
+      </div>
+      <a href="{{ url_for('admin.add_service') }}" class="btn-gold">
+        <i class="fas fa-plus me-2"></i>Add Service
+      </a>
+    </div>
   </div>
   <div class="table-responsive">
     <table class="admin-table">
@@ -59,4 +67,14 @@
     </table>
   </div>
 </div>
+
+<script>
+function filterServices(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('tbody tr').forEach(function(row) {
+    var text = row.innerText.toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}
