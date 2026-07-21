@@ -17,14 +17,28 @@
     </div>
     <div class="row g-3 mb-3">
       <div class="col-6 auth-field">
-        <label class="auth-label">Price (₹) <span style="color:#ff7b7b;">*</span></label>
-        <input type="number" name="price" class="auth-input" style="padding:12px 14px;" step="0.01" min="0" value="{{ service.price if service else '' }}" required/>
+        <label class="auth-label">Price (₹) <span style="color:var(--text-muted);font-size:0.75rem;" id="price-optional-label">{{ '(optional – price at salon)' if service and service.price_on_request else '' }}</span></label>
+        <input type="number" name="price" id="price-input" class="auth-input" style="padding:12px 14px;" step="0.01" min="0"
+               value="{{ service.price if service and not service.price_on_request else '' }}"
+               {{ 'disabled' if service and service.price_on_request }}/>
       </div>
       <div class="col-6 auth-field">
         <label class="auth-label">Duration <span style="color:#ff7b7b;">*</span></label>
         <input type="text" name="duration" class="auth-input" style="padding:12px 14px;" placeholder="e.g. 30 mins" value="{{ service.duration if service else '' }}" required/>
       </div>
     </div>
+    <div class="mb-3 d-flex align-items-center gap-3">
+      <input type="checkbox" name="price_on_request" id="price_on_request" style="width:18px;height:18px;accent-color:var(--gold);"
+             {{ 'checked' if service and service.price_on_request }}/>
+      <label for="price_on_request" style="color:var(--text-soft);margin:0;">Price decided at salon <span style="color:var(--text-muted);font-size:0.8rem;">(customers will see "Price at Salon")</span></label>
+    </div>
+    <script>
+      document.getElementById('price_on_request').addEventListener('change', function() {
+        const inp = document.getElementById('price-input');
+        inp.disabled = this.checked;
+        if (this.checked) { inp.value = ''; }
+      });
+    </script>
     <div class="auth-field">
       <label class="auth-label">Category</label>
       <select name="category" class="auth-input" style="padding:12px 14px;">

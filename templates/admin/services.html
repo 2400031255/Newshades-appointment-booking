@@ -24,7 +24,13 @@
             <div style="font-size:0.8rem;color:var(--text-muted);">{{ svc.description[:50] }}{% if svc.description and svc.description|length > 50 %}...{% endif %}</div>
           </td>
           <td><span class="admin-badge">{{ svc.category }}</span></td>
-          <td style="color:var(--gold-2);font-weight:700;">₹{{ "%.0f"|format(svc.price) }}</td>
+          <td style="color:var(--gold-2);font-weight:700;">
+            {% if svc.price_on_request %}
+            <span style="color:#7ce0aa;font-size:0.82rem;font-weight:600;">At Salon</span>
+            {% else %}
+            ₹{{ "%.0f"|format(svc.price) }}
+            {% endif %}
+          </td>
           <td class="admin-td-muted">{{ svc.duration }}</td>
           <td>
             {% if svc.is_active %}

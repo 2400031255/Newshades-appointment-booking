@@ -74,8 +74,9 @@ def add_service():
         category = request.form.get('category', '').strip()
         duration = request.form.get('duration', '').strip()
         img_url  = request.form.get('image_url', '').strip()
+        price_on_request = 1 if request.form.get('price_on_request') else 0
         try:
-            price = float(request.form.get('price', 0))
+            price = 0.0 if price_on_request else float(request.form.get('price', 0))
             if price < 0:
                 raise ValueError
         except (ValueError, TypeError):
@@ -88,8 +89,8 @@ def add_service():
             flash('Category is required (max 50 chars).', 'danger')
             return render_template('admin/service_form.html', service=None)
         execute(
-            "INSERT INTO services (service_name, description, price, duration, category, image_url) VALUES (%s,%s,%s,%s,%s,%s)",
-            (name, desc[:500], price, duration[:50], category, img_url[:255])
+            "INSERT INTO services (service_name, description, price, duration, category, image_url, price_on_request) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+            (name, desc[:500], price, duration[:50], category, img_url[:255], price_on_request)
         )
         flash('Service added.', 'success')
         return redirect(url_for('admin.services'))
@@ -108,8 +109,9 @@ def edit_service(sid):
         category = request.form.get('category', '').strip()
         duration = request.form.get('duration', '').strip()
         img_url  = request.form.get('image_url', '').strip()
+        price_on_request = 1 if request.form.get('price_on_request') else 0
         try:
-            price = float(request.form.get('price', 0))
+            price = 0.0 if price_on_request else float(request.form.get('price', 0))
             if price < 0:
                 raise ValueError
         except (ValueError, TypeError):
@@ -119,9 +121,9 @@ def edit_service(sid):
             flash('Service name is required (max 100 chars).', 'danger')
             return render_template('admin/service_form.html', service=svc)
         execute(
-            "UPDATE services SET service_name=%s, description=%s, price=%s, duration=%s, category=%s, image_url=%s, is_active=%s WHERE id=%s",
+            "UPDATE services SET service_name=%s, description=%s, price=%s, duration=%s, category=%s, image_url=%s, is_active=%s, price_on_request=%s WHERE id=%s",
             (name, desc[:500], price, duration[:50], category[:50], img_url[:255],
-             1 if request.form.get('is_active') else 0, sid)
+             1 if request.form.get('is_active') else 0, price_on_request, sid)
         )
         flash('Service updated.', 'success')
         return redirect(url_for('admin.services'))

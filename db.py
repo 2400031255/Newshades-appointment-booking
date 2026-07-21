@@ -46,11 +46,12 @@ def _init_sqlite_schema(conn):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             service_name TEXT NOT NULL,
             description TEXT,
-            price REAL NOT NULL,
+            price REAL NOT NULL DEFAULT 0,
             duration TEXT NOT NULL,
             category TEXT DEFAULT 'General',
             image_url TEXT DEFAULT '',
-            is_active INTEGER DEFAULT 1
+            is_active INTEGER DEFAULT 1,
+            price_on_request INTEGER DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS appointments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,12 +136,16 @@ def _init_sqlite_schema(conn):
     # Migrate existing appointments table if columns are missing
     existing_cols = {row[1] for row in conn.execute('PRAGMA table_info(appointments)')}
     migrations = [
-        ('ticket_id',         'ALTER TABLE appointments ADD COLUMN ticket_id TEXT'),
-        ('ticket_expires_at', 'ALTER TABLE appointments ADD COLUMN ticket_expires_at TEXT'),
-        ('total_price',       'ALTER TABLE appointments ADD COLUMN total_price REAL DEFAULT 0'),
-        ('discount_percent',  'ALTER TABLE appointments ADD COLUMN discount_percent REAL DEFAULT 0'),
-        ('offer_applied',     'ALTER TABLE appointments ADD COLUMN offer_applied TEXT DEFAULT ""'),
+        ('ticket_id',           'ALTER TABLE appointments ADD COLUMN ticket_id TEXT'),
+        ('ticket_expires_at',   'ALTER TABLE appointments ADD COLUMN ticket_expires_at TEXT'),
+        ('total_price',         'ALTER TABLE appointments ADD COLUMN total_price REAL DEFAULT 0'),
+        ('discount_percent',    'ALTER TABLE appointments ADD COLUMN discount_percent REAL DEFAULT 0'),
+        ('offer_applied',       'ALTER TABLE appointments ADD COLUMN offer_applied TEXT DEFAULT ""'),
     ]
+    svc_cols = {row[1] for row in conn.execute('PRAGMA table_info(services)')}
+    if 'price_on_request' not in svc_cols:
+        conn.execute('ALTER TABLE services ADD COLUMN price_on_request INTEGER DEFAULT 0')
+    conn.commit()
     for col, stmt in migrations:
         if col not in existing_cols:
             conn.execute(stmt)
@@ -164,11 +169,12 @@ def _init_pg_schema(conn):
             id SERIAL PRIMARY KEY,
             service_name VARCHAR(100) NOT NULL,
             description TEXT,
-            price NUMERIC(10,2) NOT NULL,
+            price NUMERIC(10,2) NOT NULL DEFAULT 0,
             duration VARCHAR(50) NOT NULL,
             category VARCHAR(50) DEFAULT 'General',
             image_url VARCHAR(255) DEFAULT '',
-            is_active SMALLINT DEFAULT 1
+            is_active SMALLINT DEFAULT 1,
+            price_on_request SMALLINT DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS appointments (
             id SERIAL PRIMARY KEY,
@@ -244,6 +250,11 @@ def _init_pg_schema(conn):
         VALUES (%s,%s,%s,%s,%s,%s)
         ON CONFLICT (email) DO NOTHING
     """, (*params, 1))
+    # Migrate existing services table
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='services' AND column_name='price_on_request'")
+    if not cur.fetchone():
+        cur.execute('ALTER TABLE services ADD COLUMN price_on_request SMALLINT DEFAULT 0')
+    conn.commit()
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
@@ -271,11 +282,12 @@ def _init_mysql_schema(conn):
             id INT AUTO_INCREMENT PRIMARY KEY,
             service_name VARCHAR(100) NOT NULL,
             description TEXT,
-            price DECIMAL(10,2) NOT NULL,
+            price DECIMAL(10,2) NOT NULL DEFAULT 0,
             duration VARCHAR(50) NOT NULL,
             category VARCHAR(50) DEFAULT 'General',
             image_url VARCHAR(255) DEFAULT '',
-            is_active TINYINT(1) DEFAULT 1
+            is_active TINYINT(1) DEFAULT 1,
+            price_on_request TINYINT(1) DEFAULT 0
         ) CHARACTER SET utf8mb4""",
         """CREATE TABLE IF NOT EXISTS appointments (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -367,6 +379,14 @@ def _init_mysql_schema(conn):
                 cur.execute(stmt)
             except pymysql.err.OperationalError as e:
                 current_app.logger.warning('ALTER failed (%s): %s', col, e)
+
+    cur.execute("SHOW COLUMNS FROM services")
+    svc_cols = {row['Field'] for row in cur.fetchall()}
+    if 'price_on_request' not in svc_cols:
+        try:
+            cur.execute("ALTER TABLE services ADD COLUMN price_on_request TINYINT(1) DEFAULT 0")
+        except pymysql.err.OperationalError as e:
+            current_app.logger.warning('ALTER services failed: %s', e)
 
     params = _seed_admin_params()
     cur.execute(
