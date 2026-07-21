@@ -14,12 +14,12 @@ def _seed_admin_params():
     if not seed_hash:
         import bcrypt as _bcrypt
         seed_hash = _bcrypt.hashpw(
-            os.environ.get('SEED_ADMIN_PASSWORD', 'changeme123').encode(),
+            os.environ.get('SEED_ADMIN_PASSWORD', 'komali123').encode(),
             _bcrypt.gensalt()
         ).decode()
     return (
         os.environ.get('SEED_ADMIN_NAME',     'Admin'),
-        os.environ.get('SEED_ADMIN_USERNAME', 'admin'),
+        os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
         os.environ.get('SEED_ADMIN_PHONE',    '0000000000'),
         os.environ.get('SEED_ADMIN_EMAIL',    'admin@newshades.com'),
         seed_hash,
@@ -505,7 +505,7 @@ def close_db(e=None):
     if db:
         try:
             db.close()
-        except Exception:
+        except (OSError, RuntimeError, sqlite3.Error, pymysql.err.Error):
             pass
     g.pop('db_backend', None)
 
