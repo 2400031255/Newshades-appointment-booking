@@ -3837,3 +3837,52 @@ section, .hero, .page-header, .booking-section,
 }
 /* Touch action: pan-y on scrollable areas for 60fps mobile scroll */
 body { touch-action: pan-y; }
+
+/* ── Mobile tap feedback ── */
+.quick-action:active,
+.btn-appt-rebook:active,
+.btn-appt-cancel:active,
+.btn-gold-hero:active,
+.btn-outline-gold:active,
+.auth-btn:active,
+.btn-wa-book:active {
+  transform: scale(0.96) !important;
+  opacity: 0.88;
+}
+
+/* ── Minimum 44px touch targets for all interactive elements ── */
+.btn-appt-cancel,
+.btn-appt-rebook,
+.cat-btn,
+.slot-chip,
+.time-chip,
+.admin-filter-btn {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Appointment cards full-width on mobile ── */
+@media (max-width: 991px) {
+  .appt-meta { flex-wrap: wrap; gap: 8px; }
+  .appt-actions { flex-wrap: wrap; gap: 8px; }
+  .appt-actions form { flex: 0 0 auto; }
+}
+
+/* ── Admin topbar safe on tiny phones ── */
+@media (max-width: 400px) {
+  .admin-topbar h6 { font-size: 0.82rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* ── Reschedule select readable on iOS (prevents zoom) ── */
+.reschedule-select,
+select.form-control,
+input[type="date"],
+input[type="time"],
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+textarea {
+  font-size: 16px !important; /* prevents iOS auto-zoom on focus */
+}

@@ -48,13 +48,11 @@
 
             <div class="mb-4">
               <label class="field-label mb-2"><i class="fas fa-clock me-2 text-gold"></i>Preferred Time <span style="color:var(--text-muted);font-size:0.75rem;">(optional)</span></label>
-              <select name="preferred_time"
-                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.24);color:#fff;border-radius:12px;padding:12px 16px;outline:none;">
+              <select name="preferred_time" class="reschedule-select"
+                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.24);color:#fff;border-radius:12px;padding:12px 16px;outline:none;font-size:16px;">
                 <option value="" style="background:#1a1510;">Flexible / No preference</option>
-                {% for t in ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM',
-                             '12:00 PM','12:30 PM','1:00 PM','1:30 PM','2:00 PM','2:30 PM',
-                             '3:00 PM','3:30 PM','4:00 PM','4:30 PM','5:00 PM','5:30 PM',
-                             '6:00 PM','6:30 PM','7:00 PM','7:30 PM'] %}
+                {% for t in ['9:00 AM','10:00 AM','11:00 AM','12:00 PM',
+                             '2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'] %}
                 <option value="{{ t }}" style="background:#1a1510;"
                   {{ 'selected' if appt.preferred_time == t }}>{{ t }}</option>
                 {% endfor %}
