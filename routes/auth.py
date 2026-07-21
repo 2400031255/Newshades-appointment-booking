@@ -14,8 +14,10 @@ _login_attempts  = defaultdict(list)
 _signup_attempts = defaultdict(list)
 _login_lock      = threading.Lock()
 
-# Dummy hash used to prevent timing attacks when user is not found
-_DUMMY_HASH = bcrypt.hashpw(b'dummy', bcrypt.gensalt()).decode()
+import os
+# Dummy hash used to prevent timing attacks when user is not found.
+# Generated from random bytes at startup — never matches any real password.
+_DUMMY_HASH = bcrypt.hashpw(os.urandom(32), bcrypt.gensalt()).decode()
 
 
 def _is_rate_limited(ip, store, window=300, limit=10):
