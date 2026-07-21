@@ -229,13 +229,6 @@
 
 <script>
 (function(){
-  if(localStorage.getItem('ns_splash_v2')){
-    var s=document.getElementById('salonSplash');
-    if(s){ s.style.opacity='0'; s.style.visibility='hidden'; s.style.display='none'; }
-    return;
-  }
-  localStorage.setItem('ns_splash_v2','1');
-
   /* Floating gold particles */
   var pc=document.getElementById('splashParticles');
   if(pc){
