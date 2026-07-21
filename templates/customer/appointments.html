@@ -107,6 +107,11 @@
             </div>
           </div>
           <div class="appt-actions mt-3 d-flex gap-2 flex-wrap">
+            {% if appt.status in ('Pending', 'Confirmed') %}
+            <a href="{{ url_for('customer.reschedule', aid=appt.id) }}" class="btn-appt-rebook" style="background:rgba(105,152,255,0.1);border-color:rgba(105,152,255,0.3);color:#9dc0ff;">
+              <i class="fas fa-calendar-alt me-1"></i>Reschedule
+            </a>
+            {% endif %}
             {% if appt.status == 'Pending' %}
             <form method="POST" action="{{ url_for('customer.cancel_appointment', aid=appt.id) }}" onsubmit="return confirm('Cancel this appointment?')">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

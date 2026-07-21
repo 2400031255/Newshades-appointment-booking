@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Reschedule Appointment – New Shades{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> Reschedule</div>
+        <h1 class="page-header-title">Change Your <span>Appointment</span></h1>
+        <p class="page-header-sub">Pick a new date and time for your booking.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5">
+        <div class="glass-card reveal-up" style="padding:32px;">
+
+          <!-- Current booking info -->
+          <div style="margin-bottom:24px;padding:16px;border-radius:14px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.18);">
+            <div style="font-size:0.75rem;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase;margin-bottom:8px;">Current Booking</div>
+            <div style="color:#fff;font-weight:600;margin-bottom:4px;">{{ appt.selected_services }}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);">
+              <i class="fas fa-calendar-alt me-1 text-gold"></i>
+              {% set d = appt.preferred_date %}
+              {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+              {% if appt.preferred_time %}
+              &nbsp;·&nbsp;<i class="fas fa-clock me-1 text-gold"></i>{{ appt.preferred_time }}
+              {% endif %}
+            </div>
+          </div>
+
+          <form method="POST" action="{{ url_for('customer.reschedule', aid=appt.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="mb-4">
+              <label class="field-label mb-2"><i class="fas fa-calendar-alt me-2 text-gold"></i>New Date</label>
+              <input type="date" name="preferred_date" required
+                min="{{ now }}"
+                class="form-control"
+                style="background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.24);color:#fff;border-radius:12px;padding:12px 16px;">
+            </div>
+
+            <div class="mb-4">
+              <label class="field-label mb-2"><i class="fas fa-clock me-2 text-gold"></i>Preferred Time <span style="color:var(--text-muted);font-size:0.75rem;">(optional)</span></label>
+              <select name="preferred_time"
+                style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.24);color:#fff;border-radius:12px;padding:12px 16px;outline:none;">
+                <option value="" style="background:#1a1510;">Flexible / No preference</option>
+                {% for t in ['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM',
+                             '12:00 PM','12:30 PM','1:00 PM','1:30 PM','2:00 PM','2:30 PM',
+                             '3:00 PM','3:30 PM','4:00 PM','4:30 PM','5:00 PM','5:30 PM',
+                             '6:00 PM','6:30 PM','7:00 PM','7:30 PM'] %}
+                <option value="{{ t }}" style="background:#1a1510;"
+                  {{ 'selected' if appt.preferred_time == t }}>{{ t }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="d-flex gap-3">
+              <button type="submit" class="btn-gold-hero" style="flex:1;">
+                <i class="fas fa-calendar-check me-2"></i>Confirm Reschedule
+              </button>
+              <a href="{{ url_for('customer.appointments') }}" class="btn-appt-cancel" style="padding:12px 20px;">
+                Cancel
+              </a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -321,11 +321,46 @@ def cancel_appointment(aid):
                 t = _html.escape(str(appt['preferred_time'] or 'Flexible'))
                 content = f"<p>Customer <strong style='color:#e8c96a;'>{n}</strong> has cancelled their appointment.</p><div class='detail-box'><div class='detail-row'><span class='detail-label'>Date</span><span class='detail-val'>{d}</span></div><div class='detail-row'><span class='detail-label'>Time</span><span class='detail-val'>{t}</span></div></div>"
                 _send(admin_email, f'Appointment Cancelled – {n}', _base_html(content))
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             logger.error('Cancel notify error: %s', e)
     else:
         flash('Only pending or confirmed appointments can be cancelled.', 'danger')
     return redirect(url_for('customer.appointments'))
+
+
+# ── Reschedule ───────────────────────────────────────────────────────────────
+
+@customer.route('/reschedule/<int:aid>', methods=['GET', 'POST'])
+@login_required
+def reschedule(aid):
+    appt = query(
+        "SELECT * FROM appointments WHERE id=%s AND user_id=%s",
+        (aid, session['user_id']), one=True
+    )
+    if not appt or appt['status'] not in ('Pending', 'Confirmed'):
+        flash('Only pending or confirmed appointments can be rescheduled.', 'danger')
+        return redirect(url_for('customer.appointments'))
+    if request.method == 'POST':
+        new_date = request.form.get('preferred_date', '').strip()
+        new_time = request.form.get('preferred_time', '').strip()
+        if not new_date:
+            flash('Please select a new date.', 'warning')
+            return redirect(url_for('customer.reschedule', aid=aid))
+        try:
+            booking_date = date.fromisoformat(new_date)
+            if booking_date < date.today():
+                flash('Please choose today or a future date.', 'warning')
+                return redirect(url_for('customer.reschedule', aid=aid))
+        except ValueError:
+            flash('Invalid date.', 'warning')
+            return redirect(url_for('customer.reschedule', aid=aid))
+        execute(
+            "UPDATE appointments SET preferred_date=%s, preferred_time=%s, status='Pending' WHERE id=%s",
+            (new_date, new_time or None, aid)
+        )
+        flash('Appointment rescheduled successfully.', 'success')
+        return redirect(url_for('customer.appointments'))
+    return render_template('customer/reschedule.html', appt=appt, now=date.today().isoformat())
 
 
 # ── Rebook ────────────────────────────────────────────────────────────────────

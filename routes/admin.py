@@ -52,9 +52,15 @@ def dashboard():
         "SELECT a.*, u.full_name, u.phone FROM appointments a "
         "JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 5"
     )
+    today_appts = query(
+        "SELECT a.*, u.full_name, u.phone FROM appointments a "
+        "JOIN users u ON a.user_id=u.id WHERE a.preferred_date=%s "
+        "ORDER BY a.preferred_time ASC",
+        (_date.today().isoformat(),)
+    )
     return render_template('admin/dashboard.html', total_users=total_users,
                            total_services=total_services, total_appts=total_appts,
-                           pending=pending, recent=recent,
+                           pending=pending, recent=recent, today_appts=today_appts,
                            revenue_total=float(revenue_total or 0),
                            revenue_month=float(revenue_month or 0))
 
@@ -143,6 +149,11 @@ def edit_service(sid):
 @admin.route('/services/delete/<int:sid>', methods=['POST'])
 @admin_required
 def delete_service(sid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.services'))
     execute("DELETE FROM services WHERE id=%s", (sid,))
     flash('Service deleted.', 'success')
     return redirect(url_for('admin.services'))
@@ -197,18 +208,17 @@ def appointment_action(aid):
     try:
         d = appt['preferred_date']
         fmt_date = d.strftime('%d %b %Y') if hasattr(d, 'strftime') else str(d)
-    except Exception:
+    except (AttributeError, ValueError):
         fmt_date = str(appt['preferred_date'])
     fmt_time = appt['preferred_time'] or 'Flexible'
 
     if action == 'accept':
         ticket_id = str(uuid.uuid4())[:8].upper()
-        # Ticket expires at end of appointment date
         try:
             from datetime import date as _date, datetime as _datetime
             appt_date  = _date.fromisoformat(str(appt['preferred_date'])[:10])
             expires_at = _datetime.combine(appt_date, _datetime.max.time()).isoformat()
-        except Exception:
+        except (ValueError, TypeError):
             expires_at = None
         execute(
             "UPDATE appointments SET status='Confirmed', ticket_id=%s, ticket_expires_at=%s WHERE id=%s",
@@ -217,12 +227,12 @@ def appointment_action(aid):
         flash('Appointment confirmed and ticket generated.', 'success')
         try:
             sms_confirmed(appt['phone'], appt['full_name'], fmt_date, fmt_time)
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.error('SMS error: %s', e)
         try:
             send_confirmation_email(appt['email'], appt['full_name'],
                                     fmt_date, fmt_time, appt['selected_services'])
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.error('Email error: %s', e)
 
     elif action == 'reject':
@@ -230,11 +240,11 @@ def appointment_action(aid):
         flash('Appointment rejected.', 'warning')
         try:
             sms_rejected(appt['phone'], appt['full_name'], fmt_date, fmt_time)
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.error('SMS error: %s', e)
         try:
             send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.error('Email error: %s', e)
 
     elif action == 'checkin':
@@ -250,7 +260,7 @@ def appointment_action(aid):
         flash('Appointment deleted.', 'success')
         try:
             send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             current_app.logger.error('Email error on delete: %s', e)
 
     return redirect(url_for('admin.appointments'))
@@ -289,6 +299,11 @@ def reviews():
 @admin.route('/reviews/delete/<int:rid>', methods=['POST'])
 @admin_required
 def delete_review(rid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.reviews'))
     execute("DELETE FROM reviews WHERE id=%s", (rid,))
     flash('Review deleted.', 'success')
     return redirect(url_for('admin.reviews'))
@@ -497,6 +512,11 @@ def gallery_upload():
 @admin.route('/gallery/delete/<int:gid>', methods=['POST'])
 @admin_required
 def gallery_delete(gid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.gallery'))
     photo = query("SELECT filename FROM gallery WHERE id=%s", (gid,), one=True)
     if photo:
         upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
@@ -580,6 +600,11 @@ def add_block():
 @admin.route('/schedule/unblock/<int:bid>', methods=['POST'])
 @admin_required
 def delete_block(bid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.schedule'))
     execute("DELETE FROM blocked_slots WHERE id=%s", (bid,))
     flash('Block removed.', 'success')
     return redirect(url_for('admin.schedule'))
@@ -687,6 +712,11 @@ def save_offer():
 @admin.route('/offers/delete/<int:oid>', methods=['POST'])
 @admin_required
 def delete_offer(oid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.offers'))
     execute("DELETE FROM offers WHERE id=%s", (oid,))
     flash('Offer deleted.', 'success')
     return redirect(url_for('admin.offers'))
@@ -743,6 +773,11 @@ def save_coupon():
 @admin.route('/coupons/delete/<int:cid>', methods=['POST'])
 @admin_required
 def delete_coupon(cid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.offers'))
     execute("DELETE FROM coupons WHERE id=%s", (cid,))
     flash('Coupon deleted.', 'success')
     return redirect(url_for('admin.offers'))
