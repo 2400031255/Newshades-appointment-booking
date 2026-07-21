@@ -1,17 +1,35 @@
-/* ── Cursor Glow ── */
+/* ── Cursor Glow (throttled to 60fps max) ── */
 const cursorGlow = document.getElementById('cursorGlow');
 if (cursorGlow) {
+  let rafPending = false;
+  let cx = 0, cy = 0;
   document.addEventListener('mousemove', e => {
-    cursorGlow.style.left = e.clientX + 'px';
-    cursorGlow.style.top  = e.clientY + 'px';
-  });
+    cx = e.clientX; cy = e.clientY;
+    if (!rafPending) {
+      rafPending = true;
+      requestAnimationFrame(() => {
+        cursorGlow.style.left = cx + 'px';
+        cursorGlow.style.top  = cy + 'px';
+        rafPending = false;
+      });
+    }
+  }, { passive: true });
 }
 
-/* ── Navbar scroll ── */
+/* ── Navbar scroll (throttled) ── */
 const nav = document.getElementById('mainNav');
-window.addEventListener('scroll', () => {
-  if (nav) nav.classList.toggle('nav-scrolled', window.scrollY > 60);
-});
+if (nav) {
+  let scrollRaf = false;
+  window.addEventListener('scroll', () => {
+    if (!scrollRaf) {
+      scrollRaf = true;
+      requestAnimationFrame(() => {
+        nav.classList.toggle('nav-scrolled', window.scrollY > 60);
+        scrollRaf = false;
+      });
+    }
+  }, { passive: true });
+}
 
 /* ── Scroll Reveal ── */
 const revealObserver = new IntersectionObserver((entries) => {
@@ -66,7 +84,7 @@ if (canvas) {
     }
   }
 
-  for (let i = 0; i < 80; i++) particles.push(new Particle());
+  for (let i = 0; i < 40; i++) particles.push(new Particle()); // reduced from 80
 
   function animateParticles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);

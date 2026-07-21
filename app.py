@@ -108,18 +108,22 @@ def create_app():
             except (OSError, RuntimeError) as e:
                 current_app.logger.warning('pending_appts query failed: %s', e)
 
+        # Only fetch today_offers for customer-facing pages (skip admin + static)
         today_offers = []
-        try:
-            from datetime import date
-            today = date.today().isoformat()
-            today_offers = query(
-                "SELECT * FROM offers WHERE is_active=1 "
-                "AND (valid_from IS NULL OR valid_from <= %s) "
-                "AND (valid_until IS NULL OR valid_until >= %s)",
-                (today, today)
-            )
-        except (OSError, RuntimeError) as e:
-            current_app.logger.warning('today_offers query failed: %s', e)
+        endpoint = request.endpoint or ''
+        if not endpoint.startswith('admin.') and endpoint != 'static':
+            try:
+                from datetime import date
+                today = date.today().isoformat()
+                today_offers = query(
+                    "SELECT id, title, discount_text, discount_percent, applicable_services "
+                    "FROM offers WHERE is_active=1 "
+                    "AND (valid_from IS NULL OR valid_from <= %s) "
+                    "AND (valid_until IS NULL OR valid_until >= %s)",
+                    (today, today)
+                )
+            except (OSError, RuntimeError) as e:
+                current_app.logger.warning('today_offers query failed: %s', e)
 
         import datetime as _dt
         return dict(
@@ -138,7 +142,7 @@ def create_app():
                 'hours_saturday': gs('shop_hours_saturday', ''),
                 'hours_sunday':   gs('shop_hours_sunday', ''),
                 'map_embed':      gs('map_embed', ''),
-            })
+            }))
 
     from routes.auth import auth
     from routes.customer import customer

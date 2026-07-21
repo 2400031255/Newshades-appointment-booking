@@ -67,6 +67,11 @@
               {% if a.get('discount_percent') and a.discount_percent > 0 %}
               <div style="font-size:0.72rem;color:#7ce0aa;">-{{ '%.0f'|format(a.discount_percent) }}% off</div>
               {% endif %}
+              {% if a.get('offer_applied') %}
+              <div style="font-size:0.7rem;color:#7ce0aa;max-width:120px;overflow:hidden;text-overflow:ellipsis;" title="{{ a.offer_applied }}">
+                <i class="fas fa-tag me-1"></i>{{ a.offer_applied }}
+              </div>
+              {% endif %}
             {% else %}—{% endif %}
           </td>
           <td>
@@ -136,6 +141,9 @@
         <span><i class="fas fa-clock me-1" style="color:var(--gold);"></i>{{ a.preferred_time if a.preferred_time else 'Flexible' }}</span>
         {% if a.get('total_price') %}
         <span><i class="fas fa-rupee-sign me-1" style="color:var(--gold);"></i>₹{{ '%.0f'|format(a.total_price) }}</span>
+        {% if a.get('offer_applied') %}
+        <span style="color:#7ce0aa;"><i class="fas fa-tag me-1"></i>{{ a.offer_applied }}</span>
+        {% endif %}
         {% endif %}
       </div>
       <div class="appt-card-actions">

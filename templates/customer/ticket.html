@@ -256,6 +256,17 @@
           {% endfor %}
         </div>
 
+        {% if appt.get('offer_applied') or (appt.get('discount_percent') and appt.discount_percent > 0) %}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.2);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+          <i class="fas fa-tag" style="color:#7ce0aa;font-size:.8rem;"></i>
+          <span style="font-size:.78rem;color:#7ce0aa;font-weight:600;">
+            {{ appt.offer_applied if appt.offer_applied else '' }}
+            {% if appt.get('discount_percent') and appt.discount_percent > 0 %}
+              — {{ '%.0f'|format(appt.discount_percent) }}% OFF applied
+            {% endif %}
+          </span>
+        </div>
+        {% endif %}
         {% if appt.total_price %}
         <div class="ticket-total-row" style="display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);">
           <span class="ticket-total-label" style="font-size:.78rem;color:rgba(240,230,211,.5);">Total Amount</span>

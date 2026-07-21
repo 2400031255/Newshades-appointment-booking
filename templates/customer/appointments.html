@@ -85,6 +85,14 @@
           <div class="appt-services mt-3">
             <i class="fas fa-concierge-bell me-2 text-gold"></i>{{ appt.selected_services }}
           </div>
+          {% if appt.get('offer_applied') or (appt.get('discount_percent') and appt.discount_percent > 0) %}
+          <div style="margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);">
+            <i class="fas fa-tag" style="color:#7ce0aa;font-size:0.72rem;"></i>
+            <span style="font-size:0.75rem;color:#7ce0aa;font-weight:600;">
+              {{ appt.offer_applied if appt.offer_applied else '' }}{% if appt.get('discount_percent') and appt.discount_percent > 0 %} &mdash; {{ '%.0f'|format(appt.discount_percent) }}% OFF{% endif %}
+            </span>
+          </div>
+          {% endif %}
           <div class="appt-meta mt-3">
             <div class="appt-meta-item">
               <i class="fas fa-calendar-alt text-gold" style="font-size:0.85rem;"></i>

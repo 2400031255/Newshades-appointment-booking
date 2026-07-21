@@ -3816,3 +3816,24 @@ section, .hero, .page-header, .booking-section,
   overflow-x: hidden;
   max-width: 100%;
 }
+
+/* ── GPU compositing hints — promotes animated elements to own layer ── */
+.cursor-glow,
+#pageTransition,
+.splash-logo,
+.splash-bar,
+.hero-circle,
+.wa-float,
+.wa-float-ripple {
+  will-change: transform, opacity;
+}
+.navbar {
+  will-change: background, box-shadow;
+}
+/* Contain layout so card repaints don't cascade to full page */
+.appt-card, .svc-select-card, .glass-card, .admin-card,
+.booking-sidebar-card, .why-card, .svc-card {
+  contain: layout style;
+}
+/* Touch action: pan-y on scrollable areas for 60fps mobile scroll */
+body { touch-action: pan-y; }
