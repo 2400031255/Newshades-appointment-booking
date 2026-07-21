@@ -9,10 +9,10 @@ class DatabaseFallbackTests(unittest.TestCase):
     def test_sqlite_fallback_initializes_schema(self):
         app = create_app()
         app.config.update(
-            TESTING=True,
+            TESTING=os.environ.get('FLASK_TESTING', 'true').lower() == 'true',
             MYSQL_HOST=os.environ.get('MYSQL_HOST', '127.0.0.1'),
             MYSQL_USER=os.environ.get('MYSQL_USER', 'root'),
-            MYSQL_PASSWORD='wrong-password',  # intentionally wrong to force SQLite fallback
+            MYSQL_PASSWORD=os.environ.get('MYSQL_PASSWORD_WRONG', 'invalid-password-forces-sqlite-fallback'),
             MYSQL_DB=os.environ.get('MYSQL_DB', 'salon_db'),
         )
 
