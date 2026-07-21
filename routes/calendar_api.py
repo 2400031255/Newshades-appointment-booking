@@ -35,6 +35,7 @@ def _coupon_rate_limited(ip):
 # Default slots — overridable via salon_config keys:
 #   weekday_slots  (comma-separated, e.g. "9:00 AM,10:00 AM,...")
 #   sunday_slots
+# ── Edit these to match your actual shop open/close hours ──────────────────
 WEEKDAY_SLOTS = [
     '9:00 AM','10:00 AM','11:00 AM','12:00 PM',
     '2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM'
