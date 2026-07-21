@@ -48,6 +48,11 @@ def create_app():
             "connect-src 'self' wss: ws:; "
             "frame-ancestors 'self';"
         )
+        # Cache static assets aggressively
+        if request.path.startswith('/static/'):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        elif request.method == 'GET' and response.status_code == 200:
+            response.headers['Cache-Control'] = 'no-cache, must-revalidate'
         return response
 
     @app.before_request
@@ -83,13 +88,17 @@ def create_app():
     @app.context_processor
     def inject_shop():
         from db import query
-        def get_setting(key, default=''):
+
+        def get_all_settings():
             try:
-                row = query("SELECT value FROM settings WHERE `key`=%s", (key,), one=True)
-                return row['value'] if row else default
-            except (OSError, RuntimeError) as e:
-                current_app.logger.warning('get_setting(%s) failed: %s', key, e)
-                return default
+                rows = query("SELECT `key`, value FROM settings")
+                return {r['key']: r['value'] for r in rows} if rows else {}
+            except (OSError, RuntimeError):
+                return {}
+
+        settings_map = get_all_settings()
+        def gs(key, default=''):
+            return settings_map.get(key, default)
 
         pending_appts = 0
         if session.get('is_admin'):
@@ -119,16 +128,16 @@ def create_app():
             now_date=_dt.date.today().isoformat(),
             asset_v=current_app.config.get('APP_VERSION', '1'),
             shop={
-                'name':           get_setting('shop_name', 'New Shades'),
-                'tagline':        get_setting('shop_tagline', 'Premium Salon & Studio'),
-                'phone':          get_setting('shop_phone', ''),
-                'email':          get_setting('shop_email', ''),
-                'whatsapp':       get_setting('whatsapp_number', ''),
-                'address':        get_setting('shop_address', ''),
-                'hours_weekday':  get_setting('shop_hours_weekday', ''),
-                'hours_saturday': get_setting('shop_hours_saturday', ''),
-                'hours_sunday':   get_setting('shop_hours_sunday', ''),
-                'map_embed':      get_setting('map_embed', ''),
+                'name':           gs('shop_name', 'New Shades'),
+                'tagline':        gs('shop_tagline', 'Premium Salon & Studio'),
+                'phone':          gs('shop_phone', ''),
+                'email':          gs('shop_email', ''),
+                'whatsapp':       gs('whatsapp_number', ''),
+                'address':        gs('shop_address', ''),
+                'hours_weekday':  gs('shop_hours_weekday', ''),
+                'hours_saturday': gs('shop_hours_saturday', ''),
+                'hours_sunday':   gs('shop_hours_sunday', ''),
+                'map_embed':      gs('map_embed', ''),
             })
 
     from routes.auth import auth
