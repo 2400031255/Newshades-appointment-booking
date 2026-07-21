@@ -10,12 +10,19 @@ _backend_unavailable = set()  # tracks permanently failed backends this process 
 # ── Seed data ─────────────────────────────────────────────────────────────────
 
 def _seed_admin_params():
+    seed_hash = os.environ.get('SEED_ADMIN_HASH', '')
+    if not seed_hash:
+        import bcrypt as _bcrypt
+        seed_hash = _bcrypt.hashpw(
+            os.environ.get('SEED_ADMIN_PASSWORD', 'changeme123').encode(),
+            _bcrypt.gensalt()
+        ).decode()
     return (
         os.environ.get('SEED_ADMIN_NAME',     'Admin'),
-        os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
+        os.environ.get('SEED_ADMIN_USERNAME', 'admin'),
         os.environ.get('SEED_ADMIN_PHONE',    '0000000000'),
         os.environ.get('SEED_ADMIN_EMAIL',    'admin@newshades.com'),
-        os.environ.get('SEED_ADMIN_HASH',     '$2b$12$LFWGIXUQsah6hZ7aha530O2anxb1K8h4VC3izN1LB9LG9RpG7lwr.'),
+        seed_hash,
     )
 
 _DEFAULT_SERVICES = [
