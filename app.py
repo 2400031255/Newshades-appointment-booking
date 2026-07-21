@@ -142,7 +142,7 @@ def create_app():
                 'hours_saturday': gs('shop_hours_saturday', ''),
                 'hours_sunday':   gs('shop_hours_sunday', ''),
                 'map_embed':      gs('map_embed', ''),
-            }))
+            })
 
     from routes.auth import auth
     from routes.customer import customer
