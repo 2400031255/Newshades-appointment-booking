@@ -75,7 +75,7 @@ def create_app():
                 wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
                 return render_template('maintenance.html',
                     whatsapp=wa['value'] if wa else ''), 503
-        except Exception:
+        except (OSError, RuntimeError):
             pass
 
     app.teardown_appcontext(close_db)

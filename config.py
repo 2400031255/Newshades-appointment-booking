@@ -1,18 +1,24 @@
 import os
 import secrets
-import subprocess
 from datetime import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 
-try:
-    _git_hash = subprocess.check_output(
-        ['git', 'rev-parse', '--short', 'HEAD'],
-        stderr=subprocess.DEVNULL
-    ).decode().strip()
-except Exception:
-    _git_hash = '1'
+def _read_git_hash():
+    try:
+        git_head = os.path.join(os.path.dirname(__file__), '..', '.git', 'HEAD')
+        with open(git_head, 'r') as f:
+            ref = f.read().strip()
+        if ref.startswith('ref: '):
+            ref_path = os.path.join(os.path.dirname(__file__), '..', '.git', ref[5:])
+            with open(ref_path, 'r') as f:
+                return f.read().strip()[:7]
+        return ref[:7]
+    except OSError:
+        return '1'
+
+_git_hash = _read_git_hash()
 
 
 class Config:

@@ -1,6 +1,7 @@
 import logging
 import html as _html
 import re
+from markupsafe import Markup
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,9 @@ def _send(to_email: str, subject: str, body_html: str) -> bool:
         return False
 
 
-def _base_html(content: str) -> str:
+def _base_html(content: Markup) -> str:
+    if not isinstance(content, Markup):
+        content = Markup(_html.escape(str(content)))
     return f"""<!DOCTYPE html>
 <html>
 <head>

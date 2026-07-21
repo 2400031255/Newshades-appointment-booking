@@ -230,11 +230,11 @@
 <script>
 (function(){
   var s = document.getElementById('salonSplash');
-  if(localStorage.getItem('ns_splash_v3')){
+  if(sessionStorage.getItem('ns_splash_done')){
     if(s){ s.style.display='none'; }
     return;
   }
-  localStorage.setItem('ns_splash_v3','1');
+  sessionStorage.setItem('ns_splash_done','1');
 
   var pc = document.getElementById('splashParticles');
   if(pc){

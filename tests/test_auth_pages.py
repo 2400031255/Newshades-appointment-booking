@@ -8,7 +8,7 @@ from app import create_app
 
 def test_auth_pages_do_not_render_csrf_tokens():
     app = create_app()
-    app.config.update(TESTING=True)
+    app.config.update(TESTING=os.environ.get('FLASK_TESTING', 'true').lower() == 'true')
     client = app.test_client()
 
     for endpoint in ["/login", "/signup"]:

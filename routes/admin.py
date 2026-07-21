@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, Response
+from flask_wtf.csrf import validate_csrf, ValidationError
 from functools import wraps
 from db import query, execute
 import bcrypt, os, csv, io, uuid, math, time
@@ -69,6 +70,11 @@ def services():
 @admin_required
 def add_service():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))
+        except ValidationError:
+            flash('Invalid CSRF token.', 'danger')
+            return redirect(url_for('admin.add_service'))
         name     = request.form.get('service_name', '').strip()
         desc     = request.form.get('description', '').strip()
         category = request.form.get('category', '').strip()
@@ -104,6 +110,11 @@ def edit_service(sid):
         flash('Service not found.', 'danger')
         return redirect(url_for('admin.services'))
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))
+        except ValidationError:
+            flash('Invalid CSRF token.', 'danger')
+            return redirect(url_for('admin.edit_service', sid=sid))
         name     = request.form.get('service_name', '').strip()
         desc     = request.form.get('description', '').strip()
         category = request.form.get('category', '').strip()
@@ -315,6 +326,11 @@ def customer_detail(uid):
 def profile():
     admin_user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))
+        except ValidationError:
+            flash('Invalid CSRF token.', 'danger')
+            return redirect(url_for('admin.profile'))
         action           = request.form.get('action')
         current_password = request.form.get('current_password', '')
         if not bcrypt.checkpw(current_password.encode(), admin_user['password_hash'].encode()):
@@ -354,6 +370,11 @@ def profile():
 @admin_required
 def settings():
     if request.method == 'POST':
+        try:
+            validate_csrf(request.form.get('csrf_token'))
+        except ValidationError:
+            flash('Invalid CSRF token.', 'danger')
+            return redirect(url_for('admin.settings'))
         action = request.form.get('action')
         if action == 'shop':
             for f in ['shop_name','shop_tagline','shop_address','shop_phone','shop_email',
@@ -436,6 +457,11 @@ MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # 8 MB per file
 @admin.route('/gallery/upload', methods=['POST'])
 @admin_required
 def gallery_upload():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.gallery'))
     files      = request.files.getlist('photos')
     caption    = request.form.get('caption', '').strip()[:255]
     upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
@@ -505,6 +531,11 @@ def schedule():
 @admin.route('/schedule/block', methods=['POST'])
 @admin_required
 def add_block():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.schedule'))
     from datetime import datetime
     raw_date   = request.form.get('block_date', '').strip()
     block_time = request.form.get('block_time', '').strip() or None
@@ -557,6 +588,11 @@ def delete_block(bid):
 @admin.route('/schedule/unblock-date', methods=['POST'])
 @admin_required
 def unblock_date():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.schedule'))
     from datetime import datetime
     raw_date = request.form.get('block_date', '').strip()
     try:
@@ -585,6 +621,11 @@ def offers():
 @admin.route('/offers/save', methods=['POST'])
 @admin_required
 def save_offer():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.offers'))
     from datetime import datetime
     oid                  = request.form.get('offer_id', '').strip()
     title                = request.form.get('title', '').strip()
@@ -655,6 +696,11 @@ def delete_offer(oid):
 @admin.route('/coupons/save', methods=['POST'])
 @admin_required
 def save_coupon():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.offers'))
     code             = request.form.get('code', '').strip().upper()[:30]
     discount_percent = request.form.get('discount_percent', '0').strip() or '0'
     max_uses         = request.form.get('max_uses', '0').strip() or '0'
