@@ -229,15 +229,20 @@
 
 <script>
 (function(){
-  /* Floating gold particles */
-  var pc=document.getElementById('splashParticles');
+  var s = document.getElementById('salonSplash');
+  if(localStorage.getItem('ns_splash_v3')){
+    if(s){ s.style.display='none'; }
+    return;
+  }
+  localStorage.setItem('ns_splash_v3','1');
+
+  var pc = document.getElementById('splashParticles');
   if(pc){
     for(var i=0;i<18;i++){
       var p=document.createElement('div');
       p.className='sp';
       var sz=Math.random()*3+1.5;
-      p.style.width=sz+'px';
-      p.style.height=sz+'px';
+      p.style.width=sz+'px'; p.style.height=sz+'px';
       p.style.left=(Math.random()*100)+'%';
       p.style.animationDuration=(Math.random()*8+6)+'s';
       p.style.animationDelay=(Math.random()*4)+'s';
@@ -245,13 +250,9 @@
       pc.appendChild(p);
     }
   }
-
   setTimeout(function(){document.getElementById('splashBar').style.width='100%';},80);
-  setTimeout(function(){document.getElementById('salonSplash').classList.add('splash-out');},2600);
-  setTimeout(function(){
-    var s=document.getElementById('salonSplash');
-    if(s)s.style.display='none';
-  },3600);
+  setTimeout(function(){s.classList.add('splash-out');},2600);
+  setTimeout(function(){if(s)s.style.display='none';},3600);
 })();
 </script>
 
