@@ -41,8 +41,8 @@
     <a href="{{ url_for('admin.services') }}" class="{{ 'active' if 'service' in request.endpoint }}">
       <span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span>
     </a>
-    <a href="{{ url_for('admin.appointments') }}" class="{{ 'active' if request.endpoint == 'admin.appointments' }}">
-      <span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Appointments</span>
+    <a href="{{ url_for('admin.enquiries') }}" class="{{ 'active' if request.endpoint in ('admin.enquiries','admin.enquiry_update','admin.enquiry_delete') }}">
+      <span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span>
       {% set pending_count = pending_appts if pending_appts is defined else 0 %}
       {% if pending_count > 0 %}
       <span class="sidebar-pending-badge">{{ pending_count }}</span>

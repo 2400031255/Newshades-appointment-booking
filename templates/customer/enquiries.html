@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}My Enquiries – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+.star-rating { display:flex;gap:6px;flex-direction:row-reverse;justify-content:flex-end; }
+.star-rating input { display:none; }
+.star-rating label { font-size:1.8rem;color:rgba(255,255,255,0.15);cursor:pointer;transition:color 0.15s,transform 0.15s; }
+.star-rating label:hover,.star-rating label:hover ~ label,.star-rating input:checked ~ label { color:var(--gold); }
+.star-rating label:hover { transform:scale(1.2); }
+.review-card { border-radius:20px;padding:28px;background:linear-gradient(145deg,rgba(201,168,76,0.08),rgba(255,255,255,0.03));border:1px solid rgba(201,168,76,0.22); }
+.review-textarea { width:100%;border:1px solid rgba(201,168,76,0.24);border-radius:12px;padding:12px 14px;background:rgba(255,255,255,0.06);color:#fff;outline:none;resize:vertical;min-height:90px;font-family:'DM Sans',sans-serif;font-size:0.92rem; }
+.review-textarea:focus { border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.16); }
+.review-textarea::placeholder { color:rgba(255,255,255,0.3); }
+.enq-status-pending   { background:rgba(255,170,77,0.14);color:#ffc36b;border:1px solid rgba(255,170,77,0.25); }
+.enq-status-contacted { background:rgba(105,152,255,0.14);color:#9dc0ff;border:1px solid rgba(105,152,255,0.25); }
+.enq-status-confirmed { background:rgba(37,211,102,0.14);color:#7ce0aa;border:1px solid rgba(37,211,102,0.25); }
+.enq-status-closed    { background:rgba(150,150,150,0.14);color:rgba(240,230,211,0.5);border:1px solid rgba(150,150,150,0.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> My Enquiries</div>
+        <h1 class="page-header-title">My <span>Enquiries</span></h1>
+        <p class="page-header-sub">Track all your enquiries and their current status.</p>
+      </div>
+      <a href="{{ url_for('customer.enquire_page') }}" class="btn-gold-hero">
+        <i class="fas fa-plus me-2"></i>New Enquiry
+      </a>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+
+    {% if enquiries %}
+    <div class="row g-4">
+      {% for enq in enquiries %}
+      <div class="col-12 reveal-up" style="animation-delay:{{ loop.index0 * 0.07 }}s">
+        <div class="appt-card">
+          <div class="appt-card-top">
+            <div>
+              <div class="appt-id"><i class="fas fa-hashtag me-1" style="font-size:0.8rem;"></i>Enquiry #{{ enq.enquiry_id }}</div>
+              <div class="appt-date-created">
+                {% set ca = enq.created_at | string %}
+                Submitted: {% if ca | length >= 10 %}{{ ca[:10] }}{% else %}{{ ca }}{% endif %}
+              </div>
+            </div>
+            <span class="appt-status enq-status-{{ enq.status.lower() }}" style="padding:5px 14px;border-radius:999px;font-size:0.78rem;font-weight:700;">{{ enq.status }}</span>
+          </div>
+
+          <div class="appt-services mt-3">
+            <i class="fas fa-concierge-bell me-2 text-gold"></i>{{ enq.selected_services }}
+          </div>
+
+          <div class="appt-meta mt-3">
+            <div class="appt-meta-item">
+              <i class="fas fa-calendar-alt text-gold" style="font-size:0.85rem;"></i>
+              <div>
+                <div class="appt-meta-label">Preferred Date</div>
+                <div class="appt-meta-val">
+                  {% if enq.preferred_date %}
+                    {% set d = enq.preferred_date %}
+                    {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d/%m/%Y') }}{% endif %}
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="appt-meta-item">
+              <i class="fas fa-clock text-gold" style="font-size:0.85rem;"></i>
+              <div>
+                <div class="appt-meta-label">Preferred Time</div>
+                <div class="appt-meta-val">{{ enq.preferred_time if enq.preferred_time else 'Flexible' }}</div>
+              </div>
+            </div>
+          </div>
+
+          {% if enq.message %}
+          <div style="margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:0.82rem;color:rgba(240,230,211,0.65);">
+            <i class="fas fa-comment-alt me-2 text-gold" style="font-size:0.75rem;"></i>{{ enq.message }}
+          </div>
+          {% endif %}
+
+          {% if enq.admin_notes %}
+          <div style="margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(105,152,255,0.06);border:1px solid rgba(105,152,255,0.2);font-size:0.82rem;color:#9dc0ff;">
+            <i class="fas fa-user-shield me-2" style="font-size:0.75rem;"></i><strong>Team Note:</strong> {{ enq.admin_notes }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state reveal-up">
+      <div class="empty-icon"><i class="fas fa-clipboard-list"></i></div>
+      <h5 style="color:#fff;font-family:'Playfair Display',serif;">No enquiries yet</h5>
+      <p class="text-muted">Make your first enquiry and our team will get back to you!</p>
+      <a href="{{ url_for('customer.enquire_page') }}" class="btn-gold-hero mt-2">
+        <i class="fas fa-paper-plane me-2"></i>Make an Enquiry
+      </a>
+    </div>
+    {% endif %}
+
+    <!-- Review Section -->
+    {% if has_confirmed %}
+    <div class="mt-5 reveal-up">
+      <div class="section-badge mb-3"><span class="badge-dot"></span> Your Experience</div>
+      <div class="review-card">
+        {% if existing_review %}
+        <div class="d-flex align-items-start gap-3 flex-wrap justify-content-between">
+          <div>
+            <h5 style="font-family:'Playfair Display',serif;color:#fff;margin-bottom:6px;">
+              <i class="fas fa-star me-2 text-gold"></i>Your Review
+            </h5>
+            <div style="color:var(--gold);font-size:1rem;letter-spacing:2px;margin-bottom:8px;">
+              {% for i in range(existing_review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+              {% for i in range(5 - existing_review.rating) %}<i class="far fa-star" style="opacity:0.3;"></i>{% endfor %}
+            </div>
+            <p style="color:rgba(240,230,211,0.82);font-style:italic;margin:0;">&ldquo;{{ existing_review.comment }}&rdquo;</p>
+          </div>
+          <form method="POST" action="{{ url_for('customer.submit_review') }}" id="editReviewForm" style="display:none;flex:1;min-width:260px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="star-rating mb-3">
+              {% for i in [5,4,3,2,1] %}
+              <input type="radio" name="rating" id="er{{ i }}" value="{{ i }}" {{ 'checked' if existing_review.rating == i }}>
+              <label for="er{{ i }}"><i class="fas fa-star"></i></label>
+              {% endfor %}
+            </div>
+            <textarea name="comment" class="review-textarea mb-3" maxlength="500" required>{{ existing_review.comment }}</textarea>
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn-gold-hero" style="padding:10px 20px;font-size:0.88rem;"><i class="fas fa-save me-2"></i>Update Review</button>
+              <button type="button" onclick="document.getElementById('editReviewForm').style.display='none';document.getElementById('editReviewBtn').style.display='';" class="btn-appt-cancel">Cancel</button>
+            </div>
+          </form>
+          <button id="editReviewBtn" onclick="document.getElementById('editReviewForm').style.display='';this.style.display='none';" class="btn-appt-rebook" style="align-self:flex-start;">
+            <i class="fas fa-edit me-1"></i>Edit Review
+          </button>
+        </div>
+        {% else %}
+        <h5 style="font-family:'Playfair Display',serif;color:#fff;margin-bottom:4px;">
+          <i class="fas fa-star me-2 text-gold"></i>Leave a Review
+        </h5>
+        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px;">How was your experience at New Shades?</p>
+        <form method="POST" action="{{ url_for('customer.submit_review') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label class="field-label mb-2">Your Rating</label>
+          <div class="star-rating mb-3">
+            {% for i in [5,4,3,2,1] %}
+            <input type="radio" name="rating" id="r{{ i }}" value="{{ i }}" required>
+            <label for="r{{ i }}"><i class="fas fa-star"></i></label>
+            {% endfor %}
+          </div>
+          <label class="field-label mb-2">Your Review <span style="color:var(--text-muted);font-size:0.75rem;">(max 500 chars)</span></label>
+          <textarea name="comment" class="review-textarea mb-3" placeholder="Tell us about your experience…" maxlength="500" required></textarea>
+          <button type="submit" class="btn-gold-hero" style="padding:12px 28px;">
+            <i class="fas fa-paper-plane me-2"></i>Submit Review
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

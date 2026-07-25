@@ -2,10 +2,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from flask_wtf.csrf import validate_csrf, ValidationError
 from functools import wraps
 from db import query, execute
-import bcrypt, os, csv, io, uuid, math, time
+import bcrypt, os, csv, io, math, time
 from werkzeug.utils import secure_filename
-from sms import sms_confirmed, sms_rejected
-from email_service import send_confirmation_email, send_rejection_email
+from email_service import send_enquiry_confirmed_email, send_enquiry_closed_email
 
 ALLOWED_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif'}
 
@@ -40,29 +39,24 @@ def dashboard():
     from datetime import date as _date
     total_users    = query("SELECT COUNT(*) as c FROM users WHERE is_admin=0", one=True)['c']
     total_services = query("SELECT COUNT(*) as c FROM services", one=True)['c']
-    total_appts    = query("SELECT COUNT(*) as c FROM appointments", one=True)['c']
-    pending        = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)['c']
-    revenue_total  = query("SELECT COALESCE(SUM(total_price),0) as r FROM appointments WHERE status='Completed'", one=True)['r']
-    month_start    = _date.today().replace(day=1).isoformat()
-    revenue_month  = query(
-        "SELECT COALESCE(SUM(total_price),0) as r FROM appointments WHERE status='Completed' AND preferred_date>=%s",
-        (month_start,), one=True
-    )['r']
+    total_enqs     = query("SELECT COUNT(*) as c FROM enquiries", one=True)['c']
+    pending        = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Pending'", one=True)['c']
+    contacted      = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Contacted'", one=True)['c']
+    confirmed      = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Confirmed'", one=True)['c']
     recent = query(
-        "SELECT a.*, u.full_name, u.phone FROM appointments a "
-        "JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC LIMIT 5"
+        "SELECT e.*, u.full_name, u.phone FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id ORDER BY e.created_at DESC LIMIT 5"
     )
-    today_appts = query(
-        "SELECT a.*, u.full_name, u.phone FROM appointments a "
-        "JOIN users u ON a.user_id=u.id WHERE a.preferred_date=%s "
-        "ORDER BY a.preferred_time ASC",
+    today_enqs = query(
+        "SELECT e.*, u.full_name, u.phone FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id WHERE e.preferred_date=%s "
+        "ORDER BY e.preferred_time ASC",
         (_date.today().isoformat(),)
     )
     return render_template('admin/dashboard.html', total_users=total_users,
-                           total_services=total_services, total_appts=total_appts,
-                           pending=pending, recent=recent, today_appts=today_appts,
-                           revenue_total=float(revenue_total or 0),
-                           revenue_month=float(revenue_month or 0))
+                           total_services=total_services, total_enqs=total_enqs,
+                           pending=pending, contacted=contacted, confirmed=confirmed,
+                           recent=recent, today_enqs=today_enqs)
 
 
 # ── Services ───────────────────────────────────────────────────────────────
@@ -159,135 +153,144 @@ def delete_service(sid):
     return redirect(url_for('admin.services'))
 
 
-# ── Appointments ───────────────────────────────────────────────────────────
-@admin.route('/appointments')
+# ── Enquiries ───────────────────────────────────────────────────────────────
+@admin.route('/enquiries')
 @admin_required
-def appointments():
+def enquiries():
     status_filter = request.args.get('status', '')
     search        = request.args.get('q', '').strip()
     page          = max(1, int(request.args.get('page', 1) or 1))
     per_page      = 20
     offset        = (page - 1) * per_page
 
-    base_sql = (
-        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
-        "JOIN users u ON a.user_id=u.id"
+    base_sql  = (
+        "SELECT e.*, u.full_name, u.phone, u.email FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id"
     )
-    count_sql = "SELECT COUNT(*) as c FROM appointments a JOIN users u ON a.user_id=u.id"
+    count_sql = "SELECT COUNT(*) as c FROM enquiries e JOIN users u ON e.user_id=u.id"
     conditions, args = [], []
     if status_filter:
-        conditions.append("a.status=%s"); args.append(status_filter)
+        conditions.append("e.status=%s"); args.append(status_filter)
     if search:
-        conditions.append("(u.full_name LIKE %s OR u.phone LIKE %s OR a.selected_services LIKE %s)")
+        conditions.append("(u.full_name LIKE %s OR u.phone LIKE %s OR e.selected_services LIKE %s)")
         args += [f'%{search}%', f'%{search}%', f'%{search}%']
     if conditions:
         where = ' WHERE ' + ' AND '.join(conditions)
         base_sql  += where
         count_sql += where
-    base_sql += ' ORDER BY a.created_at DESC LIMIT %s OFFSET %s'
+    base_sql += ' ORDER BY e.created_at DESC LIMIT %s OFFSET %s'
     total_count = query(count_sql, tuple(args), one=True)['c']
-    appts       = query(base_sql, tuple(args) + (per_page, offset))
+    enqs        = query(base_sql, tuple(args) + (per_page, offset))
     total_pages = max(1, math.ceil(total_count / per_page))
-    return render_template('admin/appointments.html', appointments=appts,
+    return render_template('admin/enquiries.html', enquiries=enqs,
                            status_filter=status_filter, search=search,
                            page=page, total_pages=total_pages, total_count=total_count)
 
 
-@admin.route('/appointments/action/<int:aid>', methods=['POST'])
+@admin.route('/enquiries/update/<int:eid>', methods=['POST'])
 @admin_required
-def appointment_action(aid):
+def enquiry_update(eid):
     try:
         validate_csrf(request.form.get('csrf_token'))
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
-        return redirect(url_for('admin.appointments'))
-    action = request.form.get('action')
-    appt   = query(
-        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a JOIN users u ON a.user_id=u.id WHERE a.id=%s",
-        (aid,), one=True
+        return redirect(url_for('admin.enquiries'))
+
+    new_status  = request.form.get('status', '').strip()
+    admin_notes = request.form.get('admin_notes', '').strip()[:1000]
+    valid_statuses = ('Pending', 'Contacted', 'Confirmed', 'Closed')
+    if new_status not in valid_statuses:
+        flash('Invalid status.', 'danger')
+        return redirect(url_for('admin.enquiries'))
+
+    enq = query(
+        "SELECT e.*, u.full_name, u.phone, u.email FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id WHERE e.enquiry_id=%s",
+        (eid,), one=True
     )
-    if not appt:
-        flash('Appointment not found.', 'danger')
-        return redirect(url_for('admin.appointments'))
+    if not enq:
+        flash('Enquiry not found.', 'danger')
+        return redirect(url_for('admin.enquiries'))
+
+    execute(
+        "UPDATE enquiries SET status=%s, admin_notes=%s WHERE enquiry_id=%s",
+        (new_status, admin_notes, eid)
+    )
+    flash(f'Enquiry #{eid} updated to {new_status}.', 'success')
 
     try:
-        d = appt['preferred_date']
+        d = enq['preferred_date']
         fmt_date = d.strftime('%d %b %Y') if hasattr(d, 'strftime') else str(d)
     except (AttributeError, ValueError):
-        fmt_date = str(appt['preferred_date'])
-    fmt_time = appt['preferred_time'] or 'Flexible'
+        fmt_date = str(enq['preferred_date'])
+    fmt_time = enq['preferred_time'] or 'Flexible'
 
-    if action == 'accept':
-        ticket_id = str(uuid.uuid4())[:8].upper()
+    if new_status == 'Confirmed':
         try:
-            from datetime import date as _date, datetime as _datetime
-            appt_date  = _date.fromisoformat(str(appt['preferred_date'])[:10])
-            expires_at = _datetime.combine(appt_date, _datetime.max.time()).isoformat()
-        except (ValueError, TypeError):
-            expires_at = None
-        execute(
-            "UPDATE appointments SET status='Confirmed', ticket_id=%s, ticket_expires_at=%s WHERE id=%s",
-            (ticket_id, expires_at, aid)
-        )
-        flash('Appointment confirmed and ticket generated.', 'success')
-        try:
-            sms_confirmed(appt['phone'], appt['full_name'], fmt_date, fmt_time)
+            send_enquiry_confirmed_email(
+                enq['email'], enq['full_name'], eid,
+                fmt_date, fmt_time, enq['selected_services'], admin_notes
+            )
         except (OSError, RuntimeError) as e:
-            current_app.logger.error('SMS error: %s', e)
+            current_app.logger.error('Email error: %s', e)
+    elif new_status == 'Closed':
         try:
-            send_confirmation_email(appt['email'], appt['full_name'],
-                                    fmt_date, fmt_time, appt['selected_services'])
+            send_enquiry_closed_email(enq['email'], enq['full_name'], eid, admin_notes)
         except (OSError, RuntimeError) as e:
             current_app.logger.error('Email error: %s', e)
 
-    elif action == 'reject':
-        execute("UPDATE appointments SET status='Rejected' WHERE id=%s", (aid,))
-        flash('Appointment rejected.', 'warning')
-        try:
-            sms_rejected(appt['phone'], appt['full_name'], fmt_date, fmt_time)
-        except (OSError, RuntimeError) as e:
-            current_app.logger.error('SMS error: %s', e)
-        try:
-            send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
-        except (OSError, RuntimeError) as e:
-            current_app.logger.error('Email error: %s', e)
+    return redirect(url_for('admin.enquiries'))
 
-    elif action == 'checkin':
-        execute("UPDATE appointments SET status='Checked In' WHERE id=%s", (aid,))
-        flash('Customer checked in.', 'success')
 
-    elif action == 'complete':
-        execute("UPDATE appointments SET status='Completed' WHERE id=%s", (aid,))
-        flash('Appointment marked as completed.', 'success')
+@admin.route('/enquiries/delete/<int:eid>', methods=['POST'])
+@admin_required
+def enquiry_delete(eid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.enquiries'))
+    execute("DELETE FROM enquiries WHERE enquiry_id=%s", (eid,))
+    flash(f'Enquiry #{eid} deleted.', 'success')
+    return redirect(url_for('admin.enquiries'))
 
-    elif action == 'delete':
-        execute("DELETE FROM appointments WHERE id=%s", (aid,))
-        flash('Appointment deleted.', 'success')
-        try:
-            send_rejection_email(appt['email'], appt['full_name'], fmt_date, fmt_time)
-        except (OSError, RuntimeError) as e:
-            current_app.logger.error('Email error on delete: %s', e)
 
-    return redirect(url_for('admin.appointments'))
+@admin.route('/enquiries/export')
+@admin_required
+def export_enquiries():
+    enqs = query(
+        "SELECT e.enquiry_id, u.full_name, u.phone, u.email, e.selected_services, "
+        "e.preferred_date, e.preferred_time, e.message, e.status, e.admin_notes, e.created_at "
+        "FROM enquiries e JOIN users u ON e.user_id=u.id ORDER BY e.created_at DESC"
+    )
+    si = io.StringIO()
+    w  = csv.writer(si)
+    w.writerow(['ID','Customer','Phone','Email','Services','Preferred Date',
+                'Preferred Time','Message','Status','Admin Notes','Submitted At'])
+    for e in enqs:
+        w.writerow([e['enquiry_id'], e['full_name'], e['phone'], e['email'],
+                    e['selected_services'], e['preferred_date'],
+                    e['preferred_time'] or '', e['message'] or '',
+                    e['status'], e['admin_notes'] or '', e['created_at']])
+    return Response(si.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment; filename=enquiries.csv'})
 
+
+# ── Legacy appointment redirects ───────────────────────────────────────────
+@admin.route('/appointments')
+@admin_required
+def appointments():
+    return redirect(url_for('admin.enquiries'))
+
+@admin.route('/appointments/action/<int:aid>', methods=['POST'])
+@admin_required
+def appointment_action(aid):
+    return redirect(url_for('admin.enquiries'))
 
 @admin.route('/appointments/export')
 @admin_required
 def export_appointments():
-    appts = query(
-        "SELECT a.id, u.full_name, u.phone, u.email, a.selected_services, "
-        "a.preferred_date, a.preferred_time, a.status, a.ticket_id, a.created_at "
-        "FROM appointments a JOIN users u ON a.user_id=u.id ORDER BY a.created_at DESC"
-    )
-    si = io.StringIO()
-    w  = csv.writer(si)
-    w.writerow(['ID', 'Customer', 'Phone', 'Email', 'Services', 'Date', 'Time', 'Status', 'Ticket ID', 'Booked At'])
-    for a in appts:
-        w.writerow([a['id'], a['full_name'], a['phone'], a['email'],
-                    a['selected_services'], a['preferred_date'],
-                    a['preferred_time'] or '', a['status'], a.get('ticket_id') or '', a['created_at']])
-    return Response(si.getvalue(), mimetype='text/csv',
-                    headers={'Content-Disposition': 'attachment; filename=appointments.csv'})
+    return redirect(url_for('admin.export_enquiries'))
 
 
 # ── Reviews ────────────────────────────────────────────────────────────────
@@ -319,8 +322,8 @@ def delete_review(rid):
 @admin_required
 def customers():
     users = query(
-        "SELECT u.*, COUNT(a.id) as appt_count FROM users u "
-        "LEFT JOIN appointments a ON u.id=a.user_id "
+        "SELECT u.*, COUNT(e.enquiry_id) as appt_count FROM users u "
+        "LEFT JOIN enquiries e ON u.id=e.user_id "
         "WHERE u.is_admin=0 GROUP BY u.id ORDER BY u.created_at DESC"
     )
     return render_template('admin/customers.html', users=users)
@@ -334,7 +337,7 @@ def customer_detail(uid):
         flash('Customer not found.', 'danger')
         return redirect(url_for('admin.customers'))
     appts = query(
-        "SELECT * FROM appointments WHERE user_id=%s ORDER BY created_at DESC",
+        "SELECT * FROM enquiries WHERE user_id=%s ORDER BY created_at DESC",
         (uid,)
     )
     return render_template('admin/customer_detail.html', user=user, appointments=appts)

@@ -402,7 +402,7 @@
         <div>
           <div class="welcome-greeting"><i class="fas fa-sun me-2"></i>Good to see you back</div>
           <h1 class="welcome-name">Hello, <span>{{ user.full_name.split()[0] }}</span> ✨</h1>
-          <p class="welcome-sub">Ready for your next premium experience? Book an appointment below.</p>
+          <p class="welcome-sub">Ready for your next premium experience? Make an enquiry below.</p>
         </div>
         <div class="welcome-avatar">{{ user.full_name[0].upper() }}</div>
       </div>
@@ -431,8 +431,8 @@
           {% if offer.valid_until %}
           <div class="offer-expiry"><i class="fas fa-clock"></i>Valid until {% set d = offer.valid_until|string %}{% if d|length >= 10 %}{{ d[8:10] }} {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d[5:7]|int] }} {{ d[0:4] }}{% else %}{{ d }}{% endif %}</div>
           {% endif %}
-          <a href="{{ url_for('customer.book_page') }}" class="offer-cta">
-            Book Now <i class="fas fa-arrow-right"></i>
+          <a href="{{ url_for('customer.enquire_page') }}" class="offer-cta">
+            Enquire Now <i class="fas fa-arrow-right"></i>
           </a>
         </div>
         {% endfor %}
@@ -444,9 +444,9 @@
     <div class="row g-3 mb-4">
       <div class="col-md-4 reveal-up" style="animation-delay:0.05s">
         <div class="cust-stat cust-stat-total">
-          <div class="cust-stat-icon"><i class="fas fa-calendar-check"></i></div>
+          <div class="cust-stat-icon"><i class="fas fa-clipboard-list"></i></div>
           <div class="cust-stat-num">{{ total }}</div>
-          <div class="cust-stat-label">Total Bookings</div>
+          <div class="cust-stat-label">Total Enquiries</div>
         </div>
       </div>
       <div class="col-md-4 reveal-up" style="animation-delay:0.1s">
@@ -472,19 +472,19 @@
         <div class="dash-card">
           <div class="dash-card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
           <div class="d-flex flex-column gap-3">
-            <a href="{{ url_for('customer.book_page') }}" class="quick-action qa-book">
-              <div class="quick-action-icon"><i class="fas fa-calendar-plus"></i></div>
+            <a href="{{ url_for('customer.enquire_page') }}" class="quick-action qa-book">
+              <div class="quick-action-icon"><i class="fas fa-paper-plane"></i></div>
               <div>
-                <div class="quick-action-title">Book Appointment</div>
-                <div class="quick-action-sub">Choose services & pick a date</div>
+                <div class="quick-action-title">Make an Enquiry</div>
+                <div class="quick-action-sub">Choose services & submit enquiry</div>
               </div>
               <i class="fas fa-arrow-right ms-auto" style="color:var(--gold);opacity:0.6;"></i>
             </a>
-            <a href="{{ url_for('customer.appointments') }}" class="quick-action qa-hist">
-              <div class="quick-action-icon"><i class="fas fa-history"></i></div>
+            <a href="{{ url_for('customer.enquiries') }}" class="quick-action qa-hist">
+              <div class="quick-action-icon"><i class="fas fa-list-alt"></i></div>
               <div>
-                <div class="quick-action-title">My Appointments</div>
-                <div class="quick-action-sub">View, cancel or re-book</div>
+                <div class="quick-action-title">My Enquiries</div>
+                <div class="quick-action-sub">View status & team notes</div>
               </div>
               <i class="fas fa-arrow-right ms-auto" style="color:#9dc0ff;opacity:0.6;"></i>
             </a>
@@ -520,35 +520,35 @@
       <div class="col-lg-7 reveal-up" style="animation-delay:0.25s">
         <div class="dash-card">
           <div class="dash-card-title d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-clock"></i> Recent Appointments</span>
-            <a href="{{ url_for('customer.appointments') }}" style="font-size:0.78rem;color:var(--gold-2);font-family:'DM Sans',sans-serif;font-weight:600;">
+            <span><i class="fas fa-clock"></i> Recent Enquiries</span>
+            <a href="{{ url_for('customer.enquiries') }}" style="font-size:0.78rem;color:var(--gold-2);font-family:'DM Sans',sans-serif;font-weight:600;">
               View All <i class="fas fa-arrow-right ms-1"></i>
             </a>
           </div>
-          {% if recent_appts %}
-            {% for appt in recent_appts %}
+          {% if recent_enquiries %}
+            {% for enq in recent_enquiries %}
             <div class="recent-appt-row">
               <div class="recent-appt-icon"><i class="fas fa-concierge-bell"></i></div>
               <div style="flex:1;min-width:0;">
-                <div class="recent-appt-name">{{ appt.selected_services }}</div>
+                <div class="recent-appt-name">{{ enq.selected_services }}</div>
                 <div class="recent-appt-meta">
                   <i class="fas fa-calendar-alt me-1"></i>
-                  {% set d = appt.preferred_date %}
+                  {% set d = enq.preferred_date %}
                   {% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
-                  {% if appt.preferred_time %}
-                  &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ appt.preferred_time }}
+                  {% if enq.preferred_time %}
+                  &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ enq.preferred_time }}
                   {% endif %}
                 </div>
               </div>
-              <span class="recent-appt-status appt-status-{{ appt.status.lower() }}">{{ appt.status }}</span>
+              <span class="recent-appt-status appt-status-{{ enq.status.lower() }}">{{ enq.status }}</span>
             </div>
             {% endfor %}
           {% else %}
           <div class="text-center py-4">
-            <div style="font-size:2.5rem;color:rgba(201,168,76,0.2);margin-bottom:12px;"><i class="fas fa-calendar-times"></i></div>
-            <p style="color:var(--text-muted);font-size:0.88rem;margin:0;">No appointments yet.</p>
-            <a href="{{ url_for('customer.book_page') }}" class="btn-gold-hero mt-3" style="font-size:0.85rem;padding:10px 20px;animation:glowPulse 2.5s ease-in-out infinite;">
-              <i class="fas fa-plus me-2"></i>Book Now
+            <div style="font-size:2.5rem;color:rgba(201,168,76,0.2);margin-bottom:12px;"><i class="fas fa-clipboard-list"></i></div>
+            <p style="color:var(--text-muted);font-size:0.88rem;margin:0;">No enquiries yet.</p>
+            <a href="{{ url_for('customer.enquire_page') }}" class="btn-gold-hero mt-3" style="font-size:0.85rem;padding:10px 20px;">
+              <i class="fas fa-paper-plane me-2"></i>Make an Enquiry
             </a>
           </div>
           {% endif %}

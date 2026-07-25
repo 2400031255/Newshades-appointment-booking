@@ -103,7 +103,7 @@ def create_app():
         pending_appts = 0
         if session.get('is_admin'):
             try:
-                r = query("SELECT COUNT(*) as c FROM appointments WHERE status='Pending'", one=True)
+                r = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Pending'", one=True)
                 pending_appts = r['c'] if r else 0
             except (OSError, RuntimeError) as e:
                 current_app.logger.warning('pending_appts query failed: %s', e)

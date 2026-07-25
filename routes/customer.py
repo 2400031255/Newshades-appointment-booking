@@ -1,63 +1,12 @@
-import math
 import logging
-from datetime import date, datetime, timezone
-import time
-import threading
-from collections import defaultdict
+from datetime import date
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from flask_wtf.csrf import validate_csrf, ValidationError
 from functools import wraps
 from db import query, execute
-from sms import sms_new_booking
-from email_service import send_booking_received_email
+from email_service import send_enquiry_received_email, send_admin_new_enquiry_email
 
 logger = logging.getLogger(__name__)
-
-_booking_attempts = defaultdict(list)
-_booking_lock     = threading.Lock()
-
-
-def _is_booking_rate_limited(ip):
-    now = time.time()
-    with _booking_lock:
-        attempts = [t for t in _booking_attempts[ip] if now - t < 600]
-        _booking_attempts[ip] = attempts
-        if len(attempts) >= 5:
-            return True
-        _booking_attempts[ip].append(now)
-    return False
-
-
-def _safe_pct(val):
-    """Return a valid float 0-100, rejecting NaN/Inf/out-of-range."""
-    try:
-        v = float(val or 0)
-    except (TypeError, ValueError):
-        return 0.0
-    if math.isnan(v) or math.isinf(v) or not (0.0 <= v <= 100.0):
-        return 0.0
-    return v
-
-
-def _build_offer_map(active_offers):
-    """Only includes offers with blank coupon_code (auto-apply). Coupon-gated offers are skipped."""
-    offer_map, global_offer = {}, None
-    for o in active_offers:
-        if not _safe_pct(o.get('discount_percent')):
-            continue
-        if (o.get('coupon_code') or '').strip():  # skip coupon-gated offers
-            continue
-        app_svcs = (o.get('applicable_services') or '').strip()
-        if not app_svcs:
-            if not global_offer:
-                global_offer = o
-        else:
-            for sname in app_svcs.split(','):
-                key = sname.strip().lower()
-                if key and key not in offer_map:
-                    offer_map[key] = o
-    return offer_map, global_offer
-
 
 customer = Blueprint('customer', __name__)
 
@@ -80,70 +29,47 @@ def dashboard():
     if not user:
         session.clear()
         return redirect(url_for('auth.login'))
-    appts     = query("SELECT * FROM appointments WHERE user_id=%s ORDER BY created_at DESC LIMIT 3", (session['user_id'],))
-    total     = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s", (session['user_id'],), one=True)['c']
-    pending   = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
-    confirmed = query("SELECT COUNT(*) as c FROM appointments WHERE user_id=%s AND status='Confirmed'", (session['user_id'],), one=True)['c']
+    recent_enquiries = query(
+        "SELECT * FROM enquiries WHERE user_id=%s ORDER BY created_at DESC LIMIT 3",
+        (session['user_id'],)
+    )
+    total     = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s", (session['user_id'],), one=True)['c']
+    pending   = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
+    confirmed = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Confirmed'", (session['user_id'],), one=True)['c']
     today_str = date.today().isoformat()
     today_offers = query(
         "SELECT * FROM offers WHERE is_active=1 "
         "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
         (today_str, today_str)
     )
-    return render_template('customer/dashboard.html', user=user, recent_appts=appts,
+    return render_template('customer/dashboard.html', user=user,
+                           recent_enquiries=recent_enquiries,
                            total=total, pending=pending, confirmed=confirmed,
                            today_offers=today_offers)
 
 
-# ── Book page (GET) ───────────────────────────────────────────────────────────
+# ── Enquire page (GET) ────────────────────────────────────────────────────────
 
-@customer.route('/book', methods=['GET'])
+@customer.route('/enquire', methods=['GET'])
 @login_required
-def book_page():
+def enquire_page():
     services   = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
     categories = list(dict.fromkeys(s['category'] for s in services))
-    rebook_names = session.pop('rebook_services', None)
-    rebook_ids   = [str(s['id']) for s in services
-                    if rebook_names and s['service_name'].lower() in
-                    [n.strip().lower() for n in rebook_names.split(',')]]
-
-    today_str     = date.today().isoformat()
-    active_offers = query(
+    today_str  = date.today().isoformat()
+    today_offers = query(
         "SELECT * FROM offers WHERE is_active=1 "
         "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
         (today_str, today_str)
     )
-    offer_map, global_offer = _build_offer_map(active_offers)
-
-    for svc in services:
-        key     = svc['service_name'].lower()
-        matched = offer_map.get(key) or global_offer
-        if matched:
-            pct = _safe_pct(matched['discount_percent'])
-            svc['offer_title']      = matched['title']
-            svc['offer_pct']        = pct
-            svc['offer_text']       = matched.get('discount_text') or f"{pct:.0f}% OFF"
-            svc['discounted_price'] = round(float(svc['price']) * (1 - pct / 100), 2)
-        else:
-            svc['offer_title']      = None
-            svc['offer_pct']        = 0
-            svc['offer_text']       = None
-            svc['discounted_price'] = float(svc['price'])
-
-    return render_template('customer/book.html', services=services, categories=categories,
-                           rebook_ids=rebook_ids, today_offers=active_offers)
+    return render_template('customer/enquire.html', services=services,
+                           categories=categories, today_offers=today_offers)
 
 
-# ── Book (POST) ───────────────────────────────────────────────────────────────
+# ── Enquire (POST) ────────────────────────────────────────────────────────────
 
-@customer.route('/book', methods=['POST'])
+@customer.route('/enquire', methods=['POST'])
 @login_required
-def book():
-    ip = request.remote_addr
-    if _is_booking_rate_limited(ip):
-        flash('Too many booking attempts. Please wait a few minutes.', 'danger')
-        return redirect(url_for('customer.book_page'))
-
+def enquire():
     user = query("SELECT * FROM users WHERE id=%s", (session['user_id'],), one=True)
     if not user:
         session.clear()
@@ -153,243 +79,83 @@ def book():
     service_ids = list({int(i) for i in raw_ids if str(i).isdigit()})[:20]
     preferred_date_str = request.form.get('preferred_date', '').strip()
     preferred_time     = request.form.get('preferred_time', '').strip()
+    message            = request.form.get('message', '').strip()[:1000]
 
     if not service_ids or not preferred_date_str:
-        flash('Please select at least one service and a date.', 'warning')
-        return redirect(url_for('customer.book_page'))
+        flash('Please select at least one service and a preferred date.', 'warning')
+        return redirect(url_for('customer.enquire_page'))
 
     try:
-        booking_date = date.fromisoformat(preferred_date_str)
-        if booking_date < date.today():
+        enquiry_date = date.fromisoformat(preferred_date_str)
+        if enquiry_date < date.today():
             flash('Please choose today or a future date.', 'warning')
-            return redirect(url_for('customer.book_page'))
+            return redirect(url_for('customer.enquire_page'))
     except ValueError:
-        flash('Please choose a valid booking date.', 'warning')
-        return redirect(url_for('customer.book_page'))
+        flash('Please choose a valid date.', 'warning')
+        return redirect(url_for('customer.enquire_page'))
 
     placeholders = ','.join(['%s'] * len(service_ids))
     services = query(
-        f"SELECT service_name, price, price_on_request FROM services WHERE id IN ({placeholders}) AND is_active=1",
+        f"SELECT service_name FROM services WHERE id IN ({placeholders}) AND is_active=1",
         tuple(service_ids)
     )
     if not services:
         flash('Selected services are no longer available.', 'warning')
-        return redirect(url_for('customer.book_page'))
+        return redirect(url_for('customer.enquire_page'))
 
     service_names = [s['service_name'] for s in services]
     services_str  = ', '.join(service_names)
-    total_price   = sum(float(s['price'] or 0) for s in services if not s.get('price_on_request'))
-
-    # Check coupon code submitted with form
-    coupon_code_input = (request.form.get('coupon_code') or '').strip().upper()
-    coupon_discount   = 0.0
-    coupon_applied    = None
-    if coupon_code_input:
-        today_str2 = preferred_date_str
-        coupon_row = query(
-            "SELECT * FROM coupons WHERE UPPER(code)=%s AND is_active=1 "
-            "AND (valid_until IS NULL OR valid_until >= %s)",
-            (coupon_code_input, today_str2), one=True
-        )
-        if coupon_row:
-            pct = float(coupon_row.get('discount_percent') or 0)
-            max_uses = int(coupon_row.get('max_uses') or 0)
-            used     = int(coupon_row.get('used_count') or 0)
-            if pct and (max_uses == 0 or used < max_uses):
-                coupon_discount = round(total_price * pct / 100, 2)
-                coupon_applied  = coupon_row
-
-    active_offers = query(
-        "SELECT * FROM offers WHERE is_active=1 "
-        "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
-        (preferred_date_str, preferred_date_str)
-    )
-    offer_map, global_offer = _build_offer_map(active_offers)
-
-    discount_amount = 0.0
-    applied_offer   = None
-    if not coupon_applied:  # only auto-apply offer if no coupon used
-        for svc in services:
-            if svc.get('price_on_request'):  # skip — price decided at salon
-                continue
-            matched = offer_map.get(svc['service_name'].lower()) or global_offer
-            if matched:
-                applied_offer    = matched
-                discount_amount += float(svc['price'] or 0) * _safe_pct(matched['discount_percent']) / 100
-
-    if coupon_applied:
-        discount_amount  = coupon_discount
-        discount_percent = float(coupon_applied['discount_percent'])
-        offer_label      = f'Coupon: {coupon_code_input}'
-    else:
-        discount_amount  = round(discount_amount, 2)
-        discount_percent = _safe_pct(applied_offer['discount_percent']) if applied_offer else 0.0
-        offer_label      = applied_offer['title'] if applied_offer else ''
-
-    final_price = round(total_price - discount_amount, 2)
 
     try:
-        formatted_date = booking_date.strftime('%d %b %Y')
+        formatted_date = enquiry_date.strftime('%d %b %Y')
     except (ValueError, AttributeError):
         formatted_date = preferred_date_str
 
-    execute(
-        "INSERT INTO appointments (user_id, selected_services, preferred_date, preferred_time, "
-        "total_price, discount_percent, offer_applied) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-        (session['user_id'], services_str, preferred_date_str, preferred_time or None,
-         final_price, discount_percent, offer_label)
+    enquiry_id = execute(
+        "INSERT INTO enquiries (user_id, selected_services, preferred_date, preferred_time, message, status) "
+        "VALUES (%s,%s,%s,%s,%s,'Pending')",
+        (session['user_id'], services_str, preferred_date_str, preferred_time or None, message)
     )
-    if coupon_applied:
-        execute("UPDATE coupons SET used_count=used_count+1 WHERE id=%s", (coupon_applied['id'],))
 
+    # Email to customer
     try:
-        admin_phone = current_app.config.get('ADMIN_PHONE', '')
-        if admin_phone:
-            sms_new_booking(admin_phone, user['full_name'], user['phone'], formatted_date, preferred_time)
+        if user.get('email'):
+            send_enquiry_received_email(
+                user['email'], user['full_name'],
+                enquiry_id or 0, formatted_date, preferred_time, services_str
+            )
     except (OSError, RuntimeError) as e:
-        logger.error('SMS error: %s', e)
+        logger.error('Customer email error: %s', e)
 
+    # Email to admin
     try:
         admin_email = current_app.config.get('ADMIN_EMAIL', '')
         if admin_email:
-            from email_service import send_admin_new_booking_email
-            send_admin_new_booking_email(admin_email, user['full_name'], user['phone'],
-                                         formatted_date, preferred_time, services_str)
+            send_admin_new_enquiry_email(
+                admin_email, user['full_name'], user['phone'],
+                enquiry_id or 0, formatted_date, preferred_time, services_str
+            )
     except (OSError, RuntimeError) as e:
         logger.error('Admin email error: %s', e)
 
-    try:
-        if user.get('email'):
-            send_booking_received_email(user['email'], user['full_name'],
-                                        formatted_date, preferred_time, services_str)
-    except (OSError, RuntimeError) as e:
-        logger.error('Email error: %s', e)
-
-    return render_template('customer/confirm.html',
+    return render_template('customer/enquiry_submitted.html',
         user=user, service_names=service_names,
         preferred_date=formatted_date, preferred_time=preferred_time,
-        total_price=total_price, discount_amount=discount_amount,
-        final_price=final_price, applied_offer=coupon_applied or applied_offer)
+        message=message, enquiry_id=enquiry_id or 0)
 
 
-# ── Ticket ────────────────────────────────────────────────────────────────────
+# ── My Enquiries ──────────────────────────────────────────────────────────────
 
-@customer.route('/ticket/<int:aid>')
+@customer.route('/enquiries')
 @login_required
-def ticket(aid):
-    appt = query(
-        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
-        "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
-        (aid, session['user_id']), one=True
+def enquiries():
+    enqs = query(
+        "SELECT * FROM enquiries WHERE user_id=%s ORDER BY created_at DESC",
+        (session['user_id'],)
     )
-    if not appt or appt['status'] not in ('Confirmed', 'Checked In', 'Completed'):
-        flash('Ticket not available.', 'danger')
-        return redirect(url_for('customer.appointments'))
-    if appt['status'] == 'Confirmed' and appt.get('ticket_expires_at'):
-        try:
-            exp = datetime.fromisoformat(str(appt['ticket_expires_at']))
-            if datetime.now() > exp:
-                flash('This ticket has expired.', 'danger')
-                return redirect(url_for('customer.appointments'))
-        except ValueError as e:
-            logger.warning('ticket expiry parse error: %s', e)
-    shop_name = query("SELECT value FROM settings WHERE `key`='shop_name'", one=True)
-    shop_name = shop_name['value'] if shop_name else 'New Shades'
-    return render_template('customer/ticket.html', appt=appt, shop_name=shop_name)
-
-
-# ── Cancel ────────────────────────────────────────────────────────────────────
-
-@customer.route('/cancel/<int:aid>', methods=['POST'])
-@login_required
-def cancel_appointment(aid):
-    try:
-        validate_csrf(request.form.get('csrf_token'))
-    except ValidationError:
-        flash('Invalid CSRF token.', 'danger')
-        return redirect(url_for('customer.appointments'))
-    appt = query(
-        "SELECT a.*, u.full_name, u.phone, u.email FROM appointments a "
-        "JOIN users u ON a.user_id=u.id WHERE a.id=%s AND a.user_id=%s",
-        (aid, session['user_id']), one=True
-    )
-    if appt and appt['status'] in ('Pending', 'Confirmed'):
-        execute("UPDATE appointments SET status='Cancelled' WHERE id=%s", (aid,))
-        flash('Appointment cancelled successfully.', 'success')
-        # Notify admin
-        try:
-            admin_email = current_app.config.get('ADMIN_EMAIL', '')
-            if admin_email:
-                from email_service import _send, _base_html
-                import html as _html
-                n = _html.escape(appt['full_name'])
-                d = _html.escape(str(appt['preferred_date']))
-                t = _html.escape(str(appt['preferred_time'] or 'Flexible'))
-                content = f"<p>Customer <strong style='color:#e8c96a;'>{n}</strong> has cancelled their appointment.</p><div class='detail-box'><div class='detail-row'><span class='detail-label'>Date</span><span class='detail-val'>{d}</span></div><div class='detail-row'><span class='detail-label'>Time</span><span class='detail-val'>{t}</span></div></div>"
-                _send(admin_email, f'Appointment Cancelled – {n}', _base_html(content))
-        except (OSError, RuntimeError) as e:
-            logger.error('Cancel notify error: %s', e)
-    else:
-        flash('Only pending or confirmed appointments can be cancelled.', 'danger')
-    return redirect(url_for('customer.appointments'))
-
-
-# ── Reschedule ───────────────────────────────────────────────────────────────
-
-@customer.route('/reschedule/<int:aid>', methods=['GET', 'POST'])
-@login_required
-def reschedule(aid):
-    appt = query(
-        "SELECT * FROM appointments WHERE id=%s AND user_id=%s",
-        (aid, session['user_id']), one=True
-    )
-    if not appt or appt['status'] not in ('Pending', 'Confirmed'):
-        flash('Only pending or confirmed appointments can be rescheduled.', 'danger')
-        return redirect(url_for('customer.appointments'))
-    if request.method == 'POST':
-        new_date = request.form.get('preferred_date', '').strip()
-        new_time = request.form.get('preferred_time', '').strip()
-        if not new_date:
-            flash('Please select a new date.', 'warning')
-            return redirect(url_for('customer.reschedule', aid=aid))
-        try:
-            booking_date = date.fromisoformat(new_date)
-            if booking_date < date.today():
-                flash('Please choose today or a future date.', 'warning')
-                return redirect(url_for('customer.reschedule', aid=aid))
-        except ValueError:
-            flash('Invalid date.', 'warning')
-            return redirect(url_for('customer.reschedule', aid=aid))
-        execute(
-            "UPDATE appointments SET preferred_date=%s, preferred_time=%s, status='Pending' WHERE id=%s",
-            (new_date, new_time or None, aid)
-        )
-        flash('Appointment rescheduled successfully.', 'success')
-        return redirect(url_for('customer.appointments'))
-    return render_template('customer/reschedule.html', appt=appt, now=date.today().isoformat())
-
-
-# ── Rebook ────────────────────────────────────────────────────────────────────
-
-@customer.route('/rebook/<int:aid>')
-@login_required
-def rebook(aid):
-    appt = query("SELECT * FROM appointments WHERE id=%s AND user_id=%s", (aid, session['user_id']), one=True)
-    if not appt:
-        return redirect(url_for('customer.book_page'))
-    session['rebook_services'] = appt['selected_services']
-    return redirect(url_for('customer.book_page'))
-
-
-# ── Appointments list ─────────────────────────────────────────────────────────
-
-@customer.route('/appointments')
-@login_required
-def appointments():
-    appts = query("SELECT * FROM appointments WHERE user_id=%s ORDER BY created_at DESC", (session['user_id'],))
     existing_review = query("SELECT * FROM reviews WHERE user_id=%s", (session['user_id'],), one=True)
-    has_confirmed   = any(a['status'] in ('Confirmed', 'Checked In', 'Completed') for a in appts)
-    return render_template('customer/appointments.html', appointments=appts,
+    has_confirmed   = any(e['status'] == 'Confirmed' for e in enqs)
+    return render_template('customer/enquiries.html', enquiries=enqs,
                            existing_review=existing_review, has_confirmed=has_confirmed)
 
 
@@ -402,23 +168,22 @@ def submit_review():
         validate_csrf(request.form.get('csrf_token'))
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
-        return redirect(url_for('customer.appointments'))
+        return redirect(url_for('customer.enquiries'))
     rating  = request.form.get('rating', '').strip()
     comment = request.form.get('comment', '').strip()
     if not rating.isdigit() or not (1 <= int(rating) <= 5):
         flash('Please select a valid rating.', 'danger')
-        return redirect(url_for('customer.appointments'))
+        return redirect(url_for('customer.enquiries'))
     if not comment or len(comment) > 500:
         flash('Please write a review (max 500 characters).', 'danger')
-        return redirect(url_for('customer.appointments'))
+        return redirect(url_for('customer.enquiries'))
     has_valid = query(
-        "SELECT id FROM appointments WHERE user_id=%s "
-        "AND status IN ('Confirmed','Checked In','Completed') LIMIT 1",
+        "SELECT enquiry_id FROM enquiries WHERE user_id=%s AND status='Confirmed' LIMIT 1",
         (session['user_id'],), one=True
     )
     if not has_valid:
-        flash('You can only review after a confirmed appointment.', 'danger')
-        return redirect(url_for('customer.appointments'))
+        flash('You can only review after a confirmed enquiry.', 'danger')
+        return redirect(url_for('customer.enquiries'))
     existing = query("SELECT id FROM reviews WHERE user_id=%s", (session['user_id'],), one=True)
     if existing:
         execute("UPDATE reviews SET rating=%s, comment=%s WHERE user_id=%s",
@@ -427,10 +192,10 @@ def submit_review():
         execute("INSERT INTO reviews (user_id, rating, comment) VALUES (%s,%s,%s)",
                 (session['user_id'], int(rating), comment))
     flash('Thank you for your review!', 'success')
-    return redirect(url_for('customer.appointments'))
+    return redirect(url_for('customer.enquiries'))
 
 
-# ── How It Works ─────────────────────────────────────────────────────────────
+# ── How It Works ──────────────────────────────────────────────────────────────
 
 @customer.route('/how-it-works')
 @login_required
@@ -480,3 +245,21 @@ def profile_post():
     session['user_name'] = name
     flash('Profile updated successfully.', 'success')
     return redirect(url_for('customer.profile'))
+
+
+# ── Legacy redirects (keep old URLs working) ──────────────────────────────────
+
+@customer.route('/book', methods=['GET'])
+@login_required
+def book_page():
+    return redirect(url_for('customer.enquire_page'))
+
+@customer.route('/book', methods=['POST'])
+@login_required
+def book():
+    return redirect(url_for('customer.enquire_page'))
+
+@customer.route('/appointments')
+@login_required
+def appointments():
+    return redirect(url_for('customer.enquiries'))

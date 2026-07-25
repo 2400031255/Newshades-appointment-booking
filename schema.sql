@@ -39,6 +39,20 @@ CREATE TABLE IF NOT EXISTS appointments (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS enquiries (
+    enquiry_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    selected_services TEXT NOT NULL,
+    preferred_date DATE NOT NULL,
+    preferred_time VARCHAR(20),
+    message TEXT DEFAULT '',
+    status ENUM('Pending','Contacted','Confirmed','Closed') DEFAULT 'Pending',
+    admin_notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS gallery (
     id INT AUTO_INCREMENT PRIMARY KEY,
     filename VARCHAR(255) NOT NULL,

@@ -127,6 +127,19 @@ def _init_sqlite_schema(conn):
             is_active INTEGER DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS enquiries (
+            enquiry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            selected_services TEXT NOT NULL,
+            preferred_date TEXT NOT NULL,
+            preferred_time TEXT,
+            message TEXT DEFAULT '',
+            status TEXT DEFAULT 'Pending',
+            admin_notes TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     """)
     params = _seed_admin_params()
     conn.execute(
@@ -139,6 +152,26 @@ def _init_sqlite_schema(conn):
             _DEFAULT_SERVICES,
         )
     conn.commit()
+
+    # Migrate: ensure enquiries table exists (for existing DBs)
+    enq_cols = {row[1] for row in conn.execute('PRAGMA table_info(enquiries)')}
+    if not enq_cols:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS enquiries (
+                enquiry_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                selected_services TEXT NOT NULL,
+                preferred_date TEXT NOT NULL,
+                preferred_time TEXT,
+                message TEXT DEFAULT '',
+                status TEXT DEFAULT 'Pending',
+                admin_notes TEXT DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+        conn.commit()
 
     # Migrate existing appointments table if columns are missing
     existing_cols = {row[1] for row in conn.execute('PRAGMA table_info(appointments)')}
@@ -249,6 +282,19 @@ def _init_pg_schema(conn):
             valid_until DATE,
             is_active SMALLINT DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS enquiries (
+            enquiry_id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL,
+            selected_services TEXT NOT NULL,
+            preferred_date DATE NOT NULL,
+            preferred_time VARCHAR(20),
+            message TEXT DEFAULT '',
+            status VARCHAR(20) DEFAULT 'Pending',
+            admin_notes TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
     """)
     params = _seed_admin_params()
@@ -363,6 +409,19 @@ def _init_mysql_schema(conn):
             is_active TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY uq_coupon_code (code)
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS enquiries (
+            enquiry_id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            selected_services TEXT NOT NULL,
+            preferred_date DATE NOT NULL,
+            preferred_time VARCHAR(20),
+            message TEXT,
+            status ENUM('Pending','Contacted','Confirmed','Closed') DEFAULT 'Pending',
+            admin_notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) CHARACTER SET utf8mb4""",
     ]
     for stmt in stmts:

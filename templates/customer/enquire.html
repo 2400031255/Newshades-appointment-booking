@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% block title %}Make an Enquiry – New Shades{% endblock %}
+
+{% block extra_css %}
+<style>
+.enquire-shell { min-height:100vh; padding:100px 0 80px; }
+.enquire-header { padding:32px 0 36px; margin-bottom:8px; }
+.enquire-back { display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.85rem;transition:color 0.2s; margin-bottom:10px; }
+.enquire-back:hover { color:var(--gold-2); }
+.enquire-page-title { font-family:'Playfair Display',serif;font-size:clamp(1.7rem,3vw,2.4rem);color:#fff;margin:0; }
+.enquire-page-title span { color:var(--gold); }
+.enq-step-label { display:flex;align-items:center;gap:12px;font-size:0.82rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:14px; }
+.step-num { width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;display:grid;place-items:center;font-size:0.78rem;font-weight:900;flex-shrink:0; }
+.svc-select-card { border-radius:16px;padding:18px 16px;border:1.5px solid rgba(201,168,76,0.15);background:linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));cursor:pointer;transition:all 0.2s ease;position:relative;overflow:hidden; }
+.svc-select-card:hover,.svc-select-card.selected { border-color:rgba(201,168,76,0.6);background:linear-gradient(145deg,rgba(201,168,76,0.1),rgba(255,255,255,0.04)); }
+.svc-select-check { position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.2);display:grid;place-items:center;font-size:0.6rem;color:transparent;transition:all 0.2s; }
+.svc-select-card.selected .svc-select-check { background:linear-gradient(135deg,var(--gold-2),var(--gold));border-color:transparent;color:#120e08; }
+.svc-select-icon { width:44px;height:44px;border-radius:12px;background:rgba(201,168,76,0.1);color:var(--gold-2);display:grid;place-items:center;font-size:1.1rem;margin-bottom:12px;border:1px solid rgba(201,168,76,0.15); }
+.svc-select-card.selected .svc-select-icon { background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;border-color:transparent; }
+.svc-select-name { font-weight:700;color:#fff;font-size:0.9rem;margin-bottom:4px; }
+.svc-select-desc { color:var(--text-muted);font-size:0.78rem;line-height:1.4;margin-bottom:10px;flex:1; }
+.svc-select-footer { display:flex;justify-content:space-between;align-items:center;margin-top:auto; }
+.svc-price { color:var(--gold-2);font-weight:700;font-size:0.9rem; }
+.svc-dur { color:var(--text-muted);font-size:0.75rem; }
+.enq-field { width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.92rem;font-family:'DM Sans',sans-serif;transition:border-color 0.25s,box-shadow 0.25s; }
+.enq-field:focus { border-color:rgba(201,168,76,0.6);box-shadow:0 0 0 3px rgba(201,168,76,0.1); }
+.enq-field::placeholder { color:rgba(255,255,255,0.25); }
+.enq-textarea { min-height:100px;resize:vertical; }
+.enq-submit-bar { display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;border-radius:18px;background:linear-gradient(145deg,rgba(201,168,76,0.1),rgba(255,255,255,0.03));border:1px solid rgba(201,168,76,0.2);flex-wrap:wrap; }
+.enq-sidebar-card { border-radius:20px;padding:24px;background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));border:1px solid rgba(201,168,76,0.18); }
+.enq-sidebar-title { font-family:'Playfair Display',serif;font-size:1rem;color:#fff;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06); }
+.enq-selected-item { display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:0.85rem;color:rgba(240,230,211,0.8); }
+.enq-selected-item:last-child { border-bottom:none; }
+.enq-empty { color:var(--text-muted);font-size:0.85rem;text-align:center;padding:16px 0; }
+.cat-filters { display:flex;gap:8px;flex-wrap:wrap; }
+.cat-btn { padding:6px 14px;border-radius:999px;border:1px solid rgba(201,168,76,0.2);background:rgba(255,255,255,0.04);color:var(--text-muted);font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s; }
+.cat-btn.active,.cat-btn:hover { background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.4);color:var(--gold-2); }
+.search-wrap { position:relative; }
+.search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--gold);font-size:0.8rem; }
+.search-input { width:100%;padding:9px 12px 9px 34px;border-radius:999px;border:1px solid rgba(201,168,76,0.2);background:rgba(255,255,255,0.05);color:#fff;outline:none;font-size:0.85rem; }
+.search-input:focus { border-color:rgba(201,168,76,0.5); }
+.safety-banner { display:flex;align-items:center;gap:14px;padding:13px 18px;border-radius:14px;background:linear-gradient(135deg,rgba(37,211,102,0.08),rgba(201,168,76,0.05));border:1px solid rgba(37,211,102,0.25);flex-wrap:wrap; }
+.safety-icon { width:34px;height:34px;border-radius:10px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.25);display:grid;place-items:center;color:#25d366;font-size:0.9rem;flex-shrink:0; }
+.safety-text { flex:1;font-size:0.82rem;color:rgba(240,230,211,0.75);line-height:1.5;min-width:200px; }
+.safety-text strong { color:#7ce0aa; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="enquire-shell">
+  <div class="container">
+
+    <div class="enquire-header reveal-up">
+      <a href="{{ url_for('customer.dashboard') }}" class="enquire-back">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </a>
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          <div class="section-badge mb-2"><span class="badge-dot"></span> New Enquiry</div>
+          <h1 class="enquire-page-title">Make an <span>Enquiry</span></h1>
+        </div>
+        <a href="{{ url_for('customer.enquiries') }}" class="btn-outline-gold">
+          <i class="fas fa-list me-2"></i>My Enquiries
+        </a>
+      </div>
+    </div>
+
+    <!-- Safety banner -->
+    <div class="safety-banner reveal-up mb-4">
+      <div class="safety-icon"><i class="fas fa-shield-alt"></i></div>
+      <div class="safety-text">
+        <strong>No payment required</strong> — Submit your enquiry and our team will contact you to confirm your appointment. All payments are made <strong>only at the salon</strong>.
+      </div>
+    </div>
+
+    {% if today_offers %}
+    <div class="glass-card mb-4 reveal-up" style="padding:20px 24px;">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,rgba(255,140,0,0.2),rgba(201,168,76,0.1));border:1px solid rgba(255,140,0,0.25);display:grid;place-items:center;color:#ff8c00;font-size:0.75rem;"><i class="fas fa-fire"></i></div>
+        <span style="font-weight:800;color:var(--gold-2);font-size:0.8rem;letter-spacing:0.14em;text-transform:uppercase;">Today's Offers</span>
+        <span style="background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;border-radius:999px;padding:2px 10px;font-size:0.68rem;font-weight:900;">{{ today_offers|length }}</span>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        {% for offer in today_offers %}
+        <div style="padding:8px 14px;border-radius:12px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);">
+          {% if offer.discount_text %}<span style="padding:2px 8px;border-radius:999px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-size:0.65rem;font-weight:900;margin-right:6px;">{{ offer.discount_text }}</span>{% endif %}
+          <span style="color:#fff;font-weight:700;font-size:0.85rem;">{{ offer.title }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <form method="POST" action="{{ url_for('customer.enquire') }}" id="enquiryForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <!-- Step 1: Services -->
+          <div class="glass-card mb-4 reveal-up">
+            <div class="enq-step-label"><span class="step-num">1</span> Select Services</div>
+            <div class="row g-3 align-items-center mb-3">
+              <div class="col-md-5">
+                <div class="search-wrap">
+                  <i class="fas fa-search search-icon"></i>
+                  <input type="text" id="serviceSearch" class="search-input" placeholder="Search services…"/>
+                </div>
+              </div>
+              <div class="col-md-7">
+                <div class="cat-filters">
+                  <button type="button" class="cat-btn active" data-cat="all">All</button>
+                  {% for cat in categories %}
+                  <button type="button" class="cat-btn" data-cat="{{ cat }}">{{ cat }}</button>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            <div id="svcCountBadge" style="font-size:0.8rem;color:var(--text-muted);margin-bottom:12px;"></div>
+            <div class="row g-3" id="servicesGrid">
+              {% for svc in services %}
+              <div class="col-lg-4 col-md-6 col-12 service-col" data-cat="{{ svc.category }}">
+                <input type="checkbox" name="services" id="svc-{{ svc.id }}" value="{{ svc.id }}" class="d-none"/>
+                <div class="svc-select-card d-flex flex-column" data-id="{{ svc.id }}" data-name="{{ svc.service_name }}" data-price="{{ svc.price }}" data-dur="{{ svc.duration }}" data-por="{{ svc.price_on_request or 0 }}">
+                  <div class="svc-select-check"><i class="fas fa-check"></i></div>
+                  <div class="svc-select-icon">
+                    {% if svc.category == 'Hair' %}<i class="fas fa-cut"></i>
+                    {% elif svc.category == 'Beard' %}<i class="fas fa-user-tie"></i>
+                    {% elif svc.category == 'Skin' %}<i class="fas fa-spa"></i>
+                    {% elif svc.category == 'Wellness' %}<i class="fas fa-hands"></i>
+                    {% elif svc.category == 'Nails' %}<i class="fas fa-paint-brush" style="color:#f472b6;"></i>
+                    {% else %}<i class="fas fa-magic"></i>{% endif %}
+                  </div>
+                  <div class="svc-select-name">{{ svc.service_name }}</div>
+                  <div class="svc-select-desc">{{ svc.description }}</div>
+                  <div class="svc-select-footer">
+                    {% if svc.price_on_request %}
+                    <span class="svc-price" style="color:#7ce0aa;font-size:0.82rem;">Price at Salon</span>
+                    {% else %}
+                    <span class="svc-price">₹{{ "%.0f"|format(svc.price) }}</span>
+                    {% endif %}
+                    <span class="svc-dur"><i class="far fa-clock me-1"></i>{{ svc.duration }}</span>
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Step 2: Date & Time -->
+          <div class="glass-card mb-4 reveal-up" style="animation-delay:0.1s">
+            <div class="enq-step-label"><span class="step-num">2</span> Preferred Date & Time</div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="field-label mb-2">Preferred Date <span class="text-danger">*</span></label>
+                <input type="date" name="preferred_date" id="preferred_date" class="enq-field"
+                  min="{{ now_date }}" required/>
+              </div>
+              <div class="col-md-6">
+                <label class="field-label mb-2">Preferred Time <span style="color:var(--text-muted);font-size:0.75rem;">(Optional)</span></label>
+                <input type="time" name="preferred_time" id="preferred_time" class="enq-field"/>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;"><i class="fas fa-info-circle me-1"></i>We'll do our best to accommodate your preferred time.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Message -->
+          <div class="glass-card mb-4 reveal-up" style="animation-delay:0.15s">
+            <div class="enq-step-label"><span class="step-num">3</span> Message / Special Requirements</div>
+            <label class="field-label mb-2">Message <span style="color:var(--text-muted);font-size:0.75rem;">(Optional)</span></label>
+            <textarea name="message" class="enq-field enq-textarea" placeholder="Any special requirements, questions, or notes for our team…" maxlength="1000"></textarea>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;">Max 1000 characters</div>
+          </div>
+
+          <!-- Submit -->
+          <div class="enq-submit-bar reveal-up" style="animation-delay:0.2s">
+            <div>
+              <div style="font-size:1rem;font-weight:600;color:#fff;"><i class="fas fa-concierge-bell me-2 text-gold"></i><span id="selectedCount">0 services selected</span></div>
+              <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">Our team will contact you to confirm your appointment.</div>
+            </div>
+            <button type="submit" id="submitBtn" class="btn-gold-hero" disabled>
+              <i class="fas fa-paper-plane me-2"></i>Submit Enquiry
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="col-lg-4 d-none d-lg-block">
+        <div style="position:sticky;top:100px;">
+          <div class="enq-sidebar-card">
+            <div class="enq-sidebar-title"><i class="fas fa-clipboard-list me-2 text-gold"></i>Your Selection</div>
+            <div id="sidebarItems">
+              <div class="enq-empty" id="sidebarEmpty">No services selected yet.</div>
+            </div>
+          </div>
+          <div class="enq-sidebar-card mt-3" style="border-color:rgba(255,255,255,0.06);">
+            <div class="enq-sidebar-title" style="font-size:0.85rem;"><i class="fas fa-lightbulb me-2" style="color:var(--gold);"></i>How It Works</div>
+            <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;">
+              {% for tip in ['Select one or more services you are interested in','Choose your preferred date and time','Submit your enquiry — no payment needed','Our team will contact you to confirm'] %}
+              <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.82rem;color:var(--text-muted);">
+                <i class="fas fa-check-circle" style="color:var(--gold);margin-top:2px;flex-shrink:0;"></i>{{ tip }}
+              </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.reveal-up').forEach(el => el.classList.add('revealed'));
+
+// Service selection
+document.querySelectorAll('.svc-select-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const id = card.dataset.id;
+    const cb = document.getElementById('svc-' + id);
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    card.classList.toggle('selected', cb.checked);
+    updateSidebar();
+  });
+});
+
+function updateSidebar() {
+  const selected = document.querySelectorAll('.svc-select-card.selected');
+  const items = document.getElementById('sidebarItems');
+  const empty = document.getElementById('sidebarEmpty');
+  const countEl = document.getElementById('selectedCount');
+  const btn = document.getElementById('submitBtn');
+
+  items.querySelectorAll('.enq-selected-item').forEach(el => el.remove());
+  selected.forEach(card => {
+    const row = document.createElement('div');
+    row.className = 'enq-selected-item';
+    const price = card.dataset.por === '1' ? 'At Salon' : '₹' + parseFloat(card.dataset.price).toFixed(0);
+    row.innerHTML = `<span>${card.dataset.name}</span><span style="color:var(--gold-2);font-weight:700;font-size:0.82rem;">${price}</span>`;
+    items.appendChild(row);
+  });
+
+  const hasItems = selected.length > 0;
+  if (empty) empty.style.display = hasItems ? 'none' : '';
+  if (countEl) countEl.textContent = selected.length + ' service' + (selected.length !== 1 ? 's' : '') + ' selected';
+  if (btn) btn.disabled = !hasItems;
+}
+
+// Category filter
+document.querySelectorAll('.cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.service-col').forEach(col => {
+      col.style.display = (cat === 'all' || col.dataset.cat === cat) ? '' : 'none';
+    });
+    updateBadge();
+  });
+});
+
+// Search
+document.getElementById('serviceSearch')?.addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  document.querySelectorAll('.service-col').forEach(col => {
+    const name = (col.querySelector('.svc-select-card')?.dataset.name || '').toLowerCase();
+    col.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+  updateBadge();
+});
+
+function updateBadge() {
+  const visible = document.querySelectorAll('.service-col:not([style*="none"])').length;
+  const total = document.querySelectorAll('.service-col').length;
+  const badge = document.getElementById('svcCountBadge');
+  if (badge) badge.textContent = visible < total ? `Showing ${visible} of ${total} services` : `${total} services available`;
+}
+
+updateSidebar();
+updateBadge();
+</script>
+{% endblock %}
