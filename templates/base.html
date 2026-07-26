@@ -10,6 +10,8 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   {% block meta_description %}{% endblock %}
   <title>{% block title %}New Shades{% endblock %}</title>
+  <!-- Critical: prevent white flash before CSS loads -->
+  <style>html,body{background:#060508!important;color:rgba(245,235,215,0.92);}</style>
   <!-- DNS prefetch + preconnect for all CDNs -->
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">

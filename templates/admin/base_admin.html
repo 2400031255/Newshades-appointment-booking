@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Admin – New Shades{% endblock %}</title>
+  <!-- Critical: prevent white flash -->
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
   <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
   <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
