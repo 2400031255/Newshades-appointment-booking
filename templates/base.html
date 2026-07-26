@@ -305,6 +305,7 @@
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.dashboard' }}" href="{{ url_for('customer.dashboard') }}"><i class="fas fa-home me-1"></i>Home</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint in ['customer.enquire_page','customer.enquire'] }}" href="{{ url_for('customer.enquire_page') }}"><i class="fas fa-paper-plane me-1"></i>Enquire</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.enquiries' }}" href="{{ url_for('customer.enquiries') }}"><i class="fas fa-list-alt me-1"></i>My Enquiries</a></li>
+            <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.offers_page' }}" href="{{ url_for('customer.offers_page') }}"><i class="fas fa-fire me-1" style="color:#ff9500;"></i>Offers</a></li>
             <li class="nav-item"><a class="nav-link {{ 'nav-active' if request.endpoint == 'customer.profile' }}" href="{{ url_for('customer.profile') }}"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
           {% endif %}
           <li class="nav-item ms-lg-2">

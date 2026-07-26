@@ -1,31 +1,32 @@
 :root {
-  /* Dark Gold palette */
+  /* Deep Gold palette — richer, more luxurious */
   --gold:        #C9A84C;
-  --gold-2:      #E8C96A;
-  --gold-light:  #f5e6c0;
-  --gold-deep:   #a07830;
-  --gold-glow:   rgba(201,168,76,0.08);
+  --gold-2:      #F0D060;
+  --gold-light:  #faefd4;
+  --gold-deep:   #8a6520;
+  --gold-glow:   rgba(201,168,76,0.1);
+  --gold-bright: #FFE082;
 
-  /* Dark backgrounds */
-  --ink:         #0c0b10;
-  --ink-2:       #100e14;
-  --ink-3:       #131118;
-  --ink-4:       #17141c;
+  /* Pure black backgrounds — deeper than before */
+  --ink:         #060508;
+  --ink-2:       #09070d;
+  --ink-3:       #0c0a10;
+  --ink-4:       #100d14;
 
-  /* Glass panels */
-  --panel:       rgba(255,255,255,0.07);
-  --panel-md:    rgba(255,255,255,0.05);
-  --border:      rgba(201,168,76,0.16);
-  --border-soft: rgba(255,255,255,0.06);
+  /* Glass panels — slightly more visible on deep black */
+  --panel:       rgba(255,255,255,0.06);
+  --panel-md:    rgba(255,255,255,0.04);
+  --border:      rgba(201,168,76,0.2);
+  --border-soft: rgba(255,255,255,0.07);
 
-  /* Text */
-  --text:        rgba(240,230,211,0.9);
-  --text-soft:   rgba(240,230,211,0.7);
-  --text-muted:  rgba(240,230,211,0.45);
+  /* Text — warm cream on deep black */
+  --text:        rgba(245,235,215,0.92);
+  --text-soft:   rgba(245,235,215,0.72);
+  --text-muted:  rgba(245,235,215,0.42);
 
-  /* Shadows */
-  --shadow:      0 18px 48px rgba(0,0,0,0.35);
-  --shadow-gold: 0 12px 32px rgba(201,168,76,0.18);
+  /* Shadows — deeper on pure black */
+  --shadow:      0 20px 56px rgba(0,0,0,0.55);
+  --shadow-gold: 0 14px 40px rgba(201,168,76,0.22);
 
   /* Radius */
   --radius-xl:   26px;
@@ -43,7 +44,7 @@ html {
   scroll-behavior: smooth;
   overflow-x: hidden;
   max-width: 100%;
-  background-color: #0c0b10;
+  background-color: #060508;
 }
 
 body {
@@ -51,9 +52,9 @@ body {
   font-family: 'DM Sans', 'Inter', sans-serif;
   color: var(--text);
   background:
-    radial-gradient(ellipse at 0% 0%, rgba(201,168,76,0.14) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 100%, rgba(201,168,76,0.08) 0%, transparent 50%),
-    linear-gradient(160deg, var(--ink) 0%, var(--ink-2) 40%, var(--ink-3) 70%, var(--ink-4) 100%);
+    radial-gradient(ellipse at 0% 0%, rgba(201,168,76,0.16) 0%, transparent 45%),
+    radial-gradient(ellipse at 100% 100%, rgba(201,168,76,0.09) 0%, transparent 45%),
+    linear-gradient(160deg, #060508 0%, #09070d 40%, #0c0a10 70%, #100d14 100%);
   min-height: 100vh;
   overflow-x: hidden;
   max-width: 100%;
@@ -61,8 +62,8 @@ body {
 }
 
 body.admin-body {
-  background: linear-gradient(180deg, rgba(8,8,12,0.98) 0%, rgba(13,13,18,1) 100%);
-  color: rgba(240,230,211,0.9);
+  background: linear-gradient(180deg, #050407 0%, #080610 100%);
+  color: rgba(245,235,215,0.92);
 }
 
 body.admin-body h1,
@@ -71,7 +72,7 @@ body.admin-body h3,
 body.admin-body h4,
 body.admin-body h5,
 body.admin-body h6 { color: #fff; }
-body.admin-body .text-muted { color: rgba(240,230,211,0.5) !important; }
+body.admin-body .text-muted { color: rgba(245,235,215,0.45) !important; }
 
 body::before {
   content: '';
@@ -79,9 +80,10 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 18% 20%, rgba(255,255,255,0.03), transparent 20%),
-    radial-gradient(circle at 83% 75%, rgba(201,168,76,0.08), transparent 16%);
-  opacity: 0.95;
+    radial-gradient(circle at 18% 20%, rgba(255,255,255,0.025), transparent 20%),
+    radial-gradient(circle at 83% 75%, rgba(201,168,76,0.1), transparent 16%),
+    radial-gradient(circle at 50% 50%, rgba(201,168,76,0.03), transparent 60%);
+  opacity: 1;
 }
 
 img {
@@ -122,10 +124,10 @@ a {
   width: 100%;
   z-index: 1030;
   padding: 14px 0;
-  background: rgba(6,6,10,0.7);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(201,168,76,0.16);
+  background: rgba(4,3,7,0.82);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border-bottom: 1px solid rgba(201,168,76,0.18);
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -398,8 +400,8 @@ a {
   position: relative;
   overflow: hidden;
   padding: 24px 0 20px;
-  background: linear-gradient(180deg, rgba(10,10,14,0.96), rgba(8,7,12,1));
-  border-top: 1px solid rgba(201,168,76,0.16);
+  background: linear-gradient(180deg, rgba(6,5,9,0.98), #040307);
+  border-top: 1px solid rgba(201,168,76,0.2);
 }
 
 .footer-glow {
@@ -1454,9 +1456,9 @@ a {
 .contact-card,
 .stat-card {
   position: relative;
-  border: 1px solid rgba(201,168,76, 0.16);
+  border: 1px solid rgba(201,168,76, 0.18);
   border-radius: var(--radius-lg);
-  background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  background: linear-gradient(145deg, rgba(255,255,255,0.065), rgba(255,255,255,0.025));
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -1671,9 +1673,9 @@ a {
   left: 0;
   width: 260px;
   height: 100vh;
-  background: linear-gradient(180deg, rgba(12,11,16,0.98), rgba(24,20,19,0.98));
-  border-right: 1px solid rgba(201,168,76,0.16);
-  box-shadow: 20px 0 50px rgba(0,0,0,0.24);
+  background: linear-gradient(180deg, #050407 0%, #080610 60%, #0a0814 100%);
+  border-right: 1px solid rgba(201,168,76,0.18);
+  box-shadow: 20px 0 60px rgba(0,0,0,0.5);
   z-index: 1020;
 }
 
@@ -1713,7 +1715,7 @@ a {
 .admin-content {
   margin-left: 260px;
   min-height: 100vh;
-  background: linear-gradient(180deg, rgba(8,8,12,0.95), rgba(13,13,16,0.97));
+  background: linear-gradient(180deg, #060508 0%, #09070d 100%);
   padding: 0 0 60px;
 }
 
@@ -1732,10 +1734,10 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: rgba(8,8,12,0.8);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(201,168,76,0.12);
-  color: rgba(240,230,211,0.9);
+  background: rgba(5,4,8,0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(201,168,76,0.15);
+  color: rgba(245,235,215,0.92);
 }
 
 .badge-status-pending {
@@ -3462,7 +3464,7 @@ a {
 
 /* ── Improved muted text contrast ── */
 :root {
-  --text-muted: #9e8e74;
+  --text-muted: #a89878;
 }
 
 /* ── Sidebar nav label + pending badge ── */

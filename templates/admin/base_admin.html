@@ -60,9 +60,6 @@
     <a href="{{ url_for('admin.gallery') }}" class="{{ 'active' if request.endpoint == 'admin.gallery' }}">
       <span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span>
     </a>
-    <a href="{{ url_for('admin.schedule') }}" class="{{ 'active' if request.endpoint in ('admin.schedule','admin.add_block','admin.delete_block','admin.unblock_date') }}">
-      <span class="sidebar-nav-label"><i class="fas fa-ban"></i> Schedule</span>
-    </a>
     <a href="{{ url_for('admin.offers') }}" class="{{ 'active' if request.endpoint in ('admin.offers',) }}">
       <span class="sidebar-nav-label"><i class="fas fa-tag"></i> Offers</span>
     </a>
@@ -152,13 +149,13 @@
   max-width: 420px;
   padding: 16px 18px;
   border-radius: 16px;
-  background: #1a1610;
+  background: #0e0b14;
   border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: 0 24px 70px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
   position: relative;
   overflow: hidden;
   animation: toastIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
 }
 .ns-toast.hiding {
   animation: toastOut 0.3s ease forwards;

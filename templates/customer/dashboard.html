@@ -225,169 +225,186 @@
 }
 .dash-card-title i { color: var(--gold); }
 
-/* ── Offers strip ── */
-.offers-strip {
+/* ── Offers Banner ── */
+.offers-banner {
   position: relative;
   border-radius: 24px;
-  padding: 26px 28px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(255,255,255,0.03) 60%, rgba(201,168,76,0.05) 100%);
-  border: 1px solid rgba(201,168,76,0.28);
   overflow: hidden;
+  border: 1px solid rgba(201,168,76,0.35);
+  background: linear-gradient(135deg, rgba(10,8,4,0.95) 0%, rgba(20,14,4,0.95) 100%);
+  box-shadow: 0 0 0 1px rgba(201,168,76,0.08), 0 24px 60px rgba(0,0,0,0.5);
 }
-.offers-strip::before {
-  content: '';
-  position: absolute;
-  right: -80px; top: -80px;
-  width: 240px; height: 240px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.12), transparent 65%);
-  pointer-events: none;
-  animation: offerOrb 6s ease-in-out infinite;
-}
-@keyframes offerOrb {
-  0%,100% { transform: translate(0,0) scale(1); }
-  50%      { transform: translate(-20px,10px) scale(1.1); }
-}
-.offers-strip-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  color: var(--gold-2);
-  font-size: 0.82rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  margin-bottom: 20px;
-}
-.offers-fire-icon {
-  width: 32px; height: 32px;
-  border-radius: 9px;
-  display: grid; place-items: center;
-  background: linear-gradient(135deg, rgba(255,140,0,0.2), rgba(201,168,76,0.1));
-  border: 1px solid rgba(255,140,0,0.25);
-  color: #ff8c00;
-  font-size: 0.85rem;
-  animation: firePulse 2s ease-in-out infinite;
-}
-@keyframes firePulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(255,140,0,0.3); }
-  50%      { box-shadow: 0 0 0 6px rgba(255,140,0,0); }
-}
-.offers-count-badge {
-  background: linear-gradient(135deg, var(--gold-2), var(--gold));
-  color: #120e08;
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-}
-.offers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 16px;
-}
-.offer-card {
-  position: relative;
-  padding: 20px 18px;
-  border-radius: 18px;
-  background: linear-gradient(145deg, rgba(201,168,76,0.09), rgba(255,255,255,0.02));
-  border: 1px solid rgba(201,168,76,0.22);
-  overflow: hidden;
-  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), border-color 0.3s ease, box-shadow 0.3s ease;
-  animation: offerCardIn 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
-}
-@keyframes offerCardIn {
-  from { opacity:0; transform: translateY(16px) scale(0.95); }
-  to   { opacity:1; transform: translateY(0) scale(1); }
-}
-.offer-card:hover {
-  transform: translateY(-5px) scale(1.01);
-  border-color: rgba(201,168,76,0.5);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(201,168,76,0.1);
-}
-.offer-card-glow {
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 130px; height: 130px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,0.18), transparent 70%);
-  pointer-events: none;
-  transition: transform 0.4s ease;
-}
-.offer-card:hover .offer-card-glow { transform: scale(1.3); }
-.offer-card-shine {
+.offers-banner-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%);
-  background-size: 200% 100%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  background:
+    radial-gradient(ellipse at 0% 50%, rgba(201,168,76,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 50%, rgba(201,168,76,0.1) 0%, transparent 50%);
   pointer-events: none;
 }
-.offer-card:hover .offer-card-shine {
-  opacity: 1;
-  animation: cardShine 0.6s ease forwards;
+.offers-banner-orb {
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.22), transparent 65%);
+  pointer-events: none;
+  animation: bannerOrb 6s ease-in-out infinite;
 }
-@keyframes cardShine {
-  from { background-position: -100% center; }
-  to   { background-position: 200% center; }
+@keyframes bannerOrb {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(-15px,10px) scale(1.1); }
 }
-.offer-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--gold-2), var(--gold));
-  color: #120e08;
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  margin-bottom: 12px;
-  box-shadow: 0 4px 14px rgba(201,168,76,0.35);
-}
-.offer-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.02rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 7px;
-  line-height: 1.3;
-}
-.offer-desc {
-  color: rgba(240,230,211,0.62);
-  font-size: 0.8rem;
-  line-height: 1.55;
-  margin-bottom: 12px;
-}
-.offer-expiry {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  margin-bottom: 14px;
+.offers-banner-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 28px;
+  flex-wrap: wrap;
 }
-.offer-cta {
+.offers-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+.offers-banner-fire {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, rgba(255,140,0,0.25), rgba(201,168,76,0.15));
+  border: 1px solid rgba(255,140,0,0.3);
+  color: #ff9500;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  animation: firePulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(255,140,0,0.2);
+}
+@keyframes firePulse {
+  0%,100% { box-shadow: 0 0 20px rgba(255,140,0,0.2); }
+  50%      { box-shadow: 0 0 36px rgba(255,140,0,0.45); }
+}
+.offers-banner-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.offers-banner-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.offers-banner-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.offers-banner-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.22);
+  color: var(--gold-2);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.offers-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.offers-banner-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: var(--gold-2);
-  transition: all 0.25s ease;
-  text-decoration: none;
   padding: 6px 14px;
-  border-radius: 8px;
-  background: rgba(201,168,76,0.08);
-  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 999px;
+  background: rgba(37,211,102,0.1);
+  border: 1px solid rgba(37,211,102,0.25);
+  color: #7ce0aa;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
-.offer-cta:hover {
-  background: rgba(201,168,76,0.15);
-  border-color: rgba(201,168,76,0.4);
-  color: #fff;
-  transform: translateX(2px);
+.offers-banner-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #25d366;
+  animation: liveDot 1.5s ease-in-out infinite;
+}
+@keyframes liveDot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.4; transform: scale(0.7); }
+}
+.offers-banner-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #120e08;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  white-space: nowrap;
+}
+.offers-banner-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(201,168,76,0.45);
+  color: #120e08;
+}
+/* Ticker */
+.offers-banner-ticker {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(201,168,76,0.15);
+  background: rgba(201,168,76,0.04);
+  padding: 8px 0;
+}
+.offers-ticker-track {
+  display: flex;
+  gap: 0;
+  animation: tickerScroll 30s linear infinite;
+  white-space: nowrap;
+}
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.offers-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 32px;
+  font-size: 0.75rem;
+  color: rgba(201,168,76,0.7);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.offers-ticker-item i {
+  color: var(--gold);
+  font-size: 0.6rem;
+}
+@media (max-width: 576px) {
+  .offers-banner-inner { padding: 18px 16px; }
+  .offers-banner-title { font-size: 0.95rem; }
+  .offers-banner-right { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 </style>
 {% endblock %}
@@ -408,34 +425,52 @@
       </div>
     </div>
 
-    <!-- Today's Offers -->
+    <!-- Offers Banner -->
     {% if today_offers %}
-    <div class="offers-strip mb-4">
-      <div class="offers-strip-head">
-        <div class="offers-fire-icon"><i class="fas fa-fire"></i></div>
-        Today's Offers
-        <span class="offers-count-badge">{{ today_offers|length }}</span>
-      </div>
-      <div class="offers-grid">
-        {% for offer in today_offers %}
-        <div class="offer-card" style="animation-delay:{{ loop.index0 * 0.1 }}s">
-          <div class="offer-card-glow"></div>
-          <div class="offer-card-shine"></div>
-          {% if offer.discount_text %}
-          <div class="offer-pill"><i class="fas fa-bolt" style="font-size:0.6rem;"></i>{{ offer.discount_text }}</div>
-          {% endif %}
-          <div class="offer-title">{{ offer.title }}</div>
-          {% if offer.description %}
-          <div class="offer-desc">{{ offer.description }}</div>
-          {% endif %}
-          {% if offer.valid_until %}
-          <div class="offer-expiry"><i class="fas fa-clock"></i>Valid until {% set d = offer.valid_until|string %}{% if d|length >= 10 %}{{ d[8:10] }} {{ ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d[5:7]|int] }} {{ d[0:4] }}{% else %}{{ d }}{% endif %}</div>
-          {% endif %}
-          <a href="{{ url_for('customer.enquire_page') }}" class="offer-cta">
-            Enquire Now <i class="fas fa-arrow-right"></i>
+    <div class="offers-banner reveal-up mb-4">
+      <div class="offers-banner-bg"></div>
+      <div class="offers-banner-orb"></div>
+      <div class="offers-banner-inner">
+        <div class="offers-banner-left">
+          <div class="offers-banner-fire">
+            <i class="fas fa-fire"></i>
+          </div>
+          <div>
+            <div class="offers-banner-label">Exclusive Deals</div>
+            <div class="offers-banner-title">
+              {% if today_offers|length == 1 %}
+                {{ today_offers[0].title }}
+              {% else %}
+                {{ today_offers|length }} Special Offers Available
+              {% endif %}
+            </div>
+            {% if today_offers|length == 1 and today_offers[0].discount_text %}
+            <div class="offers-banner-sub">{{ today_offers[0].discount_text }}</div>
+            {% elif today_offers|length > 1 %}
+            <div class="offers-banner-sub">
+              {% for o in today_offers[:3] %}
+                <span class="offers-banner-pill">{{ o.title[:22] }}{% if o.title|length > 22 %}…{% endif %}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="offers-banner-right">
+          <div class="offers-banner-badge">{{ today_offers|length }} Live</div>
+          <a href="{{ url_for('customer.offers_page') }}" class="offers-banner-cta">
+            View All Offers <i class="fas fa-arrow-right"></i>
           </a>
         </div>
-        {% endfor %}
+      </div>
+      <div class="offers-banner-ticker">
+        <div class="offers-ticker-track">
+          {% for o in today_offers %}{% for _ in range(3) %}
+          <span class="offers-ticker-item">
+            <i class="fas fa-bolt"></i>
+            {{ o.title }}{% if o.discount_text %} — {{ o.discount_text }}{% endif %}
+          </span>
+          {% endfor %}{% endfor %}
+        </div>
       </div>
     </div>
     {% endif %}
@@ -512,6 +547,16 @@
               </div>
               <i class="fas fa-arrow-right ms-auto" style="color:#c4b5fd;opacity:0.6;"></i>
             </a>
+            {% if today_offers %}
+            <a href="{{ url_for('customer.offers_page') }}" class="quick-action" style="border-color:rgba(201,168,76,0.3);background:linear-gradient(145deg,rgba(201,168,76,0.08),rgba(255,255,255,0.02));">
+              <div class="quick-action-icon" style="background:linear-gradient(135deg,rgba(255,140,0,0.2),rgba(201,168,76,0.12));color:#ff9500;"><i class="fas fa-fire"></i></div>
+              <div>
+                <div class="quick-action-title">Live Offers</div>
+                <div class="quick-action-sub">{{ today_offers|length }} exclusive deal{{ 's' if today_offers|length != 1 }} active</div>
+              </div>
+              <i class="fas fa-arrow-right ms-auto" style="color:var(--gold);opacity:0.6;"></i>
+            </a>
+            {% endif %}
           </div>
         </div>
       </div>

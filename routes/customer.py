@@ -213,6 +213,28 @@ def submit_review():
     return redirect(url_for('customer.enquiries'))
 
 
+# ── Offers Page ──────────────────────────────────────────────────────────────
+
+@customer.route('/offers')
+@login_required
+def offers_page():
+    today_str = date.today().isoformat()
+    active_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 "
+        "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s) "
+        "ORDER BY created_at DESC",
+        (today_str, today_str)
+    )
+    upcoming_offers = query(
+        "SELECT * FROM offers WHERE is_active=1 AND valid_from > %s ORDER BY valid_from ASC",
+        (today_str,)
+    )
+    return render_template('customer/offers.html',
+                           active_offers=active_offers,
+                           upcoming_offers=upcoming_offers,
+                           today_str=today_str)
+
+
 # ── How It Works ──────────────────────────────────────────────────────────────
 
 @customer.route('/how-it-works')
