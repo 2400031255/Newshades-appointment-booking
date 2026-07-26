@@ -57,7 +57,7 @@
   <div class="table-responsive d-none d-md-block">
     <table class="admin-table">
       <thead>
-        <tr><th>Customer</th><th>Phone</th><th>Services</th><th>Time</th><th>Status</th><th>Action</th></tr>
+        <tr><th>Customer</th><th>Phone</th><th>Services</th><th>Time</th><th>Assigned</th><th>Status</th><th>Action</th></tr>
       </thead>
       <tbody>
         {% for e in today_enqs %}
@@ -66,10 +66,11 @@
           <td class="admin-td-muted">{{ e.phone }}</td>
           <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">{{ e.selected_services }}</td>
           <td class="admin-td-muted">{{ e.preferred_time if e.preferred_time else 'Flexible' }}</td>
+          <td style="font-size:0.8rem;color:#9dc0ff;">{{ e.emp_name if e.emp_name else '—' }}</td>
           <td><span class="admin-status-badge enq-badge-{{ e.status.lower() }}">{{ e.status }}</span></td>
           <td>
             <button type="button" class="appt-action-btn btn-edit" title="Update"
-              onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', '')">
+              onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', '', {{ e.assigned_employee_id or 'null' }})">
               <i class="fas fa-edit"></i>
             </button>
           </td>
@@ -93,7 +94,7 @@
         <i class="fas fa-clock me-1 text-gold"></i>{{ e.preferred_time if e.preferred_time else 'Flexible' }}
       </div>
       <button type="button" class="appt-mob-btn btn-edit"
-        onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', '')">
+        onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', '', {{ e.assigned_employee_id or 'null' }})">
         <i class="fas fa-edit me-1"></i>Update
       </button>
     </div>
@@ -176,6 +177,16 @@
           <option value="Closed">Closed — sends closing email</option>
         </select>
       </div>
+      <div class="mb-3">
+        <label class="field-label mb-2">Assign to Employee</label>
+        <select name="assigned_employee_id" id="modalEmployee"
+          style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(105,152,255,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;">
+          <option value="">— Unassigned —</option>
+          {% for emp in all_employees %}
+          <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.role }})</option>
+          {% endfor %}
+        </select>
+      </div>
       <div class="mb-4">
         <label class="field-label mb-2">Admin Notes <span style="color:var(--text-muted);font-size:0.75rem;">(Optional)</span></label>
         <textarea name="admin_notes" id="modalNotes"
@@ -204,11 +215,13 @@
 </style>
 
 <script>
-function openModal(eid, status, notes) {
+function openModal(eid, status, notes, empId) {
   document.getElementById('modalEnqId').textContent = '#' + eid;
   document.getElementById('enqUpdateForm').action = '/admin/enquiries/update/' + eid;
   document.getElementById('modalStatus').value = status;
   document.getElementById('modalNotes').value = notes || '';
+  var sel = document.getElementById('modalEmployee');
+  if (sel) sel.value = empId ? String(empId) : '';
   const modal = document.getElementById('enqModal');
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';

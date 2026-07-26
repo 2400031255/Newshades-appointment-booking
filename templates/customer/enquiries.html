@@ -92,6 +92,18 @@
             <i class="fas fa-user-shield me-2" style="font-size:0.75rem;"></i><strong>Team Note:</strong> {{ enq.admin_notes }}
           </div>
           {% endif %}
+
+          {% if enq.emp_name %}
+          <div style="margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(105,152,255,0.05);border:1px solid rgba(105,152,255,0.15);font-size:0.82rem;">
+            <span style="color:rgba(240,230,211,0.5);"><i class="fas fa-user-tie me-2" style="color:#9dc0ff;"></i>Assigned Consultant:</span>
+            <strong style="color:#9dc0ff;margin-left:4px;">{{ enq.emp_name }}</strong>
+            {% if enq.employee_notes %}
+            <div style="margin-top:6px;color:rgba(240,230,211,0.55);font-size:0.8rem;">
+              <i class="fas fa-sticky-note me-1"></i>{{ enq.employee_notes }}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endfor %}

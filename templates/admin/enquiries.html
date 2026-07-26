@@ -3,8 +3,18 @@
 {% block page_title %}Enquiry Management{% endblock %}
 
 {% block content %}
-<div class="admin-card">
 
+<!-- Live Tracking Bar -->
+<div id="liveBar" style="background:rgba(37,211,102,0.07);border:1px solid rgba(37,211,102,0.2);border-radius:16px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="width:9px;height:9px;border-radius:50%;background:#25d366;display:inline-block;animation:livePulse 1.5s ease-in-out infinite;"></span>
+    <span style="color:#7ce0aa;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;">LIVE TRACKING</span>
+    <span id="liveStatus" style="color:rgba(240,230,211,0.5);font-size:0.78rem;">Polling every 15s…</span>
+  </div>
+  <div id="liveFeed" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+</div>
+
+<div class="admin-card">
   <!-- Toolbar -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
     <h6 class="fw-bold mb-0" style="color:#fff;">
@@ -38,35 +48,41 @@
   <div class="table-responsive d-none d-md-block">
     <table class="admin-table">
       <thead>
-        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Preferred Date</th><th>Time</th><th>Message</th><th>Status</th><th>Actions</th></tr>
+        <tr><th>#</th><th>Customer</th><th>Contact</th><th>Services</th><th>Date</th><th>Status</th><th>Assigned To</th><th>Emp Notes</th><th>Actions</th></tr>
       </thead>
       <tbody>
         {% for e in enquiries %}
-        <tr>
+        <tr id="row-{{ e.enquiry_id }}">
           <td class="admin-td-muted">{{ e.enquiry_id }}</td>
           <td class="admin-td-bold">{{ e.full_name }}</td>
           <td>
             <div class="admin-td-muted">{{ e.phone }}</div>
             <div style="font-size:0.75rem;color:var(--text-muted);">{{ e.email }}</div>
           </td>
-          <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">{{ e.selected_services }}</td>
+          <td class="admin-td-muted" style="max-width:150px;font-size:0.82rem;">{{ e.selected_services }}</td>
           <td class="admin-td-bold" style="white-space:nowrap;">
-            {% if e.preferred_date %}
-              {% set d = e.preferred_date %}
-              {% if d is string %}{{ d[8:10] }}/{{ d[5:7] }}/{{ d[2:4] }}{% else %}{{ d.strftime('%d/%m/%y') }}{% endif %}
-            {% else %}—{% endif %}
-          </td>
-          <td class="admin-td-muted" style="white-space:nowrap;">{{ e.preferred_time if e.preferred_time else '—' }}</td>
-          <td style="max-width:140px;font-size:0.78rem;color:var(--text-muted);">
-            {% if e.message %}<span title="{{ e.message }}">{{ e.message[:60] }}{% if e.message|length > 60 %}…{% endif %}</span>{% else %}—{% endif %}
+            {% if e.preferred_date %}{% set d = e.preferred_date %}{% if d is string %}{{ d[8:10] }}/{{ d[5:7] }}/{{ d[2:4] }}{% else %}{{ d.strftime('%d/%m/%y') }}{% endif %}{% else %}—{% endif %}
+            {% if e.preferred_time %}<div style="font-size:0.72rem;color:var(--text-muted);">{{ e.preferred_time }}</div>{% endif %}
           </td>
           <td>
-            <span class="admin-status-badge enq-badge-{{ e.status.lower() }}">{{ e.status }}</span>
+            <span class="admin-status-badge enq-badge-{{ e.status.lower() }}" id="status-{{ e.enquiry_id }}">{{ e.status }}</span>
+          </td>
+          <td>
+            {% if e.emp_name %}
+            <span style="font-size:0.8rem;color:#9dc0ff;font-weight:600;">
+              <i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}
+            </span>
+            {% else %}
+            <span style="font-size:0.78rem;color:rgba(240,230,211,0.3);">Unassigned</span>
+            {% endif %}
+          </td>
+          <td style="max-width:130px;font-size:0.78rem;color:rgba(240,230,211,0.55);" id="empnote-{{ e.enquiry_id }}">
+            {% if e.employee_notes %}{{ e.employee_notes[:60] }}{% if e.employee_notes|length > 60 %}…{% endif %}{% else %}—{% endif %}
           </td>
           <td>
             <div class="d-flex gap-1 align-items-center">
               <button type="button" class="appt-action-btn btn-edit" title="Update"
-                onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes | tojson if e.admin_notes else '\"\"' }})">
+                onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, {{ e.assigned_employee_id or 'null' }})">
                 <i class="fas fa-edit"></i>
               </button>
               <form method="POST" action="{{ url_for('admin.enquiry_delete', eid=e.enquiry_id) }}"
@@ -85,7 +101,7 @@
   <!-- Mobile Cards -->
   <div class="d-md-none enq-cards">
     {% for e in enquiries %}
-    <div class="enq-mob-card">
+    <div class="enq-mob-card" id="mob-{{ e.enquiry_id }}">
       <div class="d-flex justify-content-between align-items-start mb-2">
         <div>
           <div style="font-weight:700;color:#fff;font-size:0.95rem;">{{ e.full_name }} <span style="color:var(--text-muted);font-size:0.75rem;">#{{ e.enquiry_id }}</span></div>
@@ -93,22 +109,19 @@
         </div>
         <span class="admin-status-badge enq-badge-{{ e.status.lower() }}">{{ e.status }}</span>
       </div>
-      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:8px;">{{ e.selected_services }}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.8rem;color:rgba(240,230,211,0.7);margin-bottom:10px;">
-        <span><i class="fas fa-calendar-alt me-1" style="color:var(--gold);"></i>
-          {% if e.preferred_date %}{% set d = e.preferred_date %}{% if d is string %}{{ d[8:10] }}/{{ d[5:7] }}/{{ d[2:4] }}{% else %}{{ d.strftime('%d/%m/%y') }}{% endif %}{% else %}—{% endif %}
-        </span>
-        <span><i class="fas fa-clock me-1" style="color:var(--gold);"></i>{{ e.preferred_time if e.preferred_time else 'Flexible' }}</span>
-      </div>
-      {% if e.message %}
-      <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:6px;"><i class="fas fa-comment-alt me-1"></i>{{ e.message[:80] }}{% if e.message|length > 80 %}…{% endif %}</div>
+      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:6px;">{{ e.selected_services }}</div>
+      {% if e.emp_name %}
+      <div style="font-size:0.78rem;color:#9dc0ff;margin-bottom:6px;"><i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}</div>
+      {% endif %}
+      {% if e.employee_notes %}
+      <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-bottom:8px;"><i class="fas fa-sticky-note me-1"></i>{{ e.employee_notes[:80] }}{% if e.employee_notes|length > 80 %}…{% endif %}</div>
       {% endif %}
       {% if e.admin_notes %}
       <div style="font-size:0.78rem;color:#9dc0ff;margin-bottom:8px;"><i class="fas fa-user-shield me-1"></i>{{ e.admin_notes[:60] }}{% if e.admin_notes|length > 60 %}…{% endif %}</div>
       {% endif %}
       <div class="d-flex gap-2 flex-wrap">
         <button type="button" class="appt-mob-btn btn-edit"
-          onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes | tojson if e.admin_notes else '\"\"' }})">
+          onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, {{ e.assigned_employee_id or 'null' }})">
           <i class="fas fa-edit me-1"></i>Update
         </button>
         <form method="POST" action="{{ url_for('admin.enquiry_delete', eid=e.enquiry_id) }}"
@@ -141,7 +154,7 @@
 
 <!-- Update Modal -->
 <div id="enqModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-  <div style="background:#1a1510;border:1px solid rgba(201,168,76,0.3);border-radius:24px;padding:32px;width:min(100%,480px);margin:16px;box-shadow:0 40px 100px rgba(0,0,0,0.6);">
+  <div style="background:#1a1510;border:1px solid rgba(201,168,76,0.3);border-radius:24px;padding:32px;width:min(100%,520px);margin:16px;box-shadow:0 40px 100px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;">
         Update Enquiry <span id="modalEnqId" style="color:var(--gold-2);"></span>
@@ -150,8 +163,10 @@
     </div>
     <form method="POST" id="enqUpdateForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+      <!-- Status -->
       <div class="mb-3">
-        <label class="field-label mb-2">Status</label>
+        <label class="field-label mb-2" style="font-size:0.75rem;letter-spacing:0.08em;">STATUS</label>
         <select name="status" id="modalStatus"
           style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;">
           <option value="Pending">Pending</option>
@@ -160,12 +175,27 @@
           <option value="Closed">Closed — sends closing email</option>
         </select>
       </div>
+
+      <!-- Assign Employee -->
+      <div class="mb-3">
+        <label class="field-label mb-2" style="font-size:0.75rem;letter-spacing:0.08em;">ASSIGN TO EMPLOYEE</label>
+        <select name="assigned_employee_id" id="modalEmployee"
+          style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(105,152,255,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;">
+          <option value="">— Unassigned —</option>
+          {% for emp in all_employees %}
+          <option value="{{ emp.id }}">{{ emp.full_name }} ({{ emp.role }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Admin Notes -->
       <div class="mb-4">
-        <label class="field-label mb-2">Admin Notes <span style="color:var(--text-muted);font-size:0.75rem;">(Visible to customer on Confirmed/Closed)</span></label>
+        <label class="field-label mb-2" style="font-size:0.75rem;letter-spacing:0.08em;">ADMIN NOTES <span style="color:var(--text-muted);font-size:0.72rem;">(visible to customer)</span></label>
         <textarea name="admin_notes" id="modalNotes"
-          style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;resize:vertical;min-height:90px;font-family:'DM Sans',sans-serif;font-size:0.9rem;"
+          style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;resize:vertical;min-height:80px;font-family:'DM Sans',sans-serif;font-size:0.9rem;"
           placeholder="Add a note for the customer…" maxlength="1000"></textarea>
       </div>
+
       <div class="d-flex gap-3">
         <button type="submit" class="btn-gold-hero" style="flex:1;justify-content:center;">
           <i class="fas fa-save me-2"></i>Save Changes
@@ -180,6 +210,7 @@
 </div>
 
 <style>
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
 .enq-badge-pending   { background:rgba(255,170,77,0.16);  color:#ffc36b; }
 .enq-badge-contacted { background:rgba(105,152,255,0.16); color:#9dc0ff; }
 .enq-badge-confirmed { background:rgba(71,188,121,0.16);  color:#7ce0aa; }
@@ -194,16 +225,18 @@
 .appt-mob-btn { padding:7px 14px;border-radius:999px;border:1px solid;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s; }
 .appt-mob-btn.btn-edit   { background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3);color:#9dc0ff; }
 .appt-mob-btn.btn-delete { background:rgba(226,93,93,0.08);border-color:rgba(226,93,93,0.2);color:rgba(255,154,154,0.6); }
+.live-chip { padding:4px 12px;border-radius:999px;font-size:0.72rem;font-weight:700;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2);color:#7ce0aa; }
 </style>
 
 <script>
-function openModal(eid, status, notes) {
+function openModal(eid, status, notes, empId) {
   document.getElementById('modalEnqId').textContent = '#' + eid;
   document.getElementById('enqUpdateForm').action = '/admin/enquiries/update/' + eid;
   document.getElementById('modalStatus').value = status;
   document.getElementById('modalNotes').value = notes || '';
-  const modal = document.getElementById('enqModal');
-  modal.style.display = 'flex';
+  var sel = document.getElementById('modalEmployee');
+  sel.value = empId ? String(empId) : '';
+  document.getElementById('enqModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 function closeModal() {
@@ -213,5 +246,48 @@ function closeModal() {
 document.getElementById('enqModal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
+
+// Live tracking poll
+var statusColors = {
+  'Pending':   '#ffc36b',
+  'Contacted': '#9dc0ff',
+  'Confirmed': '#7ce0aa',
+  'Closed':    'rgba(240,230,211,0.4)'
+};
+function pollLive() {
+  fetch('/admin/enquiries/live-feed')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var feed = document.getElementById('liveFeed');
+      var html = '';
+      data.slice(0, 6).forEach(function(item) {
+        var col = statusColors[item.status] || '#fff';
+        html += '<span class="live-chip" style="color:' + col + ';border-color:' + col + '33;">'
+          + '#' + item.id + ' ' + item.status
+          + (item.employee !== '—' ? ' · ' + item.employee : '')
+          + '</span>';
+      });
+      feed.innerHTML = html || '<span style="color:rgba(240,230,211,0.3);font-size:0.78rem;">No recent activity</span>';
+      document.getElementById('liveStatus').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+      // Update status badges in table without reload
+      data.forEach(function(item) {
+        var badge = document.getElementById('status-' + item.id);
+        if (badge) {
+          badge.textContent = item.status;
+          badge.className = 'admin-status-badge enq-badge-' + item.status.toLowerCase();
+        }
+        var noteEl = document.getElementById('empnote-' + item.id);
+        if (noteEl && item.note) {
+          noteEl.textContent = item.note.length > 60 ? item.note.substring(0,60) + '…' : item.note;
+        }
+      });
+    })
+    .catch(function(){
+      document.getElementById('liveStatus').textContent = 'Connection error — retrying…';
+    });
+}
+pollLive();
+setInterval(pollLive, 15000);
 </script>
 {% endblock %}

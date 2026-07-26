@@ -136,9 +136,22 @@ def _init_sqlite_schema(conn):
             message TEXT DEFAULT '',
             status TEXT DEFAULT 'Pending',
             admin_notes TEXT DEFAULT '',
+            assigned_employee_id INTEGER,
+            employee_notes TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            phone TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'Consultant',
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
     params = _seed_admin_params()
@@ -166,12 +179,38 @@ def _init_sqlite_schema(conn):
                 message TEXT DEFAULT '',
                 status TEXT DEFAULT 'Pending',
                 admin_notes TEXT DEFAULT '',
+                assigned_employee_id INTEGER,
+                employee_notes TEXT DEFAULT '',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
         conn.commit()
+
+    # Migrate employees table
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            phone TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'Consultant',
+            is_active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+
+    # Migrate enquiries columns
+    enq_cols = {row[1] for row in conn.execute('PRAGMA table_info(enquiries)')}
+    for col, stmt in [('assigned_employee_id', 'ALTER TABLE enquiries ADD COLUMN assigned_employee_id INTEGER'),
+                      ('employee_notes', 'ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ""')]:
+        if col not in enq_cols:
+            conn.execute(stmt)
+    conn.commit()
 
     # Migrate existing appointments table if columns are missing
     existing_cols = {row[1] for row in conn.execute('PRAGMA table_info(appointments)')}
@@ -419,9 +458,22 @@ def _init_mysql_schema(conn):
             message TEXT,
             status ENUM('Pending','Contacted','Confirmed','Closed') DEFAULT 'Pending',
             admin_notes TEXT,
+            assigned_employee_id INT DEFAULT NULL,
+            employee_notes TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) CHARACTER SET utf8mb4""",
+        """CREATE TABLE IF NOT EXISTS employees (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            full_name VARCHAR(100) NOT NULL,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            phone VARCHAR(20) NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(50) DEFAULT 'Consultant',
+            is_active TINYINT(1) DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) CHARACTER SET utf8mb4""",
     ]
     for stmt in stmts:
@@ -453,6 +505,19 @@ def _init_mysql_schema(conn):
             cur.execute("ALTER TABLE services ADD COLUMN price_on_request TINYINT(1) DEFAULT 0")
         except pymysql.err.OperationalError as e:
             current_app.logger.warning('ALTER services failed: %s', e)
+
+    # Migrate enquiries columns
+    cur.execute("SHOW COLUMNS FROM enquiries")
+    enq_cols = {row['Field'] for row in cur.fetchall()}
+    for col, stmt in [
+        ('assigned_employee_id', "ALTER TABLE enquiries ADD COLUMN assigned_employee_id INT DEFAULT NULL"),
+        ('employee_notes',       "ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ''"),
+    ]:
+        if col not in enq_cols:
+            try:
+                cur.execute(stmt)
+            except pymysql.err.OperationalError as e:
+                current_app.logger.warning('ALTER enquiries failed (%s): %s', col, e)
 
     params = _seed_admin_params()
     cur.execute(

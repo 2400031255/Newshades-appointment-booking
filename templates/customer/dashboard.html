@@ -539,6 +539,17 @@
                   &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ enq.preferred_time }}
                   {% endif %}
                 </div>
+                {% if enq.emp_name %}
+                <div style="margin-top:4px;font-size:0.75rem;color:#9dc0ff;">
+                  <i class="fas fa-user-tie me-1"></i>{{ enq.emp_name }}
+                  {% if enq.employee_notes %}&nbsp;·&nbsp;<span style="color:rgba(240,230,211,0.5);">{{ enq.employee_notes[:60] }}{% if enq.employee_notes|length > 60 %}…{% endif %}</span>{% endif %}
+                </div>
+                {% endif %}
+                {% if enq.admin_notes and enq.status in ['Confirmed','Closed'] %}
+                <div style="margin-top:3px;font-size:0.75rem;color:rgba(201,168,76,0.7);">
+                  <i class="fas fa-user-shield me-1"></i>{{ enq.admin_notes[:60] }}{% if enq.admin_notes|length > 60 %}…{% endif %}
+                </div>
+                {% endif %}
               </div>
               <span class="recent-appt-status appt-status-{{ enq.status.lower() }}">{{ enq.status }}</span>
             </div>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employee Login – New Shades</title>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
+  <style>
+    body { min-height:100vh; display:flex; align-items:center; justify-content:center; background:#0c0b10; }
+    .emp-login-card {
+      width: min(100%, 420px);
+      background: linear-gradient(145deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 28px;
+      padding: 44px 36px;
+      margin: 24px;
+    }
+    .emp-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 16px; border-radius: 999px;
+      background: rgba(105,152,255,0.1); border: 1px solid rgba(105,152,255,0.25);
+      color: #9dc0ff; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+      margin-bottom: 20px;
+    }
+    .emp-field {
+      width: 100%; padding: 13px 16px; border-radius: 14px;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(201,168,76,0.2);
+      color: #fff; outline: none; font-size: 0.92rem; transition: border-color 0.2s;
+    }
+    .emp-field:focus { border-color: rgba(201,168,76,0.5); }
+    .emp-field::placeholder { color: rgba(240,230,211,0.3); }
+    .emp-btn {
+      width: 100%; padding: 14px; border-radius: 999px;
+      background: linear-gradient(135deg, #9dc0ff, #6998ff);
+      border: none; color: #0c0b10; font-weight: 800; font-size: 0.95rem;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .emp-btn:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+<div class="emp-login-card">
+  <div class="emp-badge"><i class="fas fa-user-tie"></i> EMPLOYEE PORTAL</div>
+  <h2 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.7rem;margin-bottom:6px;">Staff Login</h2>
+  <p style="color:rgba(240,230,211,0.5);font-size:0.88rem;margin-bottom:28px;">New Shades Premium Salon</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+      <div style="padding:12px 16px;border-radius:12px;margin-bottom:16px;background:rgba(255,99,99,0.1);border:1px solid rgba(255,99,99,0.25);color:#ff9a9a;font-size:0.88rem;">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ msg }}
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('employee.login_post') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="mb-3">
+      <label style="color:rgba(240,230,211,0.6);font-size:0.8rem;font-weight:600;letter-spacing:0.08em;display:block;margin-bottom:8px;">USERNAME OR EMAIL</label>
+      <input type="text" name="identifier" class="emp-field" placeholder="Enter username or email" required autocomplete="username"/>
+    </div>
+    <div class="mb-4">
+      <label style="color:rgba(240,230,211,0.6);font-size:0.8rem;font-weight:600;letter-spacing:0.08em;display:block;margin-bottom:8px;">PASSWORD</label>
+      <input type="password" name="password" class="emp-field" placeholder="Enter password" required autocomplete="current-password"/>
+    </div>
+    <button type="submit" class="emp-btn"><i class="fas fa-sign-in-alt me-2"></i>Login to Portal</button>
+  </form>
+  <div style="text-align:center;margin-top:20px;">
+    <a href="{{ url_for('auth.login') }}" style="color:rgba(240,230,211,0.4);font-size:0.8rem;">← Customer / Admin Login</a>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+</body>
+</html>

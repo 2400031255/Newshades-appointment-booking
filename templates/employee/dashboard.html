@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{{ session.emp_role }} Portal – New Shades</title>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
+  <style>
+    body { background:#0c0b10; min-height:100vh; font-family:'DM Sans',sans-serif; }
+
+    /* ── Topbar ── */
+    .emp-topbar {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      background:rgba(12,11,16,0.96); backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(201,168,76,0.12);
+      padding:0 24px; height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; }
+
+    /* Role badge colours */
+    .role-badge {
+      padding:4px 14px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.12em;
+    }
+    .role-1 { background:rgba(105,152,255,0.12); border:1px solid rgba(105,152,255,0.25); color:#9dc0ff; }
+    .role-2 { background:rgba(201,168,76,0.12);  border:1px solid rgba(201,168,76,0.3);   color:#E8C96A; }
+    .role-3 { background:rgba(139,92,246,0.14);  border:1px solid rgba(139,92,246,0.3);   color:#c4b5fd; }
+
+    .emp-shell { padding:88px 0 60px; }
+
+    /* ── Stat pills ── */
+    .stat-pill {
+      border-radius:18px; padding:20px 22px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.14);
+    }
+    .stat-pill-num { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; }
+    .stat-pill-lbl { font-size:0.75rem; color:rgba(240,230,211,0.5); text-transform:uppercase; letter-spacing:0.1em; }
+
+    /* ── Enquiry card ── */
+    .enq-card {
+      border-radius:18px; padding:22px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.14);
+      margin-bottom:14px; transition:border-color 0.2s;
+    }
+    .enq-card:hover { border-color:rgba(201,168,76,0.28); }
+
+    /* Status badges */
+    .badge-pending   { background:rgba(255,170,77,0.16);  color:#ffc36b;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .badge-contacted { background:rgba(105,152,255,0.16); color:#9dc0ff;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .badge-confirmed { background:rgba(71,188,121,0.16);  color:#7ce0aa;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .badge-closed    { background:rgba(150,150,150,0.14); color:rgba(240,230,211,0.45); padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+
+    /* Form controls */
+    .emp-select {
+      padding:8px 12px; border-radius:10px;
+      background:rgba(255,255,255,0.06); border:1.5px solid rgba(201,168,76,0.2);
+      color:#fff; outline:none; font-size:0.85rem; cursor:pointer;
+    }
+    .emp-select-blue {
+      padding:8px 12px; border-radius:10px;
+      background:rgba(255,255,255,0.06); border:1.5px solid rgba(105,152,255,0.25);
+      color:#fff; outline:none; font-size:0.85rem; cursor:pointer;
+    }
+    .emp-textarea {
+      width:100%; padding:10px 12px; border-radius:10px;
+      background:rgba(255,255,255,0.05); border:1.5px solid rgba(201,168,76,0.15);
+      color:#fff; outline:none; resize:vertical; min-height:60px;
+      font-size:0.85rem; font-family:'DM Sans',sans-serif;
+    }
+    .emp-textarea::placeholder { color:rgba(240,230,211,0.3); }
+    .emp-save-btn {
+      padding:8px 20px; border-radius:999px;
+      background:linear-gradient(135deg,#9dc0ff,#6998ff);
+      border:none; color:#0c0b10; font-weight:700; font-size:0.82rem; cursor:pointer;
+      transition:opacity 0.2s;
+    }
+    .emp-save-btn:hover { opacity:0.85; }
+    .emp-save-btn-purple {
+      padding:8px 20px; border-radius:999px;
+      background:linear-gradient(135deg,#c4b5fd,#8b5cf6);
+      border:none; color:#fff; font-weight:700; font-size:0.82rem; cursor:pointer;
+    }
+
+    /* Live dot */
+    .live-dot { width:8px; height:8px; border-radius:50%; background:#25d366; display:inline-block; margin-right:6px; animation:livePulse 1.5s ease-in-out infinite; }
+    @keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+    /* Role info banner */
+    .role-banner {
+      border-radius:16px; padding:14px 20px; margin-bottom:24px;
+      display:flex; align-items:center; gap:12px; font-size:0.85rem;
+    }
+    .role-banner-1 { background:rgba(105,152,255,0.07); border:1px solid rgba(105,152,255,0.18); color:#9dc0ff; }
+    .role-banner-2 { background:rgba(201,168,76,0.07);  border:1px solid rgba(201,168,76,0.2);   color:#E8C96A; }
+    .role-banner-3 { background:rgba(139,92,246,0.08);  border:1px solid rgba(139,92,246,0.22);  color:#c4b5fd; }
+
+    /* Section title */
+    .sec-title { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; margin-bottom:16px; }
+
+    /* Read-only card for Senior Stylist */
+    .readonly-badge {
+      font-size:0.68rem; color:rgba(240,230,211,0.35); border:1px solid rgba(255,255,255,0.08);
+      padding:2px 8px; border-radius:999px; margin-left:8px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="emp-topbar">
+  <div class="d-flex align-items-center gap-3">
+    <div class="emp-brand">New Shades</div>
+    <span class="role-badge role-{{ level }}">
+      <i class="fas fa-{{ 'user' if level==1 else ('star' if level==2 else 'crown') }} me-1"></i>
+      {{ session.emp_role | upper }}
+    </span>
+  </div>
+  <div class="d-flex align-items-center gap-3">
+    <span style="color:rgba(240,230,211,0.6);font-size:0.85rem;">{{ session.emp_name }}</span>
+    <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;">
+      <i class="fas fa-sign-out-alt me-1"></i>Logout
+    </a>
+  </div>
+</div>
+
+<!-- Flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div style="position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;">
+    {% for cat, msg in messages %}
+    <div style="pointer-events:all;padding:12px 18px;border-radius:14px;background:#1a1510;border:1px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+      <i class="fas fa-check-circle me-2" style="color:#7ce0aa;"></i>{{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="emp-shell">
+  <div class="container">
+
+    <!-- Header -->
+    <div class="mb-3">
+      <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;margin-bottom:4px;">
+        Good day, {{ emp.full_name.split()[0] }} 👋
+      </h1>
+      <p style="color:rgba(240,230,211,0.5);font-size:0.88rem;margin:0;">
+        <span class="live-dot"></span>
+        {% if level == 1 %}Your assigned enquiries — live{% endif %}
+        {% if level == 2 %}All salon enquiries — view &amp; update assigned{% endif %}
+        {% if level == 3 %}Full management view — all enquiries, reassign &amp; close{% endif %}
+      </p>
+    </div>
+
+    <!-- Role banner -->
+    <div class="role-banner role-banner-{{ level }}">
+      <i class="fas fa-{{ 'info-circle' if level==1 else ('eye' if level==2 else 'shield-alt') }}"></i>
+      {% if level == 1 %}
+        <span><strong>Consultant / Stylist:</strong> You can view and update only your assigned enquiries. Status options: Pending → Contacted → Confirmed.</span>
+      {% elif level == 2 %}
+        <span><strong>Senior Stylist:</strong> You can view all enquiries and update any assigned to you. Status options: Pending → Contacted → Confirmed.</span>
+      {% else %}
+        <span><strong>Manager:</strong> Full access — view all enquiries, reassign to any employee, and set any status including Closed.</span>
+      {% endif %}
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      {% set stat_data = [
+        (total,     'Total',     '#C9A84C'),
+        (pending,   'Pending',   '#ffc36b'),
+        (contacted, 'Contacted', '#9dc0ff'),
+        (confirmed, 'Confirmed', '#7ce0aa')
+      ] %}
+      {% for num, lbl, color in stat_data %}
+      <div class="col-6 col-md-3">
+        <div class="stat-pill">
+          <div class="stat-pill-num" style="color:{{ color }};">{{ num }}</div>
+          <div class="stat-pill-lbl">{{ lbl }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Section title -->
+    <div class="sec-title">
+      <i class="fas fa-clipboard-list me-2" style="color:#C9A84C;"></i>
+      {% if level == 1 %}My Assigned Enquiries{% else %}All Enquiries{% endif %}
+    </div>
+
+    {% if enquiries %}
+      {% for e in enquiries %}
+      {% set is_mine = (e.get('assigned_to') is none and level < 2) or (level >= 2) %}
+      {% set can_edit = (level == 1 and e.assigned_employee_id == session.emp_id) or level >= 2 %}
+      <div class="enq-card">
+        <!-- Card header -->
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+          <div>
+            <div style="font-weight:700;color:#fff;font-size:1rem;">
+              {{ e.customer_name }}
+              <span style="color:rgba(240,230,211,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id }}</span>
+              {% if not can_edit %}<span class="readonly-badge">read-only</span>{% endif %}
+            </div>
+            <div style="color:rgba(240,230,211,0.5);font-size:0.82rem;margin-top:2px;">
+              <i class="fas fa-phone me-1"></i>{{ e.customer_phone }}
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if level >= 2 and e.assigned_to %}
+            <span style="font-size:0.75rem;color:#9dc0ff;"><i class="fas fa-user-tie me-1"></i>{{ e.assigned_to }}</span>
+            {% elif level >= 2 %}
+            <span style="font-size:0.75rem;color:rgba(240,230,211,0.3);">Unassigned</span>
+            {% endif %}
+            <span class="badge-{{ e.status.lower() }}">{{ e.status }}</span>
+          </div>
+        </div>
+
+        <!-- Services & date -->
+        <div style="color:rgba(240,230,211,0.7);font-size:0.85rem;margin-bottom:8px;">
+          <i class="fas fa-concierge-bell me-1" style="color:#C9A84C;"></i>{{ e.selected_services }}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:0.8rem;color:rgba(240,230,211,0.5);margin-bottom:12px;">
+          <span><i class="fas fa-calendar-alt me-1" style="color:#C9A84C;"></i>
+            {% set d = e.preferred_date %}{% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
+          </span>
+          {% if e.preferred_time %}<span><i class="fas fa-clock me-1" style="color:#C9A84C;"></i>{{ e.preferred_time }}</span>{% endif %}
+        </div>
+
+        <!-- Admin note -->
+        {% if e.admin_notes %}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.15);font-size:0.82rem;color:rgba(240,230,211,0.7);margin-bottom:10px;">
+          <i class="fas fa-user-shield me-1" style="color:#C9A84C;"></i><strong>Admin note:</strong> {{ e.admin_notes }}
+        </div>
+        {% endif %}
+
+        <!-- Customer message -->
+        {% if e.message %}
+        <div style="font-size:0.8rem;color:rgba(240,230,211,0.4);margin-bottom:10px;">
+          <i class="fas fa-comment-alt me-1"></i>{{ e.message[:120] }}{% if e.message|length > 120 %}…{% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Existing employee notes (read-only display) -->
+        {% if e.employee_notes and not can_edit %}
+        <div style="padding:8px 12px;border-radius:10px;background:rgba(105,152,255,0.05);border:1px solid rgba(105,152,255,0.12);font-size:0.8rem;color:rgba(240,230,211,0.5);">
+          <i class="fas fa-sticky-note me-1" style="color:#9dc0ff;"></i>{{ e.employee_notes }}
+        </div>
+        {% endif %}
+
+        <!-- Update form — only if can_edit -->
+        {% if can_edit %}
+        <form method="POST" action="{{ url_for('employee.update_enquiry', enq_id=e.enquiry_id) }}" class="mt-3">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="d-flex flex-wrap gap-2 align-items-end">
+
+            <!-- Status -->
+            <div>
+              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">STATUS</div>
+              <select name="status" class="emp-select">
+                {% set statuses = ['Pending','Contacted','Confirmed'] %}
+                {% if level >= 3 %}{% set statuses = ['Pending','Contacted','Confirmed','Closed'] %}{% endif %}
+                {% for s in statuses %}
+                <option value="{{ s }}" {{ 'selected' if e.status == s }}>{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Reassign — Manager only -->
+            {% if level >= 3 %}
+            <div>
+              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">ASSIGN TO</div>
+              <select name="assigned_employee_id" class="emp-select-blue">
+                <option value="">— Unassigned —</option>
+                {% for emp2 in all_employees %}
+                <option value="{{ emp2.id }}" {{ 'selected' if e.assigned_employee_id == emp2.id }}>
+                  {{ emp2.full_name }} ({{ emp2.role }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            <div style="flex:1;min-width:180px;">
+              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">
+                {% if level >= 3 %}NOTES{% else %}YOUR NOTES{% endif %}
+              </div>
+              <textarea name="employee_notes" class="emp-textarea"
+                placeholder="Add follow-up notes…" maxlength="1000">{{ e.employee_notes or '' }}</textarea>
+            </div>
+
+            <!-- Save -->
+            <button type="submit" class="{{ 'emp-save-btn-purple' if level >= 3 else 'emp-save-btn' }}">
+              <i class="fas fa-save me-1"></i>Save
+            </button>
+          </div>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    {% else %}
+    <div style="text-align:center;padding:60px 20px;">
+      <div style="font-size:3rem;color:rgba(201,168,76,0.2);margin-bottom:16px;"><i class="fas fa-clipboard-list"></i></div>
+      <p style="color:rgba(240,230,211,0.4);font-size:0.9rem;">
+        {% if level == 1 %}No enquiries assigned to you yet.{% else %}No enquiries found.{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script>
+// Auto-refresh every 30s
+setTimeout(function(){ location.reload(); }, 30000);
+</script>
+</body>
+</html>

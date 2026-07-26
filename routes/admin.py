@@ -44,19 +44,26 @@ def dashboard():
     contacted      = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Contacted'", one=True)['c']
     confirmed      = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Confirmed'", one=True)['c']
     recent = query(
-        "SELECT e.*, u.full_name, u.phone FROM enquiries e "
-        "JOIN users u ON e.user_id=u.id ORDER BY e.created_at DESC LIMIT 5"
+        "SELECT e.*, u.full_name, u.phone, emp.full_name as emp_name "
+        "FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id "
+        "ORDER BY e.created_at DESC LIMIT 5"
     )
     today_enqs = query(
-        "SELECT e.*, u.full_name, u.phone FROM enquiries e "
-        "JOIN users u ON e.user_id=u.id WHERE e.preferred_date=%s "
-        "ORDER BY e.preferred_time ASC",
+        "SELECT e.*, u.full_name, u.phone, emp.full_name as emp_name "
+        "FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id "
+        "WHERE e.preferred_date=%s ORDER BY e.preferred_time ASC",
         (_date.today().isoformat(),)
     )
+    all_employees = query("SELECT id, full_name, role FROM employees WHERE is_active=1 ORDER BY full_name")
     return render_template('admin/dashboard.html', total_users=total_users,
                            total_services=total_services, total_enqs=total_enqs,
                            pending=pending, contacted=contacted, confirmed=confirmed,
-                           recent=recent, today_enqs=today_enqs)
+                           recent=recent, today_enqs=today_enqs,
+                           all_employees=all_employees)
 
 
 # ── Services ───────────────────────────────────────────────────────────────
@@ -164,8 +171,11 @@ def enquiries():
     offset        = (page - 1) * per_page
 
     base_sql  = (
-        "SELECT e.*, u.full_name, u.phone, u.email FROM enquiries e "
-        "JOIN users u ON e.user_id=u.id"
+        "SELECT e.*, u.full_name, u.phone, u.email, "
+        "emp.full_name as emp_name "
+        "FROM enquiries e "
+        "JOIN users u ON e.user_id=u.id "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id"
     )
     count_sql = "SELECT COUNT(*) as c FROM enquiries e JOIN users u ON e.user_id=u.id"
     conditions, args = [], []
@@ -182,9 +192,11 @@ def enquiries():
     total_count = query(count_sql, tuple(args), one=True)['c']
     enqs        = query(base_sql, tuple(args) + (per_page, offset))
     total_pages = max(1, math.ceil(total_count / per_page))
+    all_employees = query("SELECT id, full_name, role FROM employees WHERE is_active=1 ORDER BY full_name")
     return render_template('admin/enquiries.html', enquiries=enqs,
                            status_filter=status_filter, search=search,
-                           page=page, total_pages=total_pages, total_count=total_count)
+                           page=page, total_pages=total_pages, total_count=total_count,
+                           all_employees=all_employees)
 
 
 @admin.route('/enquiries/update/<int:eid>', methods=['POST'])
@@ -198,6 +210,7 @@ def enquiry_update(eid):
 
     new_status  = request.form.get('status', '').strip()
     admin_notes = request.form.get('admin_notes', '').strip()[:1000]
+    assign_emp  = request.form.get('assigned_employee_id', '').strip()
     valid_statuses = ('Pending', 'Contacted', 'Confirmed', 'Closed')
     if new_status not in valid_statuses:
         flash('Invalid status.', 'danger')
@@ -212,9 +225,10 @@ def enquiry_update(eid):
         flash('Enquiry not found.', 'danger')
         return redirect(url_for('admin.enquiries'))
 
+    emp_id = int(assign_emp) if assign_emp and assign_emp.isdigit() else None
     execute(
-        "UPDATE enquiries SET status=%s, admin_notes=%s WHERE enquiry_id=%s",
-        (new_status, admin_notes, eid)
+        "UPDATE enquiries SET status=%s, admin_notes=%s, assigned_employee_id=%s WHERE enquiry_id=%s",
+        (new_status, admin_notes, emp_id, eid)
     )
     flash(f'Enquiry #{eid} updated to {new_status}.', 'success')
 
@@ -789,3 +803,119 @@ def delete_coupon(cid):
     execute("DELETE FROM coupons WHERE id=%s", (cid,))
     flash('Coupon deleted.', 'success')
     return redirect(url_for('admin.offers'))
+
+
+# ── Employee Management ───────────────────────────────────────────────────────
+@admin.route('/employees')
+@admin_required
+def employees():
+    emps = query("SELECT * FROM employees ORDER BY created_at DESC")
+    return render_template('admin/employees.html', employees=emps)
+
+
+@admin.route('/employees/create', methods=['POST'])
+@admin_required
+def create_employee():
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.employees'))
+    full_name = request.form.get('full_name', '').strip()
+    username  = request.form.get('username', '').strip().lower()
+    phone     = request.form.get('phone', '').strip()
+    email     = request.form.get('email', '').strip().lower()
+    password  = request.form.get('password', '')
+    role      = request.form.get('role', 'Consultant').strip()
+    if not all([full_name, username, phone, email, password]):
+        flash('All fields are required.', 'danger')
+        return redirect(url_for('admin.employees'))
+    if len(password) < 6:
+        flash('Password must be at least 6 characters.', 'danger')
+        return redirect(url_for('admin.employees'))
+    if query("SELECT id FROM employees WHERE username=%s OR email=%s", (username, email), one=True):
+        flash('Username or email already exists.', 'danger')
+        return redirect(url_for('admin.employees'))
+    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    execute(
+        "INSERT INTO employees (full_name, username, phone, email, password_hash, role) VALUES (%s,%s,%s,%s,%s,%s)",
+        (full_name, username, phone, email, hashed, role)
+    )
+    flash(f'Employee {full_name} created. Username: {username}', 'success')
+    return redirect(url_for('admin.employees'))
+
+
+@admin.route('/employees/toggle/<int:eid>', methods=['POST'])
+@admin_required
+def toggle_employee(eid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.employees'))
+    emp = query("SELECT * FROM employees WHERE id=%s", (eid,), one=True)
+    if not emp:
+        flash('Employee not found.', 'danger')
+        return redirect(url_for('admin.employees'))
+    new_status = 0 if emp['is_active'] else 1
+    execute("UPDATE employees SET is_active=%s WHERE id=%s", (new_status, eid))
+    flash(f"{emp['full_name']} {'activated' if new_status else 'deactivated'}.", 'success')
+    return redirect(url_for('admin.employees'))
+
+
+@admin.route('/employees/reset-password/<int:eid>', methods=['POST'])
+@admin_required
+def reset_employee_password(eid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.employees'))
+    new_pw = request.form.get('new_password', '').strip()
+    if len(new_pw) < 6:
+        flash('Password must be at least 6 characters.', 'danger')
+        return redirect(url_for('admin.employees'))
+    hashed = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+    execute("UPDATE employees SET password_hash=%s WHERE id=%s", (hashed, eid))
+    flash('Password reset successfully.', 'success')
+    return redirect(url_for('admin.employees'))
+
+
+@admin.route('/employees/delete/<int:eid>', methods=['POST'])
+@admin_required
+def delete_employee(eid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.employees'))
+    execute("UPDATE enquiries SET assigned_employee_id=NULL WHERE assigned_employee_id=%s", (eid,))
+    execute("DELETE FROM employees WHERE id=%s", (eid,))
+    flash('Employee deleted.', 'success')
+    return redirect(url_for('admin.employees'))
+
+
+# ── Live tracking feed (admin polls this) ─────────────────────────────────────
+@admin.route('/enquiries/live-feed')
+@admin_required
+def enquiries_live_feed():
+    from datetime import datetime
+    enqs = query(
+        "SELECT e.enquiry_id, e.status, e.employee_notes, e.updated_at, "
+        "emp.full_name as emp_name "
+        "FROM enquiries e "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id "
+        "ORDER BY e.updated_at DESC LIMIT 20"
+    )
+    result = []
+    for e in enqs:
+        upd = e['updated_at']
+        result.append({
+            'id': e['enquiry_id'],
+            'status': e['status'],
+            'employee': e['emp_name'] or '—',
+            'note': (e['employee_notes'] or '')[:80],
+            'updated': str(upd)[:16] if upd else ''
+        })
+    from flask import jsonify
+    return jsonify(result)

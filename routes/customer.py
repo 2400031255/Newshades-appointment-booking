@@ -29,23 +29,38 @@ def dashboard():
     if not user:
         session.clear()
         return redirect(url_for('auth.login'))
+    uid = session['user_id']
     recent_enquiries = query(
-        "SELECT * FROM enquiries WHERE user_id=%s ORDER BY created_at DESC LIMIT 3",
-        (session['user_id'],)
+        "SELECT e.*, emp.full_name as emp_name "
+        "FROM enquiries e "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id "
+        "WHERE e.user_id=%s ORDER BY e.created_at DESC LIMIT 5", (uid,)
     )
-    total     = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s", (session['user_id'],), one=True)['c']
-    pending   = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Pending'", (session['user_id'],), one=True)['c']
-    confirmed = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Confirmed'", (session['user_id'],), one=True)['c']
+    total     = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s", (uid,), one=True)['c']
+    pending   = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Pending'", (uid,), one=True)['c']
+    confirmed = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Confirmed'", (uid,), one=True)['c']
+    completed = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Closed'", (uid,), one=True)['c']
+    cancelled = query("SELECT COUNT(*) as c FROM enquiries WHERE user_id=%s AND status='Contacted'", (uid,), one=True)['c']
+    upcoming_enquiry = query(
+        "SELECT * FROM enquiries WHERE user_id=%s AND status IN ('Pending','Contacted','Confirmed') "
+        "ORDER BY preferred_date ASC LIMIT 1", (uid,), one=True
+    )
+    visit_count = total
     today_str = date.today().isoformat()
     today_offers = query(
         "SELECT * FROM offers WHERE is_active=1 "
         "AND (valid_from IS NULL OR valid_from <= %s) AND (valid_until IS NULL OR valid_until >= %s)",
         (today_str, today_str)
     )
+    all_services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name LIMIT 6")
     return render_template('customer/dashboard.html', user=user,
                            recent_enquiries=recent_enquiries,
                            total=total, pending=pending, confirmed=confirmed,
-                           today_offers=today_offers)
+                           completed=completed, cancelled=cancelled,
+                           upcoming_enquiry=upcoming_enquiry,
+                           visit_count=visit_count,
+                           today_offers=today_offers,
+                           all_services=all_services)
 
 
 # ── Enquire page (GET) ────────────────────────────────────────────────────────
@@ -150,7 +165,10 @@ def enquire():
 @login_required
 def enquiries():
     enqs = query(
-        "SELECT * FROM enquiries WHERE user_id=%s ORDER BY created_at DESC",
+        "SELECT e.*, emp.full_name as emp_name "
+        "FROM enquiries e "
+        "LEFT JOIN employees emp ON e.assigned_employee_id=emp.id "
+        "WHERE e.user_id=%s ORDER BY e.created_at DESC",
         (session['user_id'],)
     )
     existing_review = query("SELECT * FROM reviews WHERE user_id=%s", (session['user_id'],), one=True)

@@ -64,7 +64,8 @@ def create_app():
         from db import query
         if not request.endpoint:
             return
-        allowed_endpoints = {'auth.login', 'auth.login_post', 'auth.logout', 'static', 'ping'}
+        allowed_endpoints = {'auth.login', 'auth.login_post', 'auth.logout', 'static', 'ping',
+                              'employee.login', 'employee.login_post', 'employee.logout'}
         if request.endpoint in allowed_endpoints:
             return
         if session.get('is_admin'):
@@ -147,10 +148,12 @@ def create_app():
     from routes.auth import auth
     from routes.customer import customer
     from routes.admin import admin
+    from routes.employee import employee_bp
     from routes.calendar_api import cal_api
     app.register_blueprint(auth)
     app.register_blueprint(customer)
     app.register_blueprint(admin)
+    app.register_blueprint(employee_bp)
     app.register_blueprint(cal_api)
     try:
         from flask_wtf.csrf import exempt as csrf_exempt
