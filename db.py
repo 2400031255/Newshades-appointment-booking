@@ -4,7 +4,7 @@ import sqlite3
 import pymysql
 from flask import g, current_app
 
-_schema_initialized = set()  # tracks which backends have been initialized
+_schema_initialized = set()  # tracks which backends have been initialized — reset forces re-migration
 _backend_unavailable = set()  # tracks permanently failed backends this process lifetime
 
 # ── Seed data ─────────────────────────────────────────────────────────────────
@@ -331,9 +331,22 @@ def _init_pg_schema(conn):
             message TEXT DEFAULT '',
             status VARCHAR(20) DEFAULT 'Pending',
             admin_notes TEXT DEFAULT '',
+            assigned_employee_id INT DEFAULT NULL,
+            employee_notes TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS employees (
+            id SERIAL PRIMARY KEY,
+            full_name VARCHAR(100) NOT NULL,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            phone VARCHAR(20) NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            role VARCHAR(50) DEFAULT 'Consultant',
+            is_active SMALLINT DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
     params = _seed_admin_params()
@@ -347,6 +360,20 @@ def _init_pg_schema(conn):
     if not cur.fetchone():
         cur.execute('ALTER TABLE services ADD COLUMN price_on_request SMALLINT DEFAULT 0')
     conn.commit()
+
+    # Migrate enquiries columns (for existing DBs)
+    for col, stmt in [
+        ('assigned_employee_id', "ALTER TABLE enquiries ADD COLUMN assigned_employee_id INT DEFAULT NULL"),
+        ('employee_notes',       "ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ''"),
+    ]:
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='enquiries' AND column_name=%s", (col,))
+        if not cur.fetchone():
+            try:
+                cur.execute(stmt)
+            except Exception as e:
+                current_app.logger.warning('PG ALTER enquiries failed (%s): %s', col, e)
+    conn.commit()
+
     cur.execute("SELECT COUNT(*) FROM services")
     if cur.fetchone()[0] == 0:
         cur.executemany(
