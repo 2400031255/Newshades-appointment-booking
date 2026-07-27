@@ -909,6 +909,9 @@ def reject_attendance(record_id):
     _db.reject_attendance(record_id)
     flash('Attendance request rejected.', 'warning')
     return redirect(url_for('admin.attendance'))
+
+
+@admin.route('/attendance/mark', methods=['POST'])
 @admin_required
 def mark_attendance():
     try:
