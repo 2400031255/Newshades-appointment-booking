@@ -252,11 +252,14 @@ def get_all_enquiries(status_filter=None, search=None):
         enq = _doc_to_dict(d)
         user = get_user_by_id(enq['user_id'])
         if user:
-            enq['full_name'] = user.get('full_name', '')
-            enq['phone']     = user.get('phone', '')
-            enq['email']     = user.get('email', '')
+            enq['full_name']      = user.get('full_name', '')
+            enq['phone']          = user.get('phone', '')
+            enq['email']          = user.get('email', '')
+            enq['customer_name']  = enq['full_name']
+            enq['customer_phone'] = enq['phone']
         else:
             enq['full_name'] = enq['phone'] = enq['email'] = ''
+            enq['customer_name'] = enq['customer_phone'] = ''
         if enq.get('assigned_employee_id'):
             emp = get_employee_by_id(enq['assigned_employee_id'])
             enq['emp_name'] = emp.get('full_name', '') if emp else ''
