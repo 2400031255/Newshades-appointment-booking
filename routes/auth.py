@@ -136,6 +136,17 @@ def login_post():
             return redirect(url_for('admin.dashboard'))
         return redirect(url_for('customer.dashboard'))
 
+    # Fallback: try employee login
+    emp = db.get_employee_by_identifier(identifier)
+    emp_hash = emp['password_hash'].encode() if emp else _DUMMY_HASH.encode()
+    if emp and bcrypt.checkpw(password.encode(), emp_hash):
+        session.clear()
+        session.permanent = True
+        session['emp_id']   = emp['id']
+        session['emp_name'] = emp['full_name']
+        session['emp_role'] = emp['role']
+        return redirect(url_for('employee.dashboard'))
+
     flash('Invalid credentials. Please try again.', 'danger')
     return render_template('auth/login.html')
 

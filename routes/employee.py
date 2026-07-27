@@ -48,7 +48,7 @@ def emp_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'emp_id' not in session:
-            return redirect(url_for('employee.login'))
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated
 
@@ -57,7 +57,7 @@ def manager_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'emp_id' not in session:
-            return redirect(url_for('employee.login'))
+            return redirect(url_for('auth.login'))
         if _role_level() < 3:
             flash('Manager access required.', 'danger')
             return redirect(url_for('employee.dashboard'))
@@ -65,37 +65,13 @@ def manager_required(f):
     return decorated
 
 
-@employee_bp.route('/login', methods=['GET'])
+@employee_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'emp_id' in session:
-        return redirect(url_for('employee.dashboard'))
-    return render_template('employee/login.html')
+    return redirect(url_for('auth.login'))
 
 
-@employee_bp.route('/login', methods=['POST'])
 def login_post():
-    ip = request.remote_addr
-    if _rate_limited(ip):
-        flash('Too many attempts. Please wait 5 minutes.', 'danger')
-        return render_template('employee/login.html')
-
-    identifier = request.form.get('identifier', '').strip().lower()
-    password   = request.form.get('password', '')
-    if not identifier or not password:
-        flash('Please enter both fields.', 'danger')
-        return render_template('employee/login.html')
-
-    emp = db.get_employee_by_identifier(identifier)
-    if emp and bcrypt.checkpw(password.encode(), emp['password_hash'].encode()):
-        session.clear()
-        session.permanent = True
-        session['emp_id']   = emp['id']
-        session['emp_name'] = emp['full_name']
-        session['emp_role'] = emp['role']
-        return redirect(url_for('employee.dashboard'))
-
-    flash('Invalid credentials or account inactive.', 'danger')
-    return render_template('employee/login.html')
+    pass  # handled by auth.login_post
 
 
 @employee_bp.route('/logout')
@@ -103,7 +79,7 @@ def logout():
     session.pop('emp_id', None)
     session.pop('emp_name', None)
     session.pop('emp_role', None)
-    return redirect(url_for('employee.login'))
+    return redirect(url_for('auth.login'))
 
 
 @employee_bp.route('/dashboard')
