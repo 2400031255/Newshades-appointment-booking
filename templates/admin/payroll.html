@@ -1,0 +1,117 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Payroll – Admin{% endblock %}
+{% block page_title %}Payroll{% endblock %}
+
+{% block content %}
+<style>
+  .pay-card { border-radius:16px; padding:20px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); margin-bottom:14px; }
+  .btn-gold { padding:7px 20px; border-radius:999px; border:none; background:linear-gradient(135deg,#C9A84C,#E8C96A); color:#0c0b10; font-weight:700; font-size:0.82rem; cursor:pointer; }
+  .btn-outline { padding:6px 16px; border-radius:999px; border:1px solid rgba(201,168,76,0.25); background:transparent; color:#E8C96A; font-size:0.8rem; text-decoration:none; }
+  .btn-outline:hover { background:rgba(201,168,76,0.08); color:#E8C96A; }
+  .btn-green { padding:6px 16px; border-radius:999px; border:none; background:rgba(37,211,102,0.15); color:#7ce0aa; font-size:0.8rem; cursor:pointer; border:1px solid rgba(37,211,102,0.2); }
+  .btn-slip  { padding:6px 14px; border-radius:999px; border:1px solid rgba(105,152,255,0.25); background:transparent; color:#9dc0ff; font-size:0.78rem; text-decoration:none; }
+  .status-paid    { background:rgba(37,211,102,0.15); color:#7ce0aa; padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+  .status-pending { background:rgba(255,193,7,0.15);  color:#ffc107; padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+  .status-none    { background:rgba(255,255,255,0.06); color:rgba(240,230,211,0.35); padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+</style>
+
+<!-- Month Navigation -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+  <div class="d-flex align-items-center gap-3">
+    {% set prev_month = month - 1 if month > 1 else 12 %}
+    {% set prev_year  = year if month > 1 else year - 1 %}
+    {% set next_month = month + 1 if month < 12 else 1 %}
+    {% set next_year  = year if month < 12 else year + 1 %}
+    <a href="{{ url_for('admin.payroll', year=prev_year, month=prev_month) }}" class="btn-outline"><i class="fas fa-chevron-left"></i></a>
+    <span style="font-family:'Playfair Display',serif;color:#fff;font-size:1.2rem;font-weight:700;">{{ month_name }} {{ year }}</span>
+    <a href="{{ url_for('admin.payroll', year=next_year, month=next_month) }}" class="btn-outline"><i class="fas fa-chevron-right"></i></a>
+  </div>
+  <div class="d-flex gap-2">
+    <!-- Generate All -->
+    <form method="POST" action="{{ url_for('admin.generate_all_salaries') }}" style="display:inline;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <input type="hidden" name="year" value="{{ year }}"/>
+      <input type="hidden" name="month" value="{{ month }}"/>
+      <button type="submit" class="btn-gold" onclick="return confirm('Generate salary for all employees?')">
+        <i class="fas fa-bolt me-1"></i>Generate All
+      </button>
+    </form>
+    <a href="{{ url_for('admin.export_payroll', year=year, month=month) }}" class="btn-outline">
+      <i class="fas fa-download me-1"></i>Export CSV
+    </a>
+  </div>
+</div>
+
+<!-- Employee Payroll Table -->
+{% if emps %}
+<div class="table-responsive">
+  <table class="table table-dark" style="font-size:0.85rem;">
+    <thead style="color:rgba(240,230,211,0.4);">
+      <tr>
+        <th>Employee</th><th>Role</th><th>Monthly Salary</th>
+        <th>Present</th><th>Absent</th><th>OT Hrs</th>
+        <th>Net Salary</th><th>Status</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for emp in emps %}
+      {% set rec = saved_map.get(emp.id) %}
+      <tr>
+        <td style="color:#fff;font-weight:600;">{{ emp.full_name }}</td>
+        <td style="color:rgba(240,230,211,0.5);">{{ emp.role }}</td>
+        <td>₹{{ '%.0f' | format(emp.monthly_salary | float) if emp.monthly_salary else '–' }}</td>
+        {% if rec %}
+        <td style="color:#7ce0aa;">{{ rec.present }}</td>
+        <td style="color:#ff6b6b;">{{ rec.absent }}</td>
+        <td style="color:#C9A84C;">{{ rec.total_overtime }}</td>
+        <td style="color:#C9A84C;font-weight:700;">₹{{ '%.2f' | format(rec.net_salary | float) }}</td>
+        <td>
+          {% if rec.paid %}
+          <span class="status-paid"><i class="fas fa-check me-1"></i>Paid</span>
+          {% else %}
+          <span class="status-pending"><i class="fas fa-clock me-1"></i>Pending</span>
+          {% endif %}
+        </td>
+        <td>
+          <div class="d-flex gap-2 flex-wrap">
+            {% if not rec.paid %}
+            <form method="POST" action="{{ url_for('admin.mark_salary_paid', salary_id=rec.id) }}" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <input type="hidden" name="year" value="{{ year }}"/>
+              <input type="hidden" name="month" value="{{ month }}"/>
+              <button type="submit" class="btn-green"><i class="fas fa-check me-1"></i>Mark Paid</button>
+            </form>
+            {% endif %}
+            <a href="{{ url_for('admin.salary_slip', salary_id=rec.id) }}" class="btn-slip"><i class="fas fa-file-alt me-1"></i>Slip</a>
+          </div>
+        </td>
+        {% else %}
+        <td colspan="5" style="color:rgba(240,230,211,0.3);">Not generated</td>
+        <td>
+          <form method="POST" action="{{ url_for('admin.generate_salary') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="employee_id" value="{{ emp.id }}"/>
+            <input type="hidden" name="year" value="{{ year }}"/>
+            <input type="hidden" name="month" value="{{ month }}"/>
+            <button type="submit" class="btn-gold"><i class="fas fa-calculator me-1"></i>Generate</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div style="text-align:center;padding:60px;color:rgba(240,230,211,0.3);">
+  <i class="fas fa-users" style="font-size:2.5rem;margin-bottom:16px;display:block;"></i>
+  No active employees found.
+</div>
+{% endif %}
+
+<!-- Note about salary fields -->
+<div style="margin-top:16px;padding:14px 18px;border-radius:12px;background:rgba(105,152,255,0.06);border:1px solid rgba(105,152,255,0.15);font-size:0.82rem;color:rgba(240,230,211,0.5);">
+  <i class="fas fa-info-circle me-2" style="color:#9dc0ff;"></i>
+  Salary is calculated from attendance records. Set <strong>monthly_salary</strong>, <strong>working_days_per_month</strong>, and <strong>overtime_rate</strong> on each employee profile to get accurate calculations.
+</div>
+{% endblock %}

@@ -34,8 +34,29 @@
             <option value="Consultant">Consultant</option>
             <option value="Stylist">Stylist</option>
             <option value="Senior Stylist">Senior Stylist</option>
+            <option value="Receptionist">Receptionist</option>
+            <option value="Barber">Barber</option>
+            <option value="Beautician">Beautician</option>
             <option value="Manager">Manager</option>
           </select>
+        </div>
+        <div class="mb-3">
+          <label class="field-label mb-1" style="font-size:0.75rem;letter-spacing:0.08em;">MONTHLY SALARY (₹)</label>
+          <input type="number" name="monthly_salary" min="0" step="0.01"
+            style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"
+            placeholder="e.g. 25000"/>
+        </div>
+        <div class="row g-2 mb-4">
+          <div class="col-6">
+            <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.08em;">WORKING DAYS/MONTH</label>
+            <input type="number" name="working_days_per_month" min="1" max="31" value="26"
+              style="width:100%;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.88rem;"/>
+          </div>
+          <div class="col-6">
+            <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.08em;">OT RATE (₹/hr)</label>
+            <input type="number" name="overtime_rate" min="0" step="0.01" value="150"
+              style="width:100%;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.88rem;"/>
+          </div>
         </div>
         <button type="submit" class="btn-gold" style="width:100%;justify-content:center;">
           <i class="fas fa-plus me-2"></i>Create Employee
@@ -75,6 +96,18 @@
               <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-top:3px;">
                 @{{ emp.username }} &nbsp;·&nbsp; {{ emp.email }} &nbsp;·&nbsp; {{ emp.phone }}
               </div>
+              <div style="margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                {% set att_on = emp.get('can_mark_attendance', True) %}
+                <span style="font-size:0.7rem;padding:2px 10px;border-radius:999px;font-weight:700;
+                  background:{{ 'rgba(37,211,102,0.1)' if att_on else 'rgba(255,107,107,0.1)' }};
+                  color:{{ '#7ce0aa' if att_on else '#ff6b6b' }};
+                  border:1px solid {{ 'rgba(37,211,102,0.2)' if att_on else 'rgba(255,107,107,0.2)' }};">
+                  <i class="fas fa-calendar-check me-1"></i>Attendance {{ 'ON' if att_on else 'OFF' }}
+                </span>
+                {% if emp.monthly_salary %}
+                <span style="font-size:0.7rem;color:rgba(201,168,76,0.7);">₹{{ emp.monthly_salary | int }}/mo</span>
+                {% endif %}
+              </div>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <span style="padding:3px 12px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(105,152,255,0.12);color:#9dc0ff;border:1px solid rgba(105,152,255,0.2);">
@@ -89,8 +122,18 @@
                   <i class="fas fa-{{ 'ban' if emp.is_active else 'check' }} me-1"></i>{{ 'Deactivate' if emp.is_active else 'Activate' }}
                 </button>
               </form>
+              <!-- Toggle attendance access -->
+              {% set att_on = emp.get('can_mark_attendance', True) %}
+              <form method="POST" action="{{ url_for('admin.toggle_attendance_access', eid=emp.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" title="{{ 'Disable Attendance' if att_on else 'Enable Attendance' }}"
+                  style="padding:5px 12px;border-radius:999px;border:1px solid;font-size:0.72rem;font-weight:700;cursor:pointer;
+                  {{ 'background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.25);color:#E8C96A;' if att_on else 'background:rgba(105,152,255,0.08);border-color:rgba(105,152,255,0.25);color:#9dc0ff;' }}">
+                  <i class="fas fa-calendar-{{ 'times' if att_on else 'check' }} me-1"></i>Att {{ 'ON' if att_on else 'OFF' }}
+                </button>
+              </form>
               <!-- Reset password trigger -->
-              <button type="button" onclick="openResetModal({{ emp.id }}, '{{ emp.full_name }}')"
+              <button type="button" onclick="openResetModal('{{ emp.id }}', '{{ emp.full_name }}')"
                 style="padding:5px 12px;border-radius:999px;border:1px solid rgba(201,168,76,0.25);background:rgba(201,168,76,0.08);color:var(--gold-2,#E8C96A);font-size:0.72rem;font-weight:700;cursor:pointer;">
                 <i class="fas fa-key me-1"></i>Reset PW
               </button>

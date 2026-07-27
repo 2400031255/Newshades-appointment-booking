@@ -48,7 +48,6 @@ def create_app():
             "connect-src 'self' wss: ws:; "
             "frame-ancestors 'self';"
         )
-        # Cache static assets aggressively
         if request.path.startswith('/static/'):
             response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
         elif request.method == 'GET' and response.status_code == 200:
@@ -61,7 +60,6 @@ def create_app():
 
     @app.before_request
     def check_maintenance():
-        from db import query
         if not request.endpoint:
             return
         allowed_endpoints = {'auth.login', 'auth.login_post', 'auth.logout', 'static', 'ping',
@@ -70,17 +68,15 @@ def create_app():
             return
         if session.get('is_admin'):
             return
-        # Allow env override to force maintenance OFF (useful for Render cold starts)
         if os.environ.get('MAINTENANCE_OVERRIDE') == 'off':
             return
         try:
-            row = query("SELECT value FROM settings WHERE `key`='maintenance_mode'", one=True)
-            if row and row['value'] == '1':
+            import db
+            if db.get_setting('maintenance_mode', '0') == '1':
                 if session.get('user_id'):
                     session.clear()
-                wa = query("SELECT value FROM settings WHERE `key`='whatsapp_number'", one=True)
-                return render_template('maintenance.html',
-                    whatsapp=wa['value'] if wa else ''), 503
+                wa = db.get_setting('whatsapp_number', '')
+                return render_template('maintenance.html', whatsapp=wa), 503
         except (OSError, RuntimeError):
             pass
 
@@ -88,45 +84,33 @@ def create_app():
 
     @app.context_processor
     def inject_shop():
-        from db import query
+        import db
+        import datetime as _dt
 
-        def get_all_settings():
-            try:
-                rows = query("SELECT `key`, value FROM settings")
-                return {r['key']: r['value'] for r in rows} if rows else {}
-            except (OSError, RuntimeError):
-                return {}
+        try:
+            settings_map = db.get_all_settings()
+        except (OSError, RuntimeError):
+            settings_map = {}
 
-        settings_map = get_all_settings()
         def gs(key, default=''):
             return settings_map.get(key, default)
 
         pending_appts = 0
         if session.get('is_admin'):
             try:
-                r = query("SELECT COUNT(*) as c FROM enquiries WHERE status='Pending'", one=True)
-                pending_appts = r['c'] if r else 0
+                enqs = db.get_all_enquiries(status_filter='Pending')
+                pending_appts = len(enqs)
             except (OSError, RuntimeError) as e:
-                current_app.logger.warning('pending_appts query failed: %s', e)
+                current_app.logger.warning('pending_appts failed: %s', e)
 
-        # Only fetch today_offers for customer-facing pages (skip admin + static)
         today_offers = []
         endpoint = request.endpoint or ''
         if not endpoint.startswith('admin.') and endpoint != 'static':
             try:
-                from datetime import date
-                today = date.today().isoformat()
-                today_offers = query(
-                    "SELECT id, title, discount_text, discount_percent, applicable_services "
-                    "FROM offers WHERE is_active=1 "
-                    "AND (valid_from IS NULL OR valid_from <= %s) "
-                    "AND (valid_until IS NULL OR valid_until >= %s)",
-                    (today, today)
-                )
+                today_offers = db.get_active_offers(_dt.date.today().isoformat())
             except (OSError, RuntimeError) as e:
-                current_app.logger.warning('today_offers query failed: %s', e)
+                current_app.logger.warning('today_offers failed: %s', e)
 
-        import datetime as _dt
         return dict(
             pending_appts=pending_appts,
             today_offers=today_offers,
@@ -183,8 +167,7 @@ def create_app():
     @app.errorhandler(500)
     def server_error(e):
         try:
-            import os as _os
-            path = _os.path.join(app.root_path, 'templates', 'errors', '500.html')
+            path = os.path.join(app.root_path, 'templates', 'errors', '500.html')
             with open(path, 'r') as f:
                 return f.read(), 500
         except Exception:
@@ -193,8 +176,7 @@ def create_app():
     @app.errorhandler(503)
     def service_unavailable(e):
         try:
-            import os as _os
-            path = _os.path.join(app.root_path, 'templates', 'errors', '500.html')
+            path = os.path.join(app.root_path, 'templates', 'errors', '500.html')
             with open(path, 'r') as f:
                 return f.read(), 503
         except Exception:
@@ -206,16 +188,13 @@ def create_app():
             if session.get('is_admin'):
                 return redirect(url_for('admin.dashboard'))
             return redirect(url_for('customer.dashboard'))
-        from db import query
+        import db
         try:
-            reviews = query(
-                "SELECT r.rating, r.comment, r.created_at, u.full_name FROM reviews r "
-                "JOIN users u ON r.user_id=u.id ORDER BY r.created_at DESC LIMIT 6"
-            )
+            reviews = db.get_recent_reviews(limit=6)
         except Exception:
             reviews = []
         try:
-            services = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name LIMIT 6")
+            services = db.get_all_services(active_only=True)[:6]
         except Exception:
             services = []
         return render_template('index.html', reviews=reviews, services=services)
@@ -230,9 +209,9 @@ def create_app():
 
     @app.route('/services')
     def services():
-        from db import query
+        import db
         try:
-            svcs = query("SELECT * FROM services WHERE is_active=1 ORDER BY category, service_name")
+            svcs = db.get_all_services(active_only=True)
             categories = list(dict.fromkeys(s['category'] for s in svcs))
         except (OSError, RuntimeError):
             svcs, categories = [], []
@@ -240,9 +219,9 @@ def create_app():
 
     @app.route('/gallery')
     def gallery():
-        from db import query
+        import db
         try:
-            photos = query("SELECT * FROM gallery ORDER BY created_at DESC")
+            photos = db.get_all_gallery()
         except (OSError, RuntimeError):
             photos = []
         return render_template('gallery.html', photos=photos)

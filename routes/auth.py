@@ -2,10 +2,11 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 import bcrypt
 import re
 import logging
-from db import query, execute
-from collections import defaultdict
+import os
 import time
 import threading
+from collections import defaultdict
+import db
 
 auth   = Blueprint('auth', __name__)
 logger = logging.getLogger(__name__)
@@ -14,9 +15,6 @@ _login_attempts  = defaultdict(list)
 _signup_attempts = defaultdict(list)
 _login_lock      = threading.Lock()
 
-import os
-# Dummy hash used to prevent timing attacks when user is not found.
-# Generated from random bytes at startup — never matches any real password.
 _DUMMY_HASH = bcrypt.hashpw(os.urandom(32), bcrypt.gensalt()).decode()
 
 
@@ -37,7 +35,6 @@ def _clear_rate_limit(ip):
 
 
 def _validate_signup(form):
-    """Return error string or None if valid."""
     full_name = form.get('full_name', '').strip()
     username  = form.get('username', '').strip().lower()
     email     = form.get('email', '').strip().lower()
@@ -67,8 +64,6 @@ def _validate_signup(form):
     return None
 
 
-# ── Signup ────────────────────────────────────────────────────────────────────
-
 @auth.route('/signup', methods=['GET'])
 def signup():
     return render_template('auth/signup.html')
@@ -92,24 +87,15 @@ def signup_post():
     phone     = request.form.get('phone', '').strip()
     password  = request.form.get('password', '')
 
-    conflict = query(
-        "SELECT id FROM users WHERE email=%s OR username=%s", (email, username), one=True
-    )
-    if conflict:
-        # Generic message — don't reveal which field exists
+    if db.get_user_by_email(email) or db.get_user_by_username(username):
         flash('An account with those details already exists.', 'danger')
         return render_template('auth/signup.html')
 
     hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    execute(
-        "INSERT INTO users (full_name, username, phone, email, password_hash) VALUES (%s,%s,%s,%s,%s)",
-        (full_name, username, phone, email, hashed)
-    )
+    db.create_user(full_name, username, phone, email, hashed)
     flash('Account created! Please log in.', 'success')
     return redirect(url_for('auth.login'))
 
-
-# ── Login ─────────────────────────────────────────────────────────────────────
 
 @auth.route('/login', methods=['GET'])
 def login():
@@ -133,9 +119,8 @@ def login_post():
         flash('Invalid input.', 'danger')
         return render_template('auth/login.html')
 
-    user = query("SELECT * FROM users WHERE email=%s OR username=%s", (identifier, identifier), one=True)
+    user = db.get_user_by_email_or_username(identifier)
 
-    # Always run bcrypt to prevent timing-based username enumeration
     stored_hash = user['password_hash'].encode() if user else _DUMMY_HASH.encode()
     password_ok = bcrypt.checkpw(password.encode(), stored_hash)
 
@@ -154,8 +139,6 @@ def login_post():
     flash('Invalid credentials. Please try again.', 'danger')
     return render_template('auth/login.html')
 
-
-# ── Logout ────────────────────────────────────────────────────────────────────
 
 @auth.route('/logout')
 def logout():

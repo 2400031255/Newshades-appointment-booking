@@ -1,0 +1,82 @@
+{% extends 'admin/base_admin.html' %}
+{% block title %}Salary Slip – {{ slip.emp_name }}{% endblock %}
+{% block page_title %}Salary Slip{% endblock %}
+
+{% block content %}
+<style>
+  .slip-wrap { max-width:600px; margin:0 auto; }
+  .slip-box { border-radius:20px; padding:32px; background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02)); border:1px solid rgba(201,168,76,0.2); }
+  .slip-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.9rem; }
+  .slip-row:last-child { border-bottom:none; }
+  .slip-label { color:rgba(240,230,211,0.5); }
+  .slip-value { color:#fff; font-weight:600; }
+  .btn-outline { padding:8px 20px; border-radius:999px; border:1px solid rgba(201,168,76,0.25); background:transparent; color:#E8C96A; font-size:0.85rem; text-decoration:none; }
+  @media print {
+    .admin-sidebar, .admin-topbar, .no-print { display:none !important; }
+    .admin-content { margin:0 !important; padding:0 !important; }
+    .slip-box { border:1px solid #ccc; }
+  }
+</style>
+
+<div class="slip-wrap">
+  <div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <a href="{{ url_for('admin.payroll') }}" class="btn-outline"><i class="fas fa-arrow-left me-2"></i>Back to Payroll</a>
+    <button onclick="window.print()" class="btn-outline"><i class="fas fa-print me-2"></i>Print / Save PDF</button>
+  </div>
+
+  <div class="slip-box">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-family:'Playfair Display',serif;color:#C9A84C;font-size:1.5rem;font-weight:700;letter-spacing:0.05em;">NEW SHADES PREMIUM SALON</div>
+      <div style="color:rgba(240,230,211,0.4);font-size:0.82rem;margin-top:6px;letter-spacing:0.1em;text-transform:uppercase;">Employee Salary Slip</div>
+    </div>
+
+    <div class="slip-row"><span class="slip-label">Employee ID</span><span class="slip-value">{{ slip.employee_id[:8].upper() }}</span></div>
+    <div class="slip-row"><span class="slip-label">Employee Name</span><span class="slip-value">{{ slip.emp_name }}</span></div>
+    <div class="slip-row"><span class="slip-label">Position</span><span class="slip-value">{{ slip.emp_role }}</span></div>
+    <div class="slip-row"><span class="slip-label">Month</span><span class="slip-value">{{ month_name }} {{ year }}</span></div>
+
+    <div style="border-top:1px solid rgba(201,168,76,0.2);margin:18px 0;"></div>
+
+    <div class="slip-row"><span class="slip-label">Monthly Salary</span><span class="slip-value">₹{{ '%.2f' | format(slip.monthly_salary | float) }}</span></div>
+    <div class="slip-row"><span class="slip-label">Working Days</span><span class="slip-value">{{ slip.working_days }}</span></div>
+    <div class="slip-row"><span class="slip-label">Per Day Rate</span><span class="slip-value">₹{{ '%.2f' | format(slip.per_day | float) }}</span></div>
+
+    <div style="border-top:1px solid rgba(201,168,76,0.2);margin:18px 0;"></div>
+
+    <div class="slip-row"><span class="slip-label">Present Days</span><span class="slip-value" style="color:#7ce0aa;">{{ slip.present }}</span></div>
+    <div class="slip-row"><span class="slip-label">Half Days</span><span class="slip-value" style="color:#9dc0ff;">{{ slip.half_day }}</span></div>
+    <div class="slip-row"><span class="slip-label">Absent Days</span><span class="slip-value" style="color:#ff6b6b;">{{ slip.absent }}</span></div>
+    <div class="slip-row"><span class="slip-label">Leave Days</span><span class="slip-value" style="color:#c4b5fd;">{{ slip.on_leave }}</span></div>
+    <div class="slip-row"><span class="slip-label">Overtime Hours</span><span class="slip-value" style="color:#C9A84C;">{{ slip.total_overtime }}</span></div>
+
+    <div style="border-top:1px solid rgba(201,168,76,0.2);margin:18px 0;"></div>
+
+    <div class="slip-row"><span class="slip-label">Overtime Amount</span><span class="slip-value" style="color:#7ce0aa;">+ ₹{{ '%.2f' | format(slip.overtime_amount | float) }}</span></div>
+    <div class="slip-row"><span class="slip-label">Absent Deduction</span><span class="slip-value" style="color:#ff6b6b;">– ₹{{ '%.2f' | format(slip.absent_deduction | float) }}</span></div>
+    <div class="slip-row"><span class="slip-label">Half Day Deduction</span><span class="slip-value" style="color:#ff9a6c;">– ₹{{ '%.2f' | format(slip.half_day_deduction | float) }}</span></div>
+
+    <div style="border-top:1px solid rgba(201,168,76,0.35);margin:18px 0;"></div>
+
+    <div class="slip-row" style="font-size:1.1rem;">
+      <span style="color:#fff;font-weight:700;">Net Salary</span>
+      <span style="color:#C9A84C;font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;">₹{{ '%.2f' | format(slip.net_salary | float) }}</span>
+    </div>
+
+    <div style="text-align:center;margin-top:24px;">
+      <span style="padding:7px 22px;border-radius:999px;font-size:0.82rem;font-weight:700;
+        background:{{ 'rgba(37,211,102,0.15)' if slip.paid else 'rgba(255,193,7,0.12)' }};
+        color:{{ '#7ce0aa' if slip.paid else '#ffc107' }};
+        border:1px solid {{ 'rgba(37,211,102,0.25)' if slip.paid else 'rgba(255,193,7,0.2)' }};">
+        <i class="fas fa-{{ 'check-circle' if slip.paid else 'clock' }} me-1"></i>
+        {{ 'Paid' if slip.paid else 'Pending Payment' }}
+      </span>
+    </div>
+
+    {% if slip.generated_at %}
+    <div style="text-align:center;margin-top:16px;color:rgba(240,230,211,0.3);font-size:0.75rem;">
+      Generated on {{ slip.generated_at[:10] }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

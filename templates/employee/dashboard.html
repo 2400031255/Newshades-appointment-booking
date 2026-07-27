@@ -123,6 +123,10 @@
     </span>
   </div>
   <div class="d-flex align-items-center gap-3">
+    <a href="{{ url_for('employee.dashboard') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Enquiries</a>
+    <a href="{{ url_for('employee.attendance') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Attendance</a>
+    <a href="{{ url_for('employee.salary') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Salary</a>
+    <a href="{{ url_for('employee.leave') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Leave</a>
     <span style="color:rgba(240,230,211,0.6);font-size:0.85rem;">{{ session.emp_name }}</span>
     <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;">
       <i class="fas fa-sign-out-alt me-1"></i>Logout

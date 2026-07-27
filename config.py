@@ -28,8 +28,10 @@ class Config:
     # Secret key — must be set via env in production
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
-    # Database
-    DATABASE_URL   = os.environ.get('DATABASE_URL', '')
+    # Database — SQLite only, path set via env (Render disk: /data/salon_app.db)
+    DATABASE_URL   = ''  # disabled — using SQLite
+    SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', '')
+    # MySQL kept for legacy local dev only (ignored if SQLite path is set)
     MYSQL_HOST     = os.environ.get('MYSQL_HOST', 'localhost')
     MYSQL_USER     = os.environ.get('MYSQL_USER', 'root')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')

@@ -1,762 +1,791 @@
 import os
-import re
-import sqlite3
-import pymysql
-from flask import g, current_app
+import json
+import bcrypt
+from datetime import datetime, timezone
 
-_schema_initialized = set()  # tracks which backends have been initialized — reset forces re-migration
-_backend_unavailable = set()  # tracks permanently failed backends this process lifetime
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# ── Seed data ─────────────────────────────────────────────────────────────────
+_db = None
 
-def _seed_admin_params():
-    seed_hash = os.environ.get('SEED_ADMIN_HASH', '')
-    if not seed_hash:
-        import bcrypt as _bcrypt
-        seed_hash = _bcrypt.hashpw(
-            os.environ.get('SEED_ADMIN_PASSWORD', 'komali123').encode(),
-            _bcrypt.gensalt()
-        ).decode()
-    return (
-        os.environ.get('SEED_ADMIN_NAME',     'Admin'),
-        os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
-        os.environ.get('SEED_ADMIN_PHONE',    '0000000000'),
-        os.environ.get('SEED_ADMIN_EMAIL',    'admin@newshades.com'),
-        seed_hash,
-    )
+
+def _get_firestore():
+    global _db
+    if _db is not None:
+        return _db
+
+    if not firebase_admin._apps:
+        cred_json = os.environ.get('FIREBASE_CREDENTIALS', '')
+        if not cred_json:
+            raise RuntimeError('FIREBASE_CREDENTIALS env var not set')
+        cred_dict = json.loads(cred_json)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+
+    _db = firestore.client()
+    _seed_initial_data(_db)
+    return _db
+
+
+# ── Seed ──────────────────────────────────────────────────────────────────────
 
 _DEFAULT_SERVICES = [
-    ('Hair Cut',     'Professional haircut styled to your preference', 300.00, '30 mins', 'Hair'),
-    ('Beard Trim',   'Clean beard shaping and trimming',               150.00, '20 mins', 'Beard'),
-    ('Hair Color',   'Full hair coloring with premium products',       800.00, '90 mins', 'Hair'),
-    ('Facial',       'Deep cleansing facial treatment',                500.00, '45 mins', 'Skin'),
-    ('Head Massage', 'Relaxing scalp and head massage',                250.00, '30 mins', 'Wellness'),
-    ('Hair Spa',     'Nourishing hair spa treatment',                  600.00, '60 mins', 'Hair'),
+    {'service_name': 'Hair Cut',     'description': 'Professional haircut styled to your preference', 'price': 300.0, 'duration': '30 mins', 'category': 'Hair',     'image_url': '', 'is_active': 1, 'price_on_request': 0},
+    {'service_name': 'Beard Trim',   'description': 'Clean beard shaping and trimming',               'price': 150.0, 'duration': '20 mins', 'category': 'Beard',    'image_url': '', 'is_active': 1, 'price_on_request': 0},
+    {'service_name': 'Hair Color',   'description': 'Full hair coloring with premium products',       'price': 800.0, 'duration': '90 mins', 'category': 'Hair',     'image_url': '', 'is_active': 1, 'price_on_request': 0},
+    {'service_name': 'Facial',       'description': 'Deep cleansing facial treatment',                'price': 500.0, 'duration': '45 mins', 'category': 'Skin',     'image_url': '', 'is_active': 1, 'price_on_request': 0},
+    {'service_name': 'Head Massage', 'description': 'Relaxing scalp and head massage',                'price': 250.0, 'duration': '30 mins', 'category': 'Wellness', 'image_url': '', 'is_active': 1, 'price_on_request': 0},
+    {'service_name': 'Hair Spa',     'description': 'Nourishing hair spa treatment',                  'price': 600.0, 'duration': '60 mins', 'category': 'Hair',     'image_url': '', 'is_active': 1, 'price_on_request': 0},
 ]
 
 
-# ── Schema helpers ────────────────────────────────────────────────────────────
+def _seed_initial_data(db):
+    # Seed admin user if no admin exists
+    admins = db.collection('users').where('is_admin', '==', 1).limit(1).get()
+    if not admins:
+        seed_hash = os.environ.get('SEED_ADMIN_HASH', '')
+        if not seed_hash:
+            seed_hash = bcrypt.hashpw(
+                os.environ.get('SEED_ADMIN_PASSWORD', 'komali123').encode(),
+                bcrypt.gensalt()
+            ).decode()
+        admin_ref = db.collection('users').document()
+        admin_ref.set({
+            'id':            admin_ref.id,
+            'full_name':     os.environ.get('SEED_ADMIN_NAME', 'Admin'),
+            'username':      os.environ.get('SEED_ADMIN_USERNAME', 'komali'),
+            'phone':         os.environ.get('SEED_ADMIN_PHONE', '0000000000'),
+            'email':         os.environ.get('SEED_ADMIN_EMAIL', 'admin@newshades.com'),
+            'password_hash': seed_hash,
+            'is_admin':      1,
+            'created_at':    datetime.now(timezone.utc).isoformat(),
+        })
 
-def _init_sqlite_schema(conn):
-    conn.executescript("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            phone TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            is_admin INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS services (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            service_name TEXT NOT NULL,
-            description TEXT,
-            price REAL NOT NULL DEFAULT 0,
-            duration TEXT NOT NULL,
-            category TEXT DEFAULT 'General',
-            image_url TEXT DEFAULT '',
-            is_active INTEGER DEFAULT 1,
-            price_on_request INTEGER DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS appointments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date TEXT NOT NULL,
-            preferred_time TEXT,
-            status TEXT DEFAULT 'Pending',
-            ticket_id TEXT,
-            ticket_expires_at TEXT,
-            total_price REAL DEFAULT 0,
-            discount_percent REAL DEFAULT 0,
-            offer_applied TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS blocked_slots (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            block_date TEXT NOT NULL,
-            block_time TEXT,
-            reason TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS salon_config (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
-            comment TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS gallery (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            filename TEXT NOT NULL,
-            caption TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS offers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT DEFAULT '',
-            discount_text TEXT DEFAULT '',
-            discount_percent REAL DEFAULT 0,
-            applicable_services TEXT DEFAULT '',
-            coupon_code TEXT DEFAULT '',
-            valid_from DATE,
-            valid_until DATE,
-            is_active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS coupons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code TEXT NOT NULL UNIQUE,
-            discount_percent REAL NOT NULL DEFAULT 0,
-            max_uses INTEGER DEFAULT 0,
-            used_count INTEGER DEFAULT 0,
-            valid_until DATE,
-            is_active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS enquiries (
-            enquiry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date TEXT NOT NULL,
-            preferred_time TEXT,
-            message TEXT DEFAULT '',
-            status TEXT DEFAULT 'Pending',
-            admin_notes TEXT DEFAULT '',
-            assigned_employee_id INTEGER,
-            employee_notes TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            phone TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'Consultant',
-            is_active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-    params = _seed_admin_params()
-    conn.execute(
-        "INSERT OR IGNORE INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (?,?,?,?,?,?)",
-        (*params, 1),
-    )
-    if conn.execute("SELECT COUNT(*) FROM services").fetchone()[0] == 0:
-        conn.executemany(
-            "INSERT INTO services (service_name, description, price, duration, category) VALUES (?,?,?,?,?)",
-            _DEFAULT_SERVICES,
-        )
-    conn.commit()
-
-    # Migrate: ensure enquiries table exists (for existing DBs)
-    enq_cols = {row[1] for row in conn.execute('PRAGMA table_info(enquiries)')}
-    if not enq_cols:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS enquiries (
-                enquiry_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                selected_services TEXT NOT NULL,
-                preferred_date TEXT NOT NULL,
-                preferred_time TEXT,
-                message TEXT DEFAULT '',
-                status TEXT DEFAULT 'Pending',
-                admin_notes TEXT DEFAULT '',
-                assigned_employee_id INTEGER,
-                employee_notes TEXT DEFAULT '',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        """)
-        conn.commit()
-
-    # Migrate employees table
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS employees (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
-            username TEXT UNIQUE NOT NULL,
-            phone TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'Consultant',
-            is_active INTEGER DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-
-    # Migrate enquiries columns
-    enq_cols = {row[1] for row in conn.execute('PRAGMA table_info(enquiries)')}
-    for col, stmt in [('assigned_employee_id', 'ALTER TABLE enquiries ADD COLUMN assigned_employee_id INTEGER'),
-                      ('employee_notes', 'ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ""')]:
-        if col not in enq_cols:
-            conn.execute(stmt)
-    conn.commit()
-
-    # Migrate existing appointments table if columns are missing
-    existing_cols = {row[1] for row in conn.execute('PRAGMA table_info(appointments)')}
-    migrations = [
-        ('ticket_id',           'ALTER TABLE appointments ADD COLUMN ticket_id TEXT'),
-        ('ticket_expires_at',   'ALTER TABLE appointments ADD COLUMN ticket_expires_at TEXT'),
-        ('total_price',         'ALTER TABLE appointments ADD COLUMN total_price REAL DEFAULT 0'),
-        ('discount_percent',    'ALTER TABLE appointments ADD COLUMN discount_percent REAL DEFAULT 0'),
-        ('offer_applied',       'ALTER TABLE appointments ADD COLUMN offer_applied TEXT DEFAULT ""'),
-    ]
-    svc_cols = {row[1] for row in conn.execute('PRAGMA table_info(services)')}
-    if 'price_on_request' not in svc_cols:
-        conn.execute('ALTER TABLE services ADD COLUMN price_on_request INTEGER DEFAULT 0')
-    conn.commit()
-    for col, stmt in migrations:
-        if col not in existing_cols:
-            conn.execute(stmt)
-    conn.commit()
+    # Seed default services if none exist
+    services = db.collection('services').limit(1).get()
+    if not services:
+        for svc in _DEFAULT_SERVICES:
+            ref = db.collection('services').document()
+            svc['id'] = ref.id
+            svc['created_at'] = datetime.now(timezone.utc).isoformat()
+            ref.set(svc)
 
 
-def _init_pg_schema(conn):
-    cur = conn.cursor()
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            full_name VARCHAR(100) NOT NULL,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            phone VARCHAR(20) NOT NULL,
-            email VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            is_admin SMALLINT DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS services (
-            id SERIAL PRIMARY KEY,
-            service_name VARCHAR(100) NOT NULL,
-            description TEXT,
-            price NUMERIC(10,2) NOT NULL DEFAULT 0,
-            duration VARCHAR(50) NOT NULL,
-            category VARCHAR(50) DEFAULT 'General',
-            image_url VARCHAR(255) DEFAULT '',
-            is_active SMALLINT DEFAULT 1,
-            price_on_request SMALLINT DEFAULT 0
-        );
-        CREATE TABLE IF NOT EXISTS appointments (
-            id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date DATE NOT NULL,
-            preferred_time VARCHAR(20),
-            status VARCHAR(20) DEFAULT 'Pending',
-            ticket_id VARCHAR(20),
-            ticket_expires_at TIMESTAMP,
-            total_price NUMERIC(10,2) DEFAULT 0,
-            discount_percent NUMERIC(5,2) DEFAULT 0,
-            offer_applied VARCHAR(150) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS blocked_slots (
-            id SERIAL PRIMARY KEY,
-            block_date DATE NOT NULL,
-            block_time VARCHAR(20),
-            reason VARCHAR(255) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS salon_config (
-            key VARCHAR(100) PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS settings (
-            key VARCHAR(100) PRIMARY KEY,
-            value TEXT NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS reviews (
-            id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
-            rating INT NOT NULL CHECK(rating BETWEEN 1 AND 5),
-            comment TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS gallery (
-            id SERIAL PRIMARY KEY,
-            filename VARCHAR(255) NOT NULL,
-            caption VARCHAR(255) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS offers (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(150) NOT NULL,
-            description TEXT DEFAULT '',
-            discount_text VARCHAR(100) DEFAULT '',
-            discount_percent NUMERIC(5,2) DEFAULT 0,
-            applicable_services TEXT DEFAULT '',
-            coupon_code VARCHAR(50) DEFAULT '',
-            valid_from DATE,
-            valid_until DATE,
-            is_active SMALLINT DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS coupons (
-            id SERIAL PRIMARY KEY,
-            code VARCHAR(50) NOT NULL UNIQUE,
-            discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0,
-            max_uses INTEGER DEFAULT 0,
-            used_count INTEGER DEFAULT 0,
-            valid_until DATE,
-            is_active SMALLINT DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        CREATE TABLE IF NOT EXISTS enquiries (
-            enquiry_id SERIAL PRIMARY KEY,
-            user_id INT NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date DATE NOT NULL,
-            preferred_time VARCHAR(20),
-            message TEXT DEFAULT '',
-            status VARCHAR(20) DEFAULT 'Pending',
-            admin_notes TEXT DEFAULT '',
-            assigned_employee_id INT DEFAULT NULL,
-            employee_notes TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        );
-        CREATE TABLE IF NOT EXISTS employees (
-            id SERIAL PRIMARY KEY,
-            full_name VARCHAR(100) NOT NULL,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            phone VARCHAR(20) NOT NULL,
-            email VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) DEFAULT 'Consultant',
-            is_active SMALLINT DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    """)
-    params = _seed_admin_params()
-    cur.execute("""
-        INSERT INTO users (full_name, username, phone, email, password_hash, is_admin)
-        VALUES (%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (email) DO NOTHING
-    """, (*params, 1))
-    # Migrate existing services table
-    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='services' AND column_name='price_on_request'")
-    if not cur.fetchone():
-        cur.execute('ALTER TABLE services ADD COLUMN price_on_request SMALLINT DEFAULT 0')
-    conn.commit()
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
-    # Migrate enquiries columns (for existing DBs)
-    for col, stmt in [
-        ('assigned_employee_id', "ALTER TABLE enquiries ADD COLUMN assigned_employee_id INT DEFAULT NULL"),
-        ('employee_notes',       "ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ''"),
-    ]:
-        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='enquiries' AND column_name=%s", (col,))
-        if not cur.fetchone():
-            try:
-                cur.execute(stmt)
-            except Exception as e:
-                current_app.logger.warning('PG ALTER enquiries failed (%s): %s', col, e)
-    conn.commit()
-
-    cur.execute("SELECT COUNT(*) FROM services")
-    if cur.fetchone()[0] == 0:
-        cur.executemany(
-            "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
-            _DEFAULT_SERVICES,
-        )
-    conn.commit()
-    cur.close()
+def _doc_to_dict(doc):
+    d = doc.to_dict()
+    if d is None:
+        return None
+    d['id'] = doc.id
+    return d
 
 
-def _init_mysql_schema(conn):
-    cur = conn.cursor()
-    stmts = [
-        """CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            full_name VARCHAR(100) NOT NULL,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            phone VARCHAR(20) NOT NULL,
-            email VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            is_admin TINYINT(1) DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS services (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            service_name VARCHAR(100) NOT NULL,
-            description TEXT,
-            price DECIMAL(10,2) NOT NULL DEFAULT 0,
-            duration VARCHAR(50) NOT NULL,
-            category VARCHAR(50) DEFAULT 'General',
-            image_url VARCHAR(255) DEFAULT '',
-            is_active TINYINT(1) DEFAULT 1,
-            price_on_request TINYINT(1) DEFAULT 0
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS appointments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date DATE NOT NULL,
-            preferred_time VARCHAR(20),
-            status ENUM('Pending','Confirmed','Cancelled','Rejected','Checked In','Completed') DEFAULT 'Pending',
-            ticket_id VARCHAR(20),
-            ticket_expires_at DATETIME,
-            total_price DECIMAL(10,2) DEFAULT 0,
-            discount_percent DECIMAL(5,2) DEFAULT 0,
-            offer_applied VARCHAR(150) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS blocked_slots (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            block_date DATE NOT NULL,
-            block_time VARCHAR(20),
-            reason VARCHAR(255) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS salon_config (
-            `key` VARCHAR(100) PRIMARY KEY,
-            value TEXT NOT NULL
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS settings (
-            `key` VARCHAR(100) PRIMARY KEY,
-            value TEXT NOT NULL
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS reviews (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            rating INT NOT NULL,
-            comment TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS gallery (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            filename VARCHAR(255) NOT NULL,
-            caption VARCHAR(255) DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS offers (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(150) NOT NULL,
-            description TEXT,
-            discount_text VARCHAR(100) DEFAULT '',
-            discount_percent DECIMAL(5,2) DEFAULT 0,
-            applicable_services TEXT,
-            coupon_code VARCHAR(50) DEFAULT '',
-            valid_from DATE,
-            valid_until DATE,
-            is_active TINYINT(1) DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS coupons (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            code VARCHAR(50) NOT NULL,
-            discount_percent DECIMAL(5,2) NOT NULL DEFAULT 0,
-            max_uses INT DEFAULT 0,
-            used_count INT DEFAULT 0,
-            valid_until DATE,
-            is_active TINYINT(1) DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE KEY uq_coupon_code (code)
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS enquiries (
-            enquiry_id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            selected_services TEXT NOT NULL,
-            preferred_date DATE NOT NULL,
-            preferred_time VARCHAR(20),
-            message TEXT,
-            status ENUM('Pending','Contacted','Confirmed','Closed') DEFAULT 'Pending',
-            admin_notes TEXT,
-            assigned_employee_id INT DEFAULT NULL,
-            employee_notes TEXT DEFAULT '',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-        ) CHARACTER SET utf8mb4""",
-        """CREATE TABLE IF NOT EXISTS employees (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            full_name VARCHAR(100) NOT NULL,
-            username VARCHAR(50) UNIQUE NOT NULL,
-            phone VARCHAR(20) NOT NULL,
-            email VARCHAR(100) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            role VARCHAR(50) DEFAULT 'Consultant',
-            is_active TINYINT(1) DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) CHARACTER SET utf8mb4""",
-    ]
-    for stmt in stmts:
-        try:
-            cur.execute(stmt)
-        except pymysql.err.OperationalError as e:
-            current_app.logger.warning('Schema stmt failed: %s', e)
-
-    cur.execute("SHOW COLUMNS FROM appointments")
-    existing_cols = {row['Field'] for row in cur.fetchall()}
-    alter_stmts = [
-        ("ALTER TABLE appointments ADD COLUMN ticket_expires_at DATETIME",          "ticket_expires_at"),
-        ("ALTER TABLE appointments ADD COLUMN total_price DECIMAL(10,2) DEFAULT 0", "total_price"),
-        ("ALTER TABLE appointments ADD COLUMN discount_percent DECIMAL(5,2) DEFAULT 0", "discount_percent"),
-        ("ALTER TABLE appointments ADD COLUMN offer_applied VARCHAR(150) DEFAULT ''", "offer_applied"),
-        ("ALTER TABLE appointments ADD COLUMN ticket_id VARCHAR(20)",               "ticket_id"),
-    ]
-    for stmt, col in alter_stmts:
-        if col not in existing_cols:
-            try:
-                cur.execute(stmt)
-            except pymysql.err.OperationalError as e:
-                current_app.logger.warning('ALTER failed (%s): %s', col, e)
-
-    cur.execute("SHOW COLUMNS FROM services")
-    svc_cols = {row['Field'] for row in cur.fetchall()}
-    if 'price_on_request' not in svc_cols:
-        try:
-            cur.execute("ALTER TABLE services ADD COLUMN price_on_request TINYINT(1) DEFAULT 0")
-        except pymysql.err.OperationalError as e:
-            current_app.logger.warning('ALTER services failed: %s', e)
-
-    # Migrate enquiries columns
-    cur.execute("SHOW COLUMNS FROM enquiries")
-    enq_cols = {row['Field'] for row in cur.fetchall()}
-    for col, stmt in [
-        ('assigned_employee_id', "ALTER TABLE enquiries ADD COLUMN assigned_employee_id INT DEFAULT NULL"),
-        ('employee_notes',       "ALTER TABLE enquiries ADD COLUMN employee_notes TEXT DEFAULT ''"),
-    ]:
-        if col not in enq_cols:
-            try:
-                cur.execute(stmt)
-            except pymysql.err.OperationalError as e:
-                current_app.logger.warning('ALTER enquiries failed (%s): %s', col, e)
-
-    params = _seed_admin_params()
-    cur.execute(
-        "INSERT INTO users (full_name, username, phone, email, password_hash, is_admin) VALUES (%s,%s,%s,%s,%s,%s) "
-        "ON DUPLICATE KEY UPDATE is_admin=1",
-        (*params, 1)
-    )
-    cur.execute("SELECT COUNT(*) as c FROM services")
-    if cur.fetchone()['c'] == 0:
-        cur.executemany(
-            "INSERT INTO services (service_name, description, price, duration, category) VALUES (%s,%s,%s,%s,%s)",
-            _DEFAULT_SERVICES
-        )
-    cur.close()
+def _auto_id(db, collection):
+    return db.collection(collection).document().id
 
 
-# ── Connection ────────────────────────────────────────────────────────────────
-
-def _connect_sqlite():
-    db_path = current_app.config.get('SQLITE_DB_PATH') or \
-              os.path.join(current_app.root_path, 'salon_app.db')
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    conn.execute('PRAGMA foreign_keys = ON')
-    try:
-        _init_sqlite_schema(conn)
-        return conn
-    except sqlite3.DatabaseError:
-        conn.close()
-        raise
-
+# ── Public API (mirrors old query/execute interface) ──────────────────────────
 
 def get_db():
-    global _schema_initialized, _backend_unavailable
-    if 'db' not in g:
-        cfg    = current_app.config
-        db_url = cfg.get('DATABASE_URL', '')
-
-        # 1. PostgreSQL (Render / production)
-        if db_url and 'postgres' not in _backend_unavailable:
-            try:
-                import psycopg2
-                import psycopg2.extras
-                if db_url.startswith('postgres://'):
-                    db_url = db_url.replace('postgres://', 'postgresql://', 1)
-                conn = psycopg2.connect(db_url, cursor_factory=psycopg2.extras.RealDictCursor,
-                                        connect_timeout=10)
-                conn.autocommit = False
-                g.db = conn
-                g.db_backend = 'postgres'
-                if 'postgres' not in _schema_initialized:
-                    _init_pg_schema(conn)
-                    _schema_initialized.add('postgres')
-                return g.db
-            except Exception as e:
-                current_app.logger.warning('PostgreSQL connection failed: %s', e)
-                _backend_unavailable.add('postgres')
-
-        # 2. MySQL (local dev)
-        if 'mysql' not in _backend_unavailable:
-            try:
-                conn = pymysql.connect(
-                    host=cfg['MYSQL_HOST'],
-                    user=cfg['MYSQL_USER'],
-                    password=cfg['MYSQL_PASSWORD'],
-                    database=cfg['MYSQL_DB'],
-                    cursorclass=pymysql.cursors.DictCursor,
-                    autocommit=True,
-                    connect_timeout=5,
-                )
-                if 'mysql' not in _schema_initialized:
-                    _init_mysql_schema(conn)
-                    _schema_initialized.add('mysql')
-                g.db = conn
-                g.db_backend = 'mysql'
-                return g.db
-            except Exception as e:
-                current_app.logger.warning('MySQL connection failed: %s', e)
-                _backend_unavailable.add('mysql')
-
-        # 3. SQLite fallback
-        g.db = _connect_sqlite()
-        g.db_backend = 'sqlite'
-
-    else:
-        backend = g.get('db_backend')
-        if backend == 'postgres':
-            try:
-                cur = g.db.cursor()
-                cur.execute('SELECT 1')
-                cur.close()
-            except Exception:
-                g.pop('db', None)
-                g.pop('db_backend', None)
-                return get_db()
-        elif backend == 'mysql':
-            try:
-                g.db.ping(reconnect=True)
-            except Exception:
-                g.pop('db', None)
-                g.pop('db_backend', None)
-                return get_db()
-
-    return g.db
+    return _get_firestore()
 
 
 def close_db(e=None):
-    db = g.pop('db', None)
-    if db:
+    pass  # Firestore connections are managed by the SDK
+
+
+# ── Collection helpers ────────────────────────────────────────────────────────
+
+def _col(name):
+    return _get_firestore().collection(name)
+
+
+# ── Users ─────────────────────────────────────────────────────────────────────
+
+def get_user_by_id(uid):
+    doc = _col('users').document(str(uid)).get()
+    return _doc_to_dict(doc) if doc.exists else None
+
+
+def get_user_by_email_or_username(identifier):
+    db = _get_firestore()
+    by_email = db.collection('users').where('email', '==', identifier).limit(1).get()
+    if by_email:
+        return _doc_to_dict(by_email[0])
+    by_user = db.collection('users').where('username', '==', identifier).limit(1).get()
+    if by_user:
+        return _doc_to_dict(by_user[0])
+    return None
+
+
+def get_user_by_email(email):
+    docs = _col('users').where('email', '==', email).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def get_user_by_username(username):
+    docs = _col('users').where('username', '==', username).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def create_user(full_name, username, phone, email, password_hash, is_admin=0):
+    ref = _col('users').document()
+    ref.set({
+        'id': ref.id, 'full_name': full_name, 'username': username,
+        'phone': phone, 'email': email, 'password_hash': password_hash,
+        'is_admin': is_admin, 'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+    return ref.id
+
+
+def update_user(uid, data):
+    _col('users').document(str(uid)).update(data)
+
+
+def get_all_customers():
+    docs = _col('users').get()
+    users = [_doc_to_dict(d) for d in docs if not _doc_to_dict(d).get('is_admin')]
+    users = sorted(users, key=lambda x: x.get('created_at', ''), reverse=True)
+    for u in users:
+        enqs = _col('enquiries').where('user_id', '==', u['id']).get()
+        u['appt_count'] = len(enqs)
+    return users
+
+
+# ── Services ──────────────────────────────────────────────────────────────────
+
+def get_all_services(active_only=False):
+    q = _col('services')
+    if active_only:
+        q = q.where('is_active', '==', 1)
+    docs = q.get()
+    svcs = [_doc_to_dict(d) for d in docs]
+    return sorted(svcs, key=lambda x: (x.get('category', ''), x.get('service_name', '')))
+
+
+def get_service_by_id(sid):
+    doc = _col('services').document(str(sid)).get()
+    return _doc_to_dict(doc) if doc.exists else None
+
+
+def create_service(data):
+    ref = _col('services').document()
+    data['id'] = ref.id
+    data['created_at'] = datetime.now(timezone.utc).isoformat()
+    ref.set(data)
+    return ref.id
+
+
+def update_service(sid, data):
+    _col('services').document(str(sid)).update(data)
+
+
+def delete_service(sid):
+    _col('services').document(str(sid)).delete()
+
+
+def get_services_by_ids(ids):
+    result = []
+    for sid in ids:
+        doc = _col('services').document(str(sid)).get()
+        if doc.exists:
+            d = _doc_to_dict(doc)
+            if d.get('is_active'):
+                result.append(d)
+    return result
+
+
+# ── Enquiries ─────────────────────────────────────────────────────────────────
+
+def create_enquiry(user_id, selected_services, preferred_date, preferred_time, message):
+    ref = _col('enquiries').document()
+    ref.set({
+        'id': ref.id, 'enquiry_id': ref.id, 'user_id': user_id,
+        'selected_services': selected_services, 'preferred_date': preferred_date,
+        'preferred_time': preferred_time, 'message': message,
+        'status': 'Pending', 'admin_notes': '', 'assigned_employee_id': None,
+        'employee_notes': '', 'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat(),
+    })
+    return ref.id
+
+
+def get_enquiry_by_id(eid):
+    doc = _col('enquiries').document(str(eid)).get()
+    if not doc.exists:
+        return None
+    enq = _doc_to_dict(doc)
+    # Attach user info
+    user = get_user_by_id(enq['user_id'])
+    if user:
+        enq['full_name'] = user.get('full_name', '')
+        enq['phone']     = user.get('phone', '')
+        enq['email']     = user.get('email', '')
+    # Attach employee info
+    if enq.get('assigned_employee_id'):
+        emp = get_employee_by_id(enq['assigned_employee_id'])
+        enq['emp_name'] = emp.get('full_name', '') if emp else ''
+    else:
+        enq['emp_name'] = ''
+    return enq
+
+
+def get_enquiries_for_user(user_id):
+    docs = _col('enquiries').where('user_id', '==', str(user_id)).get()
+    enqs = []
+    for d in docs:
+        enq = _doc_to_dict(d)
+        if enq.get('assigned_employee_id'):
+            emp = get_employee_by_id(enq['assigned_employee_id'])
+            enq['emp_name'] = emp.get('full_name', '') if emp else ''
+        else:
+            enq['emp_name'] = ''
+        enqs.append(enq)
+    return enqs
+
+
+def get_all_enquiries(status_filter=None, search=None):
+    docs = _col('enquiries').get()
+    enqs = []
+    for d in docs:
+        enq = _doc_to_dict(d)
+        user = get_user_by_id(enq['user_id'])
+        if user:
+            enq['full_name'] = user.get('full_name', '')
+            enq['phone']     = user.get('phone', '')
+            enq['email']     = user.get('email', '')
+        else:
+            enq['full_name'] = enq['phone'] = enq['email'] = ''
+        if enq.get('assigned_employee_id'):
+            emp = get_employee_by_id(enq['assigned_employee_id'])
+            enq['emp_name'] = emp.get('full_name', '') if emp else ''
+        else:
+            enq['emp_name'] = ''
+        if status_filter and enq.get('status') != status_filter:
+            continue
+        if search:
+            s = search.lower()
+            if s not in enq.get('full_name', '').lower() and \
+               s not in enq.get('phone', '').lower() and \
+               s not in enq.get('selected_services', '').lower():
+                continue
+        enqs.append(enq)
+    return sorted(enqs, key=lambda x: x.get('created_at', ''), reverse=True)
+    data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    _col('enquiries').document(str(eid)).update(data)
+
+
+def delete_enquiry(eid):
+    _col('enquiries').document(str(eid)).delete()
+
+
+def get_enquiries_for_date(date_str):
+    docs = _col('enquiries').where('preferred_date', '==', date_str).get()
+    enqs = []
+    for d in docs:
+        enq = _doc_to_dict(d)
+        user = get_user_by_id(enq['user_id'])
+        if user:
+            enq['full_name'] = user.get('full_name', '')
+            enq['phone']     = user.get('phone', '')
+        if enq.get('assigned_employee_id'):
+            emp = get_employee_by_id(enq['assigned_employee_id'])
+            enq['emp_name'] = emp.get('full_name', '') if emp else ''
+        else:
+            enq['emp_name'] = ''
+        enqs.append(enq)
+    return sorted(enqs, key=lambda x: x.get('preferred_time') or '')
+
+
+# ── Employees ─────────────────────────────────────────────────────────────────
+
+def get_employee_by_id(eid):
+    doc = _col('employees').document(str(eid)).get()
+    return _doc_to_dict(doc) if doc.exists else None
+
+
+def get_employee_by_identifier(identifier):
+    db = _get_firestore()
+    by_user = db.collection('employees').where('username', '==', identifier).where('is_active', '==', 1).limit(1).get()
+    if by_user:
+        return _doc_to_dict(by_user[0])
+    by_email = db.collection('employees').where('email', '==', identifier).where('is_active', '==', 1).limit(1).get()
+    if by_email:
+        return _doc_to_dict(by_email[0])
+    return None
+
+
+def get_all_employees(active_only=False):
+    docs = _col('employees').get()
+    emps = [_doc_to_dict(d) for d in docs]
+    if active_only:
+        emps = [e for e in emps if e.get('is_active')]
+    return sorted(emps, key=lambda x: x.get('full_name', '').lower())
+
+
+def create_employee(data):
+    ref = _col('employees').document()
+    data['id'] = ref.id
+    data['created_at'] = datetime.now(timezone.utc).isoformat()
+    ref.set(data)
+    return ref.id
+
+
+def update_employee(eid, data):
+    _col('employees').document(str(eid)).update(data)
+
+
+def delete_employee(eid):
+    # Unassign from enquiries
+    docs = _col('enquiries').where('assigned_employee_id', '==', str(eid)).get()
+    for d in docs:
+        d.reference.update({'assigned_employee_id': None})
+    _col('employees').document(str(eid)).delete()
+
+
+# ── Reviews ───────────────────────────────────────────────────────────────────
+
+def get_all_reviews():
+    docs = _col('reviews').get()
+    reviews = []
+    for d in docs:
+        r = _doc_to_dict(d)
+        user = get_user_by_id(r['user_id'])
+        if user:
+            r['full_name'] = user.get('full_name', '')
+            r['phone']     = user.get('phone', '')
+        reviews.append(r)
+    return reviews
+
+
+def get_review_by_user(user_id):
+    docs = _col('reviews').where('user_id', '==', str(user_id)).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def create_review(user_id, rating, comment):
+    ref = _col('reviews').document()
+    ref.set({
+        'id': ref.id, 'user_id': str(user_id), 'rating': rating,
+        'comment': comment, 'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+    return ref.id
+
+
+def update_review(user_id, rating, comment):
+    docs = _col('reviews').where('user_id', '==', str(user_id)).limit(1).get()
+    if docs:
+        docs[0].reference.update({'rating': rating, 'comment': comment})
+
+
+def delete_review(rid):
+    _col('reviews').document(str(rid)).delete()
+
+
+def get_recent_reviews(limit=6):
+    docs = _col('reviews').get()
+    reviews = []
+    for d in docs:
+        r = _doc_to_dict(d)
+        user = get_user_by_id(r['user_id'])
+        r['full_name'] = user.get('full_name', '') if user else ''
+        reviews.append(r)
+    return reviews
+
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+def get_setting(key, default=''):
+    doc = _col('settings').document(key).get()
+    return doc.to_dict().get('value', default) if doc.exists else default
+
+
+def set_setting(key, value):
+    _col('settings').document(key).set({'key': key, 'value': value})
+
+
+def get_all_settings():
+    docs = _col('settings').get()
+    return {d.id: d.to_dict().get('value', '') for d in docs}
+
+
+# ── Gallery ───────────────────────────────────────────────────────────────────
+
+def get_all_gallery():
+    docs = _col('gallery').get()
+    items = [_doc_to_dict(d) for d in docs]
+    return sorted(items, key=lambda x: x.get('created_at', ''), reverse=True)
+
+
+def add_gallery_photo(filename, caption):
+    ref = _col('gallery').document()
+    ref.set({'id': ref.id, 'filename': filename, 'caption': caption,
+             'created_at': datetime.now(timezone.utc).isoformat()})
+    return ref.id
+
+
+def delete_gallery_photo(gid):
+    _col('gallery').document(str(gid)).delete()
+
+
+def get_gallery_photo(gid):
+    doc = _col('gallery').document(str(gid)).get()
+    return _doc_to_dict(doc) if doc.exists else None
+
+
+# ── Blocked Slots ─────────────────────────────────────────────────────────────
+
+def get_all_blocked_slots():
+    docs = _col('blocked_slots').get()
+    items = [_doc_to_dict(d) for d in docs]
+    return sorted(items, key=lambda x: (x.get('block_date', ''), x.get('block_time', '') or ''))
+
+
+def add_blocked_slot(block_date, block_time, reason):
+    ref = _col('blocked_slots').document()
+    ref.set({'id': ref.id, 'block_date': block_date, 'block_time': block_time,
+             'reason': reason, 'created_at': datetime.now(timezone.utc).isoformat()})
+    return ref.id
+
+
+def delete_blocked_slot(bid):
+    _col('blocked_slots').document(str(bid)).delete()
+
+
+def delete_blocked_slots_for_date(block_date):
+    docs = _col('blocked_slots').where('block_date', '==', block_date).get()
+    for d in docs:
+        d.reference.delete()
+
+
+def get_blocked_slot(block_date, block_time):
+    docs = _col('blocked_slots').where('block_date', '==', block_date).where('block_time', '==', block_time).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+# ── Offers ────────────────────────────────────────────────────────────────────
+
+def get_all_offers():
+    docs = _col('offers').get()
+    items = [_doc_to_dict(d) for d in docs]
+    return sorted(items, key=lambda x: x.get('created_at', ''), reverse=True)
+
+
+def get_active_offers(today_str):
+    docs = _col('offers').where('is_active', '==', 1).get()
+    result = []
+    for d in docs:
+        o = _doc_to_dict(d)
+        vf = o.get('valid_from') or ''
+        vu = o.get('valid_until') or ''
+        if (not vf or vf <= today_str) and (not vu or vu >= today_str):
+            result.append(o)
+    return result
+
+
+def get_offer_by_id(oid):
+    doc = _col('offers').document(str(oid)).get()
+    return _doc_to_dict(doc) if doc.exists else None
+
+
+def create_offer(data):
+    ref = _col('offers').document()
+    data['id'] = ref.id
+    data['created_at'] = datetime.now(timezone.utc).isoformat()
+    ref.set(data)
+    return ref.id
+
+
+def update_offer(oid, data):
+    _col('offers').document(str(oid)).update(data)
+
+
+def delete_offer(oid):
+    _col('offers').document(str(oid)).delete()
+
+
+# ── Coupons ───────────────────────────────────────────────────────────────────
+
+def get_all_coupons():
+    docs = _col('coupons').get()
+    items = [_doc_to_dict(d) for d in docs]
+    return sorted(items, key=lambda x: x.get('created_at', ''), reverse=True)
+
+
+def get_coupon_by_code(code):
+    docs = _col('coupons').where('code', '==', code.upper()).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def create_coupon(data):
+    ref = _col('coupons').document()
+    data['id'] = ref.id
+    data['created_at'] = datetime.now(timezone.utc).isoformat()
+    ref.set(data)
+    return ref.id
+
+
+def update_coupon_by_code(code, data):
+    docs = _col('coupons').where('code', '==', code.upper()).limit(1).get()
+    if docs:
+        docs[0].reference.update(data)
+
+
+def delete_coupon(cid):
+    _col('coupons').document(str(cid)).delete()
+
+
+# ── Attendance ────────────────────────────────────────────────────────────────
+
+def clock_in(employee_id):
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    existing = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
+    if existing:
+        return None, 'Already clocked in today.'
+    now = datetime.now(timezone.utc)
+    clock_in_time = now.strftime('%H:%M')
+    # Determine status: late if after 09:30
+    hour, minute = now.hour, now.minute
+    status = 'Late' if (hour > 9 or (hour == 9 and minute > 30)) else 'Present'
+    ref = _col('attendance').document()
+    ref.set({
+        'id': ref.id, 'employee_id': str(employee_id), 'date': today,
+        'clock_in': clock_in_time, 'clock_out': None, 'status': status,
+        'total_hours': None, 'overtime_hours': 0.0,
+        'created_at': now.isoformat(),
+    })
+    return ref.id, None
+
+
+def clock_out(employee_id):
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    docs = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
+    if not docs:
+        return None, 'No clock-in record found for today.'
+    doc = docs[0]
+    rec = doc.to_dict()
+    if rec.get('clock_out'):
+        return None, 'Already clocked out today.'
+    now = datetime.now(timezone.utc)
+    clock_out_time = now.strftime('%H:%M')
+    # Calculate total hours
+    try:
+        ci_h, ci_m = map(int, rec['clock_in'].split(':'))
+        co_h, co_m = map(int, clock_out_time.split(':'))
+        total_mins = (co_h * 60 + co_m) - (ci_h * 60 + ci_m)
+        total_hours = round(total_mins / 60, 2) if total_mins > 0 else 0.0
+        # Standard day = 9 hours; overtime beyond that
+        overtime = round(max(0, total_hours - 9), 2)
+        # Half day if < 5 hours
+        status = rec.get('status', 'Present')
+        if total_hours < 5:
+            status = 'Half Day'
+    except Exception:
+        total_hours, overtime = 0.0, 0.0
+        status = rec.get('status', 'Present')
+    doc.reference.update({
+        'clock_out': clock_out_time, 'total_hours': total_hours,
+        'overtime_hours': overtime, 'status': status,
+    })
+    return doc.id, None
+
+
+def get_attendance_today(employee_id):
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    docs = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def get_attendance_for_month(employee_id, year, month):
+    prefix = f'{year}-{month:02d}'
+    docs = _col('attendance').where('employee_id', '==', str(employee_id)).get()
+    records = [_doc_to_dict(d) for d in docs if _doc_to_dict(d).get('date', '').startswith(prefix)]
+    return sorted(records, key=lambda x: x.get('date', ''))
+
+
+def get_all_attendance_for_date(date_str):
+    docs = _col('attendance').where('date', '==', date_str).get()
+    records = []
+    for d in docs:
+        rec = _doc_to_dict(d)
+        emp = get_employee_by_id(rec['employee_id'])
+        rec['emp_name'] = emp.get('full_name', '') if emp else ''
+        rec['emp_role'] = emp.get('role', '') if emp else ''
+        records.append(rec)
+    return sorted(records, key=lambda x: x.get('emp_name', ''))
+
+
+def get_all_attendance_for_month(year, month):
+    prefix = f'{year}-{month:02d}'
+    docs = _col('attendance').get()
+    records = []
+    for d in docs:
+        rec = _doc_to_dict(d)
+        if rec.get('date', '').startswith(prefix):
+            emp = get_employee_by_id(rec['employee_id'])
+            rec['emp_name'] = emp.get('full_name', '') if emp else ''
+            rec['emp_role'] = emp.get('role', '') if emp else ''
+            records.append(rec)
+    return sorted(records, key=lambda x: (x.get('emp_name', ''), x.get('date', '')))
+
+
+def admin_mark_attendance(employee_id, date_str, status, clock_in=None, clock_out=None):
+    docs = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', date_str).limit(1).get()
+    total_hours = None
+    overtime = 0.0
+    if clock_in and clock_out:
         try:
-            db.close()
-        except (OSError, RuntimeError, sqlite3.Error, pymysql.err.Error):
+            ci_h, ci_m = map(int, clock_in.split(':'))
+            co_h, co_m = map(int, clock_out.split(':'))
+            total_mins = (co_h * 60 + co_m) - (ci_h * 60 + ci_m)
+            total_hours = round(total_mins / 60, 2) if total_mins > 0 else 0.0
+            overtime = round(max(0, total_hours - 9), 2)
+        except Exception:
             pass
-    g.pop('db_backend', None)
+    data = {
+        'employee_id': str(employee_id), 'date': date_str, 'status': status,
+        'clock_in': clock_in, 'clock_out': clock_out,
+        'total_hours': total_hours, 'overtime_hours': overtime,
+    }
+    if docs:
+        docs[0].reference.update(data)
+        return docs[0].id
+    else:
+        ref = _col('attendance').document()
+        data['id'] = ref.id
+        data['created_at'] = datetime.now(timezone.utc).isoformat()
+        ref.set(data)
+        return ref.id
 
 
-# ── SQL normalisation (SQLite only) ──────────────────────────────────────────
+# ── Salary ────────────────────────────────────────────────────────────────────
 
-def _normalize_sql(sql):
-    sql = sql.replace('%s', '?')
-    # Convert INSERT ... ON DUPLICATE KEY UPDATE to INSERT OR REPLACE for SQLite
-    sql = re.sub(r'\s+ON DUPLICATE KEY UPDATE.+', '', sql, flags=re.IGNORECASE | re.DOTALL)
-    sql = re.sub(r'\bINSERT\s+INTO\b', 'INSERT OR IGNORE INTO', sql, flags=re.IGNORECASE)
-    sql = re.sub(r'`(\w+)`', r'\1', sql)
-    return sql
+def calculate_salary(employee_id, year, month):
+    emp = get_employee_by_id(str(employee_id))
+    if not emp:
+        return None
+    monthly_salary = float(emp.get('monthly_salary', 0) or 0)
+    working_days = int(emp.get('working_days_per_month', 26) or 26)
+    overtime_rate = float(emp.get('overtime_rate', 150) or 150)
+    per_day = round(monthly_salary / working_days, 2) if working_days else 0
+
+    records = get_attendance_for_month(employee_id, year, month)
+    present = sum(1 for r in records if r.get('status') in ('Present', 'Late'))
+    half_day = sum(1 for r in records if r.get('status') == 'Half Day')
+    absent = sum(1 for r in records if r.get('status') == 'Absent')
+    on_leave = sum(1 for r in records if r.get('status') == 'Leave')
+    total_overtime = sum(float(r.get('overtime_hours') or 0) for r in records)
+
+    absent_deduction = round(absent * per_day, 2)
+    half_day_deduction = round(half_day * per_day * 0.5, 2)
+    overtime_amount = round(total_overtime * overtime_rate, 2)
+    net_salary = round(monthly_salary - absent_deduction - half_day_deduction + overtime_amount, 2)
+
+    return {
+        'employee_id': str(employee_id), 'emp_name': emp.get('full_name', ''),
+        'emp_role': emp.get('role', ''), 'month': f'{year}-{month:02d}',
+        'monthly_salary': monthly_salary, 'working_days': working_days,
+        'per_day': per_day, 'present': present, 'half_day': half_day,
+        'absent': absent, 'on_leave': on_leave,
+        'total_overtime': round(total_overtime, 2), 'overtime_rate': overtime_rate,
+        'overtime_amount': overtime_amount, 'absent_deduction': absent_deduction,
+        'half_day_deduction': half_day_deduction, 'net_salary': net_salary,
+    }
 
 
-# ── Public API ────────────────────────────────────────────────────────────────
+def get_salary_record(employee_id, month_str):
+    docs = _col('salary').where('employee_id', '==', str(employee_id)).where('month', '==', month_str).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
+def save_salary_record(data):
+    existing = _col('salary').where('employee_id', '==', str(data['employee_id'])).where('month', '==', data['month']).limit(1).get()
+    if existing:
+        existing[0].reference.update(data)
+        return existing[0].id
+    ref = _col('salary').document()
+    data['id'] = ref.id
+    data['generated_at'] = datetime.now(timezone.utc).isoformat()
+    data['paid'] = data.get('paid', False)
+    ref.set(data)
+    return ref.id
+
+
+def get_all_salary_records(month_str=None):
+    q = _col('salary')
+    if month_str:
+        q = q.where('month', '==', month_str)
+    docs = q.get()
+    return [_doc_to_dict(d) for d in docs]
+
+
+def mark_salary_paid(salary_id, paid=True):
+    _col('salary').document(str(salary_id)).update({'paid': paid, 'paid_at': datetime.now(timezone.utc).isoformat()})
+
+
+# ── Leave Requests ────────────────────────────────────────────────────────────
+
+def create_leave_request(employee_id, from_date, to_date, reason, leave_type='Casual'):
+    ref = _col('leave_requests').document()
+    ref.set({
+        'id': ref.id, 'employee_id': str(employee_id),
+        'from_date': from_date, 'to_date': to_date,
+        'reason': reason, 'leave_type': leave_type,
+        'status': 'Pending',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+    return ref.id
+
+
+def get_leave_requests_for_employee(employee_id):
+    docs = _col('leave_requests').where('employee_id', '==', str(employee_id)).get()
+    return sorted([_doc_to_dict(d) for d in docs], key=lambda x: x.get('created_at', ''), reverse=True)
+
+
+def get_all_leave_requests(status=None):
+    q = _col('leave_requests')
+    if status:
+        q = q.where('status', '==', status)
+    docs = q.get()
+    records = []
+    for d in docs:
+        rec = _doc_to_dict(d)
+        emp = get_employee_by_id(rec['employee_id'])
+        rec['emp_name'] = emp.get('full_name', '') if emp else ''
+        rec['emp_role'] = emp.get('role', '') if emp else ''
+        records.append(rec)
+    return sorted(records, key=lambda x: x.get('created_at', ''), reverse=True)
+
+
+def update_leave_request(leave_id, status, admin_note=''):
+    _col('leave_requests').document(str(leave_id)).update({
+        'status': status, 'admin_note': admin_note,
+        'reviewed_at': datetime.now(timezone.utc).isoformat(),
+    })
+    # If approved, mark attendance as Leave for those dates
+    if status == 'Approved':
+        doc = _col('leave_requests').document(str(leave_id)).get()
+        if doc.exists:
+            rec = doc.to_dict()
+            try:
+                from datetime import date as _date, timedelta
+                start = _date.fromisoformat(rec['from_date'])
+                end = _date.fromisoformat(rec['to_date'])
+                current = start
+                while current <= end:
+                    admin_mark_attendance(rec['employee_id'], current.isoformat(), 'Leave')
+                    current += timedelta(days=1)
+            except Exception:
+                pass
+
+
+# ── Legacy query/execute shim (kept so nothing breaks) ───────────────────────
+# These are no longer used — all routes now call the functions above directly.
 
 def query(sql, args=(), one=False):
-    conn    = get_db()
-    backend = g.get('db_backend')
-
-    if backend == 'sqlite':
-        cur  = conn.execute(_normalize_sql(sql), tuple(args))
-        rows = [dict(r) for r in cur.fetchall()]
-        return (rows[0] if rows else None) if one else rows
-
-    if backend == 'postgres':
-        sql = re.sub(r'`(\w+)`', r'"\1"', sql)
-        sql = _pg_upsert(sql)
-        cur = conn.cursor()
-        cur.execute(sql, args)
-        rows = cur.fetchall()
-        cur.close()
-        return (rows[0] if rows else None) if one else (rows or [])
-
-    # MySQL
-    cur = conn.cursor()
-    cur.execute(sql, args)
-    rv  = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv
+    raise NotImplementedError('Use Firestore helper functions instead of query()')
 
 
 def execute(sql, args=()):
-    conn    = get_db()
-    backend = g.get('db_backend')
-
-    if backend == 'sqlite':
-        cur = conn.execute(_normalize_sql(sql), tuple(args))
-        conn.commit()
-        return cur.lastrowid
-
-    if backend == 'postgres':
-        sql_clean = re.sub(r'`(\w+)`', r'"\1"', sql)
-        sql_clean = _pg_upsert(sql_clean)
-        cur = conn.cursor()
-        _NO_ID_TABLES = re.compile(r'INSERT\s+INTO\s+"?(settings|salon_config)"?', re.IGNORECASE)
-        is_insert = sql_clean.strip().upper().startswith('INSERT')
-        has_id = is_insert and not _NO_ID_TABLES.search(sql_clean)
-        if has_id and 'RETURNING' not in sql_clean.upper():
-            sql_clean += ' RETURNING id'
-        cur.execute(sql_clean, args)
-        last_id = None
-        if has_id:
-            row = cur.fetchone()
-            last_id = row['id'] if row else None
-        conn.commit()
-        cur.close()
-        return last_id
-
-    # MySQL
-    cur     = conn.cursor()
-    cur.execute(sql, args)
-    last_id = cur.lastrowid
-    cur.close()
-    return last_id
-
-
-def _pg_upsert(sql):
-    pattern = re.compile(
-        r"INSERT INTO\s+(`?\w+`?)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)\s*ON DUPLICATE KEY UPDATE\s+(.+)",
-        re.IGNORECASE | re.DOTALL
-    )
-    m = pattern.match(sql.strip())
-    if not m:
-        return sql
-    table   = m.group(1).strip('`"')
-    cols    = [c.strip().strip('`"') for c in m.group(2).split(',')]
-    vals    = m.group(3)
-    updates = m.group(4).strip()
-    # Determine conflict column — key-based tables use 'key', others use first col
-    _PK_MAP = {'settings': 'key', 'salon_config': 'key', 'users': 'email', 'offers': 'id'}
-    pk = _PK_MAP.get(table, cols[0])
-    set_parts = []
-    for part in re.split(r',\s*(?=\w)', updates):
-        col_match = re.match(r'`?(\w+)`?\s*=\s*(.+)', part.strip())
-        if col_match:
-            set_parts.append(f'"{col_match.group(1)}" = {col_match.group(2)}')
-    cols_quoted = ', '.join(f'"{c}"' for c in cols)
-    return (
-        f'INSERT INTO "{table}" ({cols_quoted}) VALUES ({vals}) '
-        f'ON CONFLICT ("{pk}") DO UPDATE SET {", ".join(set_parts)}'
-    )
+    raise NotImplementedError('Use Firestore helper functions instead of execute()')

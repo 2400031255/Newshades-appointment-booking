@@ -56,6 +56,15 @@
     <a href="{{ url_for('admin.employees') }}" class="{{ 'active' if request.endpoint in ('admin.employees','admin.create_employee','admin.toggle_employee','admin.delete_employee','admin.reset_employee_password') }}">
       <span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span>
     </a>
+    <a href="{{ url_for('admin.attendance') }}" class="{{ 'active' if request.endpoint in ('admin.attendance','admin.mark_attendance') }}">
+      <span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span>
+    </a>
+    <a href="{{ url_for('admin.payroll') }}" class="{{ 'active' if 'payroll' in request.endpoint or 'salary' in request.endpoint }}">
+      <span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span>
+    </a>
+    <a href="{{ url_for('admin.leave_requests') }}" class="{{ 'active' if request.endpoint == 'admin.leave_requests' }}">
+      <span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span>
+    </a>
     <a href="{{ url_for('admin.settings') }}" class="{{ 'active' if request.endpoint == 'admin.settings' }}">
       <span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span>
     </a>

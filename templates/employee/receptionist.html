@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>Receptionist – New Shades</title>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
+  <style>
+    body { background:#0c0b10; min-height:100vh; font-family:'DM Sans',sans-serif; color:rgba(240,230,211,0.9); }
+
+    .topbar {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      background:rgba(12,11,16,0.97); backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(201,168,76,0.12);
+      padding:0 24px; height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .brand { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; }
+    .role-pill { padding:4px 14px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.1em;
+      background:rgba(255,182,100,0.12); border:1px solid rgba(255,182,100,0.3); color:#ffb664; }
+    .nav-link-top { color:rgba(240,230,211,0.55); text-decoration:none; font-size:0.82rem;
+      padding:5px 12px; border-radius:999px; border:1px solid transparent; transition:all 0.2s; }
+    .nav-link-top:hover, .nav-link-top.active { border-color:rgba(201,168,76,0.25); color:#E8C96A; }
+
+    .shell { padding:80px 0 60px; }
+
+    /* Stat cards */
+    .stat-card { border-radius:16px; padding:20px 22px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.14); }
+    .stat-num { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; }
+    .stat-lbl { font-size:0.72rem; color:rgba(240,230,211,0.45); text-transform:uppercase; letter-spacing:0.1em; margin-top:2px; }
+
+    /* Section card */
+    .sec-card { border-radius:18px; padding:22px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.12); margin-bottom:20px; }
+    .sec-title { font-family:'Playfair Display',serif; color:#fff; font-size:1rem; font-weight:700; margin-bottom:16px; }
+
+    /* Status badges */
+    .s-Pending   { background:rgba(255,170,77,0.15);  color:#ffc36b; }
+    .s-Contacted { background:rgba(105,152,255,0.15); color:#9dc0ff; }
+    .s-Confirmed { background:rgba(37,211,102,0.15);  color:#7ce0aa; }
+    .s-Closed    { background:rgba(150,150,150,0.12); color:rgba(240,230,211,0.4); }
+    .status-badge { padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+
+    /* Enquiry row */
+    .enq-row { padding:14px 16px; border-radius:12px;
+      background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+      margin-bottom:10px; transition:border-color 0.2s; }
+    .enq-row:hover { border-color:rgba(201,168,76,0.2); }
+
+    /* Clock buttons */
+    .btn-clockin  { padding:10px 24px; border-radius:999px; border:none;
+      background:linear-gradient(135deg,#7ce0aa,#25d366); color:#0c0b10; font-weight:700; font-size:0.88rem; cursor:pointer; }
+    .btn-clockout { padding:10px 24px; border-radius:999px; border:none;
+      background:linear-gradient(135deg,#ff9a6c,#ff6b6b); color:#fff; font-weight:700; font-size:0.88rem; cursor:pointer; }
+
+    /* Form controls */
+    .form-ctrl { padding:7px 12px; border-radius:9px;
+      background:rgba(255,255,255,0.06); border:1.5px solid rgba(201,168,76,0.18);
+      color:#fff; outline:none; font-size:0.83rem; }
+    .form-ctrl option { background:#1a1510; }
+    .save-btn { padding:7px 18px; border-radius:999px; border:none;
+      background:linear-gradient(135deg,#C9A84C,#E8C96A); color:#0c0b10; font-weight:700; font-size:0.82rem; cursor:pointer; }
+
+    /* Time slot badge */
+    .time-badge { padding:3px 10px; border-radius:8px; font-size:0.75rem; font-weight:600;
+      background:rgba(201,168,76,0.1); color:#C9A84C; border:1px solid rgba(201,168,76,0.2); }
+
+    /* Live dot */
+    .live-dot { width:7px; height:7px; border-radius:50%; background:#25d366; display:inline-block;
+      margin-right:5px; animation:pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Tab buttons */
+    .tab-btn { padding:7px 18px; border-radius:999px; border:1px solid rgba(255,255,255,0.08);
+      background:transparent; color:rgba(240,230,211,0.5); font-size:0.82rem; cursor:pointer; text-decoration:none; }
+    .tab-btn.active { background:rgba(201,168,76,0.1); border-color:rgba(201,168,76,0.3); color:#E8C96A; }
+  </style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="d-flex align-items-center gap-3">
+    <div class="brand">New Shades</div>
+    <span class="role-pill"><i class="fas fa-concierge-bell me-1"></i>RECEPTIONIST</span>
+  </div>
+  <div class="d-flex align-items-center gap-2 flex-wrap">
+    <a href="{{ url_for('employee.receptionist_dashboard') }}" class="nav-link-top active">Dashboard</a>
+    <a href="{{ url_for('employee.attendance') }}" class="nav-link-top">Attendance</a>
+    <a href="{{ url_for('employee.salary') }}" class="nav-link-top">Salary</a>
+    <a href="{{ url_for('employee.leave') }}" class="nav-link-top">Leave</a>
+    <span style="color:rgba(240,230,211,0.5);font-size:0.82rem;margin-left:4px;">{{ emp.full_name }}</span>
+    <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;margin-left:4px;">
+      <i class="fas fa-sign-out-alt me-1"></i>Logout
+    </a>
+  </div>
+</div>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div style="position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;">
+    {% for cat, msg in messages %}
+    <div style="padding:12px 18px;border-radius:14px;background:#1a1510;border:1px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;box-shadow:0 8px 30px rgba(0,0,0,0.5);">
+      <i class="fas fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }} me-2"
+         style="color:{{ '#7ce0aa' if cat=='success' else '#ff6b6b' }};"></i>{{ msg }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<div class="shell">
+  <div class="container-fluid px-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+      <div>
+        <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.7rem;margin-bottom:2px;">
+          Good day, {{ emp.full_name.split()[0] }} 👋
+        </h1>
+        <p style="color:rgba(240,230,211,0.4);font-size:0.85rem;margin:0;">
+          <span class="live-dot"></span>Receptionist Dashboard &nbsp;·&nbsp; {{ today }}
+        </p>
+      </div>
+      <!-- Quick Clock In/Out -->
+      <div>
+        {% if can_att %}
+          {% if not today_att %}
+          <form method="POST" action="{{ url_for('employee.clock_in') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn-clockin"><i class="fas fa-sign-in-alt me-2"></i>Clock In</button>
+          </form>
+          {% elif not today_att.clock_out %}
+          <form method="POST" action="{{ url_for('employee.clock_out') }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="btn-clockout"><i class="fas fa-sign-out-alt me-2"></i>Clock Out</button>
+          </form>
+          {% else %}
+          <div style="padding:10px 18px;border-radius:999px;border:1px solid rgba(37,211,102,0.2);color:#7ce0aa;font-size:0.85rem;">
+            <i class="fas fa-check-circle me-2"></i>{{ today_att.clock_in }} – {{ today_att.clock_out }}
+            &nbsp;·&nbsp; {{ today_att.total_hours }}h
+          </div>
+          {% endif %}
+        {% else %}
+        <div style="padding:10px 18px;border-radius:999px;border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.82rem;">
+          <i class="fas fa-lock me-2"></i>Attendance disabled
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+      {% for num, lbl, color, icon in [
+        (today_count, "Today's Appointments", '#C9A84C', 'calendar-day'),
+        (pending,     'Pending',              '#ffc36b', 'clock'),
+        (confirmed,   'Confirmed',            '#7ce0aa', 'check-circle'),
+        (total,       'Total Enquiries',      '#9dc0ff', 'clipboard-list')
+      ] %}
+      <div class="col-6 col-lg-3">
+        <div class="stat-card">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="stat-num" style="color:{{ color }};">{{ num }}</div>
+              <div class="stat-lbl">{{ lbl }}</div>
+            </div>
+            <i class="fas fa-{{ icon }}" style="color:{{ color }};opacity:0.3;font-size:1.6rem;margin-top:4px;"></i>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: Today's Schedule -->
+      <div class="col-lg-6">
+        <div class="sec-card">
+          <div class="sec-title">
+            <i class="fas fa-calendar-day me-2" style="color:#C9A84C;"></i>
+            Today's Schedule
+            <span style="font-size:0.75rem;color:rgba(240,230,211,0.35);font-weight:400;margin-left:8px;">{{ today }}</span>
+          </div>
+
+          {% if today_enqs %}
+            {% for e in today_enqs %}
+            <div class="enq-row">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:0.92rem;">
+                    {{ e.full_name }}
+                    <span style="color:rgba(240,230,211,0.3);font-size:0.75rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
+                  </div>
+                  <div style="font-size:0.8rem;color:rgba(240,230,211,0.5);margin-top:3px;">
+                    <i class="fas fa-phone me-1"></i>{{ e.phone }}
+                  </div>
+                  <div style="font-size:0.82rem;color:rgba(240,230,211,0.65);margin-top:5px;">
+                    <i class="fas fa-concierge-bell me-1" style="color:#C9A84C;"></i>{{ e.selected_services }}
+                  </div>
+                </div>
+                <div class="d-flex flex-column align-items-end gap-2">
+                  {% if e.preferred_time %}
+                  <span class="time-badge"><i class="fas fa-clock me-1"></i>{{ e.preferred_time }}</span>
+                  {% endif %}
+                  <span class="status-badge s-{{ e.status }}">{{ e.status }}</span>
+                </div>
+              </div>
+              {% if e.emp_name %}
+              <div style="margin-top:8px;font-size:0.78rem;color:rgba(240,230,211,0.4);">
+                <i class="fas fa-user-tie me-1"></i>Assigned: {{ e.emp_name }}
+              </div>
+              {% endif %}
+              <!-- Quick status update -->
+              <form method="POST" action="{{ url_for('employee.update_enquiry', enq_id=e.enquiry_id) }}" class="mt-2 d-flex gap-2 align-items-center flex-wrap">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="employee_notes" value="{{ e.employee_notes or '' }}"/>
+                <select name="status" class="form-ctrl">
+                  {% for s in ['Pending','Contacted','Confirmed','Closed'] %}
+                  <option value="{{ s }}" {{ 'selected' if e.status == s }}>{{ s }}</option>
+                  {% endfor %}
+                </select>
+                <select name="assigned_employee_id" class="form-ctrl">
+                  <option value="">— Assign staff —</option>
+                  {% for emp2 in all_employees %}
+                  <option value="{{ emp2.id }}" {{ 'selected' if e.assigned_employee_id == emp2.id }}>
+                    {{ emp2.full_name }} ({{ emp2.role }})
+                  </option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="save-btn"><i class="fas fa-save me-1"></i>Update</button>
+              </form>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div style="text-align:center;padding:40px;color:rgba(240,230,211,0.3);">
+            <i class="fas fa-calendar-check" style="font-size:2rem;margin-bottom:12px;display:block;opacity:0.3;"></i>
+            No appointments scheduled for today.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- RIGHT: All Enquiries -->
+      <div class="col-lg-6">
+        <div class="sec-card">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div class="sec-title mb-0">
+              <i class="fas fa-clipboard-list me-2" style="color:#C9A84C;"></i>All Enquiries
+            </div>
+            <div class="d-flex gap-2 flex-wrap" id="filterBtns">
+              <a href="#" class="tab-btn active" onclick="filterEnq('all',this)">All</a>
+              <a href="#" class="tab-btn" onclick="filterEnq('Pending',this)">Pending</a>
+              <a href="#" class="tab-btn" onclick="filterEnq('Confirmed',this)">Confirmed</a>
+              <a href="#" class="tab-btn" onclick="filterEnq('Closed',this)">Closed</a>
+            </div>
+          </div>
+
+          <div id="enqList" style="max-height:520px;overflow-y:auto;padding-right:4px;">
+            {% if all_enquiries %}
+              {% for e in all_enquiries %}
+              <div class="enq-row" data-status="{{ e.status }}">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                  <div>
+                    <div style="font-weight:700;color:#fff;font-size:0.9rem;">
+                      {{ e.full_name }}
+                      <span style="color:rgba(240,230,211,0.3);font-size:0.73rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
+                    </div>
+                    <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-top:2px;">
+                      <i class="fas fa-phone me-1"></i>{{ e.phone }}
+                      {% if e.preferred_date %}
+                      &nbsp;·&nbsp;<i class="fas fa-calendar me-1"></i>{{ str(e.preferred_date)[:10] }}
+                      {% endif %}
+                      {% if e.preferred_time %}
+                      &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ e.preferred_time }}
+                      {% endif %}
+                    </div>
+                    <div style="font-size:0.8rem;color:rgba(240,230,211,0.6);margin-top:4px;">
+                      <i class="fas fa-concierge-bell me-1" style="color:#C9A84C;opacity:0.7;"></i>{{ e.selected_services }}
+                    </div>
+                  </div>
+                  <div class="d-flex flex-column align-items-end gap-2">
+                    <span class="status-badge s-{{ e.status }}">{{ e.status }}</span>
+                    {% if e.emp_name %}
+                    <span style="font-size:0.72rem;color:rgba(240,230,211,0.35);">
+                      <i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+                <!-- Quick update -->
+                <form method="POST" action="{{ url_for('employee.update_enquiry', enq_id=e.enquiry_id) }}" class="mt-2 d-flex gap-2 align-items-center flex-wrap">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <input type="hidden" name="employee_notes" value="{{ e.employee_notes or '' }}"/>
+                  <select name="status" class="form-ctrl">
+                    {% for s in ['Pending','Contacted','Confirmed','Closed'] %}
+                    <option value="{{ s }}" {{ 'selected' if e.status == s }}>{{ s }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="assigned_employee_id" class="form-ctrl">
+                    <option value="">— Assign —</option>
+                    {% for emp2 in all_employees %}
+                    <option value="{{ emp2.id }}" {{ 'selected' if e.assigned_employee_id == emp2.id }}>
+                      {{ emp2.full_name }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                  <button type="submit" class="save-btn"><i class="fas fa-save"></i></button>
+                </form>
+              </div>
+              {% endfor %}
+            {% else %}
+            <div style="text-align:center;padding:40px;color:rgba(240,230,211,0.3);">
+              No enquiries found.
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script>
+function filterEnq(status, btn) {
+  document.querySelectorAll('#filterBtns .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#enqList .enq-row').forEach(row => {
+    row.style.display = (status === 'all' || row.dataset.status === status) ? '' : 'none';
+  });
+  return false;
+}
+// Auto-refresh every 45s
+setTimeout(() => location.reload(), 45000);
+</script>
+</body>
+</html>
