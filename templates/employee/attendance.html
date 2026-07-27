@@ -57,6 +57,7 @@
     .s-Absent   { background:rgba(255,107,107,0.15); color:#ff6b6b; }
     .s-Half-Day { background:rgba(105,152,255,0.15); color:#9dc0ff; }
     .s-Leave    { background:rgba(139,92,246,0.15);  color:#c4b5fd; }
+    .s-Pending  { background:rgba(255,170,77,0.15);  color:#ffc36b; }
     .emp-nav-link { color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.85rem; padding:6px 14px; border-radius:999px; border:1px solid transparent; }
     .emp-nav-link:hover, .emp-nav-link.active { border-color:rgba(201,168,76,0.25); color:#E8C96A; }
   </style>
@@ -123,6 +124,10 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <button type="submit" class="clock-btn btn-clockin"><i class="fas fa-sign-in-alt me-2"></i>Clock In</button>
           </form>
+          {% elif today_rec.status == 'Pending' %}
+          <div style="padding:12px 20px;border-radius:14px;background:rgba(255,170,77,0.08);border:1px solid rgba(255,170,77,0.25);color:#ffc36b;font-size:0.85rem;">
+            <i class="fas fa-hourglass-half me-2"></i>Awaiting admin approval…
+          </div>
           {% elif not today_rec.clock_out %}
           <form method="POST" action="{{ url_for('employee.clock_out') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>

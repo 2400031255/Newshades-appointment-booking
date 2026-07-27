@@ -11,6 +11,7 @@
   .s-Absent   { background:rgba(255,107,107,0.15); color:#ff6b6b; }
   .s-Half-Day { background:rgba(105,152,255,0.15); color:#9dc0ff; }
   .s-Leave    { background:rgba(139,92,246,0.15);  color:#c4b5fd; }
+  .s-Pending  { background:rgba(255,170,77,0.15);  color:#ffc36b; }
   .form-ctrl {
     padding:8px 12px; border-radius:10px;
     background:rgba(255,255,255,0.06); border:1.5px solid rgba(201,168,76,0.18);
@@ -23,7 +24,49 @@
   .btn-outline:hover { background:rgba(201,168,76,0.08); color:#E8C96A; }
   .tab-btn { padding:8px 20px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:transparent; color:rgba(240,230,211,0.5); font-size:0.83rem; cursor:pointer; text-decoration:none; }
   .tab-btn.active { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.3); color:#E8C96A; }
+  .btn-approve { padding:6px 16px; border-radius:999px; border:none; background:linear-gradient(135deg,#7ce0aa,#25d366); color:#0c0b10; font-weight:700; font-size:0.78rem; cursor:pointer; }
+  .btn-reject  { padding:6px 16px; border-radius:999px; border:none; background:rgba(255,107,107,0.15); border:1px solid rgba(255,107,107,0.3); color:#ff6b6b; font-weight:700; font-size:0.78rem; cursor:pointer; }
+  .pending-card { border-radius:16px; padding:20px; background:rgba(255,170,77,0.05); border:1px solid rgba(255,170,77,0.2); margin-bottom:24px; }
 </style>
+
+<!-- Pending Approvals -->
+{% if pending %}
+<div class="pending-card">
+  <div style="font-family:'Playfair Display',serif;color:#ffc36b;font-size:1rem;font-weight:700;margin-bottom:16px;">
+    <i class="fas fa-clock me-2"></i>Pending Clock-In Approvals
+    <span style="background:rgba(255,170,77,0.2);color:#ffc36b;padding:2px 10px;border-radius:999px;font-size:0.75rem;margin-left:8px;">{{ pending|length }}</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-dark" style="font-size:0.85rem;margin-bottom:0;">
+      <thead style="color:rgba(240,230,211,0.4);">
+        <tr><th>Employee</th><th>Role</th><th>Date</th><th>Clock In</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for r in pending %}
+        <tr>
+          <td style="color:#fff;font-weight:600;">{{ r.emp_name }}</td>
+          <td style="color:rgba(240,230,211,0.5);">{{ r.emp_role }}</td>
+          <td>{{ r.date }}</td>
+          <td>{{ r.clock_in }}</td>
+          <td>
+            <div class="d-flex gap-2">
+              <form method="POST" action="{{ url_for('admin.approve_attendance', record_id=r.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-approve"><i class="fas fa-check me-1"></i>Approve</button>
+              </form>
+              <form method="POST" action="{{ url_for('admin.reject_attendance', record_id=r.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-reject"><i class="fas fa-times me-1"></i>Reject</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
   <div class="d-flex gap-2 flex-wrap">

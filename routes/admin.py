@@ -878,13 +878,37 @@ def attendance():
     daily   = _db.get_all_attendance_for_date(date_str)
     monthly = _db.get_all_attendance_for_month(year, month)
     emps    = _db.get_all_employees(active_only=True)
+    pending = _db.get_pending_attendance()
     return render_template('admin/attendance.html',
                            daily=daily, monthly=monthly, emps=emps,
                            date_str=date_str, year=year, month=month,
-                           month_name=month_name)
+                           month_name=month_name, pending=pending)
 
 
-@admin.route('/attendance/mark', methods=['POST'])
+@admin.route('/attendance/approve/<record_id>', methods=['POST'])
+@admin_required
+def approve_attendance(record_id):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.attendance'))
+    _db.approve_attendance(record_id)
+    flash('Attendance approved.', 'success')
+    return redirect(url_for('admin.attendance'))
+
+
+@admin.route('/attendance/reject/<record_id>', methods=['POST'])
+@admin_required
+def reject_attendance(record_id):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.attendance'))
+    _db.reject_attendance(record_id)
+    flash('Attendance request rejected.', 'warning')
+    return redirect(url_for('admin.attendance'))
 @admin_required
 def mark_attendance():
     try:

@@ -555,17 +555,44 @@ def clock_in(employee_id):
         return None, 'Already clocked in today.'
     now = datetime.now(timezone.utc)
     clock_in_time = now.strftime('%H:%M')
-    # Determine status: late if after 09:30
-    hour, minute = now.hour, now.minute
-    status = 'Late' if (hour > 9 or (hour == 9 and minute > 30)) else 'Present'
     ref = _col('attendance').document()
     ref.set({
         'id': ref.id, 'employee_id': str(employee_id), 'date': today,
-        'clock_in': clock_in_time, 'clock_out': None, 'status': status,
+        'clock_in': clock_in_time, 'clock_out': None, 'status': 'Pending',
         'total_hours': None, 'overtime_hours': 0.0,
         'created_at': now.isoformat(),
     })
     return ref.id, None
+
+
+def get_pending_attendance():
+    docs = _col('attendance').where('status', '==', 'Pending').get()
+    records = []
+    for d in docs:
+        rec = _doc_to_dict(d)
+        emp = get_employee_by_id(rec['employee_id'])
+        rec['emp_name'] = emp.get('full_name', '') if emp else 'Unknown'
+        rec['emp_role'] = emp.get('role', '') if emp else ''
+        records.append(rec)
+    return sorted(records, key=lambda x: x.get('created_at', ''))
+
+
+def approve_attendance(record_id):
+    doc = _col('attendance').document(str(record_id)).get()
+    if not doc.exists:
+        return
+    rec = doc.to_dict()
+    clock_in_time = rec.get('clock_in', '00:00')
+    try:
+        h, m = map(int, clock_in_time.split(':'))
+        status = 'Late' if (h > 9 or (h == 9 and m > 30)) else 'Present'
+    except Exception:
+        status = 'Present'
+    _col('attendance').document(str(record_id)).update({'status': status})
+
+
+def reject_attendance(record_id):
+    _col('attendance').document(str(record_id)).delete()
 
 
 def clock_out(employee_id):
