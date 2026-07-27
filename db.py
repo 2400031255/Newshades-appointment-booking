@@ -311,13 +311,13 @@ def get_employee_by_id(eid):
 
 
 def get_employee_by_identifier(identifier):
-    db = _get_firestore()
-    by_user = db.collection('employees').where('username', '==', identifier).where('is_active', '==', 1).limit(1).get()
-    if by_user:
-        return _doc_to_dict(by_user[0])
-    by_email = db.collection('employees').where('email', '==', identifier).where('is_active', '==', 1).limit(1).get()
-    if by_email:
-        return _doc_to_dict(by_email[0])
+    docs = _col('employees').get()
+    for doc in docs:
+        e = _doc_to_dict(doc)
+        if not e.get('is_active'):
+            continue
+        if e.get('username') == identifier or e.get('email') == identifier:
+            return e
     return None
 
 
@@ -478,10 +478,12 @@ def get_all_offers():
 
 
 def get_active_offers(today_str):
-    docs = _col('offers').where('is_active', '==', 1).get()
+    docs = _col('offers').get()
     result = []
     for d in docs:
         o = _doc_to_dict(d)
+        if not o.get('is_active'):
+            continue
         vf = o.get('valid_from') or ''
         vu = o.get('valid_until') or ''
         if (not vf or vf <= today_str) and (not vu or vu >= today_str):
