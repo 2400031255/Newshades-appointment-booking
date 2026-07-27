@@ -82,7 +82,7 @@
           <td>
             <div class="d-flex gap-1 align-items-center">
               <button type="button" class="appt-action-btn btn-edit" title="Update"
-                onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, {{ e.assigned_employee_id or 'null' }})">
+                onclick="openModal('{{ e.enquiry_id }}', '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, '{{ e.assigned_employee_id or '' }}')">
                 <i class="fas fa-edit"></i>
               </button>
               <form method="POST" action="{{ url_for('admin.enquiry_delete', eid=e.enquiry_id) }}"
@@ -121,7 +121,7 @@
       {% endif %}
       <div class="d-flex gap-2 flex-wrap">
         <button type="button" class="appt-mob-btn btn-edit"
-          onclick="openModal({{ e.enquiry_id }}, '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, {{ e.assigned_employee_id or 'null' }})">
+          onclick="openModal('{{ e.enquiry_id }}', '{{ e.status }}', {{ e.admin_notes|tojson if e.admin_notes else '\"\"' }}, '{{ e.assigned_employee_id or '' }}')">
           <i class="fas fa-edit me-1"></i>Update
         </button>
         <form method="POST" action="{{ url_for('admin.enquiry_delete', eid=e.enquiry_id) }}"
@@ -235,7 +235,7 @@ function openModal(eid, status, notes, empId) {
   document.getElementById('modalStatus').value = status;
   document.getElementById('modalNotes').value = notes || '';
   var sel = document.getElementById('modalEmployee');
-  sel.value = empId ? String(empId) : '';
+  sel.value = empId || '';
   document.getElementById('enqModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }

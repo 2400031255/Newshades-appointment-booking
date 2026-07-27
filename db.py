@@ -276,6 +276,11 @@ def get_all_enquiries(status_filter=None, search=None):
     _col('enquiries').document(str(eid)).update(data)
 
 
+def update_enquiry(eid, data):
+    data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    _col('enquiries').document(str(eid)).update(data)
+
+
 def delete_enquiry(eid):
     _col('enquiries').document(str(eid)).delete()
 
