@@ -288,7 +288,7 @@
         <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="NS" class="brand-logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
         <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
-        <div class="brand-text">
+        <div class="brand-text" style="margin-left:0;">
           <span class="brand-name">New Shades</span>
           <span class="brand-tagline">Premium Salon</span>
         </div>
@@ -342,6 +342,27 @@
         {% endif %}
       {% endfor %}
     </div>
+    {% for cat, msg in messages %}
+      {% if cat == 'enq_success' %}
+      <div id="enqSuccessPopup" style="display:flex;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+        <div style="background:#0e0b14;border:1px solid rgba(37,211,102,0.35);border-radius:24px;padding:40px 32px;width:min(100%,440px);margin:16px;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,0.7);">
+          <div style="width:72px;height:72px;border-radius:50%;background:rgba(37,211,102,0.12);border:2px solid rgba(37,211,102,0.4);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:2rem;color:#25d366;">
+            <i class="fas fa-check"></i>
+          </div>
+          <h5 style="color:#fff;font-family:'Playfair Display',serif;margin-bottom:10px;">Enquiry Submitted!</h5>
+          <p style="color:rgba(240,230,211,0.72);font-size:0.92rem;line-height:1.6;margin-bottom:24px;">{{ msg }}</p>
+          <button onclick="document.getElementById('enqSuccessPopup').style.display='none'" style="padding:12px 32px;border-radius:999px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-weight:700;border:none;cursor:pointer;font-size:0.95rem;">
+            <i class="fas fa-check me-2"></i>Got it!
+          </button>
+        </div>
+      </div>
+      {% endif %}
+      {% if cat == 'enq_danger' %}
+      <div style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;padding:12px 20px;border-radius:12px;background:rgba(226,93,93,0.15);border:1px solid rgba(226,93,93,0.3);color:#ff9a9a;font-size:0.88rem;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+        <i class="fas fa-exclamation-circle"></i>{{ msg }}
+      </div>
+      {% endif %}
+    {% endfor %}
   {% endif %}
 {% endwith %}
 

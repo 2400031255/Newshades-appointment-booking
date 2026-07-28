@@ -281,7 +281,7 @@ a {
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -1687,6 +1687,10 @@ a {
   border-right: 1px solid rgba(212,175,55,0.18);
   box-shadow: 20px 0 60px rgba(0,0,0,0.5);
   z-index: 1020;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-sidebar .brand {
@@ -1703,6 +1707,9 @@ a {
 
 .sidebar-nav {
   padding: 16px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-nav a {

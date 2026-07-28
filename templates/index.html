@@ -489,19 +489,6 @@
       <div class="col-lg-7 reveal-up">
         <div class="glass-card" style="padding:36px 32px;">
 
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for cat, msg in messages %}
-            {% if cat.startswith('enq_') %}
-            <div style="padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:0.85rem;display:flex;align-items:center;gap:8px;
-              background:{{ 'rgba(37,211,102,0.1)' if cat=='enq_success' else 'rgba(226,93,93,0.1)' }};
-              border:1px solid {{ 'rgba(37,211,102,0.25)' if cat=='enq_success' else 'rgba(226,93,93,0.25)' }};
-              color:{{ '#7ce0aa' if cat=='enq_success' else '#ff9a9a' }};">
-              <i class="fas fa-{{ 'check-circle' if cat=='enq_success' else 'exclamation-circle' }}"></i>{{ msg }}
-            </div>
-            {% endif %}
-            {% endfor %}
-          {% endwith %}
-
           <form method="POST" action="{{ url_for('public_enquire') }}" id="pubEnqForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
