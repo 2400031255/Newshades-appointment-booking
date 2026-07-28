@@ -129,6 +129,21 @@ def create_app():
                 'map_embed':      gs('map_embed', ''),
             })
 
+    # ── to12hr filter ──────────────────────────────────────────────────────
+    @app.template_filter('to12hr')
+    def to12hr(value):
+        """Convert 'HH:MM' or 'HH:MM:SS' to 12-hour AM/PM string."""
+        if not value:
+            return value
+        try:
+            parts = str(value).split(':')
+            h, m = int(parts[0]), int(parts[1])
+            suffix = 'AM' if h < 12 else 'PM'
+            h12 = h % 12 or 12
+            return f'{h12}:{m:02d} {suffix}'
+        except (ValueError, IndexError):
+            return value
+
     from routes.auth import auth
     from routes.customer import customer
     from routes.admin import admin
@@ -145,6 +160,44 @@ def create_app():
     except ImportError:
         pass
     csrf.exempt(cal_api)
+
+    @app.route('/enquire', methods=['POST'])
+    def public_enquire():
+        import db
+        from datetime import date as _date
+        from flask_wtf.csrf import validate_csrf, ValidationError as _VE
+        try:
+            validate_csrf(request.form.get('csrf_token'))
+        except _VE:
+            flash('Invalid request.', 'danger')
+            return redirect(url_for('index') + '#enquire')
+        full_name = request.form.get('full_name', '').strip()[:100]
+        phone     = request.form.get('phone', '').strip()[:15]
+        services  = request.form.get('selected_services', '').strip()[:300]
+        pref_date = request.form.get('preferred_date', '').strip()
+        pref_time = request.form.get('preferred_time', '').strip() or None
+        message   = request.form.get('message', '').strip()[:500]
+        if not full_name or not phone or not services or not pref_date:
+            flash('Please fill in all required fields.', 'danger')
+            return redirect(url_for('index') + '#enquire')
+        try:
+            if _date.fromisoformat(pref_date) < _date.today():
+                flash('Please choose today or a future date.', 'danger')
+                return redirect(url_for('index') + '#enquire')
+        except ValueError:
+            flash('Invalid date.', 'danger')
+            return redirect(url_for('index') + '#enquire')
+        # Create or reuse a guest user record
+        guest = db.get_user_by_phone(phone)
+        if not guest:
+            import bcrypt as _bc
+            dummy_hash = _bc.hashpw(phone.encode(), _bc.gensalt()).decode()
+            uid = db.create_user(full_name, phone, phone, f'{phone}@guest.newshades', dummy_hash)
+        else:
+            uid = guest['id']
+        db.create_enquiry(str(uid), services, pref_date, pref_time, message)
+        flash('Enquiry submitted! We will contact you shortly to confirm.', 'success')
+        return redirect(url_for('index') + '#enquire')
 
     @app.route('/ping')
     def ping():

@@ -1,7 +1,27 @@
 import os
 import json
 import bcrypt
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def _now_ist():
+    return datetime.now(IST)
+
+def _today_ist():
+    return _now_ist().strftime('%Y-%m-%d')
+
+def to_12hr(t):
+    """Convert HH:MM (24hr) string to 12hr format like 9:30 AM"""
+    if not t:
+        return '–'
+    try:
+        h, m = map(int, t.split(':'))
+        period = 'AM' if h < 12 else 'PM'
+        h12 = h % 12 or 12
+        return f'{h12}:{m:02d} {period}'
+    except Exception:
+        return t
 
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -129,6 +149,11 @@ def get_user_by_username(username):
     return _doc_to_dict(docs[0]) if docs else None
 
 
+def get_user_by_phone(phone):
+    docs = _col('users').where('phone', '==', phone).limit(1).get()
+    return _doc_to_dict(docs[0]) if docs else None
+
+
 def create_user(full_name, username, phone, email, password_hash, is_admin=0):
     ref = _col('users').document()
     ref.set({
@@ -141,6 +166,10 @@ def create_user(full_name, username, phone, email, password_hash, is_admin=0):
 
 def update_user(uid, data):
     _col('users').document(str(uid)).update(data)
+
+
+def delete_user(uid):
+    _col('users').document(str(uid)).delete()
 
 
 def get_all_customers():
@@ -205,8 +234,8 @@ def create_enquiry(user_id, selected_services, preferred_date, preferred_time, m
         'selected_services': selected_services, 'preferred_date': preferred_date,
         'preferred_time': preferred_time, 'message': message,
         'status': 'Pending', 'admin_notes': '', 'assigned_employee_id': None,
-        'employee_notes': '', 'created_at': datetime.now(timezone.utc).isoformat(),
-        'updated_at': datetime.now(timezone.utc).isoformat(),
+        'employee_notes': '', 'created_at': _now_ist().isoformat(),
+        'updated_at': _now_ist().isoformat(),
     })
     return ref.id
 
@@ -275,8 +304,6 @@ def get_all_enquiries(status_filter=None, search=None):
                 continue
         enqs.append(enq)
     return sorted(enqs, key=lambda x: x.get('created_at', ''), reverse=True)
-    data['updated_at'] = datetime.now(timezone.utc).isoformat()
-    _col('enquiries').document(str(eid)).update(data)
 
 
 def update_enquiry(eid, data):
@@ -515,45 +542,14 @@ def delete_offer(oid):
     _col('offers').document(str(oid)).delete()
 
 
-# ── Coupons ───────────────────────────────────────────────────────────────────
-
-def get_all_coupons():
-    docs = _col('coupons').get()
-    items = [_doc_to_dict(d) for d in docs]
-    return sorted(items, key=lambda x: x.get('created_at', ''), reverse=True)
-
-
-def get_coupon_by_code(code):
-    docs = _col('coupons').where('code', '==', code.upper()).limit(1).get()
-    return _doc_to_dict(docs[0]) if docs else None
-
-
-def create_coupon(data):
-    ref = _col('coupons').document()
-    data['id'] = ref.id
-    data['created_at'] = datetime.now(timezone.utc).isoformat()
-    ref.set(data)
-    return ref.id
-
-
-def update_coupon_by_code(code, data):
-    docs = _col('coupons').where('code', '==', code.upper()).limit(1).get()
-    if docs:
-        docs[0].reference.update(data)
-
-
-def delete_coupon(cid):
-    _col('coupons').document(str(cid)).delete()
-
-
 # ── Attendance ────────────────────────────────────────────────────────────────
 
 def clock_in(employee_id):
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    today = _today_ist()
     existing = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
     if existing:
         return None, 'Already clocked in today.'
-    now = datetime.now(timezone.utc)
+    now = _now_ist()
     clock_in_time = now.strftime('%H:%M')
     ref = _col('attendance').document()
     ref.set({
@@ -596,7 +592,7 @@ def reject_attendance(record_id):
 
 
 def clock_out(employee_id):
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    today = _today_ist()
     docs = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
     if not docs:
         return None, 'No clock-in record found for today.'
@@ -604,7 +600,7 @@ def clock_out(employee_id):
     rec = doc.to_dict()
     if rec.get('clock_out'):
         return None, 'Already clocked out today.'
-    now = datetime.now(timezone.utc)
+    now = _now_ist()
     clock_out_time = now.strftime('%H:%M')
     # Calculate total hours
     try:
@@ -629,7 +625,7 @@ def clock_out(employee_id):
 
 
 def get_attendance_today(employee_id):
-    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    today = _today_ist()
     docs = _col('attendance').where('employee_id', '==', str(employee_id)).where('date', '==', today).limit(1).get()
     return _doc_to_dict(docs[0]) if docs else None
 

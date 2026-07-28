@@ -33,7 +33,7 @@ def dashboard():
     pending   = sum(1 for e in all_enqs if e['status'] == 'Pending')
     confirmed = sum(1 for e in all_enqs if e['status'] == 'Confirmed')
     completed = sum(1 for e in all_enqs if e['status'] == 'Closed')
-    cancelled = sum(1 for e in all_enqs if e['status'] == 'Contacted')
+    cancelled = sum(1 for e in all_enqs if e['status'] in ('Cancelled', 'Closed'))
     upcoming_enquiry = next(
         (e for e in sorted(all_enqs, key=lambda x: x.get('preferred_date', ''))
          if e['status'] in ('Pending', 'Contacted', 'Confirmed')), None

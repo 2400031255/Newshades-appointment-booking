@@ -32,10 +32,11 @@ def calendar():
     return render_template('admin/calendar.html')
 
 
-# ── Dashboard ──────────────────────────────────────────────────────────────
+# ── Dashboard ──────────────────────────────────────────────────────
 @admin.route('/')
 @admin_required
 def dashboard():
+    import calendar as _cal
     from datetime import date as _date
     all_users  = _db.get_all_customers()
     all_svcs   = _db.get_all_services()
@@ -47,16 +48,51 @@ def dashboard():
     contacted = sum(1 for e in all_enqs if e.get('status') == 'Contacted')
     confirmed = sum(1 for e in all_enqs if e.get('status') == 'Confirmed')
     recent    = all_enqs[:5]
-    today_str = _date.today().isoformat()
+    today     = _date.today()
+    today_str = today.isoformat()
     today_enqs = [e for e in all_enqs if str(e.get('preferred_date', ''))[:10] == today_str]
     today_enqs = sorted(today_enqs, key=lambda x: x.get('preferred_time') or '')
     all_employees = _db.get_all_employees(active_only=True)
+
+    # ── Monthly stats ──────────────────────────────────────────────────────
+    ym_prefix = today_str[:7]  # 'YYYY-MM'
+    month_enqs = [e for e in all_enqs if str(e.get('preferred_date', ''))[:7] == ym_prefix]
+    month_confirmed = sum(1 for e in month_enqs if e.get('status') == 'Confirmed')
+    month_completed = sum(1 for e in month_enqs if e.get('status') == 'Closed')
+    month_revenue   = sum(float(e.get('total_price') or 0) for e in month_enqs
+                          if e.get('status') in ('Confirmed', 'Closed'))
+    month_name = _cal.month_name[today.month]
+
+    # ── Calendar dot-map: date → count of enquiries ──────────────────────────────────────────────────────
+    cal_dot_map = {}
+    for e in month_enqs:
+        d = str(e.get('preferred_date', ''))[:10]
+        if d:
+            cal_dot_map[d] = cal_dot_map.get(d, 0) + 1
+    # Build calendar weeks [[day_num|0, ...], ...]
+    first_wd, days_in_month = _cal.monthrange(today.year, today.month)
+    cal_weeks = []
+    week = [0] * first_wd
+    for day in range(1, days_in_month + 1):
+        week.append(day)
+        if len(week) == 7:
+            cal_weeks.append(week)
+            week = []
+    if week:
+        week += [0] * (7 - len(week))
+        cal_weeks.append(week)
+
     return render_template('admin/dashboard.html',
                            total_users=total_users, total_services=total_services,
                            total_enqs=total_enqs, pending=pending,
                            contacted=contacted, confirmed=confirmed,
                            recent=recent, today_enqs=today_enqs,
-                           all_employees=all_employees)
+                           all_employees=all_employees,
+                           month_name=month_name, month_enqs=month_enqs,
+                           month_confirmed=month_confirmed, month_completed=month_completed,
+                           month_revenue=month_revenue,
+                           cal_weeks=cal_weeks, cal_dot_map=cal_dot_map,
+                           today_str=today_str, cal_year=today.year, cal_month=today.month)
 
 
 # ── Services ───────────────────────────────────────────────────────────────
@@ -316,6 +352,23 @@ def delete_review(rid):
 def customers():
     users = _db.get_all_customers()
     return render_template('admin/customers.html', users=users)
+
+
+@admin.route('/customers/<uid>/delete', methods=['POST'])
+@admin_required
+def delete_customer(uid):
+    try:
+        validate_csrf(request.form.get('csrf_token'))
+    except ValidationError:
+        flash('Invalid CSRF token.', 'danger')
+        return redirect(url_for('admin.customers'))
+    user = _db.get_user_by_id(uid)
+    if not user or user.get('is_admin'):
+        flash('Customer not found.', 'danger')
+        return redirect(url_for('admin.customers'))
+    _db.delete_user(uid)
+    flash(f'{user["full_name"]} deleted.', 'success')
+    return redirect(url_for('admin.customers'))
 
 
 @admin.route('/customers/<uid>')
@@ -605,11 +658,10 @@ def offers():
     from datetime import date as _date
     all_offers   = _db.get_all_offers()
     all_services = _db.get_all_services(active_only=True)
-    all_coupons  = _db.get_all_coupons()
     today_str    = _date.today().isoformat()
     upcoming_offers = [o for o in all_offers if o.get('valid_from') and str(o['valid_from'])[:10] > today_str]
     return render_template('admin/offers.html', offers=all_offers,
-                           all_services=all_services, all_coupons=all_coupons,
+                           all_services=all_services,
                            now_date=today_str, upcoming_offers=upcoming_offers)
 
 
@@ -684,68 +736,6 @@ def delete_offer(oid):
     flash('Offer deleted.', 'success')
     return redirect(url_for('admin.offers'))
 
-
-# ── Coupons ───────────────────────────────────────────────────────────────────
-@admin.route('/coupons/save', methods=['POST'])
-@admin_required
-def save_coupon():
-    try:
-        validate_csrf(request.form.get('csrf_token'))
-    except ValidationError:
-        flash('Invalid CSRF token.', 'danger')
-        return redirect(url_for('admin.offers'))
-    code             = request.form.get('code', '').strip().upper()[:30]
-    discount_percent = request.form.get('discount_percent', '0').strip() or '0'
-    max_uses         = request.form.get('max_uses', '0').strip() or '0'
-    valid_until      = request.form.get('valid_until', '').strip() or None
-    is_active        = 1 if request.form.get('is_active') else 0
-    if not code:
-        flash('Coupon code is required.', 'danger')
-        return redirect(url_for('admin.offers'))
-    try:
-        discount_percent = float(discount_percent)
-        if not (0 < discount_percent <= 100):
-            raise ValueError
-    except (ValueError, TypeError):
-        flash('Discount % must be between 1 and 100.', 'danger')
-        return redirect(url_for('admin.offers'))
-    try:
-        max_uses = int(max_uses)
-        if max_uses < 0:
-            raise ValueError
-    except (ValueError, TypeError):
-        max_uses = 0
-
-    existing = _db.get_coupon_by_code(code)
-    if existing:
-        _db.update_coupon_by_code(code, {
-            'discount_percent': discount_percent,
-            'max_uses': max_uses,
-            'valid_until': valid_until,
-            'is_active': is_active,
-        })
-        flash(f'Coupon {code} updated.', 'success')
-    else:
-        _db.create_coupon({
-            'code': code, 'discount_percent': discount_percent,
-            'max_uses': max_uses, 'valid_until': valid_until,
-            'is_active': is_active, 'used_count': 0,
-        })
-        flash(f'Coupon {code} created.', 'success')
-    return redirect(url_for('admin.offers'))
-
-
-@admin.route('/coupons/delete/<cid>', methods=['POST'])
-@admin_required
-def delete_coupon(cid):
-    try:
-        validate_csrf(request.form.get('csrf_token'))
-    except ValidationError:
-        flash('Invalid CSRF token.', 'danger')
-        return redirect(url_for('admin.offers'))
-    _db.delete_coupon(cid)
-    flash('Coupon deleted.', 'success')
-    return redirect(url_for('admin.offers'))
 
 
 # ── Employee Management ───────────────────────────────────────────────────────

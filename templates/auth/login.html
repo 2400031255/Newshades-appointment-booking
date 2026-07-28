@@ -355,8 +355,7 @@
 
     <!-- Tab switcher -->
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="window.location='{{ url_for('auth.login') }}'">Login</button>
-      <button class="auth-tab" onclick="window.location='{{ url_for('auth.signup') }}'">Sign Up</button>
+      <button class="auth-tab active">Staff &amp; Admin Login</button>
     </div>
 
     <!-- Form -->
@@ -373,7 +372,7 @@
 
       <div class="auth-welcome">
         <h2 class="auth-welcome-title">Welcome <span>Back</span></h2>
-        <p class="auth-welcome-sub">Login as Customer, Staff or Admin</p>
+        <p class="auth-welcome-sub">Admin &amp; Staff portal — authorised access only</p>
       </div>
 
       <form method="POST" action="{{ url_for('auth.login') }}">
@@ -415,7 +414,7 @@
       </form>
 
       <div class="anf-footer">
-        New customer? <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+        <a href="{{ url_for('index') }}" style="color:rgba(245,235,215,0.4);font-size:0.82rem;text-decoration:none;"><i class="fas fa-arrow-left me-1"></i>Back to Home</a>
       </div>
 
     </div>

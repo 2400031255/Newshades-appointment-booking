@@ -16,13 +16,28 @@
       <tbody>
         {% for u in users %}
         <tr>
-          <td class="admin-td-muted">{{ u.id }}</td>
+          <td class="admin-td-muted">{{ loop.index }}</td>
           <td class="admin-td-bold">{{ u.full_name }}</td>
           <td class="admin-td-muted">{{ u.email }}</td>
           <td class="admin-td-muted">{{ u.phone }}</td>
           <td><span class="admin-badge">{{ u.appt_count }} bookings</span></td>
-          <td class="admin-td-muted">{{ u.created_at }}</td>
-          <td><a href="{{ url_for('admin.customer_detail', uid=u.id) }}" class="admin-action-btn"><i class="fas fa-eye me-1"></i>View</a></td>
+          <td class="admin-td-muted" style="font-size:0.78rem;white-space:nowrap;">
+            {% set d = u.created_at | string %}
+            {{ d[:10] if d else '—' }}
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('admin.customer_detail', uid=u.id) }}" class="admin-action-btn"><i class="fas fa-eye me-1"></i>View</a>
+              <form method="POST" action="{{ url_for('admin.delete_customer', uid=u.id) }}"
+                onsubmit="return confirm('Delete {{ u.full_name }}? This cannot be undone.')" style="margin:0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit"
+                  style="padding:5px 10px;border-radius:8px;border:1px solid rgba(226,93,93,0.25);background:rgba(226,93,93,0.07);color:rgba(255,154,154,0.7);font-size:0.75rem;cursor:pointer;">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </form>
+            </div>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

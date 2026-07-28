@@ -48,7 +48,7 @@
       <tbody>
         {% for a in appointments %}
         <tr>
-          <td class="admin-td-muted">{{ a.id }}</td>
+          <td class="admin-td-muted">#{{ a.id[:6] }}</td>
           <td class="admin-td-bold" style="max-width:200px;">{{ a.selected_services }}</td>
           <td class="admin-td-muted">{{ a.preferred_date }}</td>
           <td class="admin-td-muted">{{ a.preferred_time or 'Flexible' }}</td>

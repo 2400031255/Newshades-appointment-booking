@@ -15,23 +15,81 @@
 
     /* ── Topbar ── */
     .emp-topbar {
-      position:fixed; top:0; left:0; right:0; z-index:100;
-      background:rgba(12,11,16,0.96); backdrop-filter:blur(20px);
+      position:fixed; top:0; left:0; right:0; z-index:200;
+      background:rgba(12,11,16,0.97); backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(201,168,76,0.12);
-      padding:0 24px; height:64px;
+      padding:0 16px; height:60px;
       display:flex; align-items:center; justify-content:space-between;
     }
-    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; }
+    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1rem; font-weight:700; white-space:nowrap; }
 
     /* Role badge colours */
     .role-badge {
-      padding:4px 14px; border-radius:999px; font-size:0.7rem; font-weight:700; letter-spacing:0.12em;
+      padding:3px 10px; border-radius:999px; font-size:0.65rem; font-weight:700; letter-spacing:0.1em;
     }
     .role-1 { background:rgba(105,152,255,0.12); border:1px solid rgba(105,152,255,0.25); color:#9dc0ff; }
     .role-2 { background:rgba(201,168,76,0.12);  border:1px solid rgba(201,168,76,0.3);   color:#E8C96A; }
     .role-3 { background:rgba(139,92,246,0.14);  border:1px solid rgba(139,92,246,0.3);   color:#c4b5fd; }
 
-    .emp-shell { padding:88px 0 60px; }
+    /* Hamburger */
+    .emp-hamburger {
+      display:none; flex-direction:column; justify-content:center; gap:5px;
+      width:40px; height:40px; background:none; border:none; cursor:pointer; padding:4px;
+    }
+    .emp-hamburger span {
+      display:block; height:2px; border-radius:2px;
+      background:rgba(240,230,211,0.8); transition:all 0.25s;
+    }
+    .emp-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .emp-hamburger.open span:nth-child(2) { opacity:0; }
+    .emp-hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+    /* Drawer */
+    .emp-drawer {
+      position:fixed; top:60px; left:0; right:0; z-index:199;
+      background:rgba(10,9,14,0.98); backdrop-filter:blur(24px);
+      border-bottom:1px solid rgba(201,168,76,0.15);
+      padding:16px 20px 20px;
+      display:none; flex-direction:column; gap:4px;
+    }
+    .emp-drawer.open { display:flex; }
+    .emp-drawer a {
+      color:rgba(240,230,211,0.75); text-decoration:none;
+      font-size:0.95rem; font-weight:500;
+      padding:12px 14px; border-radius:12px;
+      border:1px solid transparent; transition:all 0.18s;
+      display:flex; align-items:center; gap:10px;
+    }
+    .emp-drawer a:hover, .emp-drawer a.active {
+      background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.2); color:#E8C96A;
+    }
+    .emp-drawer a.logout-link { color:#ff6b6b; }
+    .emp-drawer a.logout-link:hover { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.2); }
+    .emp-drawer-divider { height:1px; background:rgba(255,255,255,0.06); margin:6px 0; }
+    .emp-drawer-name {
+      font-size:0.78rem; color:rgba(240,230,211,0.35);
+      padding:4px 14px 8px; letter-spacing:0.06em;
+    }
+
+    @media (min-width:768px) {
+      .emp-hamburger { display:none !important; }
+      .emp-drawer { display:none !important; }
+      .emp-desktop-nav { display:flex !important; }
+    }
+    @media (max-width:767px) {
+      .emp-hamburger { display:flex; }
+      .emp-desktop-nav { display:none !important; }
+    }
+    .emp-desktop-nav {
+      display:flex; align-items:center; gap:12px;
+    }
+    .emp-desktop-nav a {
+      color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.82rem;
+    }
+    .emp-desktop-nav a:hover { color:#E8C96A; }
+    .emp-desktop-nav .logout-link { color:#ff6b6b; }
+
+    .emp-shell { padding:76px 0 60px; }
 
     /* ── Stat pills ── */
     .stat-pill {
@@ -115,23 +173,37 @@
 
 <!-- Topbar -->
 <div class="emp-topbar">
-  <div class="d-flex align-items-center gap-3">
+  <div class="d-flex align-items-center gap-2">
     <div class="emp-brand">New Shades</div>
     <span class="role-badge role-{{ level }}">
       <i class="fas fa-{{ 'user' if level==1 else ('star' if level==2 else 'crown') }} me-1"></i>
       {{ session.emp_role | upper }}
     </span>
   </div>
-  <div class="d-flex align-items-center gap-3">
-    <a href="{{ url_for('employee.dashboard') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Enquiries</a>
-    <a href="{{ url_for('employee.attendance') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Attendance</a>
-    <a href="{{ url_for('employee.salary') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Salary</a>
-    <a href="{{ url_for('employee.leave') }}" style="color:rgba(240,230,211,0.6);text-decoration:none;font-size:0.82rem;">Leave</a>
-    <span style="color:rgba(240,230,211,0.6);font-size:0.85rem;">{{ session.emp_name }}</span>
-    <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;">
-      <i class="fas fa-sign-out-alt me-1"></i>Logout
-    </a>
+  <!-- Desktop nav -->
+  <div class="emp-desktop-nav">
+    <a href="{{ url_for('employee.dashboard') }}">Enquiries</a>
+    <a href="{{ url_for('employee.attendance') }}">Attendance</a>
+    <a href="{{ url_for('employee.salary') }}">Salary</a>
+    <a href="{{ url_for('employee.leave') }}">Leave</a>
+    <span style="color:rgba(240,230,211,0.5);font-size:0.82rem;">{{ session.emp_name }}</span>
+    <a href="{{ url_for('employee.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
+  <!-- Mobile hamburger -->
+  <button class="emp-hamburger" id="empHamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</div>
+
+<!-- Mobile Drawer -->
+<div class="emp-drawer" id="empDrawer">
+  <div class="emp-drawer-name">{{ session.emp_name }}</div>
+  <a href="{{ url_for('employee.dashboard') }}" class="active"><i class="fas fa-clipboard-list"></i>Enquiries</a>
+  <a href="{{ url_for('employee.attendance') }}"><i class="fas fa-calendar-check"></i>Attendance</a>
+  <a href="{{ url_for('employee.salary') }}"><i class="fas fa-money-bill-wave"></i>Salary</a>
+  <a href="{{ url_for('employee.leave') }}"><i class="fas fa-calendar-minus"></i>Leave</a>
+  <div class="emp-drawer-divider"></div>
+  <a href="{{ url_for('employee.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i>Logout</a>
 </div>
 
 <!-- Flash -->
@@ -201,7 +273,7 @@
 
     {% if enquiries %}
       {% for e in enquiries %}
-      {% set is_mine = (e.get('assigned_to') is none and level < 2) or (level >= 2) %}
+      {% set is_mine = (e.get('assigned_employee_id') is none and level < 2) or (level >= 2) %}
       {% set can_edit = (level == 1 and e.assigned_employee_id == session.emp_id) or level >= 2 %}
       <div class="enq-card">
         <!-- Card header -->
@@ -209,7 +281,7 @@
           <div>
             <div style="font-weight:700;color:#fff;font-size:1rem;">
               {{ e.customer_name }}
-              <span style="color:rgba(240,230,211,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id }}</span>
+              <span style="color:rgba(240,230,211,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
               {% if not can_edit %}<span class="readonly-badge">read-only</span>{% endif %}
             </div>
             <div style="color:rgba(240,230,211,0.5);font-size:0.82rem;margin-top:2px;">
@@ -217,8 +289,8 @@
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            {% if level >= 2 and e.assigned_to %}
-            <span style="font-size:0.75rem;color:#9dc0ff;"><i class="fas fa-user-tie me-1"></i>{{ e.assigned_to }}</span>
+            {% if level >= 2 and e.emp_name %}
+            <span style="font-size:0.75rem;color:#9dc0ff;"><i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}</span>
             {% elif level >= 2 %}
             <span style="font-size:0.75rem;color:rgba(240,230,211,0.3);">Unassigned</span>
             {% endif %}
@@ -326,6 +398,18 @@
 <script>
 // Auto-refresh every 30s
 setTimeout(function(){ location.reload(); }, 30000);
+// Hamburger drawer
+const _hbtn = document.getElementById('empHamburger');
+const _hdrawer = document.getElementById('empDrawer');
+if (_hbtn && _hdrawer) {
+  _hbtn.addEventListener('click', () => {
+    _hbtn.classList.toggle('open');
+    _hdrawer.classList.toggle('open');
+  });
+  _hdrawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    _hbtn.classList.remove('open'); _hdrawer.classList.remove('open');
+  }));
+}
 </script>
 </body>
 </html>

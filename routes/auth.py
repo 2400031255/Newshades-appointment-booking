@@ -66,34 +66,11 @@ def _validate_signup(form):
 
 @auth.route('/signup', methods=['GET'])
 def signup():
-    return render_template('auth/signup.html')
+    return redirect(url_for('auth.login'))
 
 
 @auth.route('/signup', methods=['POST'])
 def signup_post():
-    ip = request.remote_addr
-    if _is_rate_limited(ip, _signup_attempts, window=600, limit=5):
-        flash('Too many signup attempts. Please wait 10 minutes.', 'danger')
-        return render_template('auth/signup.html')
-
-    error = _validate_signup(request.form)
-    if error:
-        flash(error, 'danger')
-        return render_template('auth/signup.html')
-
-    full_name = request.form.get('full_name', '').strip()
-    username  = request.form.get('username', '').strip().lower()
-    email     = request.form.get('email', '').strip().lower()
-    phone     = request.form.get('phone', '').strip()
-    password  = request.form.get('password', '')
-
-    if db.get_user_by_email(email) or db.get_user_by_username(username):
-        flash('An account with those details already exists.', 'danger')
-        return render_template('auth/signup.html')
-
-    hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    db.create_user(full_name, username, phone, email, hashed)
-    flash('Account created! Please log in.', 'success')
     return redirect(url_for('auth.login'))
 
 

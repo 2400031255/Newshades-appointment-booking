@@ -46,7 +46,7 @@
         <div class="appt-card">
           <div class="appt-card-top">
             <div>
-              <div class="appt-id"><i class="fas fa-hashtag me-1" style="font-size:0.8rem;"></i>Enquiry #{{ enq.enquiry_id }}</div>
+              <div class="appt-id"><i class="fas fa-hashtag me-1" style="font-size:0.8rem;"></i>Enquiry #{{ enq.enquiry_id[:6] }}</div>
               <div class="appt-date-created">
                 {% set ca = enq.created_at | string %}
                 Submitted: {% if ca | length >= 10 %}{{ ca[:10] }}{% else %}{{ ca }}{% endif %}

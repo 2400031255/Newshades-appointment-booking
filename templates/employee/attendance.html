@@ -12,78 +12,168 @@
   <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
   <style>
     body { background:#0c0b10; min-height:100vh; font-family:'DM Sans',sans-serif; color:rgba(240,230,211,0.9); }
+
+    /* Topbar */
     .emp-topbar {
       position:fixed; top:0; left:0; right:0; z-index:100;
       background:rgba(12,11,16,0.96); backdrop-filter:blur(20px);
       border-bottom:1px solid rgba(201,168,76,0.12);
-      padding:0 24px; height:64px;
+      padding:0 16px; height:60px;
       display:flex; align-items:center; justify-content:space-between;
     }
-    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; }
-    .emp-shell { padding:88px 0 60px; }
-    .card-dark {
-      border-radius:18px; padding:24px;
-      background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));
-      border:1px solid rgba(201,168,76,0.14); margin-bottom:20px;
+    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1rem; font-weight:700; }
+    .emp-nav-link { color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.82rem; padding:5px 12px; border-radius:999px; border:1px solid transparent; transition:all 0.2s; }
+    .emp-nav-link:hover, .emp-nav-link.active { border-color:rgba(201,168,76,0.25); color:#E8C96A; }
+    .emp-shell { padding:76px 0 60px; }
+    .emp-hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:40px; height:40px; background:none; border:none; cursor:pointer; padding:4px; }
+    .emp-hamburger span { display:block; height:2px; border-radius:2px; background:rgba(240,230,211,0.8); transition:all 0.25s; }
+    .emp-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .emp-hamburger.open span:nth-child(2) { opacity:0; }
+    .emp-hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+    .emp-drawer { position:fixed; top:60px; left:0; right:0; z-index:199; background:rgba(10,9,14,0.98); backdrop-filter:blur(24px); border-bottom:1px solid rgba(201,168,76,0.15); padding:16px 20px 20px; display:none; flex-direction:column; gap:4px; }
+    .emp-drawer.open { display:flex; }
+    .emp-drawer a { color:rgba(240,230,211,0.75); text-decoration:none; font-size:0.95rem; font-weight:500; padding:12px 14px; border-radius:12px; border:1px solid transparent; transition:all 0.18s; display:flex; align-items:center; gap:10px; }
+    .emp-drawer a:hover, .emp-drawer a.active { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.2); color:#E8C96A; }
+    .emp-drawer a.logout-link { color:#ff6b6b; }
+    .emp-drawer a.logout-link:hover { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.2); }
+    .emp-drawer-divider { height:1px; background:rgba(255,255,255,0.06); margin:6px 0; }
+    .emp-drawer-name { font-size:0.78rem; color:rgba(240,230,211,0.35); padding:4px 14px 8px; letter-spacing:0.06em; }
+    .emp-desktop-nav { display:flex; align-items:center; gap:10px; }
+    @media (min-width:768px) { .emp-hamburger { display:none !important; } .emp-drawer { display:none !important; } .emp-desktop-nav { display:flex !important; } }
+    @media (max-width:767px) { .emp-hamburger { display:flex; } .emp-desktop-nav { display:none !important; } }
+
+    /* Live clock */
+    .live-clock-wrap {
+      display:flex; flex-direction:column; align-items:flex-end; gap:2px;
     }
-    .stat-pill { border-radius:14px; padding:16px 18px; background:rgba(255,255,255,0.05); border:1px solid rgba(201,168,76,0.12); }
+    .live-clock {
+      font-family:'Playfair Display',serif; font-size:1.5rem; font-weight:700;
+      color:#fff; letter-spacing:0.04em; line-height:1;
+    }
+    .live-clock-sub { font-size:0.72rem; color:rgba(240,230,211,0.4); letter-spacing:0.1em; text-transform:uppercase; }
+
+    /* Today card */
+    .today-card {
+      border-radius:20px; padding:28px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.18); margin-bottom:20px;
+      position:relative; overflow:hidden;
+    }
+    .today-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);
+    }
+    .today-label { font-size:0.7rem; color:rgba(240,230,211,0.4); letter-spacing:0.14em; text-transform:uppercase; margin-bottom:10px; }
+    .time-chip {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 16px; border-radius:12px; font-size:0.9rem; font-weight:600;
+    }
+    .chip-in  { background:rgba(37,211,102,0.1);  border:1px solid rgba(37,211,102,0.25);  color:#7ce0aa; }
+    .chip-out { background:rgba(255,107,107,0.1);  border:1px solid rgba(255,107,107,0.25); color:#ff9a9a; }
+    .chip-hrs { background:rgba(201,168,76,0.1);   border:1px solid rgba(201,168,76,0.25);  color:#E8C96A; }
+    .chip-pending { background:rgba(255,170,77,0.1); border:1px solid rgba(255,170,77,0.3); color:#ffc36b; }
+
+    /* Clock buttons */
+    .clock-btn {
+      padding:13px 36px; border-radius:999px; border:none;
+      font-weight:700; font-size:0.95rem; cursor:pointer;
+      transition:transform 0.2s, box-shadow 0.2s; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn-clockin  { background:linear-gradient(135deg,#7ce0aa,#25d366); color:#0c0b10; box-shadow:0 8px 24px rgba(37,211,102,0.3); }
+    .btn-clockout { background:linear-gradient(135deg,#ff9a6c,#ff6b6b); color:#fff;    box-shadow:0 8px 24px rgba(255,107,107,0.3); }
+    .btn-clockin:hover  { transform:translateY(-2px); box-shadow:0 12px 32px rgba(37,211,102,0.4); }
+    .btn-clockout:hover { transform:translateY(-2px); box-shadow:0 12px 32px rgba(255,107,107,0.4); }
+
+    /* Stat pills */
+    .stat-pill { border-radius:14px; padding:16px 18px; background:rgba(255,255,255,0.05); border:1px solid rgba(201,168,76,0.12); transition:border-color 0.2s; }
+    .stat-pill:hover { border-color:rgba(201,168,76,0.25); }
     .stat-num { font-family:'Playfair Display',serif; font-size:1.6rem; font-weight:700; }
     .stat-lbl { font-size:0.72rem; color:rgba(240,230,211,0.45); text-transform:uppercase; letter-spacing:0.1em; }
-    .clock-btn {
-      padding:12px 32px; border-radius:999px; border:none; font-weight:700; font-size:0.95rem; cursor:pointer; transition:opacity 0.2s;
-    }
-    .btn-clockin  { background:linear-gradient(135deg,#7ce0aa,#25d366); color:#0c0b10; }
-    .btn-clockout { background:linear-gradient(135deg,#ff9a6c,#ff6b6b); color:#fff; }
-    .btn-clockin:hover, .btn-clockout:hover { opacity:0.85; }
-    /* Calendar */
-    .att-cal { width:100%; border-collapse:separate; border-spacing:4px; }
-    .att-cal th { text-align:center; font-size:0.72rem; color:rgba(240,230,211,0.4); padding:4px; letter-spacing:0.08em; }
-    .att-cal td { text-align:center; border-radius:8px; padding:6px 4px; font-size:0.8rem; min-width:36px; }
-    .att-P  { background:rgba(37,211,102,0.15); color:#7ce0aa; }
-    .att-L  { background:rgba(255,193,7,0.15);  color:#ffc107; }
-    .att-A  { background:rgba(255,107,107,0.15); color:#ff6b6b; }
-    .att-H  { background:rgba(105,152,255,0.15); color:#9dc0ff; }
-    .att-LV { background:rgba(139,92,246,0.15);  color:#c4b5fd; }
-    .att-empty { color:rgba(240,230,211,0.2); }
-    .att-today { border:1.5px solid rgba(201,168,76,0.5) !important; }
-    .nav-btn {
-      padding:6px 16px; border-radius:999px; border:1px solid rgba(201,168,76,0.2);
-      background:rgba(255,255,255,0.04); color:rgba(240,230,211,0.7); font-size:0.82rem; text-decoration:none;
-    }
-    .nav-btn:hover { border-color:rgba(201,168,76,0.4); color:#fff; }
+
+    /* Status badges */
     .status-badge { padding:3px 10px; border-radius:999px; font-size:0.72rem; font-weight:700; }
     .s-Present  { background:rgba(37,211,102,0.15); color:#7ce0aa; }
     .s-Late     { background:rgba(255,193,7,0.15);  color:#ffc107; }
-    .s-Absent   { background:rgba(255,107,107,0.15); color:#ff6b6b; }
-    .s-Half-Day { background:rgba(105,152,255,0.15); color:#9dc0ff; }
-    .s-Leave    { background:rgba(139,92,246,0.15);  color:#c4b5fd; }
-    .s-Pending  { background:rgba(255,170,77,0.15);  color:#ffc36b; }
-    .emp-nav-link { color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.85rem; padding:6px 14px; border-radius:999px; border:1px solid transparent; }
-    .emp-nav-link:hover, .emp-nav-link.active { border-color:rgba(201,168,76,0.25); color:#E8C96A; }
+    .s-Absent   { background:rgba(255,107,107,0.15);color:#ff6b6b; }
+    .s-Half-Day { background:rgba(105,152,255,0.15);color:#9dc0ff; }
+    .s-Leave    { background:rgba(139,92,246,0.15); color:#c4b5fd; }
+    .s-Pending  { background:rgba(255,170,77,0.15); color:#ffc36b; }
+
+    /* Nav buttons */
+    .nav-btn {
+      width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,168,76,0.2);
+      background:rgba(255,255,255,0.04); color:rgba(240,230,211,0.7);
+      display:inline-flex; align-items:center; justify-content:center;
+      text-decoration:none; font-size:0.8rem; transition:all 0.2s;
+    }
+    .nav-btn:hover { border-color:rgba(201,168,76,0.4); color:#E8C96A; background:rgba(201,168,76,0.08); }
+
+    /* Calendar */
+    .card-dark {
+      border-radius:18px; padding:24px;
+      background:linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+      border:1px solid rgba(201,168,76,0.12); margin-bottom:20px;
+    }
+    .att-cal { width:100%; border-collapse:separate; border-spacing:5px; }
+    .att-cal th { text-align:center; font-size:0.7rem; color:rgba(240,230,211,0.35); padding:4px; letter-spacing:0.1em; text-transform:uppercase; }
+    .att-cal td { text-align:center; border-radius:10px; padding:8px 4px; font-size:0.82rem; min-width:38px; cursor:default; transition:transform 0.15s; }
+    .att-cal td:hover { transform:scale(1.08); }
+    .att-P  { background:rgba(37,211,102,0.14); color:#7ce0aa; }
+    .att-L  { background:rgba(255,193,7,0.14);  color:#ffc107; }
+    .att-A  { background:rgba(255,107,107,0.14);color:#ff6b6b; }
+    .att-H  { background:rgba(105,152,255,0.14);color:#9dc0ff; }
+    .att-LV { background:rgba(139,92,246,0.14); color:#c4b5fd; }
+    .att-PN { background:rgba(255,170,77,0.14); color:#ffc36b; }
+    .att-empty { color:rgba(240,230,211,0.15); }
+    .att-today { outline:2px solid rgba(201,168,76,0.55) !important; outline-offset:1px; }
+
+    /* Table */
+    .rec-table { font-size:0.84rem; }
+    .rec-table thead th { color:rgba(240,230,211,0.4); font-weight:600; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; border-bottom:1px solid rgba(255,255,255,0.07) !important; }
+    .rec-table tbody tr { border-bottom:1px solid rgba(255,255,255,0.04) !important; }
+    .rec-table tbody tr:hover td { background:rgba(201,168,76,0.04); }
+    .rec-table td { vertical-align:middle; border:none !important; color:rgba(240,230,211,0.8); }
   </style>
 </head>
 <body>
+
+<!-- Topbar -->
 <div class="emp-topbar">
-  <div class="d-flex align-items-center gap-3">
+  <div class="d-flex align-items-center gap-2">
     <div class="emp-brand">New Shades</div>
-    <div class="d-flex gap-2">
-      <a href="{{ url_for('employee.dashboard') }}" class="emp-nav-link">Enquiries</a>
-      <a href="{{ url_for('employee.attendance') }}" class="emp-nav-link active">Attendance</a>
-      <a href="{{ url_for('employee.salary') }}" class="emp-nav-link">Salary</a>
-      <a href="{{ url_for('employee.leave') }}" class="emp-nav-link">Leave</a>
-    </div>
   </div>
-  <div class="d-flex align-items-center gap-3">
-    <span style="color:rgba(240,230,211,0.6);font-size:0.85rem;">{{ session.emp_name }}</span>
+  <div class="emp-desktop-nav">
+    <a href="{{ url_for('employee.dashboard') }}" class="emp-nav-link">Enquiries</a>
+    <a href="{{ url_for('employee.attendance') }}" class="emp-nav-link active">Attendance</a>
+    <a href="{{ url_for('employee.salary') }}" class="emp-nav-link">Salary</a>
+    <a href="{{ url_for('employee.leave') }}" class="emp-nav-link">Leave</a>
+    <div class="live-clock-wrap">
+      <div class="live-clock" id="topClock">--:-- --</div>
+      <div class="live-clock-sub" id="topDate">--</div>
+    </div>
+    <span style="color:rgba(240,230,211,0.5);font-size:0.82rem;">{{ session.emp_name }}</span>
     <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
+  <button class="emp-hamburger" id="empHamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </div>
+<div class="emp-drawer" id="empDrawer">
+  <div class="emp-drawer-name">{{ session.emp_name }}</div>
+  <a href="{{ url_for('employee.dashboard') }}"><i class="fas fa-clipboard-list"></i>Enquiries</a>
+  <a href="{{ url_for('employee.attendance') }}" class="active"><i class="fas fa-calendar-check"></i>Attendance</a>
+  <a href="{{ url_for('employee.salary') }}"><i class="fas fa-money-bill-wave"></i>Salary</a>
+  <a href="{{ url_for('employee.leave') }}"><i class="fas fa-calendar-minus"></i>Leave</a>
+  <div class="emp-drawer-divider"></div>
+  <a href="{{ url_for('employee.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt"></i>Logout</a>
+</div></div>
 
+<!-- Flash -->
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
   <div style="position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;">
     {% for cat, msg in messages %}
-    <div style="padding:12px 18px;border-radius:14px;background:#1a1510;border:1px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;">
+    <div style="padding:12px 18px;border-radius:14px;background:#1a1510;border:1px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
       <i class="fas fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }} me-2" style="color:{{ '#7ce0aa' if cat=='success' else '#ff6b6b' }};"></i>{{ msg }}
     </div>
     {% endfor %}
@@ -92,49 +182,74 @@
 {% endwith %}
 
 <div class="emp-shell">
-  <div class="container">
-    <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;margin-bottom:4px;">Attendance</h1>
-    <p style="color:rgba(240,230,211,0.45);font-size:0.85rem;margin-bottom:24px;">Track your daily clock-in/out and monthly attendance</p>
+  <div class="container" style="max-width:860px;">
 
-    <!-- Today's Status -->
-    <div class="card-dark">
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.9rem;margin-bottom:4px;">Attendance</h1>
+        <p style="color:rgba(240,230,211,0.4);font-size:0.85rem;margin:0;">Track your daily clock-in / clock-out</p>
+      </div>
+    </div>
+
+    <!-- TODAY CARD -->
+    <div class="today-card">
+      <div class="today-label"><i class="fas fa-calendar-day me-2" style="color:#C9A84C;"></i>Today — {{ today }}</div>
+
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <!-- Left: time chips -->
         <div>
-          <div style="font-size:0.75rem;color:rgba(240,230,211,0.4);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Today – {{ today }}</div>
           {% if today_rec %}
-            <div style="font-size:1rem;color:#fff;font-weight:600;">
-              <i class="fas fa-sign-in-alt me-2" style="color:#7ce0aa;"></i>Clock In: {{ today_rec.clock_in }}
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="time-chip chip-in">
+                <i class="fas fa-sign-in-alt"></i>
+                In: {{ today_rec.clock_in | to12hr }}
+              </span>
               {% if today_rec.clock_out %}
-              &nbsp;&nbsp;<i class="fas fa-sign-out-alt me-2" style="color:#ff6b6b;"></i>Clock Out: {{ today_rec.clock_out }}
-              &nbsp;&nbsp;<i class="fas fa-clock me-1" style="color:#C9A84C;"></i>{{ today_rec.total_hours }}h
+              <span class="time-chip chip-out">
+                <i class="fas fa-sign-out-alt"></i>
+                Out: {{ today_rec.clock_out | to12hr }}
+              </span>
+              <span class="time-chip chip-hrs">
+                <i class="fas fa-clock"></i>
+                {{ today_rec.total_hours }}h worked
+              </span>
               {% endif %}
             </div>
-            <span class="status-badge s-{{ today_rec.status | replace(' ','-') }} mt-2 d-inline-block">{{ today_rec.status }}</span>
+            <span class="status-badge s-{{ today_rec.status | replace(' ','-') }}">{{ today_rec.status }}</span>
           {% else %}
-            <div style="color:rgba(240,230,211,0.5);">Not clocked in yet today.</div>
+            <div style="color:rgba(240,230,211,0.45);font-size:0.9rem;">
+              <i class="fas fa-moon me-2" style="color:rgba(201,168,76,0.4);"></i>Not clocked in yet today.
+            </div>
           {% endif %}
         </div>
-        <div class="d-flex gap-3">
+
+        <!-- Right: action button -->
+        <div>
           {% if not can_mark_attendance %}
-          <div style="padding:12px 20px;border-radius:14px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.85rem;">
-            <i class="fas fa-lock me-2"></i>Attendance access disabled. Contact admin to enable.
+          <div style="padding:12px 20px;border-radius:14px;background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.85rem;">
+            <i class="fas fa-lock me-2"></i>Attendance disabled — contact admin.
           </div>
           {% elif not today_rec %}
           <form method="POST" action="{{ url_for('employee.clock_in') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="clock-btn btn-clockin"><i class="fas fa-sign-in-alt me-2"></i>Clock In</button>
+            <button type="submit" class="clock-btn btn-clockin">
+              <i class="fas fa-sign-in-alt"></i>Clock In
+            </button>
           </form>
           {% elif today_rec.status == 'Pending' %}
-          <div style="padding:12px 20px;border-radius:14px;background:rgba(255,170,77,0.08);border:1px solid rgba(255,170,77,0.25);color:#ffc36b;font-size:0.85rem;">
-            <i class="fas fa-hourglass-half me-2"></i>Awaiting admin approval…
+          <div class="time-chip chip-pending" style="padding:12px 20px;border-radius:14px;font-size:0.88rem;">
+            <i class="fas fa-hourglass-half"></i>Awaiting admin approval…
           </div>
           {% elif not today_rec.clock_out %}
           <form method="POST" action="{{ url_for('employee.clock_out') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <button type="submit" class="clock-btn btn-clockout"><i class="fas fa-sign-out-alt me-2"></i>Clock Out</button>
+            <button type="submit" class="clock-btn btn-clockout">
+              <i class="fas fa-sign-out-alt"></i>Clock Out
+            </button>
           </form>
           {% else %}
-          <div style="color:rgba(240,230,211,0.4);font-size:0.85rem;padding:12px 20px;border-radius:999px;border:1px solid rgba(255,255,255,0.08);">
+          <div style="color:rgba(240,230,211,0.4);font-size:0.85rem;padding:12px 20px;border-radius:999px;border:1px solid rgba(255,255,255,0.07);">
             <i class="fas fa-check-circle me-2" style="color:#7ce0aa;"></i>Day complete
           </div>
           {% endif %}
@@ -144,7 +259,13 @@
 
     <!-- Monthly Stats -->
     <div class="row g-3 mb-4">
-      {% for num, lbl, color in [(present,'Present','#7ce0aa'),(absent,'Absent','#ff6b6b'),(on_leave,'Leave','#c4b5fd'),(half_day,'Half Day','#9dc0ff'),(total_ot,'OT Hours','#C9A84C')] %}
+      {% for num, lbl, color in [
+        (present,   'Present',  '#7ce0aa'),
+        (absent,    'Absent',   '#ff6b6b'),
+        (on_leave,  'Leave',    '#c4b5fd'),
+        (half_day,  'Half Day', '#9dc0ff'),
+        (total_ot,  'OT Hours', '#C9A84C')
+      ] %}
       <div class="col-6 col-md">
         <div class="stat-pill">
           <div class="stat-num" style="color:{{ color }};">{{ num }}</div>
@@ -155,7 +276,7 @@
     </div>
 
     <!-- Month Navigation -->
-    <div class="d-flex align-items-center gap-3 mb-4">
+    <div class="d-flex align-items-center gap-3 mb-3">
       {% set prev_month = month - 1 if month > 1 else 12 %}
       {% set prev_year  = year if month > 1 else year - 1 %}
       {% set next_month = month + 1 if month < 12 else 1 %}
@@ -186,12 +307,14 @@
               {% set rec = att_map.get(date_key) %}
               {% set is_today = date_key == today %}
               {% if rec %}
-                {% set cls = {'Present':'att-P','Late':'att-L','Absent':'att-A','Half Day':'att-H','Leave':'att-LV'}.get(rec.status, '') %}
-                <td class="{{ cls }}{{ ' att-today' if is_today }}" title="{{ rec.status }}{% if rec.clock_in %} | In: {{ rec.clock_in }}{% endif %}{% if rec.clock_out %} Out: {{ rec.clock_out }}{% endif %}">
-                  {{ day }}<br><small>{{ {'Present':'P','Late':'L','Absent':'A','Half Day':'HD','Leave':'LV'}.get(rec.status,'?') }}</small>
+                {% set cls_map = {'Present':'att-P','Late':'att-L','Absent':'att-A','Half Day':'att-H','Leave':'att-LV','Pending':'att-PN'} %}
+                {% set lbl_map = {'Present':'P','Late':'L','Absent':'A','Half Day':'HD','Leave':'LV','Pending':'⏳'} %}
+                {% set tip %}{{ rec.status }}{% if rec.clock_in %} · In: {{ rec.clock_in | to12hr }}{% endif %}{% if rec.clock_out %} · Out: {{ rec.clock_out | to12hr }}{% endif %}{% endset %}
+                <td class="{{ cls_map.get(rec.status,'') }}{{ ' att-today' if is_today }}" title="{{ tip }}">
+                  {{ day }}<br><small style="font-size:0.65rem;">{{ lbl_map.get(rec.status,'?') }}</small>
                 </td>
               {% else %}
-                <td class="{{ 'att-today' if is_today }}" style="color:rgba(240,230,211,0.3);">{{ day }}</td>
+                <td class="{{ 'att-today' if is_today }}" style="color:rgba(240,230,211,0.25);">{{ day }}</td>
               {% endif %}
             {% endif %}
             {% endfor %}
@@ -199,9 +322,11 @@
           {% endfor %}
         </tbody>
       </table>
+
+      <!-- Legend -->
       <div class="d-flex flex-wrap gap-3 mt-3" style="font-size:0.75rem;">
-        {% for label, cls, color in [('Present','att-P','#7ce0aa'),('Late','att-L','#ffc107'),('Absent','att-A','#ff6b6b'),('Half Day','att-H','#9dc0ff'),('Leave','att-LV','#c4b5fd')] %}
-        <span style="color:{{ color }};"><i class="fas fa-square me-1"></i>{{ label }}</span>
+        {% for lbl, color in [('Present','#7ce0aa'),('Late','#ffc107'),('Absent','#ff6b6b'),('Half Day','#9dc0ff'),('Leave','#c4b5fd'),('Pending','#ffc36b')] %}
+        <span style="color:{{ color }};"><i class="fas fa-circle me-1" style="font-size:0.55rem;"></i>{{ lbl }}</span>
         {% endfor %}
       </div>
     </div>
@@ -210,21 +335,40 @@
     {% if monthly %}
     <div class="card-dark">
       <div style="font-family:'Playfair Display',serif;color:#fff;font-size:1rem;font-weight:700;margin-bottom:16px;">
-        <i class="fas fa-list me-2" style="color:#C9A84C;"></i>Monthly Records
+        <i class="fas fa-list-alt me-2" style="color:#C9A84C;"></i>{{ month_name }} {{ year }} — Records
       </div>
       <div class="table-responsive">
-        <table class="table table-dark table-hover" style="font-size:0.85rem;">
-          <thead style="color:rgba(240,230,211,0.4);">
-            <tr><th>Date</th><th>Clock In</th><th>Clock Out</th><th>Total Hours</th><th>OT Hours</th><th>Status</th></tr>
+        <table class="table table-dark rec-table mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Clock In</th>
+              <th>Clock Out</th>
+              <th>Hours</th>
+              <th>OT</th>
+              <th>Status</th>
+            </tr>
           </thead>
           <tbody>
             {% for r in monthly | sort(attribute='date', reverse=True) %}
             <tr>
-              <td>{{ r.date }}</td>
-              <td>{{ r.clock_in or '–' }}</td>
-              <td>{{ r.clock_out or '–' }}</td>
-              <td>{{ r.total_hours or '–' }}</td>
-              <td>{{ r.overtime_hours or 0 }}</td>
+              <td style="color:#fff;font-weight:600;">{{ r.date }}</td>
+              <td>
+                {% if r.clock_in %}
+                <span class="time-chip chip-in" style="padding:3px 10px;font-size:0.78rem;">
+                  <i class="fas fa-sign-in-alt" style="font-size:0.7rem;"></i>{{ r.clock_in | to12hr }}
+                </span>
+                {% else %}–{% endif %}
+              </td>
+              <td>
+                {% if r.clock_out %}
+                <span class="time-chip chip-out" style="padding:3px 10px;font-size:0.78rem;">
+                  <i class="fas fa-sign-out-alt" style="font-size:0.7rem;"></i>{{ r.clock_out | to12hr }}
+                </span>
+                {% else %}–{% endif %}
+              </td>
+              <td style="color:#E8C96A;">{{ r.total_hours or '–' }}{% if r.total_hours %}h{% endif %}</td>
+              <td style="color:rgba(240,230,211,0.5);">{{ r.overtime_hours or 0 }}h</td>
               <td><span class="status-badge s-{{ r.status | replace(' ','-') }}">{{ r.status }}</span></td>
             </tr>
             {% endfor %}
@@ -236,6 +380,35 @@
 
   </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script>
+// Live clock — 12hr IST
+function updateClock() {
+  const now = new Date();
+  // IST = UTC+5:30
+  const ist = new Date(now.getTime() + (5.5 * 60 * 60 * 1000) - (now.getTimezoneOffset() * 60 * 1000));
+  let h = ist.getHours(), m = ist.getMinutes(), s = ist.getSeconds();
+  const period = h < 12 ? 'AM' : 'PM';
+  h = h % 12 || 12;
+  const timeStr = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${period}`;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = `${days[ist.getDay()]}, ${ist.getDate()} ${months[ist.getMonth()]} ${ist.getFullYear()}`;
+  const el = document.getElementById('topClock');
+  const dl = document.getElementById('topDate');
+  if (el) el.textContent = timeStr;
+  if (dl) dl.textContent = dateStr;
+}
+updateClock();
+setInterval(updateClock, 1000);
+// Hamburger drawer
+const _hbtn = document.getElementById('empHamburger');
+const _hdrawer = document.getElementById('empDrawer');
+if (_hbtn && _hdrawer) {
+  _hbtn.addEventListener('click', () => { _hbtn.classList.toggle('open'); _hdrawer.classList.toggle('open'); });
+  _hdrawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { _hbtn.classList.remove('open'); _hdrawer.classList.remove('open'); }));
+}
+</script>
 </body>
 </html>

@@ -68,8 +68,8 @@ if (canvas) {
       this.size  = Math.random() * 2 + 0.5;
       this.speedX = (Math.random() - 0.5) * 0.4;
       this.speedY = (Math.random() - 0.5) * 0.4;
-      this.alpha = Math.random() * 0.5 + 0.1;
-      this.color = Math.random() > 0.5 ? '215,180,106' : '255,255,255';
+      this.alpha = Math.random() * 0.6 + 0.2;
+      this.color = '255,255,255';
     }
     update() {
       this.x += this.speedX;
@@ -287,4 +287,19 @@ document.querySelectorAll('.tilt-card').forEach(card => {
 
   resetTimer();
   window.addEventListener('resize', () => goTo(0));
+})();
+
+/* ── Live Clock ── */
+(function () {
+  const el = document.getElementById('liveClock');
+  if (!el) return;
+  function tick() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    const ampm = h < 12 ? 'AM' : 'PM';
+    h = h % 12 || 12;
+    el.textContent = `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')} ${ampm}`;
+  }
+  tick();
+  setInterval(tick, 1000);
 })();
