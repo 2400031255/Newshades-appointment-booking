@@ -196,7 +196,15 @@
 
     /* Read-only badge */
     .readonly-badge { font-size:0.68rem; color:rgba(255,255,255,0.30); border:1px solid rgba(255,255,255,0.08); padding:2px 8px; border-radius:999px; margin-left:8px; }
-      /* iOS zoom fix */
+
+    /* Pagination */
+    .pg-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:20px; }
+    .pg-btn { padding:6px 14px; border-radius:999px; border:1px solid rgba(212,175,55,0.25); background:rgba(255,255,255,0.03); color:rgba(255,255,255,0.5); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .pg-btn:hover:not(:disabled) { border-color:rgba(212,175,55,0.5); color:#F5D060; }
+    .pg-btn:disabled { opacity:0.3; cursor:default; }
+    .pg-btn.active { background:rgba(212,175,55,0.15); border-color:rgba(212,175,55,0.5); color:#F5D060; }
+    .pg-info { font-size:0.78rem; color:rgba(255,255,255,0.35); margin-left:4px; }
+    /* iOS zoom fix */
     input,select,textarea { font-size:16px !important; }
   </style>
 </head>
@@ -315,16 +323,19 @@
     </div>
 
     <div class="enq-filter-wrap">
-      <button class="enq-filter-btn active" onclick="setFilter('all',this)">All</button>
-      <button class="enq-filter-btn" onclick="setFilter('pending',this)">Pending</button>
-      <button class="enq-filter-btn" onclick="setFilter('contacted',this)">Contacted</button>
-      <button class="enq-filter-btn" onclick="setFilter('confirmed',this)">Confirmed</button>
-      {% if level >= 3 %}<button class="enq-filter-btn" onclick="setFilter('closed',this)">Closed</button>{% endif %}
+      {% for lbl, val in [('All','all'),('Pending','pending'),('Contacted','contacted'),('Confirmed','confirmed')] %}
+      <a href="?status={{ val }}&page=1" class="enq-filter-btn {{ 'active' if status_filter == val }}">
+        {{ lbl }}
+      </a>
+      {% endfor %}
+      {% if level >= 3 %}
+      <a href="?status=closed&page=1" class="enq-filter-btn {{ 'active' if status_filter == 'closed' }}">Closed</a>
+      {% endif %}
     </div>
 
     {% if enquiries %}
+      <div id="enqCards">
       {% for e in enquiries %}
-      {% set is_mine = (e.get('assigned_employee_id') is none and level < 2) or (level >= 2) %}
       {% set can_edit = (level == 1 and e.assigned_employee_id == session.emp_id) or level >= 2 %}
       <div class="enq-card" data-status="{{ e.status.lower() }}" data-search="{{ (e.customer_name ~ ' ' ~ e.customer_phone ~ ' ' ~ e.selected_services) | lower }}">
         <!-- Card header -->
@@ -432,6 +443,37 @@
         {% endif %}
       </div>
       {% endfor %}
+      </div><!-- #enqCards -->
+
+      <!-- Server-side pagination -->
+      {% if pages > 1 %}
+      <div class="pg-bar">
+        {% if page > 1 %}
+        <a href="?status={{ status_filter }}&page={{ page-1 }}" class="pg-btn">&larr; Prev</a>
+        {% else %}
+        <button class="pg-btn" disabled>&larr; Prev</button>
+        {% endif %}
+
+        {% for p in range(1, pages+1) %}
+          {% if p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
+            {% set s = (p-1)*50+1 %}
+            {% set e2 = [p*50, total_filtered]|min %}
+            <a href="?status={{ status_filter }}&page={{ p }}"
+               class="pg-btn {{ 'active' if p == page }}">{{ s }}&ndash;{{ e2 }}</a>
+          {% elif p == page-3 or p == page+3 %}
+            <span class="pg-info">&hellip;</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if page < pages %}
+        <a href="?status={{ status_filter }}&page={{ page+1 }}" class="pg-btn">Next &rarr;</a>
+        {% else %}
+        <button class="pg-btn" disabled>Next &rarr;</button>
+        {% endif %}
+
+        <span class="pg-info">{{ (page-1)*50+1 }}&ndash;{{ [page*50, total_filtered]|min }} of {{ total_filtered }}</span>
+      </div>
+      {% endif %}
 
     {% else %}
     <div style="text-align:center;padding:60px 20px;">
@@ -457,41 +499,30 @@ function updateEmpClock() {
   const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const dateStr = days[ist.getDay()]+', '+ist.getDate()+' '+months[ist.getMonth()]+' '+ist.getFullYear();
-  ['empClock','headerClock'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=timeStr; });
-  const hd = document.getElementById('headerDate'); if(hd) hd.textContent=dateStr;
+  ['empClock','headerClock'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=timeStr; });
+  const hd=document.getElementById('headerDate'); if(hd) hd.textContent=dateStr;
 }
-updateEmpClock();
-setInterval(updateEmpClock, 1000);
+updateEmpClock(); setInterval(updateEmpClock,1000);
 
-// ── Smart auto-refresh — skip if user is typing ──
+// ── Auto-refresh (skip if typing) ──
 setInterval(function(){
-  const a = document.activeElement;
-  if (a && (a.tagName==='TEXTAREA' || a.tagName==='INPUT')) return;
+  const a=document.activeElement;
+  if(a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT')) return;
   location.reload();
-}, 60000);
+},60000);
 
-// ── Hamburger drawer ──
-const _hbtn = document.getElementById('empHamburger');
-const _hdrawer = document.getElementById('empDrawer');
-if (_hbtn && _hdrawer) {
-  _hbtn.addEventListener('click', () => { _hbtn.classList.toggle('open'); _hdrawer.classList.toggle('open'); });
-  _hdrawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { _hbtn.classList.remove('open'); _hdrawer.classList.remove('open'); }));
+// ── Hamburger ──
+const _hbtn=document.getElementById('empHamburger'), _hdrawer=document.getElementById('empDrawer');
+if(_hbtn&&_hdrawer){
+  _hbtn.addEventListener('click',()=>{_hbtn.classList.toggle('open');_hdrawer.classList.toggle('open');});
+  _hdrawer.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{_hbtn.classList.remove('open');_hdrawer.classList.remove('open');}));
 }
 
-// ── Filter + Search ──
-let _activeFilter = 'all';
-function setFilter(status, btn) {
-  _activeFilter = status;
-  document.querySelectorAll('.enq-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  filterEnquiries();
-}
-function filterEnquiries() {
-  const q = (document.getElementById('enqSearch').value||'').toLowerCase();
-  document.querySelectorAll('.enq-card').forEach(card => {
-    const statusMatch = _activeFilter==='all' || card.dataset.status===_activeFilter;
-    const textMatch = !q || card.dataset.search.includes(q);
-    card.style.display = (statusMatch && textMatch) ? '' : 'none';
+// ── Client-side search within current page ──
+function filterEnquiries(){
+  const q=(document.getElementById('enqSearch').value||'').toLowerCase();
+  document.querySelectorAll('#enqCards .enq-card').forEach(c=>{
+    c.style.display=(!q||c.dataset.search.includes(q))?'':' none';
   });
 }
 </script>

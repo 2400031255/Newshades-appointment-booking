@@ -82,6 +82,8 @@ def logout():
     return redirect(url_for('auth.login'))
 
 
+PER_PAGE = 50
+
 @employee_bp.route('/dashboard')
 @emp_required
 def dashboard():
@@ -90,28 +92,42 @@ def dashboard():
     emp   = db.get_employee_by_id(eid)
     role  = session.get('emp_role', '')
 
-    # Receptionist gets a dedicated dashboard
     if role == 'Receptionist':
         return redirect(url_for('employee.receptionist_dashboard'))
 
     if level >= 2:
-        enquiries = db.get_all_enquiries()
+        all_enqs = db.get_all_enquiries()
     else:
-        all_enqs  = db.get_all_enquiries()
-        enquiries = [e for e in all_enqs if e.get('assigned_employee_id') == str(eid)]
+        all_enqs = [e for e in db.get_all_enquiries() if e.get('assigned_employee_id') == str(eid)]
 
-    total     = len(enquiries)
-    pending   = sum(1 for e in enquiries if e['status'] == 'Pending')
-    contacted = sum(1 for e in enquiries if e['status'] == 'Contacted')
-    confirmed = sum(1 for e in enquiries if e['status'] == 'Confirmed')
+    # status filter
+    status_filter = request.args.get('status', 'all')
+    if status_filter != 'all':
+        filtered = [e for e in all_enqs if e['status'].lower() == status_filter.lower()]
+    else:
+        filtered = all_enqs
+
+    total_all = len(all_enqs)
+    pending   = sum(1 for e in all_enqs if e['status'] == 'Pending')
+    contacted = sum(1 for e in all_enqs if e['status'] == 'Contacted')
+    confirmed = sum(1 for e in all_enqs if e['status'] == 'Confirmed')
+
+    total_filtered = len(filtered)
+    page      = max(1, int(request.args.get('page', 1)))
+    pages     = max(1, (total_filtered + PER_PAGE - 1) // PER_PAGE)
+    page      = min(page, pages)
+    enquiries = filtered[(page-1)*PER_PAGE : page*PER_PAGE]
 
     all_employees = db.get_all_employees(active_only=True) if level >= 3 else []
 
     return render_template('employee/dashboard.html',
                            enquiries=enquiries, emp=emp, level=level,
-                           total=total, pending=pending,
+                           total=total_all, pending=pending,
                            contacted=contacted, confirmed=confirmed,
-                           all_employees=all_employees)
+                           all_employees=all_employees,
+                           page=page, pages=pages,
+                           total_filtered=total_filtered,
+                           status_filter=status_filter)
 
 
 @employee_bp.route('/receptionist')
@@ -125,28 +141,39 @@ def receptionist_dashboard():
 
     all_enquiries = db.get_all_enquiries()
 
-    # Today's appointments
-    today_enqs = [e for e in all_enquiries if str(e.get('preferred_date', ''))[:10] == today]
-    today_enqs = sorted(today_enqs, key=lambda x: x.get('preferred_time') or '')
+    today_enqs = sorted(
+        [e for e in all_enquiries if str(e.get('preferred_date', ''))[:10] == today],
+        key=lambda x: x.get('preferred_time') or ''
+    )
 
-    # Stats
-    total     = len(all_enquiries)
-    pending   = sum(1 for e in all_enquiries if e['status'] == 'Pending')
-    confirmed = sum(1 for e in all_enquiries if e['status'] == 'Confirmed')
+    total       = len(all_enquiries)
+    pending     = sum(1 for e in all_enquiries if e['status'] == 'Pending')
+    confirmed   = sum(1 for e in all_enquiries if e['status'] == 'Confirmed')
     today_count = len(today_enqs)
 
-    # All employees for assignment
     all_employees = db.get_all_employees(active_only=True)
-
-    # Attendance status
     today_att = db.get_attendance_today(eid)
     can_att   = _can_mark_attendance()
 
+    # paginate all_enquiries
+    status_filter = request.args.get('status', 'all')
+    if status_filter != 'all':
+        filtered = [e for e in all_enquiries if e['status'].lower() == status_filter.lower()]
+    else:
+        filtered = all_enquiries
+    total_filtered = len(filtered)
+    page  = max(1, int(request.args.get('page', 1)))
+    pages = max(1, (total_filtered + PER_PAGE - 1) // PER_PAGE)
+    page  = min(page, pages)
+    page_enquiries = filtered[(page-1)*PER_PAGE : page*PER_PAGE]
+
     return render_template('employee/receptionist.html',
         emp=emp, today=today, today_enqs=today_enqs,
-        all_enquiries=all_enquiries, all_employees=all_employees,
+        all_enquiries=page_enquiries, all_employees=all_employees,
         total=total, pending=pending, confirmed=confirmed, today_count=today_count,
-        today_att=today_att, can_att=can_att)
+        today_att=today_att, can_att=can_att,
+        page=page, pages=pages, total_filtered=total_filtered,
+        status_filter=status_filter)
 
 
 # ── Attendance ────────────────────────────────────────────────────────────────
