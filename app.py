@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, redirect, url_for, request, current_app
+from flask import Flask, render_template, session, redirect, url_for, request, current_app, flash
 from flask_socketio import SocketIO, emit
 from flask_wtf.csrf import CSRFProtect
 from config import Config
