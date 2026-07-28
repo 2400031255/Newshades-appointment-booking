@@ -196,8 +196,17 @@ def create_app():
         else:
             uid = guest['id']
         db.create_enquiry(str(uid), services, pref_date, pref_time, message)
-        flash('Enquiry submitted! We will contact you shortly to confirm.', 'enq_success')
-        return redirect(url_for('index') + '#enquire')
+        # Render index directly so flash popup shows regardless of login state
+        try:
+            reviews = db.get_recent_reviews(limit=6)
+        except Exception:
+            reviews = []
+        try:
+            svcs = db.get_all_services(active_only=True)[:6]
+        except Exception:
+            svcs = []
+        flash('Your enquiry has been submitted! We will contact you shortly to confirm.', 'enq_success')
+        return render_template('index.html', reviews=reviews, services=svcs)
 
     @app.route('/ping')
     def ping():
