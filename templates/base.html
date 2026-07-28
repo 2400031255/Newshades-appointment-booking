@@ -333,11 +333,13 @@
   {% if messages %}
     <div class="flash-container">
       {% for cat, msg in messages %}
-        <div class="flash-alert flash-{{ cat }}">
+        {% if not cat.startswith('enq_') %}
+        <div class="flash-alert flash-{{ 'success' if cat == 'success' else 'danger' }}">
           <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }} me-2"></i>
           {{ msg }}
           <button class="flash-close" onclick="this.parentElement.remove()">×</button>
         </div>
+        {% endif %}
       {% endfor %}
     </div>
   {% endif %}

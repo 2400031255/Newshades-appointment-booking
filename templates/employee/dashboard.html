@@ -11,34 +11,58 @@
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
   <style>
-    body { background:#0c0b10; min-height:100vh; font-family:'DM Sans',sans-serif; }
+    body { background:#000000; min-height:100vh; font-family:'DM Sans',sans-serif; }
 
     /* ── Topbar ── */
     .emp-topbar {
       position:fixed; top:0; left:0; right:0; z-index:200;
-      background:rgba(12,11,16,0.97); backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(201,168,76,0.12);
-      padding:0 16px; height:60px;
-      display:flex; align-items:center; justify-content:space-between;
+      background:rgba(0,0,0,0.97); backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(212,175,55,0.15);
+      padding:0 20px; height:54px;
+      display:flex; align-items:center; gap:0;
     }
-    .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1rem; font-weight:700; white-space:nowrap; }
+    .emp-brand {
+      font-family:'Playfair Display',serif; color:#fff;
+      font-size:0.95rem; font-weight:700; white-space:nowrap;
+      margin-right:16px;
+    }
 
     /* Role badge colours */
     .role-badge {
-      padding:3px 10px; border-radius:999px; font-size:0.65rem; font-weight:700; letter-spacing:0.1em;
+      padding:3px 10px; border-radius:999px; font-size:0.62rem; font-weight:700; letter-spacing:0.1em;
     }
-    .role-1 { background:rgba(105,152,255,0.12); border:1px solid rgba(105,152,255,0.25); color:#9dc0ff; }
-    .role-2 { background:rgba(201,168,76,0.12);  border:1px solid rgba(201,168,76,0.3);   color:#E8C96A; }
-    .role-3 { background:rgba(139,92,246,0.14);  border:1px solid rgba(139,92,246,0.3);   color:#c4b5fd; }
+    .role-1 { background:rgba(212,175,55,0.14); border:1px solid rgba(212,175,55,0.3); color:#F5D060; }
+    .role-2 { background:rgba(212,175,55,0.14); border:1px solid rgba(212,175,55,0.3); color:#F5D060; }
+    .role-3 { background:rgba(212,175,55,0.18); border:1px solid rgba(212,175,55,0.4); color:#FFE88A; }
+
+    /* Desktop nav — LEFT side after brand */
+    .emp-desktop-nav {
+      display:flex; align-items:center; gap:2px; flex:1;
+    }
+    .emp-desktop-nav a {
+      color:rgba(255,255,255,0.55); text-decoration:none;
+      font-size:0.8rem; font-weight:500;
+      padding:6px 12px; border-radius:8px;
+      transition:all 0.18s;
+    }
+    .emp-desktop-nav a:hover { color:#F5D060; background:rgba(212,175,55,0.10); }
+    .emp-desktop-nav a.active { color:#F5D060; background:rgba(212,175,55,0.12); }
+    .emp-desktop-nav .logout-link { color:rgba(255,107,107,0.8); margin-left:4px; }
+    .emp-desktop-nav .logout-link:hover { color:#ff6b6b; background:rgba(255,107,107,0.08); }
+    .emp-desktop-nav .emp-name-tag {
+      color:rgba(255,255,255,0.35); font-size:0.78rem;
+      padding:6px 10px; cursor:default;
+    }
 
     /* Hamburger */
     .emp-hamburger {
       display:none; flex-direction:column; justify-content:center; gap:5px;
-      width:40px; height:40px; background:none; border:none; cursor:pointer; padding:4px;
+      width:38px; height:38px; background:none; border:none; cursor:pointer; padding:4px;
+      margin-left:auto;
     }
     .emp-hamburger span {
       display:block; height:2px; border-radius:2px;
-      background:rgba(240,230,211,0.8); transition:all 0.25s;
+      background:rgba(255,255,255,0.75); transition:all 0.25s;
     }
     .emp-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
     .emp-hamburger.open span:nth-child(2) { opacity:0; }
@@ -46,28 +70,28 @@
 
     /* Drawer */
     .emp-drawer {
-      position:fixed; top:60px; left:0; right:0; z-index:199;
-      background:rgba(10,9,14,0.98); backdrop-filter:blur(24px);
-      border-bottom:1px solid rgba(201,168,76,0.15);
-      padding:16px 20px 20px;
+      position:fixed; top:54px; left:0; right:0; z-index:199;
+      background:rgba(0,0,0,0.98); backdrop-filter:blur(24px);
+      border-bottom:1px solid rgba(212,175,55,0.15);
+      padding:14px 18px 18px;
       display:none; flex-direction:column; gap:4px;
     }
     .emp-drawer.open { display:flex; }
     .emp-drawer a {
-      color:rgba(240,230,211,0.75); text-decoration:none;
-      font-size:0.95rem; font-weight:500;
-      padding:12px 14px; border-radius:12px;
+      color:rgba(255,255,255,0.65); text-decoration:none;
+      font-size:0.9rem; font-weight:500;
+      padding:11px 14px; border-radius:10px;
       border:1px solid transparent; transition:all 0.18s;
       display:flex; align-items:center; gap:10px;
     }
     .emp-drawer a:hover, .emp-drawer a.active {
-      background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.2); color:#E8C96A;
+      background:rgba(212,175,55,0.10); border-color:rgba(212,175,55,0.22); color:#F5D060;
     }
     .emp-drawer a.logout-link { color:#ff6b6b; }
     .emp-drawer a.logout-link:hover { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.2); }
     .emp-drawer-divider { height:1px; background:rgba(255,255,255,0.06); margin:6px 0; }
     .emp-drawer-name {
-      font-size:0.78rem; color:rgba(240,230,211,0.35);
+      font-size:0.75rem; color:rgba(255,255,255,0.30);
       padding:4px 14px 8px; letter-spacing:0.06em;
     }
 
@@ -80,70 +104,58 @@
       .emp-hamburger { display:flex; }
       .emp-desktop-nav { display:none !important; }
     }
-    .emp-desktop-nav {
-      display:flex; align-items:center; gap:12px;
-    }
-    .emp-desktop-nav a {
-      color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.82rem;
-    }
-    .emp-desktop-nav a:hover { color:#E8C96A; }
-    .emp-desktop-nav .logout-link { color:#ff6b6b; }
 
-    .emp-shell { padding:76px 0 60px; }
+    .emp-shell { padding:70px 0 60px; }
 
     /* ── Stat pills ── */
     .stat-pill {
-      border-radius:18px; padding:20px 22px;
-      background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));
-      border:1px solid rgba(201,168,76,0.14);
+      border-radius:16px; padding:18px 20px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(212,175,55,0.18);
     }
-    .stat-pill-num { font-family:'Playfair Display',serif; font-size:1.8rem; font-weight:700; }
-    .stat-pill-lbl { font-size:0.75rem; color:rgba(240,230,211,0.5); text-transform:uppercase; letter-spacing:0.1em; }
+    .stat-pill-num { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:700; }
+    .stat-pill-lbl { font-size:0.72rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em; }
 
     /* ── Enquiry card ── */
     .enq-card {
-      border-radius:18px; padding:22px;
-      background:linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
-      border:1px solid rgba(201,168,76,0.14);
-      margin-bottom:14px; transition:border-color 0.2s;
+      border-radius:16px; padding:20px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid rgba(212,175,55,0.14);
+      margin-bottom:12px; transition:border-color 0.2s;
     }
-    .enq-card:hover { border-color:rgba(201,168,76,0.28); }
+    .enq-card:hover { border-color:rgba(212,175,55,0.32); }
 
     /* Status badges */
     .badge-pending   { background:rgba(255,170,77,0.16);  color:#ffc36b;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
-    .badge-contacted { background:rgba(105,152,255,0.16); color:#9dc0ff;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .badge-contacted { background:rgba(212,175,55,0.16); color:#F5D060;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
     .badge-confirmed { background:rgba(71,188,121,0.16);  color:#7ce0aa;  padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
-    .badge-closed    { background:rgba(150,150,150,0.14); color:rgba(240,230,211,0.45); padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
+    .badge-closed    { background:rgba(150,150,150,0.14); color:rgba(255,255,255,0.40); padding:4px 12px; border-radius:999px; font-size:0.72rem; font-weight:700; }
 
     /* Form controls */
     .emp-select {
       padding:8px 12px; border-radius:10px;
-      background:rgba(255,255,255,0.06); border:1.5px solid rgba(201,168,76,0.2);
-      color:#fff; outline:none; font-size:0.85rem; cursor:pointer;
+      background:rgba(255,255,255,0.05); border:1.5px solid rgba(212,175,55,0.25);
+      color:#fff; outline:none; font-size:16px; cursor:pointer;
     }
-    .emp-select-blue {
-      padding:8px 12px; border-radius:10px;
-      background:rgba(255,255,255,0.06); border:1.5px solid rgba(105,152,255,0.25);
-      color:#fff; outline:none; font-size:0.85rem; cursor:pointer;
-    }
+    .emp-select option { background:#0d0d12; }
     .emp-textarea {
       width:100%; padding:10px 12px; border-radius:10px;
-      background:rgba(255,255,255,0.05); border:1.5px solid rgba(201,168,76,0.15);
+      background:rgba(255,255,255,0.04); border:1.5px solid rgba(212,175,55,0.18);
       color:#fff; outline:none; resize:vertical; min-height:60px;
-      font-size:0.85rem; font-family:'DM Sans',sans-serif;
+      font-size:16px; font-family:'DM Sans',sans-serif;
     }
-    .emp-textarea::placeholder { color:rgba(240,230,211,0.3); }
+    .emp-textarea::placeholder { color:rgba(255,255,255,0.25); }
     .emp-save-btn {
       padding:8px 20px; border-radius:999px;
-      background:linear-gradient(135deg,#9dc0ff,#6998ff);
-      border:none; color:#0c0b10; font-weight:700; font-size:0.82rem; cursor:pointer;
+      background:linear-gradient(135deg,#F5D060,#D4AF37);
+      border:none; color:#0d0d12; font-weight:700; font-size:0.82rem; cursor:pointer;
       transition:opacity 0.2s;
     }
     .emp-save-btn:hover { opacity:0.85; }
-    .emp-save-btn-purple {
+    .emp-save-btn-gold {
       padding:8px 20px; border-radius:999px;
-      background:linear-gradient(135deg,#c4b5fd,#8b5cf6);
-      border:none; color:#fff; font-weight:700; font-size:0.82rem; cursor:pointer;
+      background:linear-gradient(135deg,#FFE88A,#D4AF37);
+      border:none; color:#0d0d12; font-weight:700; font-size:0.82rem; cursor:pointer;
     }
 
     /* Live dot */
@@ -152,41 +164,59 @@
 
     /* Role info banner */
     .role-banner {
-      border-radius:16px; padding:14px 20px; margin-bottom:24px;
-      display:flex; align-items:center; gap:12px; font-size:0.85rem;
+      border-radius:14px; padding:12px 18px; margin-bottom:20px;
+      display:flex; align-items:center; gap:12px; font-size:0.83rem;
     }
-    .role-banner-1 { background:rgba(105,152,255,0.07); border:1px solid rgba(105,152,255,0.18); color:#9dc0ff; }
-    .role-banner-2 { background:rgba(201,168,76,0.07);  border:1px solid rgba(201,168,76,0.2);   color:#E8C96A; }
-    .role-banner-3 { background:rgba(139,92,246,0.08);  border:1px solid rgba(139,92,246,0.22);  color:#c4b5fd; }
+    .role-banner-1 { background:rgba(212,175,55,0.07); border:1px solid rgba(212,175,55,0.18); color:#F5D060; }
+    .role-banner-2 { background:rgba(212,175,55,0.07); border:1px solid rgba(212,175,55,0.18); color:#F5D060; }
+    .role-banner-3 { background:rgba(212,175,55,0.10); border:1px solid rgba(212,175,55,0.25); color:#FFE88A; }
+
+    /* Stat icon */
+    .stat-pill { position:relative; overflow:hidden; }
+    .stat-pill-icon { position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:1.6rem; opacity:0.12; }
+
+    /* Live clock */
+    .emp-clock { font-family:'Playfair Display',serif; font-size:0.88rem; font-weight:700; color:rgba(255,255,255,0.75); letter-spacing:0.04em; white-space:nowrap; }
+
+    /* Filter tabs */
+    .enq-filter-wrap { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    .enq-filter-btn { padding:6px 16px; border-radius:999px; border:1px solid rgba(212,175,55,0.2); background:rgba(255,255,255,0.03); color:rgba(255,255,255,0.45); font-size:0.78rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .enq-filter-btn:hover { border-color:rgba(212,175,55,0.4); color:#F5D060; }
+    .enq-filter-btn.active { background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08)); border-color:rgba(212,175,55,0.5); color:#F5D060; }
+
+    /* Search */
+    .enq-search-wrap { position:relative; margin-bottom:16px; }
+    .enq-search { width:100%; padding:10px 14px 10px 38px; border-radius:12px; border:1.5px solid rgba(212,175,55,0.18); background:rgba(255,255,255,0.04); color:#fff; font-size:16px; outline:none; transition:border-color 0.2s; }
+    .enq-search:focus { border-color:rgba(212,175,55,0.45); }
+    .enq-search::placeholder { color:rgba(255,255,255,0.25); }
+    .enq-search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:rgba(212,175,55,0.5); font-size:0.8rem; pointer-events:none; }
 
     /* Section title */
     .sec-title { font-family:'Playfair Display',serif; color:#fff; font-size:1.1rem; font-weight:700; margin-bottom:16px; }
 
-    /* Read-only card for Senior Stylist */
-    .readonly-badge {
-      font-size:0.68rem; color:rgba(240,230,211,0.35); border:1px solid rgba(255,255,255,0.08);
-      padding:2px 8px; border-radius:999px; margin-left:8px;
-    }
+    /* Read-only badge */
+    .readonly-badge { font-size:0.68rem; color:rgba(255,255,255,0.30); border:1px solid rgba(255,255,255,0.08); padding:2px 8px; border-radius:999px; margin-left:8px; }
+      /* iOS zoom fix */
+    input,select,textarea { font-size:16px !important; }
   </style>
 </head>
 <body>
 
 <!-- Topbar -->
 <div class="emp-topbar">
-  <div class="d-flex align-items-center gap-2">
-    <div class="emp-brand">New Shades</div>
-    <span class="role-badge role-{{ level }}">
-      <i class="fas fa-{{ 'user' if level==1 else ('star' if level==2 else 'crown') }} me-1"></i>
-      {{ session.emp_role | upper }}
-    </span>
-  </div>
-  <!-- Desktop nav -->
-  <div class="emp-desktop-nav">
+  <div class="emp-brand">New Shades</div>
+  <span class="role-badge role-{{ level }}">
+    <i class="fas fa-{{ 'user' if level==1 else ('star' if level==2 else 'crown') }} me-1"></i>
+    {{ session.emp_role | upper }}
+  </span>
+  <!-- Desktop nav — left side -->
+  <div class="emp-desktop-nav" style="margin-left:20px;">
     <a href="{{ url_for('employee.dashboard') }}">Enquiries</a>
     <a href="{{ url_for('employee.attendance') }}">Attendance</a>
     <a href="{{ url_for('employee.salary') }}">Salary</a>
     <a href="{{ url_for('employee.leave') }}">Leave</a>
-    <span style="color:rgba(240,230,211,0.5);font-size:0.82rem;">{{ session.emp_name }}</span>
+    <span class="emp-name-tag">{{ session.emp_name }}</span>
+    <span class="emp-clock" id="empClock"></span>
     <a href="{{ url_for('employee.logout') }}" class="logout-link"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
   <!-- Mobile hamburger -->
@@ -211,8 +241,8 @@
   {% if messages %}
   <div style="position:fixed;top:72px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;">
     {% for cat, msg in messages %}
-    <div style="pointer-events:all;padding:12px 18px;border-radius:14px;background:#1a1510;border:1px solid rgba(201,168,76,0.25);color:#fff;font-size:0.88rem;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
-      <i class="fas fa-check-circle me-2" style="color:#7ce0aa;"></i>{{ msg }}
+    <div style="pointer-events:all;padding:12px 18px;border-radius:14px;background:#0d0d12;border:1px solid rgba(212,175,55,0.25);color:#fff;font-size:0.88rem;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+      <i class="fas fa-{{ 'check-circle' if cat=='success' else 'exclamation-circle' }} me-2" style="color:{{ '#7ce0aa' if cat=='success' else '#ff9a9a' }};"></i>{{ msg }}
     </div>
     {% endfor %}
   </div>
@@ -223,16 +253,22 @@
   <div class="container">
 
     <!-- Header -->
-    <div class="mb-3">
-      <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;margin-bottom:4px;">
-        Good day, {{ emp.full_name.split()[0] }} 👋
-      </h1>
-      <p style="color:rgba(240,230,211,0.5);font-size:0.88rem;margin:0;">
-        <span class="live-dot"></span>
-        {% if level == 1 %}Your assigned enquiries — live{% endif %}
-        {% if level == 2 %}All salon enquiries — view &amp; update assigned{% endif %}
-        {% if level == 3 %}Full management view — all enquiries, reassign &amp; close{% endif %}
-      </p>
+    <div class="mb-3 d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;margin-bottom:4px;">
+          Good day, {{ emp.full_name.split()[0] }} 👋
+        </h1>
+        <p style="color:rgba(255,255,255,0.50);font-size:0.88rem;margin:0;">
+          <span class="live-dot"></span>
+          {% if level == 1 %}Your assigned enquiries — live{% endif %}
+          {% if level == 2 %}All salon enquiries — view &amp; update assigned{% endif %}
+          {% if level == 3 %}Full management view — all enquiries, reassign &amp; close{% endif %}
+        </p>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:'Playfair Display',serif;color:#F5D060;font-size:1rem;font-weight:700;" id="headerClock"></div>
+        <div style="color:rgba(255,255,255,0.35);font-size:0.75rem;" id="headerDate"></div>
+      </div>
     </div>
 
     <!-- Role banner -->
@@ -250,14 +286,15 @@
     <!-- Stats -->
     <div class="row g-3 mb-4">
       {% set stat_data = [
-        (total,     'Total',     '#C9A84C'),
-        (pending,   'Pending',   '#ffc36b'),
-        (contacted, 'Contacted', '#9dc0ff'),
-        (confirmed, 'Confirmed', '#7ce0aa')
+        (total,     'Total',     '#F5D060', 'clipboard-list'),
+        (pending,   'Pending',   '#ffc36b', 'clock'),
+        (contacted, 'Contacted', '#FFE88A', 'phone'),
+        (confirmed, 'Confirmed', '#7ce0aa', 'check-circle')
       ] %}
-      {% for num, lbl, color in stat_data %}
+      {% for num, lbl, color, icon in stat_data %}
       <div class="col-6 col-md-3">
         <div class="stat-pill">
+          <i class="fas fa-{{ icon }} stat-pill-icon" style="color:{{ color }};"></i>
           <div class="stat-pill-num" style="color:{{ color }};">{{ num }}</div>
           <div class="stat-pill-lbl">{{ lbl }}</div>
         </div>
@@ -265,68 +302,82 @@
       {% endfor %}
     </div>
 
-    <!-- Section title -->
+    <!-- Section title + search + filters -->
     <div class="sec-title">
-      <i class="fas fa-clipboard-list me-2" style="color:#C9A84C;"></i>
+      <i class="fas fa-clipboard-list me-2" style="color:#F5D060;"></i>
       {% if level == 1 %}My Assigned Enquiries{% else %}All Enquiries{% endif %}
+      <span style="font-size:0.75rem;color:rgba(255,255,255,0.3);font-weight:400;margin-left:8px;">{{ enquiries|length }} total</span>
+    </div>
+
+    <div class="enq-search-wrap">
+      <i class="fas fa-search enq-search-icon"></i>
+      <input type="text" class="enq-search" id="enqSearch" placeholder="Search by name, phone or service…" oninput="filterEnquiries()">
+    </div>
+
+    <div class="enq-filter-wrap">
+      <button class="enq-filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="enq-filter-btn" onclick="setFilter('pending',this)">Pending</button>
+      <button class="enq-filter-btn" onclick="setFilter('contacted',this)">Contacted</button>
+      <button class="enq-filter-btn" onclick="setFilter('confirmed',this)">Confirmed</button>
+      {% if level >= 3 %}<button class="enq-filter-btn" onclick="setFilter('closed',this)">Closed</button>{% endif %}
     </div>
 
     {% if enquiries %}
       {% for e in enquiries %}
       {% set is_mine = (e.get('assigned_employee_id') is none and level < 2) or (level >= 2) %}
       {% set can_edit = (level == 1 and e.assigned_employee_id == session.emp_id) or level >= 2 %}
-      <div class="enq-card">
+      <div class="enq-card" data-status="{{ e.status.lower() }}" data-search="{{ (e.customer_name ~ ' ' ~ e.customer_phone ~ ' ' ~ e.selected_services) | lower }}">
         <!-- Card header -->
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
           <div>
             <div style="font-weight:700;color:#fff;font-size:1rem;">
               {{ e.customer_name }}
-              <span style="color:rgba(240,230,211,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
+              <span style="color:rgba(255,255,255,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
               {% if not can_edit %}<span class="readonly-badge">read-only</span>{% endif %}
             </div>
-            <div style="color:rgba(240,230,211,0.5);font-size:0.82rem;margin-top:2px;">
+            <div style="color:rgba(255,255,255,0.50);font-size:0.82rem;margin-top:2px;">
               <i class="fas fa-phone me-1"></i>{{ e.customer_phone }}
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             {% if level >= 2 and e.emp_name %}
-            <span style="font-size:0.75rem;color:#9dc0ff;"><i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}</span>
+            <span style="font-size:0.75rem;color:#F5D060;"><i class="fas fa-user-tie me-1"></i>{{ e.emp_name }}</span>
             {% elif level >= 2 %}
-            <span style="font-size:0.75rem;color:rgba(240,230,211,0.3);">Unassigned</span>
+            <span style="font-size:0.75rem;color:rgba(255,255,255,0.30);">Unassigned</span>
             {% endif %}
             <span class="badge-{{ e.status.lower() }}">{{ e.status }}</span>
           </div>
         </div>
 
         <!-- Services & date -->
-        <div style="color:rgba(240,230,211,0.7);font-size:0.85rem;margin-bottom:8px;">
-          <i class="fas fa-concierge-bell me-1" style="color:#C9A84C;"></i>{{ e.selected_services }}
+        <div style="color:rgba(255,255,255,0.70);font-size:0.85rem;margin-bottom:8px;">
+          <i class="fas fa-concierge-bell me-1" style="color:#F5D060;"></i>{{ e.selected_services }}
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:0.8rem;color:rgba(240,230,211,0.5);margin-bottom:12px;">
-          <span><i class="fas fa-calendar-alt me-1" style="color:#C9A84C;"></i>
+        <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:0.8rem;color:rgba(255,255,255,0.50);margin-bottom:12px;">
+          <span><i class="fas fa-calendar-alt me-1" style="color:#F5D060;"></i>
             {% set d = e.preferred_date %}{% if d is string %}{{ d }}{% else %}{{ d.strftime('%d %b %Y') }}{% endif %}
           </span>
-          {% if e.preferred_time %}<span><i class="fas fa-clock me-1" style="color:#C9A84C;"></i>{{ e.preferred_time }}</span>{% endif %}
+          {% if e.preferred_time %}<span><i class="fas fa-clock me-1" style="color:#F5D060;"></i>{{ e.preferred_time }}</span>{% endif %}
         </div>
 
         <!-- Admin note -->
         {% if e.admin_notes %}
-        <div style="padding:10px 14px;border-radius:10px;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.15);font-size:0.82rem;color:rgba(240,230,211,0.7);margin-bottom:10px;">
-          <i class="fas fa-user-shield me-1" style="color:#C9A84C;"></i><strong>Admin note:</strong> {{ e.admin_notes }}
+        <div style="padding:10px 14px;border-radius:10px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.15);font-size:0.82rem;color:rgba(255,255,255,0.70);margin-bottom:10px;">
+          <i class="fas fa-user-shield me-1" style="color:#F5D060;"></i><strong>Admin note:</strong> {{ e.admin_notes }}
         </div>
         {% endif %}
 
         <!-- Customer message -->
         {% if e.message %}
-        <div style="font-size:0.8rem;color:rgba(240,230,211,0.4);margin-bottom:10px;">
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.40);margin-bottom:10px;">
           <i class="fas fa-comment-alt me-1"></i>{{ e.message[:120] }}{% if e.message|length > 120 %}…{% endif %}
         </div>
         {% endif %}
 
         <!-- Existing employee notes (read-only display) -->
         {% if e.employee_notes and not can_edit %}
-        <div style="padding:8px 12px;border-radius:10px;background:rgba(105,152,255,0.05);border:1px solid rgba(105,152,255,0.12);font-size:0.8rem;color:rgba(240,230,211,0.5);">
-          <i class="fas fa-sticky-note me-1" style="color:#9dc0ff;"></i>{{ e.employee_notes }}
+        <div style="padding:8px 12px;border-radius:10px;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.12);font-size:0.8rem;color:rgba(255,255,255,0.50);">
+          <i class="fas fa-sticky-note me-1" style="color:#F5D060;"></i>{{ e.employee_notes }}
         </div>
         {% endif %}
 
@@ -338,7 +389,7 @@
 
             <!-- Status -->
             <div>
-              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">STATUS</div>
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.40);margin-bottom:4px;letter-spacing:0.08em;">STATUS</div>
               <select name="status" class="emp-select">
                 {% set statuses = ['Pending','Contacted','Confirmed'] %}
                 {% if level >= 3 %}{% set statuses = ['Pending','Contacted','Confirmed','Closed'] %}{% endif %}
@@ -351,8 +402,8 @@
             <!-- Reassign — Manager only -->
             {% if level >= 3 %}
             <div>
-              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">ASSIGN TO</div>
-              <select name="assigned_employee_id" class="emp-select-blue">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.40);margin-bottom:4px;letter-spacing:0.08em;">ASSIGN TO</div>
+              <select name="assigned_employee_id" class="emp-select">
                 <option value="">— Unassigned —</option>
                 {% for emp2 in all_employees %}
                 <option value="{{ emp2.id }}" {{ 'selected' if e.assigned_employee_id == emp2.id }}>
@@ -365,7 +416,7 @@
 
             <!-- Notes -->
             <div style="flex:1;min-width:180px;">
-              <div style="font-size:0.7rem;color:rgba(240,230,211,0.4);margin-bottom:4px;letter-spacing:0.08em;">
+              <div style="font-size:0.7rem;color:rgba(255,255,255,0.40);margin-bottom:4px;letter-spacing:0.08em;">
                 {% if level >= 3 %}NOTES{% else %}YOUR NOTES{% endif %}
               </div>
               <textarea name="employee_notes" class="emp-textarea"
@@ -373,7 +424,7 @@
             </div>
 
             <!-- Save -->
-            <button type="submit" class="{{ 'emp-save-btn-purple' if level >= 3 else 'emp-save-btn' }}">
+            <button type="submit" class="{{ 'emp-save-btn-gold' if level >= 3 else 'emp-save-btn' }}">
               <i class="fas fa-save me-1"></i>Save
             </button>
           </div>
@@ -384,8 +435,8 @@
 
     {% else %}
     <div style="text-align:center;padding:60px 20px;">
-      <div style="font-size:3rem;color:rgba(201,168,76,0.2);margin-bottom:16px;"><i class="fas fa-clipboard-list"></i></div>
-      <p style="color:rgba(240,230,211,0.4);font-size:0.9rem;">
+      <div style="font-size:3rem;color:rgba(212,175,55,0.25);margin-bottom:16px;"><i class="fas fa-clipboard-list"></i></div>
+      <p style="color:rgba(255,255,255,0.40);font-size:0.9rem;">
         {% if level == 1 %}No enquiries assigned to you yet.{% else %}No enquiries found.{% endif %}
       </p>
     </div>
@@ -394,21 +445,54 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
 <script>
-// Auto-refresh every 30s
-setTimeout(function(){ location.reload(); }, 30000);
-// Hamburger drawer
+// ── Live clock (IST) ──
+function updateEmpClock() {
+  const now = new Date();
+  const ist = new Date(now.getTime() + (5.5*60*60*1000) - (now.getTimezoneOffset()*60*1000));
+  let h = ist.getHours(), m = ist.getMinutes(), s = ist.getSeconds();
+  const p = h < 12 ? 'AM' : 'PM'; h = h%12||12;
+  const timeStr = h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+p;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dateStr = days[ist.getDay()]+', '+ist.getDate()+' '+months[ist.getMonth()]+' '+ist.getFullYear();
+  ['empClock','headerClock'].forEach(id => { const el=document.getElementById(id); if(el) el.textContent=timeStr; });
+  const hd = document.getElementById('headerDate'); if(hd) hd.textContent=dateStr;
+}
+updateEmpClock();
+setInterval(updateEmpClock, 1000);
+
+// ── Smart auto-refresh — skip if user is typing ──
+setInterval(function(){
+  const a = document.activeElement;
+  if (a && (a.tagName==='TEXTAREA' || a.tagName==='INPUT')) return;
+  location.reload();
+}, 60000);
+
+// ── Hamburger drawer ──
 const _hbtn = document.getElementById('empHamburger');
 const _hdrawer = document.getElementById('empDrawer');
 if (_hbtn && _hdrawer) {
-  _hbtn.addEventListener('click', () => {
-    _hbtn.classList.toggle('open');
-    _hdrawer.classList.toggle('open');
+  _hbtn.addEventListener('click', () => { _hbtn.classList.toggle('open'); _hdrawer.classList.toggle('open'); });
+  _hdrawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { _hbtn.classList.remove('open'); _hdrawer.classList.remove('open'); }));
+}
+
+// ── Filter + Search ──
+let _activeFilter = 'all';
+function setFilter(status, btn) {
+  _activeFilter = status;
+  document.querySelectorAll('.enq-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterEnquiries();
+}
+function filterEnquiries() {
+  const q = (document.getElementById('enqSearch').value||'').toLowerCase();
+  document.querySelectorAll('.enq-card').forEach(card => {
+    const statusMatch = _activeFilter==='all' || card.dataset.status===_activeFilter;
+    const textMatch = !q || card.dataset.search.includes(q);
+    card.style.display = (statusMatch && textMatch) ? '' : 'none';
   });
-  _hdrawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
-    _hbtn.classList.remove('open'); _hdrawer.classList.remove('open');
-  }));
 }
 </script>
 </body>

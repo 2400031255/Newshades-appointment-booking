@@ -178,14 +178,14 @@ def create_app():
         pref_time = request.form.get('preferred_time', '').strip() or None
         message   = request.form.get('message', '').strip()[:500]
         if not full_name or not phone or not services or not pref_date:
-            flash('Please fill in all required fields.', 'danger')
+            flash('Please fill in all required fields.', 'enq_danger')
             return redirect(url_for('index') + '#enquire')
         try:
             if _date.fromisoformat(pref_date) < _date.today():
-                flash('Please choose today or a future date.', 'danger')
+                flash('Please choose today or a future date.', 'enq_danger')
                 return redirect(url_for('index') + '#enquire')
         except ValueError:
-            flash('Invalid date.', 'danger')
+            flash('Invalid date.', 'enq_danger')
             return redirect(url_for('index') + '#enquire')
         # Create or reuse a guest user record
         guest = db.get_user_by_phone(phone)
@@ -196,7 +196,7 @@ def create_app():
         else:
             uid = guest['id']
         db.create_enquiry(str(uid), services, pref_date, pref_time, message)
-        flash('Enquiry submitted! We will contact you shortly to confirm.', 'success')
+        flash('Enquiry submitted! We will contact you shortly to confirm.', 'enq_success')
         return redirect(url_for('index') + '#enquire')
 
     @app.route('/ping')

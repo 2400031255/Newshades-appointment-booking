@@ -12,7 +12,7 @@
   justify-content: center;
   padding: 90px 16px 60px;
   position: relative;
-  background: #060508;
+  background: #000000;
   overflow: hidden;
 }
 .auth-page::before {
@@ -20,8 +20,8 @@
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.13) 0%, transparent 45%),
-    radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.07) 0%, transparent 45%);
+    radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.10) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 80%, rgba(124,58,237,0.06) 0%, transparent 45%);
   pointer-events: none;
   z-index: 0;
 }
@@ -42,7 +42,7 @@
   margin: 0 0 4px;
 }
 .auth-brand-name-big span {
-  background: linear-gradient(90deg, var(--gold-2), var(--gold));
+  background: linear-gradient(90deg, #A78BFA, #7C3AED);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -51,9 +51,9 @@
   display: inline-block;
   padding: 2px 8px;
   border-radius: 5px;
-  background: rgba(201,168,76,0.15);
-  border: 1px solid rgba(201,168,76,0.35);
-  color: var(--gold-2);
+  background: rgba(124,58,237,0.15);
+  border: 1px solid rgba(124,58,237,0.35);
+  color: #A78BFA;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -64,7 +64,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(201,168,76,0.45);
+  color: rgba(167,139,250,0.45);
   margin: 0;
 }
 
@@ -74,8 +74,8 @@
   z-index: 1;
   width: min(100%, 460px);
   border-radius: 24px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02));
-  border: 1px solid rgba(201,168,76,0.22);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(124,58,237,0.22);
   box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
   overflow: hidden;
   backdrop-filter: blur(20px);
@@ -85,8 +85,8 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold-2), var(--gold), var(--gold-2), transparent);
-  opacity: 0.7;
+  background: linear-gradient(90deg, transparent, #A78BFA, #7C3AED, #A78BFA, transparent);
+  opacity: 0.8;
 }
 
 /* ── Tab switcher ── */
@@ -105,7 +105,7 @@
   border-radius: 9px;
   border: none;
   background: transparent;
-  color: rgba(245,235,215,0.45);
+  color: rgba(255,255,255,0.40);
   font-size: 0.9rem;
   font-weight: 600;
   font-family: inherit;
@@ -114,13 +114,13 @@
   letter-spacing: 0.02em;
 }
 .auth-tab.active {
-  background: linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.1));
-  border: 1px solid rgba(201,168,76,0.35);
-  color: var(--gold-2);
-  box-shadow: 0 4px 16px rgba(201,168,76,0.15);
+  background: linear-gradient(135deg, rgba(124,58,237,0.22), rgba(124,58,237,0.10));
+  border: 1px solid rgba(124,58,237,0.35);
+  color: #A78BFA;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.15);
 }
 .auth-tab:not(.active):hover {
-  color: rgba(245,235,215,0.75);
+  color: rgba(255,255,255,0.75);
   background: rgba(255,255,255,0.04);
 }
 
@@ -138,9 +138,9 @@
   color: #fff;
   margin: 0 0 5px;
 }
-.auth-welcome-title span { color: var(--gold-2); }
+.auth-welcome-title span { color: #A78BFA; }
 .auth-welcome-sub {
-  color: rgba(245,235,215,0.45);
+  color: rgba(255,255,255,0.40);
   font-size: 0.85rem;
   margin: 0;
 }
@@ -155,10 +155,10 @@
   font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(245,235,215,0.5);
+  color: rgba(255,255,255,0.45);
   font-weight: 600;
 }
-.anf-label i { color: var(--gold); font-size: 0.72rem; }
+.anf-label i { color: #A78BFA; font-size: 0.72rem; }
 .anf-wrap { position: relative; }
 .anf-input {
   width: 100%;
@@ -174,15 +174,15 @@
 }
 .anf-input::placeholder { color: rgba(255,255,255,0.22); }
 .anf-input:focus {
-  border-color: rgba(201,168,76,0.55);
-  background: rgba(201,168,76,0.05);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+  border-color: rgba(124,58,237,0.60);
+  background: rgba(124,58,237,0.06);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.14);
 }
 .anf-icon {
   position: absolute;
   left: 15px; top: 50%;
   transform: translateY(-50%);
-  color: rgba(201,168,76,0.6);
+  color: rgba(124,58,237,0.70);
   font-size: 0.85rem;
   pointer-events: none;
 }
@@ -191,11 +191,11 @@
   right: 13px; top: 50%;
   transform: translateY(-50%);
   border: none; background: transparent;
-  color: rgba(245,235,215,0.3);
+  color: rgba(255,255,255,0.28);
   cursor: pointer; padding: 4px;
   transition: color 0.2s;
 }
-.anf-eye:hover { color: var(--gold-2); }
+.anf-eye:hover { color: #A78BFA; }
 
 /* ── Remember / Forgot row ── */
 .anf-row {
@@ -210,17 +210,17 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(245,235,215,0.5);
+  color: rgba(255,255,255,0.45);
   font-size: 0.83rem;
   cursor: pointer;
 }
 .anf-remember input[type="checkbox"] {
   width: 15px; height: 15px;
-  accent-color: var(--gold);
+  accent-color: #7C3AED;
   cursor: pointer;
 }
 .anf-forgot {
-  color: var(--gold-2);
+  color: #A78BFA;
   font-size: 0.83rem;
   font-weight: 700;
   text-decoration: none;
@@ -234,8 +234,8 @@
   padding: 14px 20px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--gold-2), var(--gold));
-  color: #120e08;
+  background: linear-gradient(135deg, #A78BFA, #7C3AED);
+  color: #fff;
   font-size: 1rem;
   font-weight: 800;
   font-family: inherit;
@@ -246,7 +246,7 @@
   justify-content: center;
   gap: 10px;
   transition: transform 0.22s, box-shadow 0.22s;
-  box-shadow: 0 12px 32px rgba(201,168,76,0.3);
+  box-shadow: 0 12px 32px rgba(124,58,237,0.35);
   position: relative;
   overflow: hidden;
 }
@@ -254,11 +254,11 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent);
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
   opacity: 0;
   transition: opacity 0.22s;
 }
-.anf-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(201,168,76,0.42); }
+.anf-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 44px rgba(124,58,237,0.50); }
 .anf-btn:hover::before { opacity: 1; }
 .anf-btn:active { transform: scale(0.98); }
 
@@ -268,7 +268,7 @@
   align-items: center;
   gap: 12px;
   margin: 20px 0;
-  color: rgba(245,235,215,0.25);
+  color: rgba(255,255,255,0.22);
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -283,11 +283,11 @@
 .anf-footer {
   text-align: center;
   margin-top: 20px;
-  color: rgba(245,235,215,0.45);
+  color: rgba(255,255,255,0.40);
   font-size: 0.86rem;
 }
 .anf-footer a {
-  color: var(--gold-2);
+  color: #A78BFA;
   font-weight: 700;
   text-decoration: none;
   transition: color 0.2s;
@@ -302,7 +302,7 @@
   text-align: center;
 }
 .auth-back a {
-  color: rgba(245,235,215,0.35);
+  color: rgba(255,255,255,0.30);
   font-size: 0.82rem;
   text-decoration: none;
   display: inline-flex;
@@ -310,7 +310,7 @@
   gap: 6px;
   transition: color 0.2s;
 }
-.auth-back a:hover { color: var(--gold-2); }
+.auth-back a:hover { color: #A78BFA; }
 
 /* ── Flash ── */
 .anf-flash {
@@ -329,7 +329,7 @@
 
 /* ── Strength bar ── */
 .anf-strength { height: 3px; border-radius: 99px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 6px; }
-.anf-strength-fill { height: 100%; width: 0; border-radius: 99px; background: var(--gold); transition: width 0.3s, background 0.3s; }
+.anf-strength-fill { height: 100%; width: 0; border-radius: 99px; background: #7C3AED; transition: width 0.3s, background 0.3s; }
 
 @media (max-width: 480px) {
   .auth-form-body { padding: 20px 18px 24px; }
@@ -345,7 +345,6 @@
   <div class="auth-brand-head reveal-up">
     <div class="auth-brand-name-big">
       <span>New Shades</span>
-      <span class="auth-brand-luxe">LUXE</span>
     </div>
     <p class="auth-brand-sub-text">Premium Salon Platform</p>
   </div>
@@ -414,7 +413,7 @@
       </form>
 
       <div class="anf-footer">
-        <a href="{{ url_for('index') }}" style="color:rgba(245,235,215,0.4);font-size:0.82rem;text-decoration:none;"><i class="fas fa-arrow-left me-1"></i>Back to Home</a>
+        <a href="{{ url_for('index') }}" style="color:rgba(255,255,255,0.35);font-size:0.82rem;text-decoration:none;"><i class="fas fa-arrow-left me-1"></i>Back to Home</a>
       </div>
 
     </div>

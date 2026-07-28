@@ -11,41 +11,41 @@
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link href="{{ url_for('static', filename='css/style.css') }}?v={{ asset_v }}" rel="stylesheet"/>
   <style>
-    body { background:#0c0b10; min-height:100vh; font-family:'DM Sans',sans-serif; color:rgba(240,230,211,0.9); }
+    body { background:#000000; min-height:100vh; font-family:'DM Sans',sans-serif; color:rgba(255,255,255,0.9); }
     .emp-topbar {
       position:fixed; top:0; left:0; right:0; z-index:200;
       background:rgba(12,11,16,0.97); backdrop-filter:blur(20px);
-      border-bottom:1px solid rgba(201,168,76,0.12);
+      border-bottom:1px solid rgba(212,175,55,0.12);
       padding:0 16px; height:60px;
       display:flex; align-items:center; justify-content:space-between;
     }
     .emp-brand { font-family:'Playfair Display',serif; color:#fff; font-size:1rem; font-weight:700; }
     .emp-shell { padding:76px 0 60px; }
     .emp-hamburger { display:none; flex-direction:column; justify-content:center; gap:5px; width:40px; height:40px; background:none; border:none; cursor:pointer; padding:4px; }
-    .emp-hamburger span { display:block; height:2px; border-radius:2px; background:rgba(240,230,211,0.8); transition:all 0.25s; }
+    .emp-hamburger span { display:block; height:2px; border-radius:2px; background:rgba(255,255,255,0.8); transition:all 0.25s; }
     .emp-hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
     .emp-hamburger.open span:nth-child(2) { opacity:0; }
     .emp-hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
-    .emp-drawer { position:fixed; top:60px; left:0; right:0; z-index:199; background:rgba(10,9,14,0.98); backdrop-filter:blur(24px); border-bottom:1px solid rgba(201,168,76,0.15); padding:16px 20px 20px; display:none; flex-direction:column; gap:4px; }
+    .emp-drawer { position:fixed; top:60px; left:0; right:0; z-index:199; background:rgba(10,9,14,0.98); backdrop-filter:blur(24px); border-bottom:1px solid rgba(212,175,55,0.15); padding:16px 20px 20px; display:none; flex-direction:column; gap:4px; }
     .emp-drawer.open { display:flex; }
-    .emp-drawer a { color:rgba(240,230,211,0.75); text-decoration:none; font-size:0.95rem; font-weight:500; padding:12px 14px; border-radius:12px; border:1px solid transparent; transition:all 0.18s; display:flex; align-items:center; gap:10px; }
-    .emp-drawer a:hover, .emp-drawer a.active { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.2); color:#E8C96A; }
+    .emp-drawer a { color:rgba(255,255,255,0.75); text-decoration:none; font-size:0.95rem; font-weight:500; padding:12px 14px; border-radius:12px; border:1px solid transparent; transition:all 0.18s; display:flex; align-items:center; gap:10px; }
+    .emp-drawer a:hover, .emp-drawer a.active { background:rgba(212,175,55,0.08); border-color:rgba(212,175,55,0.2); color:#F5D060; }
     .emp-drawer a.logout-link { color:#ff6b6b; }
     .emp-drawer a.logout-link:hover { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.2); }
     .emp-drawer-divider { height:1px; background:rgba(255,255,255,0.06); margin:6px 0; }
-    .emp-drawer-name { font-size:0.78rem; color:rgba(240,230,211,0.35); padding:4px 14px 8px; letter-spacing:0.06em; }
+    .emp-drawer-name { font-size:0.78rem; color:rgba(255,255,255,0.35); padding:4px 14px 8px; letter-spacing:0.06em; }
     .emp-desktop-nav { display:flex; align-items:center; gap:10px; }
     @media (min-width:768px) { .emp-hamburger { display:none !important; } .emp-drawer { display:none !important; } .emp-desktop-nav { display:flex !important; } }
     @media (max-width:767px) { .emp-hamburger { display:flex; } .emp-desktop-nav { display:none !important; } }
-    .card-dark { border-radius:18px; padding:24px; background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02)); border:1px solid rgba(201,168,76,0.14); margin-bottom:20px; }
+    .card-dark { border-radius:18px; padding:24px; background:linear-gradient(145deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02)); border:1px solid rgba(212,175,55,0.14); margin-bottom:20px; }
     .slip-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); font-size:0.9rem; }
     .slip-row:last-child { border-bottom:none; }
-    .slip-label { color:rgba(240,230,211,0.55); }
+    .slip-label { color:rgba(255,255,255,0.55); }
     .slip-value { color:#fff; font-weight:600; }
-    .nav-btn { padding:6px 16px; border-radius:999px; border:1px solid rgba(201,168,76,0.2); background:rgba(255,255,255,0.04); color:rgba(240,230,211,0.7); font-size:0.82rem; text-decoration:none; }
-    .nav-btn:hover { border-color:rgba(201,168,76,0.4); color:#fff; }
-    .emp-nav-link { color:rgba(240,230,211,0.6); text-decoration:none; font-size:0.85rem; padding:6px 14px; border-radius:999px; border:1px solid transparent; }
-    .emp-nav-link:hover, .emp-nav-link.active { border-color:rgba(201,168,76,0.25); color:#E8C96A; }
+    .nav-btn { padding:6px 16px; border-radius:999px; border:1px solid rgba(212,175,55,0.2); background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.7); font-size:0.82rem; text-decoration:none; }
+    .nav-btn:hover { border-color:rgba(212,175,55,0.4); color:#fff; }
+    .emp-nav-link { color:rgba(255,255,255,0.6); text-decoration:none; font-size:0.85rem; padding:6px 14px; border-radius:999px; border:1px solid transparent; }
+    .emp-nav-link:hover, .emp-nav-link.active { border-color:rgba(212,175,55,0.25); color:#F5D060; }
   </style>
 </head>
 <body>
@@ -56,7 +56,7 @@
     <a href="{{ url_for('employee.attendance') }}" class="emp-nav-link">Attendance</a>
     <a href="{{ url_for('employee.salary') }}" class="emp-nav-link active">Salary</a>
     <a href="{{ url_for('employee.leave') }}" class="emp-nav-link">Leave</a>
-    <span style="color:rgba(240,230,211,0.5);font-size:0.82rem;">{{ session.emp_name }}</span>
+    <span style="color:rgba(255,255,255,0.5);font-size:0.82rem;">{{ session.emp_name }}</span>
     <a href="{{ url_for('employee.logout') }}" style="color:#ff6b6b;font-size:0.82rem;text-decoration:none;"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>
   </div>
   <button class="emp-hamburger" id="empHamburger" aria-label="Menu">
@@ -76,7 +76,7 @@
 <div class="emp-shell">
   <div class="container" style="max-width:680px;">
     <h1 style="font-family:'Playfair Display',serif;color:#fff;font-size:1.8rem;margin-bottom:4px;">Salary</h1>
-    <p style="color:rgba(240,230,211,0.45);font-size:0.85rem;margin-bottom:24px;">Your salary details and slip</p>
+    <p style="color:rgba(255,255,255,0.45);font-size:0.85rem;margin-bottom:24px;">Your salary details and slip</p>
 
     <!-- Month Navigation -->
     <div class="d-flex align-items-center gap-3 mb-4">
@@ -93,39 +93,39 @@
     <!-- Salary Slip Card -->
     <div class="card-dark">
       <div style="text-align:center;margin-bottom:20px;">
-        <div style="font-family:'Playfair Display',serif;color:#C9A84C;font-size:1.3rem;font-weight:700;">NEW SHADES PREMIUM SALON</div>
-        <div style="color:rgba(240,230,211,0.5);font-size:0.8rem;margin-top:4px;">Employee Salary Slip</div>
+        <div style="font-family:'Playfair Display',serif;color:#F5D060;font-size:1.3rem;font-weight:700;">NEW SHADES PREMIUM SALON</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.8rem;margin-top:4px;">Employee Salary Slip</div>
       </div>
 
       <div class="slip-row"><span class="slip-label">Employee</span><span class="slip-value">{{ calc.emp_name }}</span></div>
       <div class="slip-row"><span class="slip-label">Position</span><span class="slip-value">{{ calc.emp_role }}</span></div>
       <div class="slip-row"><span class="slip-label">Month</span><span class="slip-value">{{ month_name }} {{ year }}</span></div>
 
-      <div style="border-top:1px solid rgba(201,168,76,0.15);margin:16px 0;"></div>
+      <div style="border-top:1px solid rgba(212,175,55,0.15);margin:16px 0;"></div>
 
       <div class="slip-row"><span class="slip-label">Monthly Salary</span><span class="slip-value">₹{{ '%.2f' | format(calc.monthly_salary) }}</span></div>
       <div class="slip-row"><span class="slip-label">Working Days</span><span class="slip-value">{{ calc.working_days }}</span></div>
       <div class="slip-row"><span class="slip-label">Per Day Rate</span><span class="slip-value">₹{{ '%.2f' | format(calc.per_day) }}</span></div>
 
-      <div style="border-top:1px solid rgba(201,168,76,0.15);margin:16px 0;"></div>
+      <div style="border-top:1px solid rgba(212,175,55,0.15);margin:16px 0;"></div>
 
       <div class="slip-row"><span class="slip-label">Present Days</span><span class="slip-value" style="color:#7ce0aa;">{{ calc.present }}</span></div>
-      <div class="slip-row"><span class="slip-label">Half Days</span><span class="slip-value" style="color:#9dc0ff;">{{ calc.half_day }}</span></div>
+      <div class="slip-row"><span class="slip-label">Half Days</span><span class="slip-value" style="color:#F5D060;">{{ calc.half_day }}</span></div>
       <div class="slip-row"><span class="slip-label">Absent Days</span><span class="slip-value" style="color:#ff6b6b;">{{ calc.absent }}</span></div>
-      <div class="slip-row"><span class="slip-label">Leave Days</span><span class="slip-value" style="color:#c4b5fd;">{{ calc.on_leave }}</span></div>
-      <div class="slip-row"><span class="slip-label">Overtime Hours</span><span class="slip-value" style="color:#C9A84C;">{{ calc.total_overtime }}</span></div>
+      <div class="slip-row"><span class="slip-label">Leave Days</span><span class="slip-value" style="color:#FFE88A;">{{ calc.on_leave }}</span></div>
+      <div class="slip-row"><span class="slip-label">Overtime Hours</span><span class="slip-value" style="color:#F5D060;">{{ calc.total_overtime }}</span></div>
 
-      <div style="border-top:1px solid rgba(201,168,76,0.15);margin:16px 0;"></div>
+      <div style="border-top:1px solid rgba(212,175,55,0.15);margin:16px 0;"></div>
 
       <div class="slip-row"><span class="slip-label">Overtime Amount</span><span class="slip-value" style="color:#7ce0aa;">+ ₹{{ '%.2f' | format(calc.overtime_amount) }}</span></div>
       <div class="slip-row"><span class="slip-label">Absent Deduction</span><span class="slip-value" style="color:#ff6b6b;">– ₹{{ '%.2f' | format(calc.absent_deduction) }}</span></div>
       <div class="slip-row"><span class="slip-label">Half Day Deduction</span><span class="slip-value" style="color:#ff9a6c;">– ₹{{ '%.2f' | format(calc.half_day_deduction) }}</span></div>
 
-      <div style="border-top:1px solid rgba(201,168,76,0.3);margin:16px 0;"></div>
+      <div style="border-top:1px solid rgba(212,175,55,0.3);margin:16px 0;"></div>
 
       <div class="slip-row" style="font-size:1.1rem;">
         <span style="color:#fff;font-weight:700;">Net Salary</span>
-        <span style="color:#C9A84C;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;">₹{{ '%.2f' | format(calc.net_salary) }}</span>
+        <span style="color:#F5D060;font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;">₹{{ '%.2f' | format(calc.net_salary) }}</span>
       </div>
 
       {% if saved %}
@@ -139,21 +139,21 @@
         </span>
       </div>
       {% else %}
-      <div style="text-align:center;margin-top:16px;color:rgba(240,230,211,0.35);font-size:0.8rem;">
+      <div style="text-align:center;margin-top:16px;color:rgba(255,255,255,0.35);font-size:0.8rem;">
         Salary not yet generated by admin for this month.
       </div>
       {% endif %}
     </div>
     {% else %}
     <div class="card-dark" style="text-align:center;padding:48px;">
-      <i class="fas fa-money-bill-wave" style="font-size:2.5rem;color:rgba(201,168,76,0.2);margin-bottom:16px;"></i>
-      <p style="color:rgba(240,230,211,0.4);">No salary data available for this month.</p>
+      <i class="fas fa-money-bill-wave" style="font-size:2.5rem;color:rgba(212,175,55,0.2);margin-bottom:16px;"></i>
+      <p style="color:rgba(255,255,255,0.4);">No salary data available for this month.</p>
     </div>
     {% endif %}
 
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
 <script>
 const _hbtn = document.getElementById('empHamburger');
 const _hdrawer = document.getElementById('empDrawer');
