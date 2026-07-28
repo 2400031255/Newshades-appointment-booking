@@ -1,6 +1,6 @@
 from flask import Flask, render_template, session, redirect, url_for, request, current_app, flash
 from flask_socketio import SocketIO, emit
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from config import Config
 from db import close_db
 import os
@@ -63,7 +63,8 @@ def create_app():
         if not request.endpoint:
             return
         allowed_endpoints = {'auth.login', 'auth.login_post', 'auth.logout', 'static', 'ping',
-                              'employee.login', 'employee.login_post', 'employee.logout'}
+                              'employee.login', 'employee.login_post', 'employee.logout',
+                              'public_enquire', 'index'}
         if request.endpoint in allowed_endpoints:
             return
         if session.get('is_admin'):
@@ -161,7 +162,13 @@ def create_app():
         pass
     csrf.exempt(cal_api)
 
-    @app.route('/enquire', methods=['POST'])
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        flash('Session expired. Please try submitting again.', 'enq_danger')
+        return redirect(url_for('index') + '#enquire')
+
+    @app.route('/public-enquire', methods=['POST'])
+    @csrf.exempt
     def public_enquire():
         import db
         from datetime import date as _date

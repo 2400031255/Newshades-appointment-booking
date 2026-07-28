@@ -28,6 +28,9 @@ class Config:
     # Secret key — must be set via env in production
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
+    # CSRF — no time limit so tokens don't expire while page is open
+    WTF_CSRF_TIME_LIMIT = None
+
     # Database — SQLite only, path set via env (Render disk: /data/salon_app.db)
     DATABASE_URL   = ''  # disabled — using SQLite
     SQLITE_DB_PATH = os.environ.get('SQLITE_DB_PATH', '')
