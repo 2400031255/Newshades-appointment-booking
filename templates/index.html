@@ -2,15 +2,79 @@
 {% block title %}New Shades – Premium Salon{% endblock %}
 {% block meta_description %}<meta name="description" content="New Shades – Premium family salon in Eluru offering haircuts, beard trims, hair color, facials, head massage and more. Book your appointment online.">{% endblock %}
 
+{% block extra_css %}
+<style>
+/* ── Hero Logo ── */
+.hero-logo-wrap {
+  position: relative;
+  width: 160px; height: 160px;
+  margin: 0 auto 28px;
+  display: flex; align-items: center; justify-content: center;
+}
+.hero-logo-circle {
+  width: 130px; height: 130px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(212,175,55,0.6);
+  box-shadow: 0 0 40px rgba(212,175,55,0.35), 0 0 80px rgba(212,175,55,0.15);
+  animation: logoFloat 5s ease-in-out infinite;
+  position: relative; z-index: 2;
+  background: #000;
+}
+.hero-logo-img-main {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 50%;
+}
+.hero-logo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(212,175,55,0.2);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+.hero-logo-ring-1 { width: 150px; height: 150px; animation: ringPulse 3s ease-in-out infinite; }
+.hero-logo-ring-2 { width: 175px; height: 175px; animation: ringPulse 3s ease-in-out infinite 0.6s; border-style: dashed; }
+.hero-logo-ring-3 { width: 200px; height: 200px; animation: ringPulse 3s ease-in-out infinite 1.2s; }
+@keyframes logoFloat {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes ringPulse {
+  0%,100% { opacity: 0.3; transform: translate(-50%,-50%) scale(1); }
+  50%      { opacity: 0.7; transform: translate(-50%,-50%) scale(1.04); }
+}
+/* Stars canvas */
+#starsCanvas {
+  position: absolute;
+  inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- Hero -->
 <section class="hero" id="hero">
   <canvas id="particleCanvas"></canvas>
+  <canvas id="starsCanvas"></canvas>
   <div class="container hero-container">
     <div class="hero-inner hero-centered">
 
-      <div class="hero-badge reveal-up">
+      <!-- Salon Logo -->
+      <div class="hero-logo-wrap reveal-up">
+        <div class="hero-logo-ring hero-logo-ring-1"></div>
+        <div class="hero-logo-ring hero-logo-ring-2"></div>
+        <div class="hero-logo-ring hero-logo-ring-3"></div>
+        <div class="hero-logo-circle">
+          <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="New Shades Logo" class="hero-logo-img-main"/>
+        </div>
+      </div>
+
+      <div class="hero-badge reveal-up" style="animation-delay:0.1s">
         <span class="badge-dot"></span> Premium Salon Experience
       </div>
 
@@ -498,4 +562,107 @@
   </div>
 </section>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const canvas = document.getElementById('starsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let stars = [], W, H;
+  function resize(){
+    const hero = canvas.parentElement;
+    W = canvas.width  = hero.offsetWidth;
+    H = canvas.height = hero.offsetHeight;
+  }
+  function initStars(){
+    stars = [];
+    const count = Math.floor((W * H) / 5000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.6 + 0.3,
+        alpha: Math.random() * 0.7 + 0.2,
+        speed: Math.random() * 0.3 + 0.05,
+        td: Math.random() * 0.018 + 0.004,
+        tdir: Math.random() > 0.5 ? 1 : -1,
+        gold: Math.random() > 0.72
+      });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.alpha += s.td * s.tdir;
+      if (s.alpha >= 1)   { s.alpha = 1;   s.tdir = -1; }
+      if (s.alpha <= 0.1) { s.alpha = 0.1; s.tdir =  1; }
+      s.y -= s.speed;
+      if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; }
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.gold ? 'rgba(212,175,55,'+s.alpha+')' : 'rgba(255,255,255,'+s.alpha+')';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); initStars(); draw();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+})();
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Moving Stars ──
+(function(){
+  const canvas = document.getElementById('starsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let stars = [], W, H;
+  function resize(){
+    const hero = canvas.parentElement;
+    W = canvas.width  = hero.offsetWidth;
+    H = canvas.height = hero.offsetHeight;
+  }
+  function initStars(){
+    stars = [];
+    const count = Math.floor((W * H) / 6000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 1.5 + 0.3,
+        alpha: Math.random() * 0.7 + 0.2,
+        speed: Math.random() * 0.25 + 0.05,
+        twinkleSpeed: Math.random() * 0.02 + 0.005,
+        twinkleDir: Math.random() > 0.5 ? 1 : -1,
+        gold: Math.random() > 0.75
+      });
+    }
+  }
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      s.alpha += s.twinkleSpeed * s.twinkleDir;
+      if (s.alpha >= 1)   { s.alpha = 1;   s.twinkleDir = -1; }
+      if (s.alpha <= 0.1) { s.alpha = 0.1; s.twinkleDir =  1; }
+      s.y -= s.speed;
+      if (s.y < -2) { s.y = H + 2; s.x = Math.random() * W; }
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = s.gold
+        ? 'rgba(212,175,55,' + s.alpha + ')'
+        : 'rgba(255,255,255,' + s.alpha + ')';
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  initStars();
+  draw();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+})();
+</script>
 {% endblock %}
