@@ -346,8 +346,18 @@
               <span style="color:rgba(255,255,255,0.35);font-size:0.78rem;font-weight:400;"> #{{ e.enquiry_id[:6] }}</span>
               {% if not can_edit %}<span class="readonly-badge">read-only</span>{% endif %}
             </div>
-            <div style="color:rgba(255,255,255,0.50);font-size:0.82rem;margin-top:2px;">
+            <div style="color:rgba(255,255,255,0.50);font-size:0.82rem;margin-top:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
               <i class="fas fa-phone me-1"></i>{{ e.customer_phone }}
+              {% if e.customer_phone %}
+              <button type="button" onclick="navigator.clipboard.writeText('{{ e.customer_phone }}');this.innerHTML='<i class=\'fas fa-check\'></i>';setTimeout(()=>this.innerHTML='<i class=\'fas fa-copy\'></i>',1200);"
+                style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(212,175,55,0.35);background:rgba(212,175,55,0.10);color:#F5D060;font-size:0.65rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;">
+                <i class="fas fa-copy"></i>
+              </button>
+              <a href="tel:{{ e.customer_phone }}"
+                style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(37,211,102,0.4);background:rgba(37,211,102,0.12);color:#25d366;font-size:0.65rem;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-phone"></i>
+              </a>
+              {% endif %}
             </div>
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -457,7 +467,7 @@
         {% for p in range(1, pages+1) %}
           {% if p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
             {% set s = (p-1)*50+1 %}
-            {% set e2 = [p*50, total_filtered]|min %}
+            {% set e2 = p*50 if p*50 < total_filtered else total_filtered %}
             <a href="?status={{ status_filter }}&page={{ p }}"
                class="pg-btn {{ 'active' if p == page }}">{{ s }}&ndash;{{ e2 }}</a>
           {% elif p == page-3 or p == page+3 %}
@@ -471,7 +481,7 @@
         <button class="pg-btn" disabled>Next &rarr;</button>
         {% endif %}
 
-        <span class="pg-info">{{ (page-1)*50+1 }}&ndash;{{ [page*50, total_filtered]|min }} of {{ total_filtered }}</span>
+        <span class="pg-info">{{ (page-1)*50+1 }}&ndash;{{ page*50 if page*50 < total_filtered else total_filtered }} of {{ total_filtered }}</span>
       </div>
       {% endif %}
 
@@ -492,13 +502,8 @@
 // ── Live clock (IST) ──
 function updateEmpClock() {
   const now = new Date();
-  const ist = new Date(now.getTime() + (5.5*60*60*1000) - (now.getTimezoneOffset()*60*1000));
-  let h = ist.getHours(), m = ist.getMinutes(), s = ist.getSeconds();
-  const p = h < 12 ? 'AM' : 'PM'; h = h%12||12;
-  const timeStr = h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+p;
-  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateStr = days[ist.getDay()]+', '+ist.getDate()+' '+months[ist.getMonth()]+' '+ist.getFullYear();
+  const timeStr = now.toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}).toUpperCase();
+  const dateStr = now.toLocaleDateString('en-IN', {timeZone:'Asia/Kolkata', weekday:'short', day:'numeric', month:'short', year:'numeric'});
   ['empClock','headerClock'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=timeStr; });
   const hd=document.getElementById('headerDate'); if(hd) hd.textContent=dateStr;
 }

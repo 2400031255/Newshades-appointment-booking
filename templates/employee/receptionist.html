@@ -340,7 +340,7 @@
                       </a>
                       {% endif %}
                       {% if e.preferred_date %}
-                      &nbsp;·&nbsp;<i class="fas fa-calendar me-1"></i>{{ str(e.preferred_date)[:10] }}
+                      &nbsp;·&nbsp;<i class="fas fa-calendar me-1"></i>{{ e.preferred_date|string|truncate(10, True, '') }}
                       {% endif %}
                       {% if e.preferred_time %}
                       &nbsp;·&nbsp;<i class="fas fa-clock me-1"></i>{{ e.preferred_time }}
@@ -399,7 +399,7 @@
             {% for p in range(1, pages+1) %}
               {% if p == 1 or p == pages or (p >= page-2 and p <= page+2) %}
                 {% set s = (p-1)*50+1 %}
-                {% set e2 = [p*50, total_filtered]|min %}
+                {% set e2 = p*50 if p*50 < total_filtered else total_filtered %}
                 <a href="?status={{ status_filter }}&page={{ p }}"
                    class="pg-btn {{ 'active' if p == page }}">{{ s }}&ndash;{{ e2 }}</a>
               {% elif p == page-3 or p == page+3 %}
@@ -413,7 +413,7 @@
             <span class="pg-btn disabled">Next &rarr;</span>
             {% endif %}
 
-            <span class="pg-info">{{ (page-1)*50+1 }}&ndash;{{ [page*50, total_filtered]|min }} of {{ total_filtered }}</span>
+            <span class="pg-info">{{ (page-1)*50+1 }}&ndash;{{ page*50 if page*50 < total_filtered else total_filtered }} of {{ total_filtered }}</span>
           </div>
           {% endif %}
         </div>
@@ -428,13 +428,8 @@
 // ── Live clock (IST) ──
 function updateClock() {
   const now = new Date();
-  const ist = new Date(now.getTime() + (5.5*60*60*1000) - (now.getTimezoneOffset()*60*1000));
-  let h = ist.getHours(), m = ist.getMinutes(), s = ist.getSeconds();
-  const p = h < 12 ? 'AM' : 'PM'; h = h%12||12;
-  const timeStr = h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+p;
-  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateStr = days[ist.getDay()]+', '+ist.getDate()+' '+months[ist.getMonth()]+' '+ist.getFullYear();
+  const timeStr = now.toLocaleTimeString('en-IN', {timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true}).toUpperCase();
+  const dateStr = now.toLocaleDateString('en-IN', {timeZone:'Asia/Kolkata', weekday:'short', day:'numeric', month:'short', year:'numeric'});
   ['recClock','headerClock'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=timeStr; });
   const hd=document.getElementById('headerDate'); if(hd) hd.textContent=dateStr;
 }
