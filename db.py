@@ -176,9 +176,14 @@ def get_all_customers():
     docs = _col('users').get()
     users = [_doc_to_dict(d) for d in docs if not _doc_to_dict(d).get('is_admin')]
     users = sorted(users, key=lambda x: x.get('created_at', ''), reverse=True)
+    # Batch count enquiries per user in one query
+    enq_docs = _col('enquiries').get()
+    enq_counts = {}
+    for e in enq_docs:
+        uid = e.to_dict().get('user_id', '')
+        enq_counts[uid] = enq_counts.get(uid, 0) + 1
     for u in users:
-        enqs = _col('enquiries').where('user_id', '==', u['id']).get()
-        u['appt_count'] = len(enqs)
+        u['appt_count'] = enq_counts.get(u['id'], 0)
     return users
 
 

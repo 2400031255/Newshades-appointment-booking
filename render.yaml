@@ -15,3 +15,5 @@ services:
         value: "false"
       - key: MAINTENANCE_OVERRIDE
         value: "off"
+      - key: CORS_ORIGINS
+        value: "https://newshades-salon.onrender.com"

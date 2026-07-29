@@ -140,7 +140,7 @@ def send_enquiry_closed_email(to_email: str, customer_name: str,
         notes_html = f'<div class="detail-row"><span class="detail-label">Note</span><span class="detail-val">{an}</span></div>'
     content = f"""
 <p>Hello <strong style="color:#e8c96a;">{n}</strong>,</p>
-<p>Your enquiry <strong style="color:var(--gold-2);">#{eid}</strong> has been <strong style="color:rgba(240,230,211,0.6);">closed</strong>.</p>
+<p>Your enquiry <strong style="color:#F5D060;">#{eid}</strong> has been <strong style="color:rgba(240,230,211,0.6);">closed</strong>.</p>
 <div class="detail-box">
   <div class="detail-row"><span class="detail-label">Enquiry ID</span><span class="detail-val">#{eid}</span></div>
   <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val">Closed</span></div>
