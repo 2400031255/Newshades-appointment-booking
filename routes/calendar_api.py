@@ -65,7 +65,7 @@ def _blocked_times(date_str: str) -> set:
         try:
             parsed = datetime.strptime(t, '%H:%M')
             result.add(parsed.strftime('%I:%M %p').lstrip('0'))
-        except Exception:
+        except ValueError:
             result.add(t)
     return result
 
@@ -116,7 +116,7 @@ def slots():
                     result.append({'time': t, 'available': False, 'reason': 'past',
                                    'booked': MAX_PER_SLOT, 'max': MAX_PER_SLOT})
                     continue
-            except Exception:
+            except ValueError:
                 pass
         count = booked.get(t, 0)
         result.append({
@@ -132,7 +132,7 @@ def month_availability():
     try:
         year  = int(request.args.get('year',  date.today().year))
         month = int(request.args.get('month', date.today().month))
-    except ValueError:
+    except (ValueError, TypeError):
         return jsonify({'error': 'invalid params'}), 400
     if not (1 <= month <= 12) or not (2020 <= year <= date.today().year + 2):
         return jsonify({'error': 'invalid year or month'}), 400
@@ -259,7 +259,7 @@ def admin_appointments():
         t = e.get('preferred_time') or '09:00 AM'
         try:
             t24 = datetime.strptime(t, '%I:%M %p').strftime('%H:%M')
-        except Exception:
+        except ValueError:
             t24 = '09:00'
         start_iso = f"{ds}T{t24}:00"
         status = e.get('status', '')
@@ -329,5 +329,5 @@ def _emit_calendar_update():
     try:
         from app import socketio
         socketio.emit('calendar_update', {'ts': datetime.now().isoformat()})
-    except Exception:
+    except (ImportError, RuntimeError):
         pass

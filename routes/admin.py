@@ -107,8 +107,9 @@ def services():
 @admin_required
 def add_service():
     if request.method == 'POST':
+        token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
         try:
-            validate_csrf(request.form.get('csrf_token'))
+            validate_csrf(token)
         except ValidationError:
             flash('Invalid CSRF token.', 'danger')
             return redirect(url_for('admin.add_service'))
@@ -150,8 +151,9 @@ def edit_service(sid):
         flash('Service not found.', 'danger')
         return redirect(url_for('admin.services'))
     if request.method == 'POST':
+        token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
         try:
-            validate_csrf(request.form.get('csrf_token'))
+            validate_csrf(token)
         except ValidationError:
             flash('Invalid CSRF token.', 'danger')
             return redirect(url_for('admin.edit_service', sid=sid))
@@ -186,8 +188,9 @@ def edit_service(sid):
 @admin.route('/services/delete/<sid>', methods=['POST'])
 @admin_required
 def delete_service(sid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.services'))
@@ -201,8 +204,11 @@ def delete_service(sid):
 @admin_required
 def enquiries():
     status_filter = request.args.get('status', '')
-    search        = request.args.get('q', '').strip()
-    page          = max(1, int(request.args.get('page', 1) or 1))
+    search        = request.args.get('q', '').strip()[:100]
+    try:
+        page = max(1, int(request.args.get('page', 1) or 1))
+    except (ValueError, TypeError):
+        page = 1
     per_page      = 20
 
     all_enqs = _db.get_all_enquiries(
@@ -224,8 +230,9 @@ def enquiries():
 @admin.route('/enquiries/update/<eid>', methods=['POST'])
 @admin_required
 def enquiry_update(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.enquiries'))
@@ -276,8 +283,9 @@ def enquiry_update(eid):
 @admin.route('/enquiries/delete/<eid>', methods=['POST'])
 @admin_required
 def enquiry_delete(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.enquiries'))
@@ -336,8 +344,9 @@ def reviews():
 @admin.route('/reviews/delete/<rid>', methods=['POST'])
 @admin_required
 def delete_review(rid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.reviews'))
@@ -357,8 +366,9 @@ def customers():
 @admin.route('/customers/<uid>/delete', methods=['POST'])
 @admin_required
 def delete_customer(uid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.customers'))
@@ -509,14 +519,16 @@ MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 @admin.route('/gallery/upload', methods=['POST'])
 @admin_required
 def gallery_upload():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.gallery'))
     files      = request.files.getlist('photos')
     caption    = request.form.get('caption', '').strip()[:255]
     upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
+    upload_dir = os.path.realpath(upload_dir)
     os.makedirs(upload_dir, exist_ok=True)
     count = 0
     for f in files:
@@ -535,8 +547,8 @@ def gallery_upload():
             continue
         base, ext = os.path.splitext(safe)
         filename  = f"{base}_{int(time.time()*1000)}{ext}"
-        dest = os.path.join(upload_dir, filename)
-        if not os.path.abspath(dest).startswith(os.path.abspath(upload_dir)):
+        dest = os.path.realpath(os.path.join(upload_dir, filename))
+        if not dest.startswith(upload_dir + os.sep):
             continue
         f.save(dest)
         _db.add_gallery_photo(filename, caption)
@@ -548,16 +560,17 @@ def gallery_upload():
 @admin.route('/gallery/delete/<gid>', methods=['POST'])
 @admin_required
 def gallery_delete(gid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.gallery'))
     photo = _db.get_gallery_photo(gid)
     if photo:
-        upload_dir = os.path.join(current_app.root_path, 'static', 'images', 'gallery')
-        path = os.path.join(upload_dir, secure_filename(photo['filename']))
-        if os.path.abspath(path).startswith(os.path.abspath(upload_dir)) and os.path.exists(path):
+        upload_dir = os.path.realpath(os.path.join(current_app.root_path, 'static', 'images', 'gallery'))
+        path = os.path.realpath(os.path.join(upload_dir, secure_filename(photo['filename'])))
+        if path.startswith(upload_dir + os.sep) and os.path.exists(path):
             os.remove(path)
         _db.delete_gallery_photo(gid)
         flash('Photo deleted.', 'success')
@@ -668,8 +681,9 @@ def offers():
 @admin.route('/offers/save', methods=['POST'])
 @admin_required
 def save_offer():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.offers'))
@@ -727,8 +741,9 @@ def save_offer():
 @admin.route('/offers/delete/<oid>', methods=['POST'])
 @admin_required
 def delete_offer(oid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.offers'))
@@ -749,8 +764,9 @@ def employees():
 @admin.route('/employees/create', methods=['POST'])
 @admin_required
 def create_employee():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.employees'))
@@ -790,8 +806,9 @@ def create_employee():
 @admin.route('/employees/toggle/<eid>', methods=['POST'])
 @admin_required
 def toggle_employee(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.employees'))
@@ -808,8 +825,9 @@ def toggle_employee(eid):
 @admin.route('/employees/reset-password/<eid>', methods=['POST'])
 @admin_required
 def reset_employee_password(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.employees'))
@@ -826,8 +844,9 @@ def reset_employee_password(eid):
 @admin.route('/employees/delete/<eid>', methods=['POST'])
 @admin_required
 def delete_employee(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.employees'))
@@ -839,8 +858,9 @@ def delete_employee(eid):
 @admin.route('/employees/toggle-attendance/<eid>', methods=['POST'])
 @admin_required
 def toggle_attendance_access(eid):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.employees'))
@@ -861,8 +881,11 @@ def toggle_attendance_access(eid):
 def attendance():
     from datetime import datetime as _dt
     import calendar
-    year     = int(request.args.get('year',  _dt.utcnow().year))
-    month    = int(request.args.get('month', _dt.utcnow().month))
+    try:
+        year  = int(request.args.get('year',  _dt.utcnow().year))
+        month = int(request.args.get('month', _dt.utcnow().month))
+    except (ValueError, TypeError):
+        year, month = _dt.utcnow().year, _dt.utcnow().month
     month_name = calendar.month_name[month]
     date_str   = request.args.get('date', _dt.utcnow().strftime('%Y-%m-%d'))
     daily   = _db.get_all_attendance_for_date(date_str)
@@ -878,8 +901,9 @@ def attendance():
 @admin.route('/attendance/approve/<record_id>', methods=['POST'])
 @admin_required
 def approve_attendance(record_id):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.attendance'))
@@ -891,8 +915,9 @@ def approve_attendance(record_id):
 @admin.route('/attendance/reject/<record_id>', methods=['POST'])
 @admin_required
 def reject_attendance(record_id):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.attendance'))
@@ -904,8 +929,9 @@ def reject_attendance(record_id):
 @admin.route('/attendance/mark', methods=['POST'])
 @admin_required
 def mark_attendance():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.attendance'))
@@ -949,8 +975,11 @@ def export_attendance():
 def payroll():
     from datetime import datetime as _dt
     import calendar
-    year       = int(request.args.get('year',  _dt.utcnow().year))
-    month      = int(request.args.get('month', _dt.utcnow().month))
+    try:
+        year  = int(request.args.get('year',  _dt.utcnow().year))
+        month = int(request.args.get('month', _dt.utcnow().month))
+    except (ValueError, TypeError):
+        year, month = _dt.utcnow().year, _dt.utcnow().month
     month_str  = f'{year}-{month:02d}'
     month_name = calendar.month_name[month]
     emps       = _db.get_all_employees(active_only=True)
@@ -964,14 +993,19 @@ def payroll():
 @admin.route('/payroll/generate', methods=['POST'])
 @admin_required
 def generate_salary():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.payroll'))
     emp_id = request.form.get('employee_id', '').strip()
-    year   = int(request.form.get('year',  0))
-    month  = int(request.form.get('month', 0))
+    try:
+        year  = int(request.form.get('year',  0))
+        month = int(request.form.get('month', 0))
+    except (ValueError, TypeError):
+        flash('Invalid request.', 'danger')
+        return redirect(url_for('admin.payroll'))
     if not emp_id or not year or not month:
         flash('Invalid request.', 'danger')
         return redirect(url_for('admin.payroll'))
@@ -987,13 +1021,18 @@ def generate_salary():
 @admin.route('/payroll/generate-all', methods=['POST'])
 @admin_required
 def generate_all_salaries():
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.payroll'))
-    year  = int(request.form.get('year',  0))
-    month = int(request.form.get('month', 0))
+    try:
+        year  = int(request.form.get('year',  0))
+        month = int(request.form.get('month', 0))
+    except (ValueError, TypeError):
+        flash('Invalid request.', 'danger')
+        return redirect(url_for('admin.payroll'))
     emps  = _db.get_all_employees(active_only=True)
     count = 0
     for emp in emps:
@@ -1008,8 +1047,9 @@ def generate_all_salaries():
 @admin.route('/payroll/mark-paid/<salary_id>', methods=['POST'])
 @admin_required
 def mark_salary_paid(salary_id):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.payroll'))
@@ -1075,8 +1115,9 @@ def leave_requests():
 @admin.route('/leave-requests/action/<leave_id>', methods=['POST'])
 @admin_required
 def leave_action(leave_id):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('admin.leave_requests'))

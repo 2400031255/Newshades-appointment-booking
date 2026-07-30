@@ -15,8 +15,14 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 json_path = sys.argv[1]
+json_path = os.path.realpath(json_path)
 if not os.path.exists(json_path):
     print(f"File not found: {json_path}")
+    sys.exit(1)
+
+# Restrict to current working directory to prevent path traversal
+if not json_path.startswith(os.path.realpath('.')):
+    print("ERROR: File path must be within the current directory.")
     sys.exit(1)
 
 with open(json_path, 'r') as f:

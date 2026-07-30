@@ -134,8 +134,9 @@ def create_app():
     @app.template_filter('to12hr')
     def to12hr(value):
         """Convert 'HH:MM' or 'HH:MM:SS' to 12-hour AM/PM string."""
+        from markupsafe import escape
         if not value:
-            return value
+            return ''
         try:
             parts = str(value).split(':')
             h, m = int(parts[0]), int(parts[1])
@@ -143,7 +144,7 @@ def create_app():
             h12 = h % 12 or 12
             return f'{h12}:{m:02d} {suffix}'
         except (ValueError, IndexError):
-            return value
+            return str(escape(value))
 
     from routes.auth import auth
     from routes.customer import customer
@@ -164,7 +165,7 @@ def create_app():
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
-        flash('Session expired. Please try submitting again.', 'enq_danger')
+        flash('Session expired. Please try submitting again.', 'danger')
         return redirect(url_for('index') + '#enquire')
 
     @app.route('/public-enquire', methods=['POST'])

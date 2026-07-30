@@ -16,12 +16,12 @@ def to_12hr(t):
     if not t:
         return '–'
     try:
-        h, m = map(int, t.split(':'))
+        h, m = map(int, str(t).split(':')[:2])
         period = 'AM' if h < 12 else 'PM'
         h12 = h % 12 or 12
         return f'{h12}:{m:02d} {period}'
-    except Exception:
-        return t
+    except (ValueError, AttributeError):
+        return str(t)
 
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -619,7 +619,7 @@ def clock_out(employee_id):
         status = rec.get('status', 'Present')
         if total_hours < 5:
             status = 'Half Day'
-    except Exception:
+    except (ValueError, KeyError, AttributeError):
         total_hours, overtime = 0.0, 0.0
         status = rec.get('status', 'Present')
     doc.reference.update({
@@ -679,7 +679,7 @@ def admin_mark_attendance(employee_id, date_str, status, clock_in=None, clock_ou
             total_mins = (co_h * 60 + co_m) - (ci_h * 60 + ci_m)
             total_hours = round(total_mins / 60, 2) if total_mins > 0 else 0.0
             overtime = round(max(0, total_hours - 9), 2)
-        except Exception:
+        except (ValueError, AttributeError):
             pass
     data = {
         'employee_id': str(employee_id), 'date': date_str, 'status': status,
@@ -814,7 +814,7 @@ def update_leave_request(leave_id, status, admin_note=''):
                 while current <= end:
                     admin_mark_attendance(rec['employee_id'], current.isoformat(), 'Leave')
                     current += timedelta(days=1)
-            except Exception:
+            except (ValueError, KeyError, TypeError):
                 pass
 
 

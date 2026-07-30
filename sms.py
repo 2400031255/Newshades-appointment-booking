@@ -36,8 +36,11 @@ def send_sms(to, body):
     try:
         from twilio.rest import Client
         client = Client(sid, token)
-        client.messages.create(body=body, from_=from_, to=to)
-        return True
+        try:
+            client.messages.create(body=body, from_=from_, to=to)
+            return True
+        finally:
+            client.http_client.session.close()
     except Exception as e:
         current_app.logger.error('[SMS ERROR] %s', e)
         return False

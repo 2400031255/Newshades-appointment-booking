@@ -162,7 +162,10 @@ def receptionist_dashboard():
     else:
         filtered = all_enquiries
     total_filtered = len(filtered)
-    page  = max(1, int(request.args.get('page', 1)))
+    try:
+        page  = max(1, int(request.args.get('page', 1)))
+    except (ValueError, TypeError):
+        page = 1
     pages = max(1, (total_filtered + PER_PAGE - 1) // PER_PAGE)
     page  = min(page, pages)
     page_enquiries = filtered[(page-1)*PER_PAGE : page*PER_PAGE]
@@ -296,8 +299,9 @@ def apply_leave():
 @employee_bp.route('/enquiry/update/<enq_id>', methods=['POST'])
 @emp_required
 def update_enquiry(enq_id):
+    token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken', '')
     try:
-        validate_csrf(request.form.get('csrf_token'))
+        validate_csrf(token)
     except ValidationError:
         flash('Invalid CSRF token.', 'danger')
         return redirect(url_for('employee.dashboard'))
