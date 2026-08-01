@@ -66,6 +66,8 @@ window.setup = async () => {
       is_admin: 1, phone: '',
       created_at: serverTimestamp()
     });
+    // Write to usernames lookup collection
+    await setDoc(doc(db, 'usernames', username.toLowerCase()), { email, uid: cred.user.uid });
     msg.className = 'ok';
     msg.innerHTML = `✅ Admin created!<br>UID: <code>${cred.user.uid}</code><br>Login with username: <strong>${username}</strong> / password: <strong>${password}</strong><br><br><strong>Delete this setup.html file now!</strong>`;
     msg.style.display = 'block';

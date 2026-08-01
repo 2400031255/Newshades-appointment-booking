@@ -105,17 +105,22 @@ document.getElementById('createEmpForm').addEventListener('submit', async e => {
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating…';
   document.getElementById('createAlert').innerHTML = '';
   try {
-    const cred = await createUserWithEmailAndPassword(auth, document.getElementById('empEmail').value.trim(), document.getElementById('empPassword').value);
-    const db = getFirestore();
-    await setDoc(doc(db, 'employees', cred.user.uid), {
-      full_name: document.getElementById('empName').value.trim(),
-      email: document.getElementById('empEmail').value.trim(),
+    const db2 = getFirestore();
+    const empEmail = document.getElementById('empEmail').value.trim();
+    const empNameVal = document.getElementById('empName').value.trim();
+    const cred = await createUserWithEmailAndPassword(auth, empEmail, document.getElementById('empPassword').value);
+    await setDoc(doc(db2, 'employees', cred.user.uid), {
+      full_name: empNameVal,
+      email: empEmail,
       phone: document.getElementById('empPhone').value.trim(),
       role: document.getElementById('empRole').value,
       monthly_salary: parseFloat(document.getElementById('empSalary').value)||0,
       is_active: 1,
       created_at: serverTimestamp()
     });
+    // Write username lookup (use first name lowercase as username)
+    const uname = empNameVal.split(' ')[0].toLowerCase();
+    await setDoc(doc(db2, 'usernames', uname), { email: empEmail, uid: cred.user.uid }).catch(()=>{});
     showToast('Employee created!', 'success');
     document.getElementById('createEmpForm').reset();
     await loadEmps();

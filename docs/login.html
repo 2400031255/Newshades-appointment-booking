@@ -116,21 +116,23 @@
 <script src="js/main.js" defer></script>
 <script type="module">
 import { loginUser, requireGuest, getUserProfile, getEmployeeProfile, db } from './js/firebase.js';
-import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 requireGuest();
 
 async function resolveEmail(identifier) {
-  // If it looks like an email, use it directly
   if (identifier.includes('@')) return identifier;
-  // Otherwise look up username in users collection
+  // Fast: check usernames collection (doc ID = username)
+  const usnap = await getDoc(doc(db, 'usernames', identifier.toLowerCase()));
+  if (usnap.exists()) return usnap.data().email;
+  // Fallback: query users collection
   const q = query(collection(db, 'users'), where('username', '==', identifier));
-  const snap = await getDocs(q);
-  if (!snap.empty) return snap.docs[0].data().email;
-  // Also check employees collection
+  const snap = await getDocs(q).catch(() => null);
+  if (snap && !snap.empty) return snap.docs[0].data().email;
+  // Fallback: query employees collection
   const eq = query(collection(db, 'employees'), where('username', '==', identifier));
-  const esnap = await getDocs(eq);
-  if (!esnap.empty) return esnap.docs[0].data().email;
+  const esnap = await getDocs(eq).catch(() => null);
+  if (esnap && !esnap.empty) return esnap.docs[0].data().email;
   return null;
 }
 
@@ -166,7 +168,9 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       ? 'Invalid username/email or password.'
       : err.code === 'auth/too-many-requests'
       ? 'Too many attempts. Please try again later.'
-      : 'Login failed. Please try again.';
+      : err.code === 'auth/user-not-found'
+      ? 'No account found with this email.'
+      : `Login failed: ${err.code}`;
     alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';

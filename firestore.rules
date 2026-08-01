@@ -20,6 +20,12 @@ service cloud.firestore {
       allow write: if isOwner(uid) || isAdmin();
     }
 
+    // ── Usernames (public lookup map: username → email) ──────────────────────
+    match /usernames/{username} {
+      allow read: if true;
+      allow write: if isAdmin() || isSignedIn();
+    }
+
     // ── Employees ─────────────────────────────────────────────────────────
     match /employees/{uid} {
       allow read: if isOwner(uid) || isAdmin();
