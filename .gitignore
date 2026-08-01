@@ -1,10 +1,9 @@
-venv/
-__pycache__/
-*.pyc
-*.pyo
-.env
-salon_app.db
-static/images/gallery/*
-!static/images/gallery/.gitkeep
-*.log
+# macOS
 .DS_Store
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Node (only used locally for firebase-tools)
+node_modules/

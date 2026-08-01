@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin == true;
+    }
+    function isEmployee() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/employees/$(request.auth.uid));
+    }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    // ── Users ─────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isOwner(uid) || isAdmin();
+    }
+
+    // ── Employees ─────────────────────────────────────────────────────────
+    match /employees/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Services (public read) ─────────────────────────────────────────────
+    match /services/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Enquiries ─────────────────────────────────────────────────────────
+    match /enquiries/{id} {
+      allow read: if isAdmin() || isEmployee() ||
+        (isSignedIn() && resource.data.user_id == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || isEmployee();
+      allow delete: if isAdmin();
+    }
+
+    // ── Attendance ────────────────────────────────────────────────────────
+    match /attendance/{id} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // ── Leave Requests ────────────────────────────────────────────────────
+    match /leave_requests/{id} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow create: if isEmployee();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Payroll ───────────────────────────────────────────────────────────
+    match /payroll/{id} {
+      allow read: if isAdmin() ||
+        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow write: if isAdmin();
+    }
+
+    // ── Reviews ───────────────────────────────────────────────────────────
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isAdmin() ||
+        (isSignedIn() && resource.data.user_id == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ── Gallery (public read) ──────────────────────────────────────────────
+    match /gallery/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Offers (public read) ───────────────────────────────────────────────
+    match /offers/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Settings (public read) ─────────────────────────────────────────────
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

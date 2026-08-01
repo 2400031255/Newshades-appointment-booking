@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html" class="active"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Shop Settings</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <div class="row g-4">
+      <!-- Shop Info -->
+      <div class="col-lg-6">
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-store me-2" style="color:var(--gold);"></i>Shop Information</h6>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">SHOP NAME</label><input type="text" id="shopName" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="New Shades Eluru"/></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">ADDRESS</label><textarea id="shopAddress" rows="2" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="Shop address…"></textarea></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">PHONE</label><input type="tel" id="shopPhone" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="+91 XXXXX XXXXX"/></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">EMAIL</label><input type="email" id="shopEmail" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="info@newshadeseluru.in"/></div>
+          <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">GOOGLE MAPS LINK</label><input type="url" id="shopMaps" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://maps.google.com/…"/></div>
+          <button id="saveShopBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-save me-2"></i>Save Shop Info</button>
+        </div>
+      </div>
+      <!-- WhatsApp & Hours -->
+      <div class="col-lg-6">
+        <div class="admin-card mb-4">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fab fa-whatsapp me-2" style="color:#25d366;"></i>WhatsApp Settings</h6>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">WHATSAPP NUMBER (with country code)</label><input type="tel" id="waNumber" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(37,211,102,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="919XXXXXXXXX"/></div>
+          <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">DEFAULT MESSAGE</label><textarea id="waMessage" rows="3" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(37,211,102,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="Hi! I'd like to book an appointment…"></textarea></div>
+          <button id="saveWaBtn" class="btn-gold" style="width:100%;justify-content:center;background:linear-gradient(135deg,#25d366,#128c7e);"><i class="fab fa-whatsapp me-2"></i>Save WhatsApp Settings</button>
+        </div>
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-clock me-2" style="color:var(--gold);"></i>Business Hours</h6>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">OPENING TIME</label><input type="time" id="openTime" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">CLOSING TIME</label><input type="time" id="closeTime" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
+          <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">CLOSED ON</label><input type="text" id="closedDays" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Sunday"/></div>
+          <button id="saveHoursBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-save me-2"></i>Save Hours</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getSettings, saveSettings, showToast } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+const s = await getSettings();
+document.getElementById('shopName').value    = s.shop_name    || '';
+document.getElementById('shopAddress').value = s.address      || '';
+document.getElementById('shopPhone').value   = s.phone        || '';
+document.getElementById('shopEmail').value   = s.email        || '';
+document.getElementById('shopMaps').value    = s.maps_link    || '';
+document.getElementById('waNumber').value    = s.wa_number    || '';
+document.getElementById('waMessage').value   = s.wa_message   || '';
+document.getElementById('openTime').value    = s.open_time    || '09:00';
+document.getElementById('closeTime').value   = s.close_time   || '20:00';
+document.getElementById('closedDays').value  = s.closed_days  || '';
+
+document.getElementById('saveShopBtn').addEventListener('click', async () => {
+  try {
+    await saveSettings({ shop_name: document.getElementById('shopName').value, address: document.getElementById('shopAddress').value, phone: document.getElementById('shopPhone').value, email: document.getElementById('shopEmail').value, maps_link: document.getElementById('shopMaps').value });
+    showToast('Shop info saved!', 'success');
+  } catch { showToast('Failed to save.', 'danger'); }
+});
+
+document.getElementById('saveWaBtn').addEventListener('click', async () => {
+  try {
+    await saveSettings({ wa_number: document.getElementById('waNumber').value, wa_message: document.getElementById('waMessage').value });
+    showToast('WhatsApp settings saved!', 'success');
+  } catch { showToast('Failed to save.', 'danger'); }
+});
+
+document.getElementById('saveHoursBtn').addEventListener('click', async () => {
+  try {
+    await saveSettings({ open_time: document.getElementById('openTime').value, close_time: document.getElementById('closeTime').value, closed_days: document.getElementById('closedDays').value });
+    showToast('Business hours saved!', 'success');
+  } catch { showToast('Failed to save.', 'danger'); }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+</body>
+</html>

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Employees – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Employee Management</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-user-plus me-2" style="color:var(--gold);"></i>Create Employee</h6>
+          <div id="createAlert"></div>
+          <form id="createEmpForm">
+            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">FULL NAME *</label><input type="text" id="empName" required style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="Full Name"/></div>
+            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">EMAIL *</label><input type="email" id="empEmail" required style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="employee@email.com"/></div>
+            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">PHONE</label><input type="text" id="empPhone" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="Phone"/></div>
+            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">ROLE</label><select id="empRole" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;"><option>Consultant</option><option>Stylist</option><option>Senior Stylist</option><option>Receptionist</option><option>Barber</option><option>Beautician</option><option>Manager</option></select></div>
+            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">MONTHLY SALARY (₹)</label><input type="number" id="empSalary" min="0" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 25000"/></div>
+            <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">PASSWORD *</label><input type="password" id="empPassword" required minlength="6" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="Min 6 characters"/></div>
+            <button type="submit" class="btn-gold" style="width:100%;justify-content:center;" id="createEmpBtn"><i class="fas fa-plus me-2"></i>Create Employee</button>
+          </form>
+          <div style="margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(105,152,255,0.07);border:1px solid rgba(105,152,255,0.18);font-size:0.8rem;color:#9dc0ff;"><i class="fas fa-info-circle me-1"></i>Employee logs in at <strong>employee/dashboard.html</strong> with their email &amp; password.</div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-users me-2" style="color:var(--gold);"></i>All Employees <span style="color:var(--gold);font-size:0.85rem;" id="empCount"></span></h6>
+          <div id="empList"><div class="text-center py-4" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, updateEmployee, deleteEmployee, showToast, auth } from '../js/firebase.js';
+import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+let employees = [];
+
+async function loadEmps() {
+  employees = await getAllEmployees();
+  document.getElementById('empCount').textContent = `(${employees.length})`;
+  const list = document.getElementById('empList');
+  if (!employees.length) { list.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2.5rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees yet.</p></div>'; return; }
+  list.innerHTML = employees.map(emp => `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,${emp.is_active?'0.25':'0.08'});border-radius:16px;padding:18px 20px;margin-bottom:12px;">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <div style="font-weight:700;color:${emp.is_active?'#fff':'rgba(240,230,211,0.4)'};font-size:0.95rem;">${emp.full_name}${!emp.is_active?'<span style="font-size:0.72rem;color:rgba(255,99,99,0.7);margin-left:6px;">(Inactive)</span>':''}</div>
+          <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-top:3px;">${emp.email||''} · ${emp.phone||''}</div>
+          ${emp.monthly_salary?`<div style="font-size:0.7rem;color:rgba(201,168,76,0.7);margin-top:4px;">₹${Math.round(emp.monthly_salary)}/mo</div>`:''}
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span style="padding:3px 12px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(105,152,255,0.12);color:#9dc0ff;border:1px solid rgba(105,152,255,0.2);">${emp.role}</span>
+          <button onclick="toggleEmp('${emp.id}',${emp.is_active?1:0})" style="padding:5px 12px;border-radius:999px;border:1px solid;font-size:0.72rem;font-weight:700;cursor:pointer;${emp.is_active?'background:rgba(255,99,99,0.08);border-color:rgba(255,99,99,0.25);color:#ff9a9a;':'background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.25);color:#7ce0aa;'}"><i class="fas fa-${emp.is_active?'ban':'check'} me-1"></i>${emp.is_active?'Deactivate':'Activate'}</button>
+          <button onclick="delEmp('${emp.id}')" style="padding:5px 12px;border-radius:999px;border:1px solid rgba(226,93,93,0.2);background:rgba(226,93,93,0.06);color:rgba(255,154,154,0.6);font-size:0.72rem;font-weight:700;cursor:pointer;"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+loadEmps();
+
+document.getElementById('createEmpForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('createEmpBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating…';
+  document.getElementById('createAlert').innerHTML = '';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, document.getElementById('empEmail').value.trim(), document.getElementById('empPassword').value);
+    const db = getFirestore();
+    await setDoc(doc(db, 'employees', cred.user.uid), {
+      full_name: document.getElementById('empName').value.trim(),
+      email: document.getElementById('empEmail').value.trim(),
+      phone: document.getElementById('empPhone').value.trim(),
+      role: document.getElementById('empRole').value,
+      monthly_salary: parseFloat(document.getElementById('empSalary').value)||0,
+      is_active: 1,
+      created_at: serverTimestamp()
+    });
+    showToast('Employee created!', 'success');
+    document.getElementById('createEmpForm').reset();
+    await loadEmps();
+  } catch(err) {
+    const msg = err.code === 'auth/email-already-in-use' ? 'Email already in use.' : err.message;
+    document.getElementById('createAlert').innerHTML = `<div style="padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:0.84rem;background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.28);color:#ff9a9a;display:flex;align-items:center;gap:8px;"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
+  } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus me-2"></i>Create Employee'; }
+});
+
+window.toggleEmp = async (id, isActive) => {
+  try { await updateEmployee(id, { is_active: isActive ? 0 : 1 }); showToast('Updated!', 'success'); await loadEmps(); }
+  catch(err) { showToast('Failed.', 'danger'); }
+};
+window.delEmp = async (id) => {
+  if (!confirm('Delete this employee?')) return;
+  try { await deleteEmployee(id); showToast('Deleted.', 'success'); await loadEmps(); }
+  catch(err) { showToast('Failed.', 'danger'); }
+};
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Profile – New Shades</title>
+  <style>html,body{background:#000!important;color:rgba(255,255,255,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html">
+      <div class="brand-wrap">
+        <img src="../images/logo.jpeg" alt="NS" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
+        <div class="brand-text" style="margin-left:0;"><span class="brand-name">New Shades</span><span class="brand-tagline">Premium Salon</span></div>
+      </div>
+    </a>
+    <button class="navbar-toggler-custom" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="enquire.html"><i class="fas fa-paper-plane me-1"></i>Enquire</a></li>
+        <li class="nav-item"><a class="nav-link" href="enquiries.html"><i class="fas fa-list-alt me-1"></i>My Enquiries</a></li>
+        <li class="nav-item"><a class="nav-link" href="offers.html"><i class="fas fa-fire me-1" style="color:#ff9500;"></i>Offers</a></li>
+        <li class="nav-item"><a class="nav-link nav-active" href="profile.html"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
+        <li class="nav-item ms-lg-2"><a class="btn-nav-outline" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> Account</div>
+        <h1 class="page-header-title">My <span>Profile</span></h1>
+        <p class="page-header-sub">Manage your personal details and preferences.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7 reveal-up">
+
+        <div class="glass-card text-center mb-4" style="padding:32px 24px;">
+          <div class="profile-avatar mx-auto"><i class="fas fa-user"></i><div class="profile-avatar-ring"></div></div>
+          <h4 class="profile-name mt-3" id="profileName">—</h4>
+          <p class="profile-since" id="profileSince">Member</p>
+          <div class="d-flex justify-content-center gap-3 mt-3">
+            <div class="text-center">
+              <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold-2);font-weight:700;" id="profilePhone">—</div>
+              <div style="font-size:0.72rem;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);">Phone</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <h6 style="color:#fff;font-weight:700;margin-bottom:20px;"><i class="fas fa-edit me-2 text-gold"></i>Edit Details</h6>
+          <form id="profileForm">
+            <div class="auth-field">
+              <label class="auth-label">Full Name</label>
+              <div class="auth-input-wrap"><i class="fas fa-user auth-icon"></i><input type="text" id="editName" class="auth-input" required/></div>
+            </div>
+            <div class="auth-field">
+              <label class="auth-label">Mobile Number</label>
+              <div class="auth-input-wrap"><i class="fas fa-phone auth-icon"></i><input type="tel" id="editPhone" class="auth-input" required/></div>
+            </div>
+            <div class="auth-field">
+              <label class="auth-label">Email Address</label>
+              <div class="auth-input-wrap"><i class="fas fa-envelope auth-icon"></i><input type="email" id="editEmail" class="auth-input" disabled style="opacity:0.5;cursor:not-allowed;"/></div>
+              <small style="color:var(--text-muted);font-size:0.78rem;margin-top:4px;display:block;">Email cannot be changed.</small>
+            </div>
+            <button type="submit" class="auth-btn mt-2"><i class="fas fa-save me-2"></i>Save Changes</button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, updateUserProfile, formatDate, showToast } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+
+document.getElementById('profileName').textContent = profile?.full_name || '—';
+document.getElementById('profilePhone').textContent = profile?.phone || '—';
+document.getElementById('profileSince').textContent = 'Member since ' + formatDate(profile?.created_at);
+document.getElementById('editName').value = profile?.full_name || '';
+document.getElementById('editPhone').value = profile?.phone || '';
+document.getElementById('editEmail').value = user.email;
+
+document.getElementById('profileForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  try {
+    await updateUserProfile(user.uid, { full_name: document.getElementById('editName').value.trim(), phone: document.getElementById('editPhone').value.trim() });
+    showToast('Profile updated successfully!', 'success');
+    document.getElementById('profileName').textContent = document.getElementById('editName').value.trim();
+    document.getElementById('profilePhone').textContent = document.getElementById('editPhone').value.trim();
+  } catch(err) { showToast('Failed to update profile.', 'danger'); }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+</script>
+</body>
+</html>

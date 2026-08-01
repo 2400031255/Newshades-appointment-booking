@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard – New Shades</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+  <style>
+  .enq-badge-pending{background:rgba(255,170,77,0.16);color:#ffc36b;}
+  .enq-badge-contacted{background:rgba(105,152,255,0.16);color:#9dc0ff;}
+  .enq-badge-confirmed{background:rgba(71,188,121,0.16);color:#7ce0aa;}
+  .enq-badge-closed{background:rgba(150,150,150,0.14);color:rgba(240,230,211,0.45);}
+  </style>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar -->
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2">
+    <img src="../images/logo.jpeg" alt="New Shades Logo" class="admin-brand-logo"/>
+    <div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span><span class="sidebar-pending-badge" id="pendingBadge" style="display:none;"></span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+
+<!-- Main Content -->
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <h6 class="mb-0 fw-bold">Dashboard Overview</h6>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="text-muted small" id="adminName"></span>
+      <div class="service-icon" style="width:36px;height:36px;font-size:1rem;"><i class="fas fa-user"></i></div>
+    </div>
+  </div>
+
+  <div class="admin-page-body">
+
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Customers</div><div class="stat-number" id="statCustomers">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-users"></i></div></div></div></div>
+      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Services</div><div class="stat-number" id="statServices">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-concierge-bell"></i></div></div></div></div>
+      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#0d6efd;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Enquiries</div><div class="stat-number" id="statEnqs">—</div></div><div class="stat-icon" style="color:#0d6efd;"><i class="fas fa-clipboard-list"></i></div></div></div></div>
+      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#fd7e14;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Pending</div><div class="stat-number" id="statPending">—</div></div><div class="stat-icon" style="color:#fd7e14;"><i class="fas fa-clock"></i></div></div></div></div>
+    </div>
+
+    <!-- Today's Enquiries -->
+    <div class="admin-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h6 class="fw-bold mb-0">Today's Enquiries <span style="color:var(--gold);font-size:0.85rem;" id="todayCount"></span></h6>
+        <a href="enquiries.html" class="btn-outline-gold" style="font-size:0.8rem;padding:6px 16px;">View All</a>
+      </div>
+      <div id="todayList"><div class="text-center py-4" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div></div>
+    </div>
+
+    <!-- Recent Enquiries -->
+    <div class="admin-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h6 class="fw-bold mb-0">Recent Enquiries</h6>
+        <a href="enquiries.html" class="btn-outline-gold" style="font-size:0.8rem;padding:6px 16px;">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>Services</th><th>Preferred Date</th><th>Status</th></tr></thead>
+          <tbody id="recentBody"><tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4">
+      <div class="col-md-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-plus"></i></div><h6 class="fw-bold">Add New Service</h6><p class="text-muted small">Expand your service offerings</p><a href="services.html" class="btn-gold mt-2">Manage Services</a></div></div>
+      <div class="col-md-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-clipboard-list"></i></div><h6 class="fw-bold">Manage Enquiries</h6><p class="text-muted small">View, update and respond to enquiries</p><a href="enquiries.html" class="btn-gold mt-2">View All</a></div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Update Modal -->
+<div id="enqModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#1a1510;border:1px solid rgba(201,168,76,0.3);border-radius:24px;padding:32px;width:min(100%,480px);margin:16px;box-shadow:0 40px 100px rgba(0,0,0,0.6);">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;">Update Enquiry <span id="modalEnqId" style="color:var(--gold-2);"></span></h6>
+      <button onclick="closeModal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mb-3">
+      <label class="field-label mb-2">Status</label>
+      <select id="modalStatus" style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;">
+        <option>Pending</option><option>Contacted</option><option>Confirmed</option><option>Closed</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="field-label mb-2">Assign to Employee</label>
+      <select id="modalEmployee" style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(105,152,255,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;">
+        <option value="">— Unassigned —</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label class="field-label mb-2">Admin Notes</label>
+      <textarea id="modalNotes" style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;resize:vertical;min-height:80px;font-family:'DM Sans',sans-serif;font-size:0.9rem;" placeholder="Add a note for the customer…" maxlength="1000"></textarea>
+    </div>
+    <div class="d-flex gap-3">
+      <button id="modalSaveBtn" class="btn-gold-hero" style="flex:1;justify-content:center;"><i class="fas fa-save me-2"></i>Save</button>
+      <button onclick="closeModal()" style="flex:1;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(240,230,211,0.8);font-weight:700;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllCustomers, getServices, getAllEmployees, updateEnquiry, showToast, formatDate, to12hr } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+const [enquiries, customers, services, employees] = await Promise.all([
+  getAllEnquiries(), getAllCustomers(), getServices(), getAllEmployees()
+]);
+
+// Stats
+document.getElementById('statCustomers').textContent = customers.length;
+document.getElementById('statServices').textContent = services.length;
+document.getElementById('statEnqs').textContent = enquiries.length;
+const pending = enquiries.filter(e => e.status === 'Pending');
+document.getElementById('statPending').textContent = pending.length;
+if (pending.length) { const b=document.getElementById('pendingBadge'); b.textContent=pending.length; b.style.display=''; }
+
+// Today's enquiries
+const today = new Date().toISOString().slice(0,10);
+const todayEnqs = enquiries.filter(e => e.preferred_date === today);
+document.getElementById('todayCount').textContent = `(${todayEnqs.length})`;
+const todayList = document.getElementById('todayList');
+if (todayEnqs.length) {
+  todayList.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr><th>Customer</th><th>Phone</th><th>Services</th><th>Time</th><th>Status</th><th>Action</th></tr></thead><tbody>${
+    todayEnqs.map(e => `<tr>
+      <td class="admin-td-bold">${e.full_name}</td>
+      <td class="admin-td-muted">${e.phone}</td>
+      <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">${e.selected_services}</td>
+      <td class="admin-td-muted">${e.preferred_time||'Flexible'}</td>
+      <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
+      <td><button class="appt-action-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit"></i></button></td>
+    </tr>`).join('')
+  }</tbody></table></div>`;
+} else {
+  todayList.innerHTML = '<p class="text-muted text-center py-3" style="font-size:0.88rem;">No enquiries with today\'s preferred date.</p>';
+}
+
+// Recent
+const recentBody = document.getElementById('recentBody');
+recentBody.innerHTML = enquiries.slice(0,10).map(e => `<tr>
+  <td class="admin-td-muted">#${(e.id||'').slice(0,6)}</td>
+  <td class="admin-td-bold">${e.full_name}</td>
+  <td class="admin-td-muted">${e.phone}</td>
+  <td>${(e.selected_services||'').slice(0,40)}${(e.selected_services||'').length>40?'…':''}</td>
+  <td class="admin-td-muted">${e.preferred_date||'—'}</td>
+  <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
+</tr>`).join('') || '<tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">No enquiries yet.</td></tr>';
+
+// Populate employee dropdown
+const empSel = document.getElementById('modalEmployee');
+employees.forEach(emp => { const o=document.createElement('option'); o.value=emp.id; o.textContent=`${emp.full_name} (${emp.role})`; empSel.appendChild(o); });
+
+// Modal
+let currentEid = null;
+window.openModal = (eid, status, notes, empId) => {
+  currentEid = eid;
+  document.getElementById('modalEnqId').textContent = '#' + eid.slice(0,6);
+  document.getElementById('modalStatus').value = status;
+  document.getElementById('modalNotes').value = notes || '';
+  document.getElementById('modalEmployee').value = empId || '';
+  document.getElementById('enqModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+window.closeModal = () => { document.getElementById('enqModal').style.display='none'; document.body.style.overflow=''; };
+document.getElementById('enqModal').addEventListener('click', e => { if(e.target===document.getElementById('enqModal')) closeModal(); });
+
+document.getElementById('modalSaveBtn').addEventListener('click', async () => {
+  if (!currentEid) return;
+  const empId = document.getElementById('modalEmployee').value;
+  const emp = employees.find(e => e.id === empId);
+  try {
+    await updateEnquiry(currentEid, {
+      status: document.getElementById('modalStatus').value,
+      admin_notes: document.getElementById('modalNotes').value,
+      assigned_employee_id: empId || null,
+      emp_name: emp?.full_name || null
+    });
+    showToast('Enquiry updated!', 'success');
+    closeModal();
+    setTimeout(() => location.reload(), 800);
+  } catch(err) { showToast('Failed to update.', 'danger'); }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+
+// Sidebar
+const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay'), toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+<style>
+.appt-action-btn{width:32px;height:32px;border-radius:8px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+.btn-edit{background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3);color:#9dc0ff;}
+.btn-edit:hover{transform:scale(1.1);}
+</style>
+</body>
+</html>

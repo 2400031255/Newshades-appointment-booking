@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exclusive Offers – New Shades</title>
+  <style>html,body{background:#000!important;color:rgba(255,255,255,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+  <style>
+  .offers-shell{min-height:100vh;padding:100px 0 80px;position:relative;}
+  .offers-shell::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 15% 10%,rgba(201,168,76,0.12),transparent 40%),radial-gradient(ellipse at 85% 85%,rgba(201,168,76,0.07),transparent 40%);pointer-events:none;z-index:0;}
+  .offers-hero{position:relative;border-radius:32px;padding:56px 52px;background:linear-gradient(135deg,rgba(201,168,76,0.16) 0%,rgba(255,255,255,0.03) 50%,rgba(201,168,76,0.08) 100%);border:1px solid rgba(201,168,76,0.28);overflow:hidden;margin-bottom:48px;text-align:center;}
+  .offers-hero-icon{width:72px;height:72px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-size:1.8rem;margin:0 auto 20px;box-shadow:0 16px 48px rgba(201,168,76,0.4);animation:heroIconPulse 3s ease-in-out infinite;}
+  @keyframes heroIconPulse{0%,100%{box-shadow:0 16px 48px rgba(201,168,76,0.4);transform:scale(1);}50%{box-shadow:0 20px 64px rgba(201,168,76,0.65);transform:scale(1.04);}}
+  .offer-full-card{position:relative;border-radius:24px;padding:28px;background:linear-gradient(145deg,rgba(201,168,76,0.08),rgba(255,255,255,0.025));border:1px solid rgba(201,168,76,0.2);overflow:hidden;transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),border-color 0.3s ease,box-shadow 0.3s ease;height:100%;}
+  .offer-full-card:hover{transform:translateY(-6px);border-color:rgba(201,168,76,0.45);box-shadow:0 28px 70px rgba(0,0,0,0.4);}
+  .offer-full-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-size:0.72rem;font-weight:900;margin-bottom:14px;box-shadow:0 6px 20px rgba(201,168,76,0.4);}
+  .offer-full-cta{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:#120e08;font-weight:800;font-size:0.88rem;transition:transform 0.25s ease,box-shadow 0.25s ease;text-decoration:none;}
+  .offer-full-cta:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(201,168,76,0.4);color:#120e08;}
+  @media(max-width:576px){.offers-hero{padding:36px 20px;}}
+  </style>
+</head>
+<body>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html">
+      <div class="brand-wrap">
+        <img src="../images/logo.jpeg" alt="NS" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
+        <div class="brand-text" style="margin-left:0;"><span class="brand-name">New Shades</span><span class="brand-tagline">Premium Salon</span></div>
+      </div>
+    </a>
+    <button class="navbar-toggler-custom" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i>Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="enquire.html"><i class="fas fa-paper-plane me-1"></i>Enquire</a></li>
+        <li class="nav-item"><a class="nav-link" href="enquiries.html"><i class="fas fa-list-alt me-1"></i>My Enquiries</a></li>
+        <li class="nav-item"><a class="nav-link nav-active" href="offers.html"><i class="fas fa-fire me-1" style="color:#ff9500;"></i>Offers</a></li>
+        <li class="nav-item"><a class="nav-link" href="profile.html"><i class="fas fa-user-circle me-1"></i>Profile</a></li>
+        <li class="nav-item ms-lg-2"><a class="btn-nav-outline" href="#" id="logoutBtn"><i class="fas fa-sign-out-alt me-1"></i>Logout</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="offers-shell">
+  <div class="container" style="position:relative;z-index:1;">
+    <div class="offers-hero reveal-up">
+      <div class="offers-hero-icon"><i class="fas fa-fire"></i></div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;color:#fff;margin:0 0 12px;">Exclusive <span style="background:linear-gradient(90deg,var(--gold-2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Offers</span> &amp; Deals</h1>
+      <p style="color:rgba(245,235,215,0.68);font-size:1rem;max-width:520px;margin:0 auto 24px;line-height:1.7;">Premium promotions crafted just for you. Book now and save on our finest services.</p>
+      <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--gold-2);" id="activeCount">—</div><div style="font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(245,235,215,0.45);">Live Offers</div></div>
+        <div style="width:1px;height:40px;background:rgba(201,168,76,0.2);align-self:center;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--gold-2);">100%</div><div style="font-size:0.72rem;letter-spacing:0.16em;text-transform:uppercase;color:rgba(245,235,215,0.45);">Exclusive</div></div>
+      </div>
+    </div>
+
+    <div id="offersContent"><div class="text-center py-5" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Loading offers…</div></div>
+
+    <div style="text-align:center;padding:48px 0 20px;" class="reveal-up">
+      <a href="enquire.html" class="offer-full-cta" style="font-size:1rem;padding:14px 32px;"><i class="fas fa-paper-plane"></i> Book Your Session</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="../js/main.js" defer></script>
+<script type="module">
+import { requireAuth, logoutUser, getActiveOffers, getAllOffers, formatDate } from '../js/firebase.js';
+
+await requireAuth('../login.html');
+
+const [active, all] = await Promise.all([getActiveOffers(), getAllOffers()]);
+const today = new Date().toISOString().slice(0,10);
+const upcoming = all.filter(o => o.is_active && o.valid_from && o.valid_from > today);
+
+document.getElementById('activeCount').textContent = active.length;
+
+const content = document.getElementById('offersContent');
+if (active.length) {
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:28px;" class="reveal-up">
+      <div style="width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.22);color:var(--gold-2);font-size:1rem;"><i class="fas fa-bolt"></i></div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#fff;margin:0;">Live Now</h2>
+      <span style="margin-left:auto;padding:4px 14px;border-radius:999px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.22);color:var(--gold-2);font-size:0.78rem;font-weight:700;">${active.length} Active</span>
+    </div>
+    <div class="row g-4 mb-5">
+      ${active.map((o,i) => `
+        <div class="col-md-6 col-lg-4 reveal-up" style="animation-delay:${i*0.08}s">
+          <div class="offer-full-card">
+            ${o.discount_text?`<div class="offer-full-badge"><i class="fas fa-bolt" style="font-size:0.6rem;"></i>${o.discount_text}</div>`:''}
+            <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:#fff;margin-bottom:10px;">${o.title}</div>
+            ${o.description?`<div style="color:rgba(245,235,215,0.62);font-size:0.88rem;line-height:1.65;margin-bottom:16px;">${o.description}</div>`:''}
+            <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+              ${o.valid_until?`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(245,235,215,0.55);font-size:0.75rem;"><i class="fas fa-clock" style="font-size:0.65rem;"></i>Until ${formatDate(o.valid_until)}</span>`:'<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(245,235,215,0.55);font-size:0.75rem;"><i class="fas fa-infinity" style="font-size:0.65rem;"></i>No Expiry</span>'}
+            </div>
+            <a href="enquire.html" class="offer-full-cta"><i class="fas fa-paper-plane"></i> Enquire Now</a>
+          </div>
+        </div>`).join('')}
+    </div>`;
+} else {
+  content.innerHTML = `<div style="text-align:center;padding:80px 20px;" class="reveal-up"><div style="width:96px;height:96px;border-radius:28px;display:grid;place-items:center;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.14);color:rgba(201,168,76,0.35);font-size:2.4rem;margin:0 auto 24px;"><i class="fas fa-tag"></i></div><h3 style="font-family:'Playfair Display',serif;color:#fff;margin-bottom:8px;">No Active Offers Right Now</h3><p style="color:rgba(245,235,215,0.45);font-size:0.9rem;margin-bottom:24px;">Check back soon — exclusive deals are always around the corner.</p></div>`;
+}
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+</script>
+</body>
+</html>

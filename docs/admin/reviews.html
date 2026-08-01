@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reviews – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Customer Reviews</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <!-- Stats -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-3"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Reviews</div><div class="stat-number" id="statTotal">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-star"></i></div></div></div></div>
+      <div class="col-md-3"><div class="stat-card" style="border-left-color:#25d366;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Avg Rating</div><div class="stat-number" id="statAvg">—</div></div><div class="stat-icon" style="color:#25d366;"><i class="fas fa-star-half-alt"></i></div></div></div></div>
+      <div class="col-md-3"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">5 Stars</div><div class="stat-number" id="stat5">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-award"></i></div></div></div></div>
+      <div class="col-md-3"><div class="stat-card" style="border-left-color:#0d6efd;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Visible</div><div class="stat-number" id="statVisible">—</div></div><div class="stat-icon" style="color:#0d6efd;"><i class="fas fa-eye"></i></div></div></div></div>
+    </div>
+    <!-- Reviews Table -->
+    <div class="admin-card">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h6 class="fw-bold mb-0" style="color:#fff;">All Reviews <span style="color:var(--gold);" id="reviewCount"></span></h6>
+        <select id="filterRating" style="padding:7px 12px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;" onchange="filterReviews()">
+          <option value="">All Ratings</option><option value="5">5 ★</option><option value="4">4 ★</option><option value="3">3 ★</option><option value="2">2 ★</option><option value="1">1 ★</option>
+        </select>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead><tr><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Visible</th><th>Action</th></tr></thead>
+          <tbody id="reviewBody"><tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getReviews, updateReview, showToast, formatDate } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+let allReviews = [];
+
+async function load() {
+  allReviews = await getReviews(200);
+  renderStats();
+  renderTable(allReviews);
+}
+load();
+
+function stars(n) {
+  return Array.from({length:5},(_,i)=>`<i class="fas fa-star" style="color:${i<n?'#C9A84C':'rgba(255,255,255,0.15)';font-size:0.75rem;"></i>`).join('');
+}
+
+function renderStats() {
+  document.getElementById('statTotal').textContent = allReviews.length;
+  const avg = allReviews.length ? (allReviews.reduce((s,r)=>s+(r.rating||0),0)/allReviews.length).toFixed(1) : '—';
+  document.getElementById('statAvg').textContent = avg;
+  document.getElementById('stat5').textContent = allReviews.filter(r=>r.rating===5).length;
+  document.getElementById('statVisible').textContent = allReviews.filter(r=>r.is_visible!==false).length;
+}
+
+function renderTable(reviews) {
+  document.getElementById('reviewCount').textContent = `(${reviews.length})`;
+  document.getElementById('reviewBody').innerHTML = reviews.map(r => `<tr>
+    <td><div class="admin-td-bold">${r.full_name||'Anonymous'}</div><div style="font-size:0.78rem;color:var(--text-muted);">${r.email||''}</div></td>
+    <td><div style="display:flex;gap:2px;">${Array.from({length:5},(_,i)=>`<i class="fas fa-star" style="color:${i<(r.rating||0)?'#C9A84C':'rgba(255,255,255,0.15)'};font-size:0.8rem;"></i>`).join('')}</div><div style="font-size:0.75rem;color:var(--gold-2);margin-top:2px;">${r.rating||0}/5</div></td>
+    <td style="max-width:260px;font-size:0.85rem;color:rgba(240,230,211,0.75);">${(r.review_text||'').slice(0,120)}${(r.review_text||'').length>120?'…':''}</td>
+    <td class="admin-td-muted">${formatDate(r.created_at)}</td>
+    <td><span style="padding:4px 12px;border-radius:999px;font-size:0.75rem;font-weight:700;${r.is_visible!==false?'background:rgba(37,211,102,0.16);color:#7ce0aa;':'background:rgba(150,150,150,0.14);color:rgba(240,230,211,0.5);'}">${r.is_visible!==false?'Visible':'Hidden'}</span></td>
+    <td><button class="appt-action-btn" onclick="toggleVisible('${r.id}',${r.is_visible!==false})" style="width:32px;height:32px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.1);color:#C9A84C;cursor:pointer;font-size:0.78rem;display:flex;align-items:center;justify-content:center;" title="${r.is_visible!==false?'Hide':'Show'}"><i class="fas fa-${r.is_visible!==false?'eye-slash':'eye'}"></i></button></td>
+  </tr>`).join('') || '<tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">No reviews yet.</td></tr>';
+}
+
+window.filterReviews = () => {
+  const val = document.getElementById('filterRating').value;
+  renderTable(val ? allReviews.filter(r=>String(r.rating)===val) : allReviews);
+};
+
+window.toggleVisible = async (id, currentlyVisible) => {
+  try {
+    await updateReview(id, { is_visible: !currentlyVisible });
+    showToast(currentlyVisible ? 'Review hidden.' : 'Review visible.', 'success');
+    load();
+  } catch { showToast('Failed to update.', 'danger'); }
+};
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+</body>
+</html>

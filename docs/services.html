@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Explore all services at New Shades – haircuts, beard trims, hair color, facials and more."/>
+  <title>Services – New Shades</title>
+  <style>html,body{background:#000!important;color:rgba(255,255,255,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="style.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="pageTransition" style="position:fixed;inset:0;background:#000;z-index:99998;opacity:0;pointer-events:none;transition:opacity 0.15s ease;"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">
+      <div class="brand-wrap">
+        <img src="images/logo.jpeg" alt="NS" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
+        <div class="brand-text" style="margin-left:0;"><span class="brand-name">New Shades</span><span class="brand-tagline">Premium Salon</span></div>
+      </div>
+    </a>
+    <button class="navbar-toggler-custom" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        <li class="nav-item"><a class="nav-link nav-active" href="services.html">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="gallery.html">Gallery</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+        <li class="nav-item ms-lg-2"><a class="btn-nav-gold" href="login.html"><i class="fas fa-sign-in-alt me-1"></i>Login</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-orb"></div>
+  <div class="container">
+    <div class="page-header-inner reveal-up">
+      <div>
+        <div class="section-badge mb-2"><span class="badge-dot"></span> What We Offer</div>
+        <h1 class="page-header-title">Our <span>Services</span></h1>
+        <p class="page-header-sub">Premium grooming and beauty services tailored just for you.</p>
+      </div>
+      <a href="index.html#enquire" class="btn-gold-hero"><i class="fas fa-paper-plane me-2"></i>Make an Enquiry</a>
+    </div>
+  </div>
+</div>
+
+<section class="booking-section">
+  <div class="container">
+    <div class="cat-filters mb-4 reveal-up" id="catFilters" style="display:none;">
+      <button type="button" class="cat-btn active" data-cat="all">All</button>
+    </div>
+    <div class="row g-4" id="servicesGrid">
+      <div class="col-12 text-center py-5" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Loading services…</div>
+    </div>
+    <div class="text-center mt-5 reveal-up">
+      <a href="index.html#enquire" class="btn-gold-hero"><i class="fas fa-calendar-check me-2"></i>Book an Appointment</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="footer-glow"></div>
+  <div class="container">
+    <div class="row py-5 g-4">
+      <div class="col-lg-4 mb-2"><div class="footer-brand"><img src="images/logo.jpeg" alt="New Shades" class="footer-logo"/><div><div class="footer-brand-name">New Shades</div><div class="footer-brand-sub">Premium Salon &amp; Studio</div></div></div><p class="footer-desc">Premium salon services crafted for your style, comfort and confidence.</p><div class="footer-socials"><a href="https://www.instagram.com/newshades_eluru?igsh=eXU1MDh3aXFvdmh2" class="social-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a><a href="#" class="social-btn" id="footerWa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a></div></div>
+      <div class="col-lg-2 col-6"><div class="footer-heading">Quick Links</div><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="about.html">About</a></li><li><a href="gallery.html">Gallery</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+      <div class="col-lg-3 col-6"><div class="footer-heading">Hours</div><ul class="footer-links"><li>Mon – Fri &nbsp;<span id="ftWeekday">9AM – 8PM</span></li><li>Saturday &nbsp;<span id="ftSat">9AM – 6PM</span></li><li>Sunday &nbsp;<span id="ftSun">10AM – 4PM</span></li></ul></div>
+      <div class="col-lg-3"><div class="footer-heading">Contact</div><ul class="footer-links"><li><i class="fas fa-map-marker-alt me-2 text-gold"></i><span id="ftAddr">Eluru, Andhra Pradesh</span></li><li><i class="fas fa-phone me-2 text-gold"></i><a href="#" id="ftPhone">Contact via WhatsApp</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 New Shades. All rights reserved.</span><span>Crafted with <i class="fas fa-heart text-gold"></i> for you</span></div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="js/main.js" defer></script>
+<script type="module">
+import { getServices, getSettings } from './js/firebase.js';
+
+const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Nails:'fas fa-paint-brush' };
+
+async function load() {
+  const [svcs, s] = await Promise.all([getServices(true), getSettings()]);
+  if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
+  if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
+  if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
+  if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
+  if (s.address) document.getElementById('ftAddr').textContent = s.address;
+  if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
+
+  const cats = [...new Set(svcs.map(s => s.category).filter(Boolean))];
+  if (cats.length) {
+    const cf = document.getElementById('catFilters');
+    cf.style.display = '';
+    cats.forEach(c => { const b=document.createElement('button'); b.className='cat-btn'; b.dataset.cat=c; b.textContent=c; cf.appendChild(b); });
+    cf.addEventListener('click', e => {
+      const btn = e.target.closest('.cat-btn'); if (!btn) return;
+      cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      document.querySelectorAll('.service-col').forEach(el => {
+        el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  }
+
+  document.getElementById('servicesGrid').innerHTML = svcs.map((sv,i) => `
+    <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="${sv.category||''}" style="animation-delay:${i*0.06}s">
+      <div class="svc-select-card" style="cursor:default;">
+        <div class="svc-select-icon"><i class="${iconMap[sv.category]||'fas fa-magic'}"></i></div>
+        <h6 class="svc-select-name">${sv.service_name}</h6>
+        <p class="svc-select-desc">${sv.description||''}</p>
+        <div class="svc-select-footer">
+          <span class="svc-price">₹${Math.round(sv.price||0)}</span>
+          <span class="svc-dur"><i class="far fa-clock me-1"></i>${sv.duration||''}</span>
+        </div>
+      </div>
+    </div>`).join('') || '<div class="col-12 text-center py-5" style="color:var(--text-muted);">No services available yet.</div>';
+}
+load();
+</script>
+</body>
+</html>

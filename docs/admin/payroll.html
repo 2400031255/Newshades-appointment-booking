@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payroll – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Payroll</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <div class="admin-card mb-4">
+      <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+        <h6 class="fw-bold mb-0" style="color:#fff;">Monthly Payroll</h6>
+        <input type="month" id="payMonth" style="padding:8px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;"/>
+        <button onclick="loadPayroll()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-search me-2"></i>Load</button>
+      </div>
+      <div id="payrollGrid"><p style="color:var(--text-muted);font-size:0.88rem;">Select a month and click Load.</p></div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, getPayroll, savePayroll, showToast } from '../js/firebase.js';
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+document.getElementById('payMonth').value = new Date().toISOString().slice(0,7);
+
+let employees = await getAllEmployees(true);
+
+window.loadPayroll = async () => {
+  const month = document.getElementById('payMonth').value;
+  if (!month) return;
+  const grid = document.getElementById('payrollGrid');
+  grid.innerHTML = '<div class="text-center py-4" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Calculating…</div>';
+
+  const [year, mon] = month.split('-').map(Number);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  const existing = await getPayroll(month);
+
+  const rows = await Promise.all(employees.map(async emp => {
+    const ex = existing.find(p => p.employee_id === emp.id);
+    if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, saved: true };
+    let present = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = `${month}-${String(d).padStart(2,'0')}`;
+      const recs = await getAttendance(date);
+      const rec = recs.find(r => r.employee_id === emp.id);
+      if (rec?.status === 'Present') present++;
+      else if (rec?.status === 'Half Day') present += 0.5;
+    }
+    const absent = daysInMonth - present;
+    const workDays = emp.working_days_per_month || 26;
+    const net = Math.round(((emp.monthly_salary || 0) / workDays) * present);
+    return { ...emp, present, absent, net, saved: false };
+  }));
+
+  grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr><th>Employee</th><th>Role</th><th>Monthly Salary</th><th>Present Days</th><th>Net Salary</th><th>Action</th></tr></thead><tbody>${
+    rows.map(r => `<tr>
+      <td class="admin-td-bold">${r.full_name}</td>
+      <td class="admin-td-muted">${r.role}</td>
+      <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(r.monthly_salary||0)}</td>
+      <td class="admin-td-muted">${r.present} / ${daysInMonth}</td>
+      <td style="color:#7ce0aa;font-weight:700;">₹${r.net}</td>
+      <td>${r.saved?'<span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check me-1"></i>Saved</span>':`<button onclick="savePay('${r.id}','${r.full_name}','${month}',${r.present},${daysInMonth-r.present},${r.net})" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold-2);font-size:0.78rem;cursor:pointer;"><i class="fas fa-save me-1"></i>Save</button>`}</td>
+    </tr>`).join('')
+  }</tbody></table></div>`;
+};
+
+window.savePay = async (empId, empName, month, present, absent, net) => {
+  try { await savePayroll({ employee_id: empId, employee_name: empName, month, present_days: present, absent_days: absent, net_salary: net }); showToast('Payroll saved!', 'success'); await loadPayroll(); }
+  catch(err) { showToast('Failed.', 'danger'); }
+};
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+</body>
+</html>

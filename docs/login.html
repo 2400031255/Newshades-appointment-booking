@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – New Shades</title>
+  <style>html,body{background:#000!important;color:rgba(255,255,255,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="style.css" rel="stylesheet"/>
+  <style>
+  .auth-page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:90px 16px 60px;position:relative;background:#000;overflow:hidden;}
+  .auth-page::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 20%,rgba(212,175,55,0.10) 0%,transparent 45%),radial-gradient(ellipse at 80% 80%,rgba(212,175,55,0.06) 0%,transparent 45%);pointer-events:none;z-index:0;}
+  .auth-brand-head{position:relative;z-index:1;text-align:center;margin-bottom:28px;}
+  .auth-brand-name-big{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.2rem);font-weight:700;color:#fff;letter-spacing:0.02em;margin:0 0 4px;}
+  .auth-brand-name-big span{background:linear-gradient(90deg,#F5D060,#D4AF37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .auth-brand-sub-text{font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:rgba(167,139,250,0.45);margin:0;}
+  .auth-card-new{position:relative;z-index:1;width:min(100%,460px);border-radius:24px;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.22);box-shadow:0 32px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.03);overflow:hidden;backdrop-filter:blur(20px);}
+  .auth-card-new::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5D060,#D4AF37,#F5D060,transparent);opacity:0.8;}
+  .auth-tabs{display:flex;margin:24px 24px 0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:4px;gap:4px;}
+  .auth-tab{flex:1;padding:10px 0;border-radius:9px;border:none;background:transparent;color:rgba(255,255,255,0.40);font-size:0.9rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all 0.25s ease;}
+  .auth-tab.active{background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10));border:1px solid rgba(212,175,55,0.35);color:#F5D060;box-shadow:0 4px 16px rgba(212,175,55,0.15);}
+  .auth-form-body{padding:28px 28px 32px;}
+  .auth-welcome-title{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;color:#fff;margin:0 0 5px;}
+  .auth-welcome-title span{color:#F5D060;}
+  .auth-welcome-sub{color:rgba(255,255,255,0.40);font-size:0.85rem;margin:0 0 24px;}
+  .anf-field{margin-bottom:18px;}
+  .anf-label{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);font-weight:600;}
+  .anf-label i{color:#F5D060;font-size:0.72rem;}
+  .anf-wrap{position:relative;}
+  .anf-input{width:100%;padding:13px 16px 13px 46px;border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;background:rgba(255,255,255,0.05);color:#fff;font-size:16px;font-family:inherit;outline:none;transition:border-color 0.22s,background 0.22s,box-shadow 0.22s;}
+  .anf-input::placeholder{color:rgba(255,255,255,0.22);}
+  .anf-input:focus{border-color:rgba(212,175,55,0.60);background:rgba(212,175,55,0.06);box-shadow:0 0 0 3px rgba(212,175,55,0.14);}
+  .anf-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:rgba(212,175,55,0.70);font-size:0.85rem;pointer-events:none;}
+  .anf-eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);border:none;background:transparent;color:rgba(255,255,255,0.28);cursor:pointer;padding:4px;transition:color 0.2s;}
+  .anf-eye:hover{color:#F5D060;}
+  .anf-btn{width:100%;padding:14px 20px;border:none;border-radius:12px;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-size:1rem;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform 0.22s,box-shadow 0.22s;box-shadow:0 12px 32px rgba(212,175,55,0.35);}
+  .anf-btn:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(212,175,55,0.50);}
+  .anf-flash{padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:0.84rem;font-weight:500;display:flex;align-items:center;gap:8px;}
+  .anf-flash-danger{background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.28);color:#ff9a9a;}
+  .anf-flash-success{background:rgba(37,211,102,0.10);border:1px solid rgba(37,211,102,0.28);color:#7ce0aa;}
+  .auth-back{position:relative;z-index:1;margin-top:24px;text-align:center;}
+  .auth-back a{color:rgba(255,255,255,0.30);font-size:0.82rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:color 0.2s;}
+  .auth-back a:hover{color:#F5D060;}
+  @media(max-width:480px){.auth-form-body{padding:20px 18px 24px;}.auth-tabs{margin:18px 18px 0;}}
+  </style>
+</head>
+<body>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<div class="auth-page">
+
+  <div class="auth-brand-head reveal-up">
+    <div class="auth-brand-name-big"><span>New Shades</span></div>
+    <p class="auth-brand-sub-text">Premium Salon Platform</p>
+  </div>
+
+  <div class="auth-card-new reveal-up" style="animation-delay:0.08s">
+    <div class="auth-tabs">
+      <button class="auth-tab active">Staff &amp; Admin Login</button>
+    </div>
+
+    <div class="auth-form-body">
+      <div id="loginAlert"></div>
+
+      <h2 class="auth-welcome-title">Welcome <span>Back</span></h2>
+      <p class="auth-welcome-sub">Admin &amp; Staff portal — authorised access only</p>
+
+      <form id="loginForm">
+        <div class="anf-field">
+          <label class="anf-label"><i class="fas fa-user"></i> Email</label>
+          <div class="anf-wrap">
+            <i class="fas fa-user anf-icon"></i>
+            <input type="email" id="loginEmail" class="anf-input"
+                   placeholder="admin@newshades.in" required autocomplete="email"/>
+          </div>
+        </div>
+
+        <div class="anf-field">
+          <label class="anf-label"><i class="fas fa-lock"></i> Password</label>
+          <div class="anf-wrap">
+            <i class="fas fa-lock anf-icon"></i>
+            <input type="password" id="loginPw" class="anf-input"
+                   placeholder="••••••••" required autocomplete="current-password"/>
+            <button type="button" class="anf-eye" onclick="togglePw()">
+              <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="anf-btn" id="loginBtn">
+          <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:20px;">
+        <a href="index.html" style="color:rgba(255,255,255,0.35);font-size:0.82rem;text-decoration:none;">
+          <i class="fas fa-arrow-left me-1"></i>Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-back">
+    <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="js/main.js" defer></script>
+<script type="module">
+import { loginUser, requireGuest, getUserProfile, getEmployeeProfile } from './js/firebase.js';
+
+requireGuest(); // redirect if already logged in
+
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('loginBtn');
+  const alert = document.getElementById('loginAlert');
+  alert.innerHTML = '';
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in…';
+
+  try {
+    const cred = await loginUser(
+      document.getElementById('loginEmail').value.trim(),
+      document.getElementById('loginPw').value
+    );
+    const uid = cred.user.uid;
+    const profile = await getUserProfile(uid);
+    if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+    const emp = await getEmployeeProfile(uid);
+    if (emp) { window.location.href = 'employee/dashboard.html'; return; }
+    window.location.href = 'customer/dashboard.html';
+  } catch(err) {
+    const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+      ? 'Invalid email or password.'
+      : err.code === 'auth/too-many-requests'
+      ? 'Too many attempts. Please try again later.'
+      : 'Login failed. Please try again.';
+    alert.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+  }
+});
+</script>
+<script>
+function togglePw() {
+  const inp = document.getElementById('loginPw');
+  const ico = document.getElementById('eyeIcon');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  ico.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+</script>
+</body>
+</html>

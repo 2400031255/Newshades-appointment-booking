@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customers – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Customers</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <div class="admin-card">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h6 class="fw-bold mb-0" style="color:#fff;">All Customers <span style="color:var(--gold);" id="custCount"></span></h6>
+        <input type="text" placeholder="Search name, phone, email…" style="padding:8px 12px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;width:220px;" oninput="filterCusts(this.value)"/>
+      </div>
+      <div class="table-responsive">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Enquiries</th></tr></thead>
+          <tbody id="custBody"><tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllCustomers, getAllEnquiries, formatDate } from '../js/firebase.js';
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+const [customers, enquiries] = await Promise.all([getAllCustomers(), getAllEnquiries()]);
+let allCusts = customers;
+document.getElementById('custCount').textContent = `(${customers.length})`;
+
+function renderCusts(list) {
+  document.getElementById('custBody').innerHTML = list.map(c => {
+    const enqCount = enquiries.filter(e => e.user_id === c.id).length;
+    return `<tr>
+      <td class="admin-td-bold">${c.full_name||'—'}</td>
+      <td class="admin-td-muted">${c.email||'—'}</td>
+      <td class="admin-td-muted">${c.phone||'—'}</td>
+      <td class="admin-td-muted">${formatDate(c.created_at)}</td>
+      <td><span style="padding:3px 12px;border-radius:999px;font-size:0.75rem;font-weight:700;background:rgba(201,168,76,0.1);color:var(--gold-2);border:1px solid rgba(201,168,76,0.2);">${enqCount}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center py-4" style="color:var(--text-muted);">No customers yet.</td></tr>';
+}
+renderCusts(allCusts);
+
+window.filterCusts = q => { q=q.toLowerCase(); renderCusts(allCusts.filter(c=>(c.full_name||'').toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.phone||'').includes(q))); };
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enquiries – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+  <style>
+  .enq-badge-pending{background:rgba(255,170,77,0.16);color:#ffc36b;}
+  .enq-badge-contacted{background:rgba(105,152,255,0.16);color:#9dc0ff;}
+  .enq-badge-confirmed{background:rgba(71,188,121,0.16);color:#7ce0aa;}
+  .enq-badge-closed{background:rgba(150,150,150,0.14);color:rgba(240,230,211,0.45);}
+  .appt-action-btn{width:32px;height:32px;border-radius:8px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:0.78rem;cursor:pointer;transition:all 0.2s;}
+  .btn-edit{background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3);color:#9dc0ff;}
+  .btn-delete{background:rgba(226,93,93,0.08);border-color:rgba(226,93,93,0.2);color:rgba(255,154,154,0.6);}
+  .btn-delete:hover{background:rgba(226,93,93,0.2);color:#ff9a9a;}
+  .appt-action-btn:hover{transform:scale(1.1);}
+  </style>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="customers.html"><span class="sidebar-nav-label"><i class="fas fa-users"></i> Customers</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Enquiry Management</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+  <div class="admin-page-body">
+    <div class="admin-card">
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <h6 class="fw-bold mb-0" style="color:#fff;">All Enquiries <span style="color:var(--gold);" id="totalCount"></span></h6>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <input type="text" id="searchInput" placeholder="Search name, phone, service…" style="padding:8px 12px 8px 34px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;width:220px;position:relative;" oninput="filterTable(this.value)"/>
+          <div id="statusFilters" class="d-flex gap-2 flex-wrap"></div>
+        </div>
+      </div>
+      <div class="table-responsive d-none d-md-block">
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>Services</th><th>Date</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
+          <tbody id="enqBody"><tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="d-md-none" id="mobileCards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="enqModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#1a1510;border:1px solid rgba(201,168,76,0.3);border-radius:24px;padding:32px;width:min(100%,520px);margin:16px;box-shadow:0 40px 100px rgba(0,0,0,0.6);max-height:90vh;overflow-y:auto;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;">Update Enquiry <span id="modalEnqId" style="color:var(--gold-2);"></span></h6>
+      <button onclick="closeModal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:1.2rem;cursor:pointer;"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mb-3"><label class="field-label mb-2">Status</label><select id="modalStatus" style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;"><option>Pending</option><option>Contacted</option><option>Confirmed</option><option>Closed</option></select></div>
+    <div class="mb-3"><label class="field-label mb-2">Assign to Employee</label><select id="modalEmployee" style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(105,152,255,0.25);color:#fff;outline:none;font-size:0.92rem;cursor:pointer;"><option value="">— Unassigned —</option></select></div>
+    <div class="mb-4"><label class="field-label mb-2">Admin Notes</label><textarea id="modalNotes" style="width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;resize:vertical;min-height:80px;font-family:'DM Sans',sans-serif;font-size:0.9rem;" placeholder="Add a note for the customer…" maxlength="1000"></textarea></div>
+    <div class="d-flex gap-3">
+      <button id="modalSaveBtn" class="btn-gold-hero" style="flex:1;justify-content:center;"><i class="fas fa-save me-2"></i>Save</button>
+      <button onclick="closeModal()" style="flex:1;padding:12px 20px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(240,230,211,0.8);font-weight:700;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllEmployees, updateEnquiry, deleteEnquiry, showToast, formatDate } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+let allEnqs = [], employees = [], currentEid = null, activeFilter = '';
+
+[allEnqs, employees] = await Promise.all([getAllEnquiries(), getAllEmployees()]);
+
+const empSel = document.getElementById('modalEmployee');
+employees.forEach(e => { const o=document.createElement('option'); o.value=e.id; o.textContent=`${e.full_name} (${e.role})`; empSel.appendChild(o); });
+
+// Status filter buttons
+const filters = ['', 'Pending', 'Contacted', 'Confirmed', 'Closed'];
+const sf = document.getElementById('statusFilters');
+filters.forEach(s => {
+  const btn = document.createElement('button');
+  btn.className = 'admin-filter-btn' + (s===''?' active':'');
+  btn.textContent = s || 'All';
+  btn.onclick = () => { sf.querySelectorAll('.admin-filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); activeFilter=s; renderTable(); };
+  sf.appendChild(btn);
+});
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allEnqs.filter(e => {
+    const matchStatus = !activeFilter || e.status === activeFilter;
+    const matchSearch = !q || (e.full_name||'').toLowerCase().includes(q) || (e.phone||'').includes(q) || (e.selected_services||'').toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+  document.getElementById('totalCount').textContent = `(${filtered.length})`;
+  document.getElementById('enqBody').innerHTML = filtered.map(e => `<tr>
+    <td class="admin-td-muted">#${(e.id||'').slice(0,6)}</td>
+    <td class="admin-td-bold">${e.full_name}</td>
+    <td><div style="display:flex;align-items:center;gap:4px;"><span class="admin-td-muted" style="font-size:0.82rem;">${e.phone}</span><button onclick="navigator.clipboard.writeText('${e.phone}')" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold);font-size:0.65rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;"><i class="fas fa-copy"></i></button><a href="tel:${e.phone}" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(37,211,102,0.4);background:rgba(37,211,102,0.12);color:#25d366;font-size:0.65rem;display:inline-flex;align-items:center;justify-content:center;"><i class="fas fa-phone"></i></a></div></td>
+    <td class="admin-td-muted" style="max-width:150px;font-size:0.82rem;">${e.selected_services}</td>
+    <td class="admin-td-bold" style="white-space:nowrap;">${e.preferred_date||'—'}${e.preferred_time?'<div style="font-size:0.72rem;color:var(--text-muted);">'+e.preferred_time+'</div>':''}</td>
+    <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
+    <td>${e.emp_name?`<span style="font-size:0.8rem;color:#9dc0ff;font-weight:600;"><i class="fas fa-user-tie me-1"></i>${e.emp_name}</span>`:'<span style="font-size:0.78rem;color:rgba(240,230,211,0.3);">Unassigned</span>'}</td>
+    <td><div class="d-flex gap-1"><button class="appt-action-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit"></i></button><button class="appt-action-btn btn-delete" onclick="delEnq('${e.id}')"><i class="fas fa-trash"></i></button></div></td>
+  </tr>`).join('') || '<tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted);">No enquiries found.</td></tr>';
+
+  document.getElementById('mobileCards').innerHTML = filtered.map(e => `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.12);border-radius:14px;padding:16px;margin-bottom:12px;">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${e.full_name}</div><div style="font-size:0.78rem;color:var(--text-muted);">${e.phone}</div></div>
+        <span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span>
+      </div>
+      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:8px;">${e.selected_services}</div>
+      <div class="d-flex gap-2">
+        <button class="appt-mob-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit me-1"></i>Update</button>
+        <button class="appt-mob-btn btn-delete" onclick="delEnq('${e.id}')"><i class="fas fa-trash me-1"></i>Delete</button>
+      </div>
+    </div>`).join('');
+}
+renderTable();
+
+window.filterTable = () => renderTable();
+
+window.openModal = (eid, status, notes, empId) => {
+  currentEid = eid;
+  document.getElementById('modalEnqId').textContent = '#' + eid.slice(0,6);
+  document.getElementById('modalStatus').value = status;
+  document.getElementById('modalNotes').value = notes || '';
+  document.getElementById('modalEmployee').value = empId || '';
+  document.getElementById('enqModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
+window.closeModal = () => { document.getElementById('enqModal').style.display='none'; document.body.style.overflow=''; };
+document.getElementById('enqModal').addEventListener('click', e => { if(e.target===document.getElementById('enqModal')) closeModal(); });
+
+document.getElementById('modalSaveBtn').addEventListener('click', async () => {
+  if (!currentEid) return;
+  const empId = document.getElementById('modalEmployee').value;
+  const emp = employees.find(e => e.id === empId);
+  try {
+    await updateEnquiry(currentEid, { status: document.getElementById('modalStatus').value, admin_notes: document.getElementById('modalNotes').value, assigned_employee_id: empId||null, emp_name: emp?.full_name||null });
+    const idx = allEnqs.findIndex(e => e.id === currentEid);
+    if (idx > -1) { allEnqs[idx].status = document.getElementById('modalStatus').value; allEnqs[idx].admin_notes = document.getElementById('modalNotes').value; allEnqs[idx].emp_name = emp?.full_name||null; }
+    showToast('Enquiry updated!', 'success');
+    closeModal(); renderTable();
+  } catch(err) { showToast('Failed to update.', 'danger'); }
+});
+
+window.delEnq = async (eid) => {
+  if (!confirm('Delete this enquiry?')) return;
+  try { await deleteEnquiry(eid); allEnqs = allEnqs.filter(e => e.id !== eid); renderTable(); showToast('Deleted.', 'success'); }
+  catch(err) { showToast('Failed to delete.', 'danger'); }
+};
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay'), toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+<style>
+.appt-mob-btn{padding:7px 14px;border-radius:999px;border:1px solid;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.appt-mob-btn.btn-edit{background:rgba(105,152,255,0.12);border-color:rgba(105,152,255,0.3);color:#9dc0ff;}
+.appt-mob-btn.btn-delete{background:rgba(226,93,93,0.08);border-color:rgba(226,93,93,0.2);color:rgba(255,154,154,0.6);}
+</style>
+</body>
+</html>

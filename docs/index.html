@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="New Shades – Premium family salon in Eluru offering haircuts, beard trims, hair color, facials and more."/>
+  <title>New Shades – Premium Salon</title>
+  <style>html,body{background:#000!important;color:rgba(255,255,255,0.92);}</style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet"/></noscript>
+  <link href="style.css" rel="stylesheet"/>
+  <style>
+  .hero-logo-wrap{position:relative;width:160px;height:160px;margin:0 auto 28px;display:flex;align-items:center;justify-content:center;}
+  .hero-logo-circle{width:130px;height:130px;border-radius:50%;overflow:hidden;border:3px solid rgba(212,175,55,0.6);box-shadow:0 0 40px rgba(212,175,55,0.35),0 0 80px rgba(212,175,55,0.15);animation:logoFloat 5s ease-in-out infinite;position:relative;z-index:2;background:#000;}
+  .hero-logo-img-main{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%;}
+  .hero-logo-ring{position:absolute;border-radius:50%;border:1px solid rgba(212,175,55,0.2);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+  .hero-logo-ring-1{width:150px;height:150px;animation:ringPulse 3s ease-in-out infinite;}
+  .hero-logo-ring-2{width:175px;height:175px;animation:ringPulse 3s ease-in-out infinite 0.6s;border-style:dashed;}
+  .hero-logo-ring-3{width:200px;height:200px;animation:ringPulse 3s ease-in-out infinite 1.2s;}
+  @keyframes logoFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  @keyframes ringPulse{0%,100%{opacity:0.3;transform:translate(-50%,-50%) scale(1);}50%{opacity:0.7;transform:translate(-50%,-50%) scale(1.04);}}
+  #starsCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+  </style>
+</head>
+<body>
+<div id="pageTransition" style="position:fixed;inset:0;background:#000;z-index:99998;opacity:0;pointer-events:none;transition:opacity 0.15s ease;"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">
+      <div class="brand-wrap">
+        <img src="images/logo.jpeg" alt="NS" class="brand-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"/>
+        <div class="brand-logo-fallback" style="display:none;width:44px;height:44px;min-width:44px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#fff;font-weight:900;font-size:1rem;align-items:center;justify-content:center;flex-shrink:0;">NS</div>
+        <div class="brand-text" style="margin-left:0;">
+          <span class="brand-name">New Shades</span>
+          <span class="brand-tagline">Premium Salon</span>
+        </div>
+      </div>
+    </a>
+    <button class="navbar-toggler-custom" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1" id="navLinks">
+        <li class="nav-item"><a class="nav-link nav-active" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+        <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="gallery.html">Gallery</a></li>
+        <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+        <li class="nav-item ms-lg-2">
+          <a class="btn-nav-gold" href="login.html"><i class="fas fa-sign-in-alt me-1"></i>Login</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <canvas id="particleCanvas"></canvas>
+  <canvas id="starsCanvas"></canvas>
+  <div class="container hero-container">
+    <div class="hero-inner hero-centered">
+
+      <div class="hero-logo-wrap reveal-up">
+        <div class="hero-logo-ring hero-logo-ring-1"></div>
+        <div class="hero-logo-ring hero-logo-ring-2"></div>
+        <div class="hero-logo-ring hero-logo-ring-3"></div>
+        <div class="hero-logo-circle">
+          <img src="images/logo.jpeg" alt="New Shades Logo" class="hero-logo-img-main"/>
+        </div>
+      </div>
+
+      <div class="hero-badge reveal-up" style="animation-delay:0.1s">
+        <span class="badge-dot"></span> Premium Salon Experience
+      </div>
+
+      <h1 class="hero-title reveal-up" style="animation-delay:0.1s">
+        Your Style,<br><em class="hero-em" id="heroTypewriter"></em>
+      </h1>
+
+      <p class="hero-subtitle reveal-up" style="animation-delay:0.2s">
+        Experience world-class grooming and beauty services tailored just for you.<br>Book your appointment in seconds.
+      </p>
+
+      <div class="hero-actions reveal-up" style="animation-delay:0.3s">
+        <a href="#enquire" class="btn-gold-hero"><i class="fas fa-paper-plane me-2"></i>Book Appointment</a>
+        <a href="gallery.html" class="btn-ghost-hero"><i class="fas fa-images me-2"></i>View Gallery</a>
+      </div>
+
+      <div class="hero-stats reveal-up" style="animation-delay:0.4s">
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="500">0</div>
+          <div class="hero-stat-label">Happy Clients</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="15">0</div>
+          <div class="hero-stat-label">Services</div>
+        </div>
+        <div class="hero-stat-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">5&#9733;</div>
+          <div class="hero-stat-label">Rating</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Services -->
+<section class="section-services" id="services">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Our Services</div>
+      <h2 class="section-title">What We <span>Offer</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row g-4 mt-2" id="servicesGrid">
+      <!-- filled by JS -->
+    </div>
+    <div class="text-center mt-5 reveal-up">
+      <a href="#enquire" class="btn-gold-hero">Book Now <i class="fas fa-arrow-right ms-2"></i></a>
+    </div>
+  </div>
+</section>
+
+<!-- Why Us -->
+<section class="section-why">
+  <div class="why-bg-glow"></div>
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Why Us</div>
+      <h2 class="section-title">The <span>New Shades</span> Difference</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row g-4 mt-2">
+      <div class="col-md-3 col-6 reveal-up">
+        <div class="why-card"><div class="why-icon"><i class="fas fa-award"></i></div><h6 class="why-title">Expert Stylists</h6><p class="why-desc">Trained professionals with years of experience</p></div>
+      </div>
+      <div class="col-md-3 col-6 reveal-up" style="animation-delay:0.1s">
+        <div class="why-card"><div class="why-icon"><i class="fas fa-leaf"></i></div><h6 class="why-title">Premium Products</h6><p class="why-desc">Only the finest quality products used</p></div>
+      </div>
+      <div class="col-md-3 col-6 reveal-up" style="animation-delay:0.2s">
+        <div class="why-card"><div class="why-icon"><i class="fas fa-clock"></i></div><h6 class="why-title">Flexible Timing</h6><p class="why-desc">Book at your convenience, 7 days a week</p></div>
+      </div>
+      <div class="col-md-3 col-6 reveal-up" style="animation-delay:0.3s">
+        <div class="why-card"><div class="why-icon"><i class="fab fa-whatsapp"></i></div><h6 class="why-title">Easy Booking</h6><p class="why-desc">Book via WhatsApp in just a few taps</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section-why">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Happy Clients</div>
+      <h2 class="section-title">What They <span>Say</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="testimonial-track-wrap reveal-up" style="animation-delay:0.2s">
+      <div class="testimonial-track" id="testimonialTrack">
+        <!-- filled by JS -->
+      </div>
+      <div class="testimonial-dots" id="testimonialDots"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Business Hours -->
+<section class="section-services">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Visit Us</div>
+      <h2 class="section-title">Business <span>Hours</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-lg-5 reveal-up">
+        <div class="glass-card" id="hoursCard">
+          <div class="hours-row">
+            <span class="hours-label"><i class="fas fa-briefcase me-2 text-gold"></i>Monday – Friday</span>
+            <span class="hours-val" id="hoursWeekday">9:00 AM – 8:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span class="hours-label"><i class="fas fa-calendar-day me-2 text-gold"></i>Saturday</span>
+            <span class="hours-val" id="hoursSaturday">9:00 AM – 6:00 PM</span>
+          </div>
+          <div class="hours-row">
+            <span class="hours-label"><i class="fas fa-sun me-2 text-gold"></i>Sunday</span>
+            <span class="hours-val" id="hoursSunday">10:00 AM – 4:00 PM</span>
+          </div>
+          <div class="hours-address" id="shopAddress" style="display:none;">
+            <i class="fas fa-map-marker-alt me-2 text-gold"></i><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Enquiry Form -->
+<section class="section-services" id="enquire" style="padding-bottom:100px;">
+  <div class="container">
+    <div class="section-head reveal-up">
+      <div class="section-badge">Book Appointment</div>
+      <h2 class="section-title">Make an <span>Enquiry</span></h2>
+      <div class="section-line"></div>
+      <p style="color:rgba(240,230,211,0.5);font-size:0.9rem;margin-top:10px;">Fill in your details and we'll confirm your appointment shortly.</p>
+    </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-lg-7 reveal-up">
+        <div class="glass-card" style="padding:36px 32px;">
+          <form id="pubEnqForm">
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">FULL NAME *</label>
+                <input type="text" id="enqName" required maxlength="100"
+                  style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"
+                  placeholder="Your name"/>
+              </div>
+              <div class="col-sm-6">
+                <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">PHONE *</label>
+                <input type="tel" id="enqPhone" required maxlength="15"
+                  style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"
+                  placeholder="+91 98765 43210"/>
+              </div>
+              <div class="col-12">
+                <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">SERVICES *</label>
+                <input type="text" id="enqServices" required maxlength="300"
+                  style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"
+                  placeholder="e.g. Hair Cut, Beard Trim, Facial…"/>
+              </div>
+              <div class="col-sm-6">
+                <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">PREFERRED DATE *</label>
+                <input type="date" id="enqDate" required
+                  style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;"/>
+              </div>
+              <div class="col-sm-6">
+                <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">PREFERRED TIME</label>
+                <select id="enqTime"
+                  style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(20,16,10,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
+                  <option value="">Flexible</option>
+                  <option>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option>
+                  <option>11:00</option><option>11:30</option><option>12:00</option><option>12:30</option>
+                  <option>13:00</option><option>13:30</option><option>14:00</option><option>14:30</option>
+                  <option>15:00</option><option>15:30</option><option>16:00</option><option>16:30</option>
+                  <option>17:00</option><option>17:30</option><option>18:00</option><option>18:30</option>
+                  <option>19:00</option><option>19:30</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Form continued (message + submit) injected by JS after form loads -->
+
+<!-- WhatsApp Float -->
+<a href="#" class="wa-float" id="waFloat" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp" style="display:none;">
+  <i class="fab fa-whatsapp"></i>
+  <span class="wa-float-ripple"></span>
+</a>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-glow"></div>
+  <div class="container">
+    <div class="row py-5 g-4">
+      <div class="col-lg-4 mb-2">
+        <div class="footer-brand">
+          <img src="images/logo.jpeg" alt="New Shades" class="footer-logo"/>
+          <div>
+            <div class="footer-brand-name">New Shades</div>
+            <div class="footer-brand-sub">Premium Salon &amp; Studio</div>
+          </div>
+        </div>
+        <p class="footer-desc">Premium salon services crafted for your style, comfort and confidence.</p>
+        <div class="footer-socials">
+          <a href="https://www.instagram.com/newshades_eluru?igsh=eXU1MDh3aXFvdmh2" class="social-btn" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+          <a href="#" class="social-btn" id="footerWa" target="_blank" rel="noopener noreferrer"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="col-lg-2 col-6">
+        <div class="footer-heading">Quick Links</div>
+        <ul class="footer-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="gallery.html">Gallery</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3 col-6">
+        <div class="footer-heading">Hours</div>
+        <ul class="footer-links">
+          <li>Mon – Fri &nbsp;<span id="ftWeekday">9AM – 8PM</span></li>
+          <li>Saturday &nbsp;<span id="ftSat">9AM – 6PM</span></li>
+          <li>Sunday &nbsp;<span id="ftSun">10AM – 4PM</span></li>
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <div class="footer-heading">Contact</div>
+        <ul class="footer-links">
+          <li><i class="fas fa-map-marker-alt me-2 text-gold"></i><span id="ftAddr">Eluru, Andhra Pradesh</span></li>
+          <li><i class="fas fa-phone me-2 text-gold"></i><a href="#" id="ftPhone">Contact via WhatsApp</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 New Shades. All rights reserved.</span>
+      <span>Crafted with <i class="fas fa-heart text-gold"></i> for you</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+<script src="js/main.js" defer></script>
+<script type="module">
+import { getSettings, getServices, getReviews, getActiveOffers, createEnquiry, showToast } from './js/firebase.js';
+
+const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female' };
+
+async function loadSettings() {
+  const s = await getSettings();
+  if (s.whatsapp) {
+    const wa = `https://wa.me/${s.whatsapp}`;
+    document.getElementById('waFloat').href = wa;
+    document.getElementById('waFloat').style.display = '';
+    document.getElementById('footerWa').href = wa;
+  }
+  if (s.hours_weekday) { document.getElementById('hoursWeekday').textContent = s.hours_weekday; document.getElementById('ftWeekday').textContent = s.hours_weekday; }
+  if (s.hours_saturday) { document.getElementById('hoursSaturday').textContent = s.hours_saturday; document.getElementById('ftSat').textContent = s.hours_saturday; }
+  if (s.hours_sunday) { document.getElementById('hoursSunday').textContent = s.hours_sunday; document.getElementById('ftSun').textContent = s.hours_sunday; }
+  if (s.address) {
+    const el = document.getElementById('shopAddress');
+    el.querySelector('span').textContent = s.address;
+    el.style.display = '';
+    document.getElementById('ftAddr').textContent = s.address;
+  }
+  if (s.phone) {
+    const ph = document.getElementById('ftPhone');
+    ph.textContent = s.phone;
+    ph.href = `tel:${s.phone}`;
+  }
+}
+
+async function loadServices() {
+  const svcs = await getServices(true);
+  const grid = document.getElementById('servicesGrid');
+  grid.innerHTML = svcs.slice(0,6).map((s,i) => `
+    <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
+      <div class="svc-card tilt-card">
+        <div class="svc-card-glow"></div>
+        <div class="svc-icon"><i class="${iconMap[s.category]||'fas fa-magic'}"></i></div>
+        <h5 class="svc-name">${s.service_name}</h5>
+        <p class="svc-desc">${s.description||'Professional service tailored for you'}</p>
+      </div>
+    </div>`).join('');
+}
+
+async function loadReviews() {
+  const reviews = await getReviews(6);
+  const track = document.getElementById('testimonialTrack');
+  const list = reviews.length ? reviews : [
+    {rating:5,comment:'Amazing experience! The hair spa left my hair feeling silky smooth.',full_name:'Priya R.'},
+    {rating:5,comment:'Best beard trim in town. The staff is professional and the ambiance is top-notch.',full_name:'Ravi K.'},
+    {rating:5,comment:'Booked via WhatsApp in seconds. The facial was absolutely relaxing.',full_name:'Sneha M.'},
+    {rating:5,comment:'Great haircut and very friendly staff. Premium feel at an affordable price.',full_name:'Arjun T.'}
+  ];
+  track.innerHTML = list.map(r => `
+    <div class="testimonial-slide">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(r.rating)}${'<i class="far fa-star" style="opacity:0.3;"></i>'.repeat(5-r.rating)}</div>
+        <p class="testimonial-text">&ldquo;${r.comment}&rdquo;</p>
+        <div class="testimonial-author"><i class="fas fa-user-circle me-2" style="color:var(--gold);opacity:0.7;"></i>${r.full_name}</div>
+      </div>
+    </div>`).join('');
+  if (window.initTestimonials) window.initTestimonials();
+}
+
+document.getElementById('pubEnqForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.submitter;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting…'; }
+  try {
+    await createEnquiry({
+      full_name: document.getElementById('enqName').value.trim(),
+      phone: document.getElementById('enqPhone').value.trim(),
+      selected_services: document.getElementById('enqServices').value.trim(),
+      preferred_date: document.getElementById('enqDate').value,
+      preferred_time: document.getElementById('enqTime').value,
+      message: document.getElementById('enqMsg')?.value.trim() || ''
+    });
+    showToast('Enquiry submitted! We\'ll contact you shortly.', 'success');
+    e.target.reset();
+  } catch(err) {
+    showToast('Failed to submit. Please try again.', 'danger');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Enquiry'; }
+  }
+});
+
+loadSettings();
+loadServices();
+loadReviews();
+getActiveOffers(); // preload
+</script>
+
+<script>
+// Inject message field + submit button into form
+(function(){
+  const form = document.getElementById('pubEnqForm');
+  const extra = document.createElement('div');
+  extra.className = 'row g-3 mt-0';
+  extra.innerHTML = `
+    <div class="col-12">
+      <label class="field-label mb-1" style="font-size:0.72rem;letter-spacing:0.1em;">MESSAGE <span style="color:rgba(240,230,211,0.35);">(Optional)</span></label>
+      <textarea id="enqMsg" rows="3" maxlength="500"
+        style="width:100%;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;"
+        placeholder="Any special requests or notes…"></textarea>
+    </div>
+    <div class="col-12 mt-1">
+      <button type="submit" class="btn-gold-hero" style="width:100%;justify-content:center;font-size:1rem;padding:14px 20px;">
+        <i class="fas fa-paper-plane me-2"></i>Submit Enquiry
+      </button>
+    </div>
+    <div class="col-12">
+      <div style="padding:12px 16px;border-radius:12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);font-size:0.82rem;color:rgba(240,230,211,0.55);display:flex;align-items:center;gap:10px;">
+        <i class="fas fa-info-circle" style="color:var(--gold);flex-shrink:0;"></i>
+        We'll call or WhatsApp you to confirm your appointment within a few hours.
+      </div>
+    </div>`;
+  form.querySelector('.row').appendChild(extra);
+})();
+
+// Stars canvas
+(function(){
+  const canvas = document.getElementById('starsCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let stars=[], W, H;
+  function resize(){ const h=canvas.parentElement; W=canvas.width=h.offsetWidth; H=canvas.height=h.offsetHeight; }
+  function initStars(){ stars=[]; const c=Math.floor((W*H)/5000); for(let i=0;i<c;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+0.3,alpha:Math.random()*0.7+0.2,speed:Math.random()*0.3+0.05,td:Math.random()*0.018+0.004,tdir:Math.random()>0.5?1:-1,gold:Math.random()>0.72}); }
+  function draw(){ ctx.clearRect(0,0,W,H); stars.forEach(s=>{ s.alpha+=s.td*s.tdir; if(s.alpha>=1){s.alpha=1;s.tdir=-1;} if(s.alpha<=0.1){s.alpha=0.1;s.tdir=1;} s.y-=s.speed; if(s.y<-2){s.y=H+2;s.x=Math.random()*W;} ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.gold?`rgba(212,175,55,${s.alpha})`:`rgba(255,255,255,${s.alpha})`;ctx.fill();}); requestAnimationFrame(draw); }
+  resize(); initStars(); draw();
+  window.addEventListener('resize',()=>{resize();initStars();});
+})();
+
+// Navbar close on outside tap
+(function(){
+  const navMenu=document.getElementById('navMenu');
+  if(!navMenu) return;
+  document.addEventListener('click',function(e){
+    if(!navMenu.classList.contains('show')) return;
+    const nav=document.getElementById('mainNav');
+    if(nav&&!nav.contains(e.target)){ const b=bootstrap.Collapse.getInstance(navMenu); if(b) b.hide(); }
+  });
+})();
+</script>
+</body>
+</html>
