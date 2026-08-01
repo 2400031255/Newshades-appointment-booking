@@ -6,7 +6,7 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isAdmin() {
       return isSignedIn() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin == true;
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin in [1, true];
     }
     function isEmployee() {
       return isSignedIn() &&
