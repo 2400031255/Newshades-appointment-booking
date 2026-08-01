@@ -79,7 +79,7 @@ async function load() {
 load();
 
 function stars(n) {
-  return Array.from({length:5},(_,i)=>`<i class="fas fa-star" style="color:${i<n?'#C9A84C':'rgba(255,255,255,0.15)';font-size:0.75rem;"></i>`).join('');
+  return Array.from({length:5},(_,i)=>`<i class="fas fa-star" style="color:${i<n?'#C9A84C':'rgba(255,255,255,0.15)'};font-size:0.75rem;"></i>`).join('');
 }
 
 function renderStats() {

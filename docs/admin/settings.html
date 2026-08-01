@@ -57,9 +57,9 @@
         </div>
         <div class="admin-card">
           <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-clock me-2" style="color:var(--gold);"></i>Business Hours</h6>
-          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">OPENING TIME</label><input type="time" id="openTime" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
-          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">CLOSING TIME</label><input type="time" id="closeTime" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
-          <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">CLOSED ON</label><input type="text" id="closedDays" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Sunday"/></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">MON – FRI HOURS</label><input type="text" id="hoursWeekday" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 9:00 AM – 8:00 PM"/></div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">SATURDAY HOURS</label><input type="text" id="hoursSaturday" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 9:00 AM – 6:00 PM"/></div>
+          <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">SUNDAY HOURS</label><input type="text" id="hoursSunday" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 10:00 AM – 4:00 PM"/></div>
           <button id="saveHoursBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-save me-2"></i>Save Hours</button>
         </div>
       </div>
@@ -78,16 +78,16 @@ if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 const s = await getSettings();
-document.getElementById('shopName').value    = s.shop_name    || '';
-document.getElementById('shopAddress').value = s.address      || '';
-document.getElementById('shopPhone').value   = s.phone        || '';
-document.getElementById('shopEmail').value   = s.email        || '';
-document.getElementById('shopMaps').value    = s.maps_link    || '';
-document.getElementById('waNumber').value    = s.wa_number    || '';
-document.getElementById('waMessage').value   = s.wa_message   || '';
-document.getElementById('openTime').value    = s.open_time    || '09:00';
-document.getElementById('closeTime').value   = s.close_time   || '20:00';
-document.getElementById('closedDays').value  = s.closed_days  || '';
+document.getElementById('shopName').value    = s.shop_name      || '';
+document.getElementById('shopAddress').value = s.address        || '';
+document.getElementById('shopPhone').value   = s.phone          || '';
+document.getElementById('shopEmail').value   = s.email          || '';
+document.getElementById('shopMaps').value    = s.maps_link      || '';
+document.getElementById('waNumber').value    = s.wa_number || s.whatsapp || '';
+document.getElementById('waMessage').value   = s.wa_message     || '';
+document.getElementById('hoursWeekday').value  = s.hours_weekday  || '';
+document.getElementById('hoursSaturday').value = s.hours_saturday || '';
+document.getElementById('hoursSunday').value   = s.hours_sunday   || '';
 
 document.getElementById('saveShopBtn').addEventListener('click', async () => {
   try {
@@ -98,14 +98,14 @@ document.getElementById('saveShopBtn').addEventListener('click', async () => {
 
 document.getElementById('saveWaBtn').addEventListener('click', async () => {
   try {
-    await saveSettings({ wa_number: document.getElementById('waNumber').value, wa_message: document.getElementById('waMessage').value });
+    await saveSettings({ wa_number: document.getElementById('waNumber').value, whatsapp: document.getElementById('waNumber').value, wa_message: document.getElementById('waMessage').value });
     showToast('WhatsApp settings saved!', 'success');
   } catch { showToast('Failed to save.', 'danger'); }
 });
 
 document.getElementById('saveHoursBtn').addEventListener('click', async () => {
   try {
-    await saveSettings({ open_time: document.getElementById('openTime').value, close_time: document.getElementById('closeTime').value, closed_days: document.getElementById('closedDays').value });
+    await saveSettings({ hours_weekday: document.getElementById('hoursWeekday').value, hours_saturday: document.getElementById('hoursSaturday').value, hours_sunday: document.getElementById('hoursSunday').value });
     showToast('Business hours saved!', 'success');
   } catch { showToast('Failed to save.', 'danger'); }
 });

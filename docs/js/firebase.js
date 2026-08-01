@@ -74,7 +74,8 @@ export async function getSettings() {
   return snap.exists() ? snap.data() : {};
 }
 export async function saveSettings(data) {
-  return updateDoc(doc(db, "settings", "shop"), data);
+  const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  return setDoc(doc(db, "settings", "shop"), data, { merge: true });
 }
 
 // ── Services ──────────────────────────────────────────────────────────────
@@ -120,9 +121,8 @@ export function listenEnquiries(cb) {
 
 // ── Customers ─────────────────────────────────────────────────────────────
 export async function getAllCustomers() {
-  const q = query(collection(db, "users"), where("is_admin", "==", 0));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db, "users"));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(u => !u.is_admin);
 }
 
 // ── Employees ─────────────────────────────────────────────────────────────
@@ -197,8 +197,11 @@ export async function addGalleryPhoto(data) {
 export async function deleteGalleryPhoto(id) { return deleteDoc(doc(db, "gallery", id)); }
 
 // ── Leave Requests ────────────────────────────────────────────────────────
-export async function getLeaveRequests() {
-  const snap = await getDocs(collection(db, "leave_requests"));
+export async function getLeaveRequests(uid = null) {
+  const q = uid
+    ? query(collection(db, "leave_requests"), where("employee_id", "==", uid))
+    : collection(db, "leave_requests");
+  const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 export async function createLeaveRequest(data) {

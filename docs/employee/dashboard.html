@@ -79,8 +79,8 @@ const records = snap.docs.map(d=>d.data()).filter(r=>r.date&&r.date.startsWith(m
 document.getElementById('statPresent').textContent = records.filter(r=>r.status==='Present').length;
 document.getElementById('statAbsent').textContent  = records.filter(r=>r.status==='Absent').length;
 
-const leaves = await getLeaveRequests();
-document.getElementById('statLeave').textContent = leaves.filter(l=>l.employee_id===user.uid).length;
+const leaves = await getLeaveRequests(user.uid);
+document.getElementById('statLeave').textContent = leaves.length;
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');

@@ -384,7 +384,7 @@ async function loadReviews() {
     <div class="testimonial-slide">
       <div class="testimonial-card">
         <div class="testimonial-stars">${'<i class="fas fa-star"></i>'.repeat(r.rating)}${'<i class="far fa-star" style="opacity:0.3;"></i>'.repeat(5-r.rating)}</div>
-        <p class="testimonial-text">&ldquo;${r.comment}&rdquo;</p>
+        <p class="testimonial-text">&ldquo;${r.review_text||r.comment}&rdquo;</p>
         <div class="testimonial-author"><i class="fas fa-user-circle me-2" style="color:var(--gold);opacity:0.7;"></i>${r.full_name}</div>
       </div>
     </div>`).join('');

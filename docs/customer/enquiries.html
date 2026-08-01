@@ -143,7 +143,7 @@ document.getElementById('reviewForm')?.addEventListener('submit', async e => {
   const rating = parseInt(document.querySelector('input[name="rating"]:checked')?.value);
   if (!rating) { showToast('Please select a rating.', 'warning'); return; }
   try {
-    await createReview({ user_id: user.uid, full_name: profile?.full_name||user.email, rating, comment: document.getElementById('reviewComment').value.trim() });
+    await createReview({ user_id: user.uid, full_name: profile?.full_name||user.email, rating, review_text: document.getElementById('reviewComment').value.trim(), comment: document.getElementById('reviewComment').value.trim() });
     showToast('Review submitted! Thank you.', 'success');
     document.getElementById('reviewSection').style.display = 'none';
   } catch(err) { showToast('Failed to submit review.', 'danger'); }
