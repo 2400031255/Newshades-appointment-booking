@@ -78,8 +78,7 @@ document.getElementById('leaveTo').min = new Date().toISOString().slice(0,10);
 const statusStyle = { Pending:'background:rgba(255,170,77,0.16);color:#ffc36b;', Approved:'background:rgba(37,211,102,0.16);color:#7ce0aa;', Rejected:'background:rgba(255,107,107,0.16);color:#ff6b6b;' };
 
 async function load() {
-  const all = await getLeaveRequests();
-  const mine = all.filter(l=>l.employee_id===user.uid).sort((a,b)=>(b.created_at?.seconds||0)-(a.created_at?.seconds||0));
+  const mine = (await getLeaveRequests(user.uid)).sort((a,b)=>(b.created_at?.seconds||0)-(a.created_at?.seconds||0));
   document.getElementById('leaveCount').textContent = `(${mine.length})`;
   document.getElementById('leaveBody').innerHTML = mine.map(l => {
     const days = l.from_date && l.to_date ? Math.ceil((new Date(l.to_date)-new Date(l.from_date))/(86400000))+1 : '—';
@@ -102,7 +101,7 @@ document.getElementById('leaveForm').addEventListener('submit', async e => {
   const to   = document.getElementById('leaveTo').value;
   if (to < from) { showToast('To date must be after From date.', 'warning'); return; }
   try {
-    await createLeaveRequest({ employee_id: user.uid, emp_name: emp.full_name, leave_type: document.getElementById('leaveType').value, from_date: from, to_date: to, reason: document.getElementById('leaveReason').value });
+    await createLeaveRequest({ employee_id: user.uid, employee_name: emp.full_name, leave_type: document.getElementById('leaveType').value, from_date: from, to_date: to, reason: document.getElementById('leaveReason').value });
     showToast('Leave request submitted!', 'success');
     e.target.reset();
     load();
