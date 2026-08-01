@@ -65,9 +65,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEmployees, updateEmployee, deleteEmployee, showToast, auth } from '../js/firebase.js';
-import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, updateEmployee, deleteEmployee, showToast, auth, firebaseConfig } from '../js/firebase.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// Secondary app so admin stays signed in while creating employee accounts
+const secondaryApp = initializeApp(firebaseConfig, 'employee-creator');
+const secondaryAuth = getAuth(secondaryApp);
+const secondaryDb = getFirestore(secondaryApp);
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
@@ -105,11 +111,12 @@ document.getElementById('createEmpForm').addEventListener('submit', async e => {
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating…';
   document.getElementById('createAlert').innerHTML = '';
   try {
-    const db2 = getFirestore();
     const empEmail = document.getElementById('empEmail').value.trim();
     const empNameVal = document.getElementById('empName').value.trim();
-    const cred = await createUserWithEmailAndPassword(auth, empEmail, document.getElementById('empPassword').value);
-    await setDoc(doc(db2, 'employees', cred.user.uid), {
+    // Use secondary app — admin stays signed in on primary app
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, empEmail, document.getElementById('empPassword').value);
+    const newUid = cred.user.uid;
+    await setDoc(doc(secondaryDb, 'employees', newUid), {
       full_name: empNameVal,
       email: empEmail,
       phone: document.getElementById('empPhone').value.trim(),
@@ -118,9 +125,11 @@ document.getElementById('createEmpForm').addEventListener('submit', async e => {
       is_active: 1,
       created_at: serverTimestamp()
     });
-    // Write username lookup (use first name lowercase as username)
+    // Write username lookup
     const uname = empNameVal.split(' ')[0].toLowerCase();
-    await setDoc(doc(db2, 'usernames', uname), { email: empEmail, uid: cred.user.uid }).catch(()=>{});
+    await setDoc(doc(secondaryDb, 'usernames', uname), { email: empEmail, uid: newUid }).catch(()=>{});
+    // Sign out of secondary app so it doesn't linger
+    await signOut(secondaryAuth);
     showToast('Employee created!', 'success');
     document.getElementById('createEmpForm').reset();
     await loadEmps();

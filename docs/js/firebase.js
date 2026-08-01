@@ -41,7 +41,7 @@ export function requireAuth(redirectTo = "/login.html") {
 }
 
 // ── Guard: redirect to dashboard if already logged in ────────────────────
-export function requireGuest(redirectTo = "customer/dashboard.html") {
+export function requireGuest(redirectTo = "employee/dashboard.html") {
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, async user => {
       unsub();
@@ -50,7 +50,8 @@ export function requireGuest(redirectTo = "customer/dashboard.html") {
       if (profile?.is_admin) { window.location.href = "admin/dashboard.html"; return; }
       const emp = await getEmployeeProfile(user.uid);
       if (emp) { window.location.href = "employee/dashboard.html"; return; }
-      window.location.href = redirectTo;
+      // Regular customer — no dashboard, go back to home
+      window.location.href = "index.html";
     });
   });
 }
@@ -105,9 +106,10 @@ export async function getAllEnquiries(statusFilter = "") {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 export async function getEnquiriesForUser(uid) {
-  const q = query(collection(db, "enquiries"), where("user_id", "==", uid), orderBy("created_at", "desc"));
+  const q = query(collection(db, "enquiries"), where("user_id", "==", uid));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 }
 export async function createEnquiry(data) {
   return addDoc(collection(db, "enquiries"), { ...data, status: "Pending", created_at: serverTimestamp() });

@@ -20,7 +20,7 @@ service cloud.firestore {
       allow write: if isOwner(uid) || isAdmin();
     }
 
-    // ── Usernames (public lookup map: username → email) ──────────────────────
+    // ── Usernames (public lookup map: username → email) ───────────────────
     match /usernames/{username} {
       allow read: if true;
       allow write: if isAdmin() || isSignedIn();
@@ -29,7 +29,10 @@ service cloud.firestore {
     // ── Employees ─────────────────────────────────────────────────────────
     match /employees/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow write: if isAdmin();
+      // isOwner allows the newly-created employee to write their own doc
+      allow create: if isAdmin() || isOwner(uid);
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ── Services (public read) ─────────────────────────────────────────────
@@ -42,22 +45,22 @@ service cloud.firestore {
     match /enquiries/{id} {
       allow read: if isAdmin() || isEmployee() ||
         (isSignedIn() && resource.data.user_id == request.auth.uid);
-      allow create: if isSignedIn();
+      // Require user_id to match the caller so no one can spoof another user
+      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
       allow update: if isAdmin() || isEmployee();
       allow delete: if isAdmin();
     }
 
     // ── Attendance ────────────────────────────────────────────────────────
+    // Allow all employees to list/read — resource.data is null on list queries
     match /attendance/{id} {
-      allow read: if isAdmin() ||
-        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow read: if isAdmin() || isEmployee();
       allow write: if isAdmin();
     }
 
     // ── Leave Requests ────────────────────────────────────────────────────
     match /leave_requests/{id} {
-      allow read: if isAdmin() ||
-        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow read: if isAdmin() || isEmployee();
       allow create: if isEmployee();
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -65,8 +68,7 @@ service cloud.firestore {
 
     // ── Payroll ───────────────────────────────────────────────────────────
     match /payroll/{id} {
-      allow read: if isAdmin() ||
-        (isSignedIn() && resource.data.employee_id == request.auth.uid);
+      allow read: if isAdmin() || isEmployee();
       allow write: if isAdmin();
     }
 

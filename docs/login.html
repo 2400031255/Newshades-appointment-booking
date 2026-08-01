@@ -162,7 +162,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
     const emp = await getEmployeeProfile(uid);
     if (emp) { window.location.href = 'employee/dashboard.html'; return; }
-    window.location.href = 'customer/dashboard.html';
+    window.location.href = 'index.html';
   } catch(err) {
     const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
       ? 'Invalid username/email or password.'
