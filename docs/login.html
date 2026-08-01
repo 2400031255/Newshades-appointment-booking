@@ -170,7 +170,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       ? 'Too many attempts. Please try again later.'
       : err.code === 'auth/user-not-found'
       ? 'No account found with this email.'
-      : `Login failed: ${err.code}`;
+      : `Error: ${err.code || err.message}`;
     alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
