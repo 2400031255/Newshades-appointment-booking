@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Setup – New Shades</title>
+  <style>
+    html,body{background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+    .box{background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:40px;width:min(100%,440px);margin:16px;}
+    h2{color:#F5D060;font-size:1.4rem;margin:0 0 8px;}
+    p{color:rgba(255,255,255,0.5);font-size:0.85rem;margin:0 0 24px;}
+    input{width:100%;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(212,175,55,0.2);color:#fff;outline:none;font-size:0.95rem;margin-bottom:12px;box-sizing:border-box;}
+    button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#000;font-weight:800;font-size:1rem;cursor:pointer;}
+    #msg{margin-top:16px;padding:12px;border-radius:10px;font-size:0.85rem;display:none;}
+    .ok{background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#7ce0aa;}
+    .err{background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.3);color:#ff9a9a;}
+  </style>
+</head>
+<body>
+<div class="box">
+  <h2>🔧 Admin Account Setup</h2>
+  <p>Run this ONCE to create the admin account in Firebase. Delete this file after use.</p>
+  <input type="text" id="username" placeholder="Username (e.g. komali)" value="komali"/>
+  <input type="email" id="email" placeholder="Admin email (e.g. komali@newshades.in)"/>
+  <input type="password" id="password" placeholder="Password (e.g. komali123)" value="komali123"/>
+  <input type="text" id="fullname" placeholder="Full Name (e.g. Komali)" value="Komali"/>
+  <button onclick="setup()">Create Admin Account</button>
+  <div id="msg"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── paste your Firebase config here ──
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "newshadeseluru-ec450.firebaseapp.com",
+  projectId: "newshadeseluru-ec450",
+  storageBucket: "newshadeseluru-ec450.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.setup = async () => {
+  const msg = document.getElementById('msg');
+  msg.style.display = 'none';
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const username = document.getElementById('username').value.trim();
+  const fullname = document.getElementById('fullname').value.trim();
+
+  if (!email || !password || !username) {
+    msg.className = 'err'; msg.textContent = 'Fill all fields.'; msg.style.display = 'block'; return;
+  }
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, 'users', cred.user.uid), {
+      email, username, full_name: fullname,
+      is_admin: 1, phone: '',
+      created_at: serverTimestamp()
+    });
+    msg.className = 'ok';
+    msg.innerHTML = `✅ Admin created!<br>UID: <code>${cred.user.uid}</code><br>Login with username: <strong>${username}</strong> / password: <strong>${password}</strong><br><br><strong>Delete this setup.html file now!</strong>`;
+    msg.style.display = 'block';
+  } catch(err) {
+    msg.className = 'err';
+    msg.textContent = err.code === 'auth/email-already-in-use'
+      ? '⚠️ Email already exists. If this is your admin, just update Firestore manually: set is_admin=1 and username="komali" on their users document.'
+      : err.message;
+    msg.style.display = 'block';
+  }
+};
+</script>
+</body>
+</html>

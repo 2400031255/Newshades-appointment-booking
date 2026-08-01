@@ -14,6 +14,7 @@ export const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db   = getFirestore(app);
+export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 export async function loginUser(email, password) {

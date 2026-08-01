@@ -74,11 +74,11 @@
 
       <form id="loginForm">
         <div class="anf-field">
-          <label class="anf-label"><i class="fas fa-user"></i> Email</label>
+          <label class="anf-label"><i class="fas fa-user"></i> Username or Email</label>
           <div class="anf-wrap">
             <i class="fas fa-user anf-icon"></i>
-            <input type="email" id="loginEmail" class="anf-input"
-                   placeholder="admin@newshades.in" required autocomplete="email"/>
+            <input type="text" id="loginIdentifier" class="anf-input"
+                   placeholder="komali or admin@email.com" required autocomplete="username"/>
           </div>
         </div>
 
@@ -115,23 +115,46 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
 <script src="js/main.js" defer></script>
 <script type="module">
-import { loginUser, requireGuest, getUserProfile, getEmployeeProfile } from './js/firebase.js';
+import { loginUser, requireGuest, getUserProfile, getEmployeeProfile, db } from './js/firebase.js';
+import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-requireGuest(); // redirect if already logged in
+requireGuest();
+
+async function resolveEmail(identifier) {
+  // If it looks like an email, use it directly
+  if (identifier.includes('@')) return identifier;
+  // Otherwise look up username in users collection
+  const q = query(collection(db, 'users'), where('username', '==', identifier));
+  const snap = await getDocs(q);
+  if (!snap.empty) return snap.docs[0].data().email;
+  // Also check employees collection
+  const eq = query(collection(db, 'employees'), where('username', '==', identifier));
+  const esnap = await getDocs(eq);
+  if (!esnap.empty) return esnap.docs[0].data().email;
+  return null;
+}
 
 document.getElementById('loginForm').addEventListener('submit', async e => {
   e.preventDefault();
   const btn = document.getElementById('loginBtn');
-  const alert = document.getElementById('loginAlert');
-  alert.innerHTML = '';
+  const alertEl = document.getElementById('loginAlert');
+  alertEl.innerHTML = '';
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in…';
 
   try {
-    const cred = await loginUser(
-      document.getElementById('loginEmail').value.trim(),
-      document.getElementById('loginPw').value
-    );
+    const identifier = document.getElementById('loginIdentifier').value.trim();
+    const password = document.getElementById('loginPw').value;
+
+    const email = await resolveEmail(identifier);
+    if (!email) {
+      alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>Username not found.</div>`;
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+      return;
+    }
+
+    const cred = await loginUser(email, password);
     const uid = cred.user.uid;
     const profile = await getUserProfile(uid);
     if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
@@ -140,11 +163,11 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     window.location.href = 'customer/dashboard.html';
   } catch(err) {
     const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
-      ? 'Invalid email or password.'
+      ? 'Invalid username/email or password.'
       : err.code === 'auth/too-many-requests'
       ? 'Too many attempts. Please try again later.'
       : 'Login failed. Please try again.';
-    alert.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
+    alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
   }
