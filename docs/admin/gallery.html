@@ -52,7 +52,7 @@
               <div id="dropZone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed rgba(201,168,76,0.3);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;">
                 <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:rgba(201,168,76,0.4);margin-bottom:8px;display:block;"></i>
                 <div style="font-size:0.85rem;color:rgba(240,230,211,0.5);">Click or drag &amp; drop image</div>
-                <div style="font-size:0.72rem;color:rgba(240,230,211,0.3);margin-top:4px;">JPG, PNG, WEBP · Max 5MB</div>
+                <div style="font-size:0.72rem;color:rgba(240,230,211,0.3);margin-top:4px;">JPG, PNG, WEBP · Max 15MB</div>
               </div>
               <input type="file" id="fileInput" accept="image/*" style="display:none;"/>
               <div id="previewWrap" style="display:none;margin-bottom:12px;">
@@ -124,23 +124,26 @@ document.getElementById('fileInput').addEventListener('change', e => handleFile(
 
 function handleFile(file) {
   if (!file || !file.type.startsWith('image/')) { showToast('Please select an image file.','warning'); return; }
-  if (file.size > 5*1024*1024) { showToast('File too large. Max 5MB.','warning'); return; }
+  if (file.size > 15*1024*1024) { showToast('File too large. Max 15MB.','warning'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('previewImg').src = e.target.result;
     document.getElementById('previewWrap').style.display = '';
   };
   reader.readAsDataURL(file);
-  uploadToCloudinary(file);
+  compressAndUpload(file);
 }
 
-async function uploadToCloudinary(file) {
+async function compressAndUpload(file) {
   const prog = document.getElementById('uploadProgress');
-  prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
+  prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Compressing…';
   uploadedUrl = '';
   try {
+    // Compress via canvas — target max 1600px, quality 0.82
+    const compressed = await compressImage(file, 1600, 0.82);
+    prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
     const fd = new FormData();
-    fd.append('file', file);
+    fd.append('file', compressed);
     fd.append('upload_preset', UPLOAD_PRESET);
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:'POST', body:fd });
     const data = await res.json();
@@ -148,11 +151,33 @@ async function uploadToCloudinary(file) {
       uploadedUrl = data.secure_url;
       prog.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Uploaded successfully!</span>';
     } else {
-      prog.innerHTML = '<span style="color:#ff9a9a;">Upload failed. Use URL tab instead.</span>';
+      prog.innerHTML = `<span style="color:#ff9a9a;">Upload failed: ${data.error?.message||'Check Cloudinary preset'}. Use URL tab instead.</span>`;
     }
-  } catch {
-    prog.innerHTML = '<span style="color:#ff9a9a;">Upload failed. Use URL tab instead.</span>';
+  } catch(err) {
+    prog.innerHTML = `<span style="color:#ff9a9a;">Upload failed. Use URL tab instead.</span>`;
+    console.error(err);
   }
+}
+
+function compressImage(file, maxPx, quality) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxPx || height > maxPx) {
+        if (width > height) { height = Math.round(height * maxPx / width); width = maxPx; }
+        else { width = Math.round(width * maxPx / height); height = maxPx; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
 }
 
 async function load() {
