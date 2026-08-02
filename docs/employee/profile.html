@@ -194,24 +194,28 @@ document.getElementById('qrFileInput').addEventListener('change', async e => {
   const reader = new FileReader();
   reader.onload = ev => { document.getElementById('qrPreviewImg').src = ev.target.result; document.getElementById('qrPreviewWrap').style.display = ''; };
   reader.readAsDataURL(file);
-  document.getElementById('qrUploadStatus').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
+  document.getElementById('qrUploadStatus').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing…';
   try {
-    // Compress first
     const compressed = await new Promise(resolve => {
       const img = new Image(), url = URL.createObjectURL(file);
-      img.onload = () => { URL.revokeObjectURL(url); const c=document.createElement('canvas'); const max=1200; let w=img.width,h=img.height; if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}} c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);c.toBlob(b=>resolve(b||file),'image/jpeg',0.85); };
+      img.onload = () => { URL.revokeObjectURL(url); const c=document.createElement('canvas'); const max=800; let w=img.width,h=img.height; if(w>max||h>max){if(w>h){h=Math.round(h*max/w);w=max;}else{w=Math.round(w*max/h);h=max;}} c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);c.toBlob(b=>resolve(b||file),'image/jpeg',0.88); };
       img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);}; img.src=url;
     });
-    const fd = new FormData(); fd.append('file', compressed); fd.append('upload_preset', UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:'POST', body:fd });
-    const data = await res.json();
-    if (data.secure_url) {
-      qrUrl = data.secure_url;
-      document.getElementById('qrUploadStatus').innerHTML = '<span style="color:#7ce0aa;"><i class="fas fa-check-circle me-1"></i>QR uploaded!</span>';
-    } else {
-      document.getElementById('qrUploadStatus').innerHTML = `<span style="color:#ff9a9a;">Upload failed: ${data.error?.message||'Check Cloudinary preset'}.</span>`;
+    // Try Cloudinary if configured, else base64
+    let url = '';
+    if (CLOUD_NAME && CLOUD_NAME !== 'newshades') {
+      const fd = new FormData(); fd.append('file', compressed); fd.append('upload_preset', UPLOAD_PRESET);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST',body:fd});
+      const data = await res.json();
+      if (data.secure_url) url = data.secure_url;
     }
-  } catch { document.getElementById('qrUploadStatus').innerHTML = '<span style="color:#ff9a9a;">Upload failed.</span>'; }
+    if (!url) {
+      url = await new Promise(r => { const fr=new FileReader(); fr.onload=ev=>r(ev.target.result); fr.readAsDataURL(compressed); });
+    }
+    qrUrl = url;
+    document.getElementById('qrPreviewImg').src = qrUrl;
+    document.getElementById('qrUploadStatus').innerHTML = '<span style="color:#7ce0aa;"><i class="fas fa-check-circle me-1"></i>QR ready!</span>';
+  } catch { document.getElementById('qrUploadStatus').innerHTML = '<span style="color:#ff9a9a;">Failed. Try again.</span>'; }
 });
 
 // Save UPI
