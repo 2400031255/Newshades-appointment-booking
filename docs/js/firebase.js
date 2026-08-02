@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 export const firebaseConfig = {
   apiKey: "AIzaSyD1u6cOGWmrrJ-JbBDSFJ5eJ11XPTDbCWk",
@@ -16,11 +16,21 @@ export const auth = getAuth(app);
 export const db   = getFirestore(app);
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
+// ── Offline persistence (cache-first on repeat visits) ────────────────────
+enableIndexedDbPersistence(db).catch(() => {});
+
+// ── Session cache for profile (avoids repeat Firestore reads) ─────────────
+const _cache = {};
+function cacheSet(key, val) { try { sessionStorage.setItem(key, JSON.stringify(val)); } catch{} _cache[key] = val; }
+function cacheGet(key) { if (_cache[key]) return _cache[key]; try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; } catch{ return null; } }
+function cacheClear() { try { sessionStorage.clear(); } catch{} Object.keys(_cache).forEach(k => delete _cache[k]); }
+
 // ── Auth ───────────────────────────────────────────────────────────────────
 export async function loginUser(email, password) {
   return signInWithEmailAndPassword(auth, email, password);
 }
 export async function logoutUser() {
+  cacheClear();
   await signOut(auth);
   const depth = window.location.pathname.split('/').filter(Boolean).length;
   const prefix = depth >= 2 ? '../' : '';
@@ -31,6 +41,7 @@ export function currentUser() { return auth.currentUser; }
 
 // ── Guard: redirect to login if not authenticated ─────────────────────────
 export function requireAuth(redirectTo = "/login.html") {
+  if (auth.currentUser) return Promise.resolve(auth.currentUser);
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, user => {
       unsub();
@@ -41,31 +52,38 @@ export function requireAuth(redirectTo = "/login.html") {
 }
 
 // ── Guard: redirect to dashboard if already logged in ────────────────────
-export function requireGuest(redirectTo = "employee/dashboard.html") {
+export function requireGuest() {
   return new Promise(resolve => {
     const unsub = onAuthStateChanged(auth, async user => {
       unsub();
       if (!user) { resolve(null); return; }
-      const profile = await getUserProfile(user.uid);
+      const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
       if (profile?.is_admin) { window.location.href = "admin/dashboard.html"; return; }
-      const emp = await getEmployeeProfile(user.uid);
       if (emp) { window.location.href = "employee/dashboard.html"; return; }
-      // Regular customer — no dashboard, go back to home
       window.location.href = "index.html";
     });
   });
 }
 
-// ── User profiles ─────────────────────────────────────────────────────────
+// ── User profiles (session-cached) ────────────────────────────────────────
 export async function getUserProfile(uid) {
+  const key = `up_${uid}`;
+  const hit = cacheGet(key); if (hit) return hit;
   const snap = await getDoc(doc(db, "users", uid));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  if (val) cacheSet(key, val);
+  return val;
 }
 export async function getEmployeeProfile(uid) {
+  const key = `ep_${uid}`;
+  const hit = cacheGet(key); if (hit) return hit;
   const snap = await getDoc(doc(db, "employees", uid));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  if (val) cacheSet(key, val);
+  return val;
 }
 export async function updateUserProfile(uid, data) {
+  cacheSet(`up_${uid}`, null);
   return updateDoc(doc(db, "users", uid), data);
 }
 

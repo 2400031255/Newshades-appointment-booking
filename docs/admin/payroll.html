@@ -52,8 +52,7 @@
 import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getPayroll, savePayroll, showToast, db } from '../js/firebase.js';
 import { getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
+const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 document.getElementById('payMonth').value = new Date().toISOString().slice(0,7);

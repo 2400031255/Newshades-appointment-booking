@@ -51,8 +51,7 @@
 <script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getUserProfile, getLeaveRequests, updateLeaveRequest, showToast, formatDate } from '../js/firebase.js';
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
+const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 

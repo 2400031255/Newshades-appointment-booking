@@ -67,8 +67,7 @@
 <script type="module">
 import { requireAuth, logoutUser, getEmployeeProfile, getLeaveRequests, createLeaveRequest, showToast } from '../js/firebase.js';
 
-const user = await requireAuth('../login.html');
-const emp = await getEmployeeProfile(user.uid);
+const [user, emp] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getEmployeeProfile(u.uid))]);
 if (!emp) { window.location.href = '../login.html'; }
 document.getElementById('empName').textContent = emp.full_name || user.email;
 

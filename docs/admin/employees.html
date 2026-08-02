@@ -98,8 +98,7 @@ const secondaryApp = initializeApp(firebaseConfig, 'employee-creator');
 const secondaryAuth = getAuth(secondaryApp);
 const secondaryDb = getFirestore(secondaryApp);
 
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
+const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
