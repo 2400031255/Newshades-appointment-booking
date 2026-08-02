@@ -5,35 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Setup – New Shades</title>
   <style>
-    html,body{background:#000;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
-    .box{background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:40px;width:min(100%,440px);margin:16px;}
-    h2{color:#F5D060;font-size:1.4rem;margin:0 0 8px;}
-    p{color:rgba(255,255,255,0.5);font-size:0.85rem;margin:0 0 24px;}
-    input{width:100%;padding:12px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(212,175,55,0.2);color:#fff;outline:none;font-size:0.95rem;margin-bottom:12px;box-sizing:border-box;}
-    button{width:100%;padding:13px;border:none;border-radius:10px;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#000;font-weight:800;font-size:1rem;cursor:pointer;}
-    #msg{margin-top:16px;padding:12px;border-radius:10px;font-size:0.85rem;display:none;}
-    .ok{background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);color:#7ce0aa;}
-    .err{background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.3);color:#ff9a9a;}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{background:#050407;color:#fff;font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .box{background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:24px;padding:40px 36px;width:min(100%,460px);box-shadow:0 32px 80px rgba(0,0,0,0.6);}
+    .logo{text-align:center;margin-bottom:28px;}
+    .logo-title{font-size:1.6rem;font-weight:800;background:linear-gradient(90deg,#F5D060,#D4AF37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .logo-sub{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:4px;}
+    .warn{background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:12px;padding:12px 14px;font-size:0.82rem;color:#ffc36b;margin-bottom:24px;display:flex;gap:10px;align-items:flex-start;line-height:1.5;}
+    .warn i{flex-shrink:0;margin-top:2px;}
+    label{display:block;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:6px;}
+    .field{margin-bottom:16px;}
+    input{width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(212,175,55,0.2);color:#fff;outline:none;font-size:0.95rem;transition:border-color 0.2s;}
+    input:focus{border-color:rgba(212,175,55,0.6);}
+    input::placeholder{color:rgba(255,255,255,0.2);}
+    button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#F5D060,#D4AF37);color:#120e08;font-weight:800;font-size:1rem;cursor:pointer;margin-top:8px;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 8px 24px rgba(212,175,55,0.3);}
+    button:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(212,175,55,0.45);}
+    button:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+    #msg{margin-top:18px;padding:14px;border-radius:12px;font-size:0.85rem;display:none;line-height:1.6;}
+    .ok{background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#7ce0aa;}
+    .err{background:rgba(226,93,93,0.1);border:1px solid rgba(226,93,93,0.3);color:#ff9a9a;}
+    code{background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:5px;font-size:0.82rem;}
   </style>
 </head>
 <body>
 <div class="box">
-  <h2>🔧 Admin Account Setup</h2>
-  <p>Run this ONCE to create the admin account in Firebase. Delete this file after use.</p>
-  <input type="text" id="username" placeholder="Username (e.g. komali)" value="komali"/>
-  <input type="email" id="email" placeholder="Admin email (e.g. komali@newshades.in)"/>
-  <input type="password" id="password" placeholder="Password (e.g. komali123)" value="komali123"/>
-  <input type="text" id="fullname" placeholder="Full Name (e.g. Komali)" value="Komali"/>
-  <button onclick="setup()">Create Admin Account</button>
+  <div class="logo">
+    <div class="logo-title">New Shades</div>
+    <div class="logo-sub">Admin Account Setup</div>
+  </div>
+
+  <div class="warn">
+    <i>⚠️</i>
+    <span>Run this <strong>once only</strong> to create the admin account. After success, <strong>delete this page</strong> from your repo immediately.</span>
+  </div>
+
+  <div class="field">
+    <label>Username</label>
+    <input type="text" id="username" placeholder="e.g. komali" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Email Address</label>
+    <input type="email" id="email" placeholder="e.g. admin@newshadeseluru.in" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Password (min 6 characters)</label>
+    <input type="password" id="password" placeholder="Choose a strong password" autocomplete="new-password"/>
+  </div>
+  <div class="field">
+    <label>Full Name</label>
+    <input type="text" id="fullname" placeholder="e.g. Komali" autocomplete="off"/>
+  </div>
+
+  <button id="setupBtn" onclick="setup()">Create Admin Account</button>
   <div id="msg"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// ── paste your Firebase config here ──
 const firebaseConfig = {
   apiKey: "AIzaSyD1u6cOGWmrrJ-JbBDSFJ5eJ11XPTDbCWk",
   authDomain: "newshadeseluru-ec450.firebaseapp.com",
@@ -43,49 +74,82 @@ const firebaseConfig = {
   appId: "1:5209377015:web:f363707d7fcfbdd095abf2"
 };
 
-const app = initializeApp(firebaseConfig);
+const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+const db   = getFirestore(app);
 
 window.setup = async () => {
-  const msg = document.getElementById('msg');
-  msg.style.display = 'none';
-  const email = document.getElementById('email').value.trim();
+  const msg      = document.getElementById('msg');
+  const btn      = document.getElementById('setupBtn');
+  const email    = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
-  const username = document.getElementById('username').value.trim();
+  const username = document.getElementById('username').value.trim().toLowerCase();
   const fullname = document.getElementById('fullname').value.trim();
 
-  if (!email || !password || !username) {
-    msg.className = 'err'; msg.textContent = 'Fill all fields.'; msg.style.display = 'block'; return;
+  msg.style.display = 'none';
+
+  if (!email || !password || !username || !fullname) {
+    msg.className = 'err';
+    msg.textContent = 'Please fill in all fields.';
+    msg.style.display = 'block';
+    return;
   }
+  if (password.length < 6) {
+    msg.className = 'err';
+    msg.textContent = 'Password must be at least 6 characters.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
 
   try {
     let uid;
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       uid = cred.user.uid;
-    } catch(authErr) {
+    } catch (authErr) {
       if (authErr.code === 'auth/email-already-in-use') {
-        // Sign in to get the UID
-        const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+        // Account exists — sign in to get UID and update Firestore docs
         const cred = await signInWithEmailAndPassword(auth, email, password);
         uid = cred.user.uid;
-      } else { throw authErr; }
+      } else {
+        throw authErr;
+      }
     }
+
+    // Write users/{uid} doc with is_admin: 1
     await setDoc(doc(db, 'users', uid), {
       email, username, full_name: fullname,
       is_admin: 1, phone: '',
       created_at: serverTimestamp()
     });
-    // Write to usernames lookup collection
-    await setDoc(doc(db, 'usernames', username.toLowerCase()), { email, uid });
+
+    // Write usernames/{username} lookup doc
+    await setDoc(doc(db, 'usernames', username), { email, uid });
+
     msg.className = 'ok';
-    msg.innerHTML = `✅ Admin ready!<br>UID: <code>${uid}</code><br>Login with username: <strong>${username}</strong> / password: <strong>${password}</strong><br><br><strong>Delete this setup.html file now!</strong>`;
+    msg.innerHTML = `
+      ✅ <strong>Admin account ready!</strong><br><br>
+      Username: <code>${username}</code><br>
+      Email: <code>${email}</code><br>
+      UID: <code>${uid}</code><br><br>
+      <strong>Go to <a href="login.html" style="color:#7ce0aa;">login.html</a> and sign in now.</strong><br><br>
+      ⚠️ <strong>Delete this setup.html from your GitHub repo immediately after logging in!</strong>
+    `;
     msg.style.display = 'block';
-  } catch(err) {
+  } catch (err) {
     msg.className = 'err';
-    msg.textContent = err.message;
+    msg.textContent = err.code === 'auth/wrong-password'
+      ? 'Account exists but password is wrong. Use the correct password.'
+      : err.code === 'auth/invalid-email'
+      ? 'Invalid email address.'
+      : err.message;
     msg.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create Admin Account';
   }
 };
 </script>
