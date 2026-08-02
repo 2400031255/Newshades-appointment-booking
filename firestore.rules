@@ -43,10 +43,9 @@ service cloud.firestore {
 
     // ── Enquiries ─────────────────────────────────────────────────────────
     match /enquiries/{id} {
-      allow read: if isAdmin() || isEmployee() ||
-        (isSignedIn() && resource.data.user_id == request.auth.uid);
-      // Require user_id to match the caller so no one can spoof another user
-      allow create: if isSignedIn() && request.resource.data.user_id == request.auth.uid;
+      allow read: if isAdmin() || isEmployee();
+      // Public visitors submit from home page — no auth required
+      allow create: if true;
       allow update: if isAdmin() || isEmployee();
       allow delete: if isAdmin();
     }

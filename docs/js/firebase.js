@@ -100,10 +100,11 @@ export async function deleteService(id) { return deleteDoc(doc(db, "services", i
 // ── Enquiries ─────────────────────────────────────────────────────────────
 export async function getAllEnquiries(statusFilter = "") {
   let q = statusFilter
-    ? query(collection(db, "enquiries"), where("status", "==", statusFilter), orderBy("created_at", "desc"))
-    : query(collection(db, "enquiries"), orderBy("created_at", "desc"));
+    ? query(collection(db, "enquiries"), where("status", "==", statusFilter))
+    : collection(db, "enquiries");
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 }
 export async function getEnquiriesForUser(uid) {
   const q = query(collection(db, "enquiries"), where("user_id", "==", uid));

@@ -51,7 +51,7 @@
 import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, getPayroll, savePayroll, showToast } from '../js/firebase.js';
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 document.getElementById('payMonth').value = new Date().toISOString().slice(0,7);
 

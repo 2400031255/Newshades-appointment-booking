@@ -67,7 +67,7 @@ import { requireAuth, logoutUser, getUserProfile, getReviews, updateReview, show
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../customer/dashboard.html'; }
+if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 let allReviews = [];
