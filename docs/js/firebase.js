@@ -81,11 +81,11 @@ export async function saveSettings(data) {
 
 // ── Services ──────────────────────────────────────────────────────────────
 export async function getServices(activeOnly = false) {
-  let q = activeOnly
-    ? query(collection(db, "services"), where("is_active", "==", 1))
-    : collection(db, "services");
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db, "services"));
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!activeOnly) return all;
+  // Accept both is_active===1 (number) and is_active===true (boolean)
+  return all.filter(s => s.is_active === 1 || s.is_active === true);
 }
 export async function getServiceById(id) {
   const snap = await getDoc(doc(db, "services", id));
