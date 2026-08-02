@@ -57,7 +57,7 @@
 <script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getEmployeeProfile, db } from '../js/firebase.js';
-import { getDocs, collection, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const user = await requireAuth('../login.html');
 const emp = await getEmployeeProfile(user.uid);
@@ -98,7 +98,7 @@ function renderCurrentSlip() {
 
 function renderTable(records) {
   document.getElementById('salaryBody').innerHTML = records.map(p => {
-    const net = slip.net_salary || ((p.base_salary||0)+(p.bonus||0)-(p.deductions||0));
+    const net = p.net_salary || ((p.base_salary||0)+(p.bonus||0)-(p.deductions||0));
     return `<tr>
       <td class="admin-td-bold">${p.month}</td>
       <td class="admin-td-muted">₹${(p.base_salary||0).toLocaleString()}</td>
