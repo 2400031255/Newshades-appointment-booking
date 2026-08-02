@@ -26,6 +26,7 @@
     <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
     <a href="gallery.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
     <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
     <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
   </nav>
 </div>
@@ -39,16 +40,37 @@
       <!-- Add Photo Form -->
       <div class="col-lg-4">
         <div class="admin-card">
-          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-plus me-2" style="color:var(--gold);"></i>Add Photo</h6>
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-cloud-upload-alt me-2" style="color:var(--gold);"></i>Add Photo</h6>
           <form id="galleryForm">
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">IMAGE URL *</label><input type="url" id="photoUrl" required style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://…"/></div>
+            <!-- Upload tab toggle -->
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <button type="button" id="tabUpload" onclick="switchTab('upload')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.12);color:var(--gold-2);font-size:0.82rem;font-weight:700;cursor:pointer;"><i class="fas fa-upload me-1"></i>Upload File</button>
+              <button type="button" id="tabUrl" onclick="switchTab('url')" style="flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(240,230,211,0.4);font-size:0.82rem;font-weight:700;cursor:pointer;"><i class="fas fa-link me-1"></i>Paste URL</button>
+            </div>
+            <!-- File upload -->
+            <div id="panelUpload">
+              <div id="dropZone" onclick="document.getElementById('fileInput').click()" style="border:2px dashed rgba(201,168,76,0.3);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;">
+                <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:rgba(201,168,76,0.4);margin-bottom:8px;display:block;"></i>
+                <div style="font-size:0.85rem;color:rgba(240,230,211,0.5);">Click or drag &amp; drop image</div>
+                <div style="font-size:0.72rem;color:rgba(240,230,211,0.3);margin-top:4px;">JPG, PNG, WEBP · Max 5MB</div>
+              </div>
+              <input type="file" id="fileInput" accept="image/*" style="display:none;"/>
+              <div id="previewWrap" style="display:none;margin-bottom:12px;">
+                <img id="previewImg" style="width:100%;border-radius:12px;max-height:160px;object-fit:cover;"/>
+                <div id="uploadProgress" style="margin-top:8px;font-size:0.8rem;color:var(--gold-2);"></div>
+              </div>
+            </div>
+            <!-- URL input -->
+            <div id="panelUrl" style="display:none;">
+              <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">IMAGE URL *</label><input type="url" id="photoUrl" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://…"/></div>
+            </div>
             <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">CAPTION</label><input type="text" id="photoCaption" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Hair Transformation"/></div>
             <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">CATEGORY</label>
-              <select id="photoCategory" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
+              <select id="photoCategory" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(20,16,10,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
                 <option>Hair</option><option>Beard</option><option>Skin</option><option>Bridal</option><option>Other</option>
               </select>
             </div>
-            <button type="submit" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-plus me-2"></i>Add Photo</button>
+            <button type="submit" id="addPhotoBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-plus me-2"></i>Add Photo</button>
           </form>
         </div>
       </div>
@@ -75,22 +97,78 @@ const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
-let photos = [];
+// Cloudinary unsigned upload preset — free tier
+const CLOUD_NAME = 'newshades';
+const UPLOAD_PRESET = 'newshades_gallery';
+
+let photos = [], activeTab = 'upload', uploadedUrl = '';
+
+window.switchTab = (tab) => {
+  activeTab = tab;
+  document.getElementById('panelUpload').style.display = tab==='upload' ? '' : 'none';
+  document.getElementById('panelUrl').style.display    = tab==='url'    ? '' : 'none';
+  document.getElementById('tabUpload').style.cssText = tab==='upload'
+    ? 'flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.12);color:var(--gold-2);font-size:0.82rem;font-weight:700;cursor:pointer;'
+    : 'flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(240,230,211,0.4);font-size:0.82rem;font-weight:700;cursor:pointer;';
+  document.getElementById('tabUrl').style.cssText = tab==='url'
+    ? 'flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.12);color:var(--gold-2);font-size:0.82rem;font-weight:700;cursor:pointer;'
+    : 'flex:1;padding:8px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(240,230,211,0.4);font-size:0.82rem;font-weight:700;cursor:pointer;';
+};
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor='rgba(201,168,76,0.7)'; });
+dz.addEventListener('dragleave', () => { dz.style.borderColor='rgba(201,168,76,0.3)'; });
+dz.addEventListener('drop', e => { e.preventDefault(); dz.style.borderColor='rgba(201,168,76,0.3)'; handleFile(e.dataTransfer.files[0]); });
+document.getElementById('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) { showToast('Please select an image file.','warning'); return; }
+  if (file.size > 5*1024*1024) { showToast('File too large. Max 5MB.','warning'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('previewWrap').style.display = '';
+  };
+  reader.readAsDataURL(file);
+  uploadToCloudinary(file);
+}
+
+async function uploadToCloudinary(file) {
+  const prog = document.getElementById('uploadProgress');
+  prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
+  uploadedUrl = '';
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method:'POST', body:fd });
+    const data = await res.json();
+    if (data.secure_url) {
+      uploadedUrl = data.secure_url;
+      prog.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Uploaded successfully!</span>';
+    } else {
+      prog.innerHTML = '<span style="color:#ff9a9a;">Upload failed. Use URL tab instead.</span>';
+    }
+  } catch {
+    prog.innerHTML = '<span style="color:#ff9a9a;">Upload failed. Use URL tab instead.</span>';
+  }
+}
 
 async function load() {
   photos = await getGallery();
   document.getElementById('photoCount').textContent = `(${photos.length})`;
   const grid = document.getElementById('galleryGrid');
-  if (!photos.length) { grid.innerHTML = '<div class="col-12 text-center py-5" style="color:var(--text-muted);">No photos yet. Add one!</div>'; return; }
+  if (!photos.length) { grid.innerHTML = '<div class="col-12 text-center py-5" style="color:var(--text-muted);"><i class="fas fa-images" style="font-size:2.5rem;opacity:0.2;"></i><p class="mt-3">No photos yet.</p></div>'; return; }
   grid.innerHTML = photos.map(p => `
     <div class="col-md-4 col-6">
       <div style="position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1;background:#111;">
-        <img src="${p.url}" alt="${p.caption||''}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.src='https://placehold.co/300x300/1a1510/C9A84C?text=Photo'"/>
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 50%);display:flex;flex-direction:column;justify-content:flex-end;padding:12px;">
+        <img src="${p.url}" alt="${p.caption||''}" style="width:100%;height:100%;object-fit:cover;display:block;" loading="lazy" onerror="this.src='https://placehold.co/300x300/1a1510/C9A84C?text=Photo'"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 55%);display:flex;flex-direction:column;justify-content:flex-end;padding:12px;">
           <div style="font-size:0.78rem;color:#fff;font-weight:600;">${p.caption||''}</div>
           <div style="font-size:0.7rem;color:var(--gold-2);">${p.category||''}</div>
         </div>
-        <button onclick="delPhoto('${p.id}')" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;background:rgba(255,107,107,0.2);border:1px solid rgba(255,107,107,0.4);color:#ff6b6b;cursor:pointer;font-size:0.75rem;display:flex;align-items:center;justify-content:center;"><i class="fas fa-trash"></i></button>
+        <button onclick="delPhoto('${p.id}')" style="position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:8px;background:rgba(0,0,0,0.5);border:1px solid rgba(255,107,107,0.5);color:#ff6b6b;cursor:pointer;font-size:0.75rem;display:flex;align-items:center;justify-content:center;"><i class="fas fa-trash"></i></button>
       </div>
     </div>`).join('');
 }
@@ -98,14 +176,20 @@ load();
 
 document.getElementById('galleryForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const url = document.getElementById('photoUrl').value.trim();
-  if (!url) return;
+  const btn = document.getElementById('addPhotoBtn');
+  let url = activeTab === 'upload' ? uploadedUrl : document.getElementById('photoUrl').value.trim();
+  if (!url) { showToast(activeTab==='upload' ? 'Please wait for upload to finish or use URL tab.' : 'Please enter an image URL.', 'warning'); return; }
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding…';
   try {
     await addGalleryPhoto({ url, caption: document.getElementById('photoCaption').value.trim(), category: document.getElementById('photoCategory').value });
     showToast('Photo added!', 'success');
     e.target.reset();
+    uploadedUrl = '';
+    document.getElementById('previewWrap').style.display = 'none';
+    document.getElementById('uploadProgress').innerHTML = '';
     load();
   } catch { showToast('Failed to add photo.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus me-2"></i>Add Photo'; }
 });
 
 window.delPhoto = async id => {

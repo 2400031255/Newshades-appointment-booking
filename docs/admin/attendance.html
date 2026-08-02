@@ -26,6 +26,7 @@
     <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
     <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
     <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
     <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
   </nav>
 </div>
@@ -56,6 +57,7 @@ document.getElementById('adminName').textContent = profile?.full_name || user.em
 document.getElementById('attDate').value = new Date().toISOString().slice(0,10);
 
 let employees = await getAllEmployees(true);
+await loadAtt();
 
 window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;

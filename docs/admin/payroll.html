@@ -26,6 +26,7 @@
     <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
     <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
     <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
+    <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
     <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
   </nav>
 </div>
@@ -48,7 +49,9 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, getPayroll, savePayroll, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getPayroll, savePayroll, showToast, db } from '../js/firebase.js';
+import { getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
@@ -67,38 +70,56 @@ window.loadPayroll = async () => {
   const daysInMonth = new Date(year, mon, 0).getDate();
   const existing = await getPayroll(month);
 
-  const rows = await Promise.all(employees.map(async emp => {
+  // Bulk fetch ALL attendance for this month in ONE query
+  const attSnap = await getDocs(query(collection(db,'attendance'),
+    where('date','>=',`${month}-01`), where('date','<=',`${month}-${daysInMonth}`)));
+  const allAtt = attSnap.docs.map(d => d.data());
+
+  const rows = employees.map(emp => {
     const ex = existing.find(p => p.employee_id === emp.id);
     if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, saved: true };
+    const empAtt = allAtt.filter(r => r.employee_id === emp.id);
     let present = 0;
-    for (let d = 1; d <= daysInMonth; d++) {
-      const date = `${month}-${String(d).padStart(2,'0')}`;
-      const recs = await getAttendance(date);
-      const rec = recs.find(r => r.employee_id === emp.id);
-      if (rec?.status === 'Present') present++;
-      else if (rec?.status === 'Half Day') present += 0.5;
-    }
-    const absent = daysInMonth - present;
+    empAtt.forEach(r => {
+      if (r.status === 'Present') present++;
+      else if (r.status === 'Half Day') present += 0.5;
+    });
     const workDays = emp.working_days_per_month || 26;
     const net = Math.round(((emp.monthly_salary || 0) / workDays) * present);
-    return { ...emp, present, absent, net, base: emp.monthly_salary||0, saved: false };
-  }));
+    return { ...emp, present, absent: daysInMonth - present, net, saved: false };
+  });
 
-  grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr><th>Employee</th><th>Role</th><th>Monthly Salary</th><th>Present Days</th><th>Net Salary</th><th>Action</th></tr></thead><tbody>${
-    rows.map(r => `<tr>
-      <td class="admin-td-bold">${r.full_name}</td>
-      <td class="admin-td-muted">${r.role}</td>
-      <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(r.monthly_salary||0)}</td>
-      <td class="admin-td-muted">${r.present} / ${daysInMonth}</td>
-      <td style="color:#7ce0aa;font-weight:700;">₹${r.net}</td>
-      <td>${r.saved?'<span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check me-1"></i>Saved</span>':`<button onclick="savePay('${r.id}','${r.full_name}','${month}',${r.present},${daysInMonth-r.present},${r.net},${r.base})" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold-2);font-size:0.78rem;cursor:pointer;"><i class="fas fa-save me-1"></i>Save</button>`}</td>
-    </tr>`).join('')
-  }</tbody></table></div>`;
+  if (!rows.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees found.</p>'; return; }
+
+  grid.innerHTML = `
+  <div class="table-responsive">
+    <table class="admin-table">
+      <thead><tr><th>Employee</th><th>Role</th><th>Monthly Salary</th><th>Present</th><th>Net Salary</th><th>UPI</th><th>Action</th></tr></thead>
+      <tbody>${rows.map(r => `<tr>
+        <td class="admin-td-bold">${r.full_name}</td>
+        <td class="admin-td-muted">${r.role}</td>
+        <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(r.monthly_salary||0).toLocaleString()}</td>
+        <td class="admin-td-muted">${r.present} / ${daysInMonth} days</td>
+        <td style="color:#7ce0aa;font-weight:700;font-size:1rem;">₹${r.net.toLocaleString()}</td>
+        <td>${r.upi_id
+          ? `<div style="font-size:0.78rem;"><div style="color:#9dc0ff;font-weight:600;">${r.upi_id}</div>${r.upi_app?`<div style="color:var(--text-muted);font-size:0.7rem;">${r.upi_app}</div>`:''}</div>`
+          : '<span style="color:rgba(240,230,211,0.25);font-size:0.75rem;">Not set</span>'}
+        </td>
+        <td>${r.saved
+          ? '<span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check-circle me-1"></i>Saved</span>'
+          : `<button onclick="savePay('${r.id}','${r.full_name.replace(/'/g,"\\'")}}','${month}',${r.present},${Math.round(daysInMonth-r.present)},${r.net},${r.monthly_salary||0})" class="btn-gold" style="padding:5px 14px;font-size:0.78rem;"><i class="fas fa-save me-1"></i>Save</button>`}
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>
+  </div>`;
 };
 
 window.savePay = async (empId, empName, month, present, absent, net, base) => {
-  try { await savePayroll({ employee_id: empId, employee_name: empName, month, present_days: present, absent_days: absent, net_salary: net, base_salary: base||0, bonus: 0, deductions: 0, status: 'Pending' }); showToast('Payroll saved!', 'success'); await loadPayroll(); }
-  catch(err) { showToast('Failed.', 'danger'); }
+  try {
+    await savePayroll({ employee_id: empId, employee_name: empName, month, present_days: present, absent_days: absent, net_salary: net, base_salary: base||0, bonus: 0, deductions: 0, status: 'Pending' });
+    showToast('Payroll saved!', 'success');
+    await loadPayroll();
+  } catch { showToast('Failed to save payroll.', 'danger'); }
 };
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
