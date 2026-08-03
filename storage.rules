@@ -1,0 +1,18 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public read for all files
+    match /{allPaths=**} {
+      allow read: if true;
+    }
+    // Only admin can upload
+    match /founders/{file} {
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.is_admin in [1, true];
+    }
+    match /gallery/{file} {
+      allow write: if request.auth != null
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.is_admin in [1, true];
+    }
+  }
+}

@@ -111,19 +111,20 @@
       </div>
       <div class="founders-card reveal-up" style="animation-delay:0.15s">
         <div class="founders-img-side">
-          <div class="founders-img-wrap">
-            <img src="images/founders.jpeg" alt="Komali & Gayathri – Founders of New Shades" class="founders-img"/>
+          <div class="founders-img-wrap d-flex flex-column gap-3 align-items-center">
+            <img src="images/founders.jpeg" id="f1Img" alt="Founder 1" class="founders-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(201,168,76,0.4);"/>
+            <img src="images/founders.jpeg" id="f2Img" alt="Founder 2" class="founders-img" style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid rgba(201,168,76,0.4);"/>
             <div class="founders-img-glow"></div>
           </div>
         </div>
         <div class="founders-content-side">
           <div class="founders-names-row">
-            <div class="founder-name-tag"><div class="founder-initial">K</div><div><div class="founder-name">Komali</div><div class="founder-title">Co-Founder &amp; Creative Director</div></div></div>
+            <div class="founder-name-tag"><div class="founder-initial">K</div><div><div class="founder-name" id="f1Name">Komali</div><div class="founder-title" id="f1Title">Co-Founder &amp; Creative Director</div></div></div>
             <div class="founders-amp">&amp;</div>
-            <div class="founder-name-tag"><div class="founder-initial">G</div><div><div class="founder-name">Gayathri</div><div class="founder-title">Co-Founder &amp; Head Stylist</div></div></div>
+            <div class="founder-name-tag"><div class="founder-initial">G</div><div><div class="founder-name" id="f2Name">Gayathri</div><div class="founder-title" id="f2Title">Co-Founder &amp; Head Stylist</div></div></div>
           </div>
           <div class="founders-divider"></div>
-          <p class="founders-quote"><i class="fas fa-quote-left founders-quote-icon"></i>We started New Shades because we wanted every woman to experience the joy of feeling beautiful — not just on special occasions, but every single day.</p>
+          <p class="founders-quote"><i class="fas fa-quote-left founders-quote-icon"></i><span id="foundersQuoteText">We started New Shades because we wanted every woman to experience the joy of feeling beautiful — not just on special occasions, but every single day.</span></p>
           <div class="founders-tags">
             <span class="founder-tag"><i class="fas fa-heart me-1"></i>Passion-Driven</span>
             <span class="founder-tag"><i class="fas fa-leaf me-1"></i>Premium Quality</span>
@@ -185,14 +186,23 @@
 <script type="module">
 import { getSettings } from './js/firebase.js';
 getSettings().then(s => {
-  const wa = s.whatsapp ? `https://wa.me/${s.whatsapp}` : '#';
+  const waNum = /^[0-9+\s\-()]{7,20}$/.test(s.whatsapp||'') ? s.whatsapp.replace(/\D/g,'') : null;
+  const wa = waNum ? `https://wa.me/${waNum}` : '#';
   document.getElementById('footerWa').href = wa;
   document.getElementById('ctaWa').href = wa;
   if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
   if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
   if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
   if (s.address) document.getElementById('ftAddr').textContent = s.address;
-  if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
+  if (/^[0-9+\s\-()]{7,20}$/.test(s.phone||'')) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone.replace(/\D/g,'')}`; }
+  // Founders
+  if (s.founder1_name)  document.getElementById('f1Name').textContent  = s.founder1_name;
+  if (s.founder1_title) document.getElementById('f1Title').textContent = s.founder1_title;
+  if (s.founder1_img)   document.getElementById('f1Img').src            = s.founder1_img;
+  if (s.founder2_name)  document.getElementById('f2Name').textContent  = s.founder2_name;
+  if (s.founder2_title) document.getElementById('f2Title').textContent = s.founder2_title;
+  if (s.founder2_img)   document.getElementById('f2Img').src            = s.founder2_img;
+  if (s.founders_quote) document.getElementById('foundersQuoteText').textContent = s.founders_quote;
 });
 </script>
 </body>

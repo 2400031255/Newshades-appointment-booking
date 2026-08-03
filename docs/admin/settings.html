@@ -64,6 +64,38 @@
           <button id="saveHoursBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-save me-2"></i>Save Hours</button>
         </div>
       </div>
+      <!-- Founders -->
+      <div class="col-12">
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-users me-2" style="color:var(--gold);"></i>Founders Section (About Page)</h6>
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:12px;">Founder 1</div>
+              <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">NAME</label><input type="text" id="f1Name" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Komali"/></div>
+              <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">TITLE</label><input type="text" id="f1Title" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Co-Founder & Creative Director"/></div>
+              <div class="mb-3">
+                <label class="field-label mb-1" style="font-size:0.75rem;">PHOTO (max 1 GB)</label>
+                <input type="file" id="f1File" accept="image/*" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:rgba(255,255,255,0.7);outline:none;font-size:0.85rem;"/>
+                <div id="f1Bar" style="display:none;margin-top:8px;height:6px;border-radius:99px;background:rgba(255,255,255,0.08);"><div id="f1BarFill" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#F5D060,#D4AF37);width:0%;transition:width 0.2s;"></div></div>
+              </div>
+              <img id="f1Preview" src="" alt="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid rgba(201,168,76,0.35);display:none;margin-top:4px;"/>
+            </div>
+            <div class="col-md-6">
+              <div style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:12px;">Founder 2</div>
+              <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">NAME</label><input type="text" id="f2Name" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Gayathri"/></div>
+              <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">TITLE</label><input type="text" id="f2Title" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Co-Founder & Head Stylist"/></div>
+              <div class="mb-3">
+                <label class="field-label mb-1" style="font-size:0.75rem;">PHOTO (max 1 GB)</label>
+                <input type="file" id="f2File" accept="image/*" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:rgba(255,255,255,0.7);outline:none;font-size:0.85rem;"/>
+                <div id="f2Bar" style="display:none;margin-top:8px;height:6px;border-radius:99px;background:rgba(255,255,255,0.08);"><div id="f2BarFill" style="height:100%;border-radius:99px;background:linear-gradient(90deg,#F5D060,#D4AF37);width:0%;transition:width 0.2s;"></div></div>
+              </div>
+              <img id="f2Preview" src="" alt="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid rgba(201,168,76,0.35);display:none;margin-top:4px;"/>
+            </div>
+          </div>
+          <div class="mb-4 mt-3"><label class="field-label mb-1" style="font-size:0.75rem;">FOUNDERS QUOTE</label><textarea id="foundersQuote" rows="2" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="We started New Shades because…"></textarea></div>
+          <button id="saveFoundersBtn" class="btn-gold" style="justify-content:center;"><i class="fas fa-save me-2"></i>Save Founders Info</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -71,7 +103,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getSettings, saveSettings, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getSettings, saveSettings, showToast, uploadFile } from '../js/firebase.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
@@ -89,6 +121,29 @@ document.getElementById('waMessage').value   = s.wa_message     || '';
 document.getElementById('hoursWeekday').value  = s.hours_weekday  || '';
 document.getElementById('hoursSaturday').value = s.hours_saturday || '';
 document.getElementById('hoursSunday').value   = s.hours_sunday   || '';
+
+// Founders
+document.getElementById('f1Name').value  = s.founder1_name  || '';
+document.getElementById('f1Title').value = s.founder1_title || '';
+document.getElementById('f2Name').value  = s.founder2_name  || '';
+document.getElementById('f2Title').value = s.founder2_title || '';
+document.getElementById('foundersQuote').value = s.founders_quote || '';
+function setPreview(inputId, previewId) {
+  const input = document.getElementById(inputId);
+  const img   = document.getElementById(previewId);
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => { img.src = e.target.result; img.style.display = 'block'; };
+    reader.readAsDataURL(file);
+  });
+}
+// Show existing saved images
+if (s.founder1_img) { const p=document.getElementById('f1Preview'); p.src=s.founder1_img; p.style.display='block'; }
+if (s.founder2_img) { const p=document.getElementById('f2Preview'); p.src=s.founder2_img; p.style.display='block'; }
+setPreview('f1File', 'f1Preview');
+setPreview('f2File', 'f2Preview');
 
 document.getElementById('saveShopBtn').addEventListener('click', async () => {
   try {
@@ -109,6 +164,33 @@ document.getElementById('saveHoursBtn').addEventListener('click', async () => {
     await saveSettings({ hours_weekday: document.getElementById('hoursWeekday').value, hours_saturday: document.getElementById('hoursSaturday').value, hours_sunday: document.getElementById('hoursSunday').value });
     showToast('Business hours saved!', 'success');
   } catch { showToast('Failed to save.', 'danger'); }
+});
+
+document.getElementById('saveFoundersBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveFoundersBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
+  try {
+    const data = {
+      founder1_name:  document.getElementById('f1Name').value.trim(),
+      founder1_title: document.getElementById('f1Title').value.trim(),
+      founder2_name:  document.getElementById('f2Name').value.trim(),
+      founder2_title: document.getElementById('f2Title').value.trim(),
+      founders_quote: document.getElementById('foundersQuote').value.trim()
+    };
+    const f1 = document.getElementById('f1File').files[0];
+    const f2 = document.getElementById('f2File').files[0];
+    if (f1) {
+      document.getElementById('f1Bar').style.display = 'block';
+      data.founder1_img = await uploadFile(`founders/founder1_${Date.now()}`, f1, p => { document.getElementById('f1BarFill').style.width = p + '%'; });
+    }
+    if (f2) {
+      document.getElementById('f2Bar').style.display = 'block';
+      data.founder2_img = await uploadFile(`founders/founder2_${Date.now()}`, f2, p => { document.getElementById('f2BarFill').style.width = p + '%'; });
+    }
+    await saveSettings(data);
+    showToast('Founders info saved!', 'success');
+  } catch(e) { showToast('Failed to save: ' + (e.message||e), 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Founders Info'; }
 });
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });

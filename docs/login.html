@@ -169,8 +169,14 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       ? 'Too many attempts. Please try again later.'
       : err.code === 'auth/user-not-found'
       ? 'No account found with this email.'
-      : `Error: ${err.code || err.message}`;
-    alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;
+      : `Error: ${err.code || 'unknown'}`;
+    const flash = document.createElement('div');
+    flash.className = 'anf-flash anf-flash-danger';
+    flash.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+    const msgNode = document.createTextNode(msg);
+    flash.appendChild(msgNode);
+    alertEl.innerHTML = '';
+    alertEl.appendChild(flash);
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
   }

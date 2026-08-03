@@ -1,12 +1,27 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { firebaseConfig } from './config.js';
 
 const app  = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db   = getFirestore(app);
+export const auth    = getAuth(app);
+export const db      = getFirestore(app);
+export const storage = getStorage(app);
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
+
+// ── Upload file to Firebase Storage with progress callback ────────────────
+export function uploadFile(path, file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const storageRef = ref(storage, path);
+    const task = uploadBytesResumable(storageRef, file);
+    task.on('state_changed',
+      snap => onProgress && onProgress(Math.round(snap.bytesTransferred / snap.totalBytes * 100)),
+      reject,
+      () => getDownloadURL(task.snapshot.ref).then(resolve).catch(reject)
+    );
+  });
+}
 
 // ── Offline persistence (cache-first on repeat visits) ────────────────────
 enableIndexedDbPersistence(db).catch(() => {});
