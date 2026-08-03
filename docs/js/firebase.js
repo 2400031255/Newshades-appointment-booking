@@ -1,15 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-export const firebaseConfig = {
-  apiKey: "AIzaSyD1u6cOGWmrrJ-JbBDSFJ5eJ11XPTDbCWk",
-  authDomain: "newshadeseluru-ec450.firebaseapp.com",
-  projectId: "newshadeseluru-ec450",
-  storageBucket: "newshadeseluru-ec450.firebasestorage.app",
-  messagingSenderId: "5209377015",
-  appId: "1:5209377015:web:f363707d7fcfbdd095abf2"
-};
+import { firebaseConfig } from './config.js';
 
 const app  = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
