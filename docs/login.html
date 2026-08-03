@@ -117,7 +117,10 @@ import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gsta
 // Disable form until auth state resolves to prevent flash
 const _loginBtn = document.getElementById('loginBtn');
 _loginBtn.disabled = true;
-requireGuest().finally(() => { _loginBtn.disabled = false; });
+try {
+  await requireGuest();
+} catch(e) {}
+_loginBtn.disabled = false;
 
 async function resolveEmail(identifier) {
   if (identifier.includes('@')) return identifier;
