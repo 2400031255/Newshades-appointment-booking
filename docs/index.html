@@ -425,8 +425,7 @@ document.getElementById('pubEnqForm').addEventListener('submit', async e => {
 document.getElementById('enqDate').min = new Date().toISOString().slice(0,10);
 
 loadSettings();
-loadServices();
-loadReviews();
+Promise.all([loadServices(), loadReviews()]);
 getActiveOffers(); // preload
 </script>
 
@@ -457,17 +456,22 @@ getActiveOffers(); // preload
   form.appendChild(extra);
 })();
 
-// Stars canvas
+// Stars canvas — deferred after load
 (function(){
-  const canvas = document.getElementById('starsCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let stars=[], W, H;
-  function resize(){ const h=canvas.parentElement; W=canvas.width=h.offsetWidth; H=canvas.height=h.offsetHeight; }
-  function initStars(){ stars=[]; const c=Math.floor((W*H)/5000); for(let i=0;i<c;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.6+0.3,alpha:Math.random()*0.7+0.2,speed:Math.random()*0.3+0.05,td:Math.random()*0.018+0.004,tdir:Math.random()>0.5?1:-1,gold:Math.random()>0.72}); }
-  function draw(){ ctx.clearRect(0,0,W,H); stars.forEach(s=>{ s.alpha+=s.td*s.tdir; if(s.alpha>=1){s.alpha=1;s.tdir=-1;} if(s.alpha<=0.1){s.alpha=0.1;s.tdir=1;} s.y-=s.speed; if(s.y<-2){s.y=H+2;s.x=Math.random()*W;} ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.gold?`rgba(212,175,55,${s.alpha})`:`rgba(255,255,255,${s.alpha})`;ctx.fill();}); requestAnimationFrame(draw); }
-  resize(); initStars(); draw();
-  window.addEventListener('resize',()=>{resize();initStars();});
+  function initStars() {
+    const canvas = document.getElementById('starsCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let stars=[], W, H, rafId;
+    function resize(){ const h=canvas.parentElement; W=canvas.width=h.offsetWidth; H=canvas.height=h.offsetHeight; }
+    function init(){ stars=[]; const c=Math.floor((W*H)/8000); for(let i=0;i<c;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+0.3,alpha:Math.random()*0.6+0.2,speed:Math.random()*0.2+0.04,td:Math.random()*0.015+0.003,tdir:Math.random()>0.5?1:-1,gold:Math.random()>0.8}); }
+    function draw(){ ctx.clearRect(0,0,W,H); stars.forEach(s=>{ s.alpha+=s.td*s.tdir; if(s.alpha>=1){s.alpha=1;s.tdir=-1;} if(s.alpha<=0.1){s.alpha=0.1;s.tdir=1;} s.y-=s.speed; if(s.y<-2){s.y=H+2;s.x=Math.random()*W;} ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.gold?`rgba(212,175,55,${s.alpha})`:`rgba(255,255,255,${s.alpha})`;ctx.fill();}); rafId=requestAnimationFrame(draw); }
+    resize(); init(); draw();
+    window.addEventListener('resize',()=>{resize();init();},{passive:true});
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden) cancelAnimationFrame(rafId); else draw(); });
+  }
+  if (document.readyState === 'complete') initStars();
+  else window.addEventListener('load', initStars);
 })();
 
 // Navbar close on outside tap
