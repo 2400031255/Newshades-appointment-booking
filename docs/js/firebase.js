@@ -32,9 +32,10 @@ export async function loginUser(email, password) {
 export async function logoutUser() {
   cacheClear();
   await signOut(auth);
-  const depth = window.location.pathname.split('/').filter(Boolean).length;
-  const prefix = depth >= 2 ? '../' : '';
-  window.location.href = prefix + 'login.html';
+  // Always redirect to login relative to current path depth
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  const inSubfolder = parts.length >= 2 && ['admin','employee','customer'].includes(parts[parts.length-2]);
+  window.location.href = inSubfolder ? '../login.html' : 'login.html';
 }
 export function onAuth(cb) { return onAuthStateChanged(auth, cb); }
 export function currentUser() { return auth.currentUser; }
@@ -60,7 +61,7 @@ export function requireGuest() {
       const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
       if (profile?.is_admin) { window.location.href = "admin/dashboard.html"; return; }
       if (emp) { window.location.href = "employee/dashboard.html"; return; }
-      window.location.href = "index.html";
+      window.location.href = "customer/dashboard.html";
     });
   });
 }
@@ -83,7 +84,8 @@ export async function getEmployeeProfile(uid) {
   return val;
 }
 export async function updateUserProfile(uid, data) {
-  cacheSet(`up_${uid}`, null);
+  try { sessionStorage.removeItem(`up_${uid}`); } catch{}
+  delete _cache[`up_${uid}`];
   return updateDoc(doc(db, "users", uid), data);
 }
 
@@ -148,11 +150,10 @@ export async function getAllCustomers() {
 
 // ── Employees ─────────────────────────────────────────────────────────────
 export async function getAllEmployees(activeOnly = false) {
-  let q = activeOnly
-    ? query(collection(db, "employees"), where("is_active", "==", 1))
-    : collection(db, "employees");
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const snap = await getDocs(collection(db, "employees"));
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!activeOnly) return all;
+  return all.filter(e => e.is_active === 1 || e.is_active === true);
 }
 export async function createEmployee(data) {
   return addDoc(collection(db, "employees"), { ...data, created_at: serverTimestamp() });
@@ -192,10 +193,11 @@ export async function getReviewByUser(uid) {
 // ── Offers ────────────────────────────────────────────────────────────────
 export async function getActiveOffers() {
   const today = new Date().toISOString().slice(0, 10);
-  const q = query(collection(db, "offers"), where("is_active", "==", 1));
-  const snap = await getDocs(q);
+  const snap = await getDocs(collection(db, "offers"));
   return snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .filter(o => (!o.valid_from || o.valid_from <= today) && (!o.valid_until || o.valid_until >= today));
+    .filter(o => (o.is_active === 1 || o.is_active === true)
+      && (!o.valid_from || o.valid_from <= today)
+      && (!o.valid_until || o.valid_until >= today));
 }
 export async function getAllOffers() {
   const snap = await getDocs(collection(db, "offers"));
@@ -237,10 +239,15 @@ export async function getPayroll(month) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 export async function savePayroll(data) {
+  const q = query(collection(db, "payroll"), where("employee_id", "==", data.employee_id), where("month", "==", data.month));
+  const snap = await getDocs(q);
+  if (!snap.empty) return updateDoc(snap.docs[0].ref, data);
   return addDoc(collection(db, "payroll"), { ...data, created_at: serverTimestamp() });
 }
 
 // ── Utilities ─────────────────────────────────────────────────────────────
+export function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 export function today() { return new Date().toISOString().slice(0, 10); }
 
 export function to12hr(t) {
@@ -252,11 +259,15 @@ export function to12hr(t) {
 export function showToast(msg, type = "success") {
   const colors = { success: "#25d366", danger: "#ff6b6b", warning: "#ffc107", info: "#63b3ff" };
   const icons  = { success: "fa-check-circle", danger: "fa-times-circle", warning: "fa-exclamation-triangle", info: "fa-info-circle" };
+  const isMobile = window.innerWidth < 768;
   const t = document.createElement("div");
-  t.style.cssText = `position:fixed;top:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:12px;
+  t.style.cssText = `position:fixed;top:${isMobile ? 72 : 24}px;right:${isMobile ? 12 : 24}px;${isMobile ? 'left:12px;' : ''}z-index:99999;display:flex;align-items:center;gap:12px;
     padding:14px 20px;border-radius:14px;background:#0e0b14;border:1px solid ${colors[type]}55;
-    color:#fff;font-size:0.9rem;box-shadow:0 24px 70px rgba(0,0,0,0.7);min-width:280px;max-width:380px;`;
-  t.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:1.1rem;flex-shrink:0;"></i><span>${msg}</span>`;
+    color:#fff;font-size:0.9rem;box-shadow:0 24px 70px rgba(0,0,0,0.7);min-width:${isMobile ? 'unset' : '280px'};max-width:${isMobile ? '100%' : '380px'};`;
+  const msgEl = document.createElement('span');
+  msgEl.textContent = msg;
+  t.innerHTML = `<i class="fas ${icons[type]}" style="color:${colors[type]};font-size:1.1rem;flex-shrink:0;"></i>`;
+  t.appendChild(msgEl);
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(() => t.remove(), 300); }, 3500);
 }

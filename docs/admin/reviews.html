@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Reviews – New Shades Admin</title>
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
@@ -61,12 +61,13 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getReviews, updateReview, showToast, formatDate } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getReviews, updateReview, showToast, formatDate, esc } from '../js/firebase.js';
 
-const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
@@ -94,7 +95,7 @@ function renderStats() {
 function renderTable(reviews) {
   document.getElementById('reviewCount').textContent = `(${reviews.length})`;
   document.getElementById('reviewBody').innerHTML = reviews.map(r => `<tr>
-    <td><div class="admin-td-bold">${r.full_name||'Anonymous'}</div><div style="font-size:0.78rem;color:var(--text-muted);">${r.email||''}</div></td>
+    <td><div class="admin-td-bold">${esc(r.full_name||'Anonymous')}</div><div style="font-size:0.78rem;color:var(--text-muted);">${esc(r.email||'')}</div></td>
     <td><div style="display:flex;gap:2px;">${Array.from({length:5},(_,i)=>`<i class="fas fa-star" style="color:${i<(r.rating||0)?'#C9A84C':'rgba(255,255,255,0.15)'};font-size:0.8rem;"></i>`).join('')}</div><div style="font-size:0.75rem;color:var(--gold-2);margin-top:2px;">${r.rating||0}/5</div></td>
     <td style="max-width:260px;font-size:0.85rem;color:rgba(240,230,211,0.75);">${(r.review_text||'').slice(0,120)}${(r.review_text||'').length>120?'…':''}</td>
     <td class="admin-td-muted">${formatDate(r.created_at)}</td>

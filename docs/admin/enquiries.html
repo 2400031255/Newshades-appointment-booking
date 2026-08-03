@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Enquiries – New Shades Admin</title>
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -87,12 +87,13 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllEmployees, updateEnquiry, deleteEnquiry, showToast, formatDate } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllEmployees, updateEnquiry, deleteEnquiry, showToast, formatDate, esc } from '../js/firebase.js';
 
-const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
@@ -124,31 +125,39 @@ function renderTable() {
   document.getElementById('totalCount').textContent = `(${filtered.length})`;
   document.getElementById('enqBody').innerHTML = filtered.map(e => `<tr>
     <td class="admin-td-muted">#${(e.id||'').slice(0,6)}</td>
-    <td class="admin-td-bold">${e.full_name}</td>
-    <td><div style="display:flex;align-items:center;gap:4px;"><span class="admin-td-muted" style="font-size:0.82rem;">${e.phone}</span><button onclick="navigator.clipboard.writeText('${e.phone}')" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold);font-size:0.65rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;"><i class="fas fa-copy"></i></button><a href="tel:${e.phone}" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(37,211,102,0.4);background:rgba(37,211,102,0.12);color:#25d366;font-size:0.65rem;display:inline-flex;align-items:center;justify-content:center;"><i class="fas fa-phone"></i></a></div></td>
-    <td class="admin-td-muted" style="max-width:150px;font-size:0.82rem;">${e.selected_services}</td>
+    <td class="admin-td-bold">${esc(e.full_name)}</td>
+    <td><div style="display:flex;align-items:center;gap:4px;"><span class="admin-td-muted" style="font-size:0.82rem;">${esc(e.phone)}</span><button onclick="navigator.clipboard.writeText('${e.phone}')" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold);font-size:0.65rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;"><i class="fas fa-copy"></i></button><a href="tel:${e.phone}" style="width:22px;height:22px;border-radius:5px;border:1px solid rgba(37,211,102,0.4);background:rgba(37,211,102,0.12);color:#25d366;font-size:0.65rem;display:inline-flex;align-items:center;justify-content:center;"><i class="fas fa-phone"></i></a></div></td>
+    <td class="admin-td-muted" style="max-width:150px;font-size:0.82rem;">${esc(e.selected_services)}</td>
     <td class="admin-td-bold" style="white-space:nowrap;">${e.preferred_date||'—'}${e.preferred_time?'<div style="font-size:0.72rem;color:var(--text-muted);">'+e.preferred_time+'</div>':''}</td>
     <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
     <td>${e.emp_name?`<span style="font-size:0.8rem;color:#9dc0ff;font-weight:600;"><i class="fas fa-user-tie me-1"></i>${e.emp_name}</span>`:'<span style="font-size:0.78rem;color:rgba(240,230,211,0.3);">Unassigned</span>'}</td>
-    <td><div class="d-flex gap-1"><button class="appt-action-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit"></i></button><button class="appt-action-btn btn-delete" onclick="delEnq('${e.id}')"><i class="fas fa-trash"></i></button></div></td>
+    <td><div class="d-flex gap-1"><button class="appt-action-btn btn-edit" data-id="${e.id}"><i class="fas fa-edit"></i></button><button class="appt-action-btn btn-delete" data-id="${e.id}"><i class="fas fa-trash"></i></button></div></td>
   </tr>`).join('') || '<tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted);">No enquiries found.</td></tr>';
 
   document.getElementById('mobileCards').innerHTML = filtered.map(e => `
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.12);border-radius:14px;padding:16px;margin-bottom:12px;">
       <div class="d-flex justify-content-between align-items-start mb-2">
-        <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${e.full_name}</div><div style="font-size:0.78rem;color:var(--text-muted);">${e.phone}</div></div>
+        <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${esc(e.full_name)}</div><div style="font-size:0.78rem;color:var(--text-muted);">${esc(e.phone)}</div></div>
         <span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span>
       </div>
-      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:8px;">${e.selected_services}</div>
+      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:8px;">${esc(e.selected_services)}</div>
       <div class="d-flex gap-2">
-        <button class="appt-mob-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit me-1"></i>Update</button>
-        <button class="appt-mob-btn btn-delete" onclick="delEnq('${e.id}')"><i class="fas fa-trash me-1"></i>Delete</button>
+        <button class="appt-mob-btn btn-edit" data-id="${e.id}"><i class="fas fa-edit me-1"></i>Update</button>
+        <button class="appt-mob-btn btn-delete" data-id="${e.id}"><i class="fas fa-trash me-1"></i>Delete</button>
       </div>
     </div>`).join('');
 }
 renderTable();
 
 window.filterTable = () => renderTable();
+
+// Safe event delegation — no inline onclick with user data
+document.addEventListener('click', e => {
+  const editBtn = e.target.closest('.btn-edit[data-id]');
+  const delBtn  = e.target.closest('.btn-delete[data-id]');
+  if (editBtn) { const enq = allEnqs.find(x => x.id === editBtn.dataset.id); if (enq) openModal(enq.id, enq.status, enq.admin_notes||'', enq.assigned_employee_id||''); }
+  if (delBtn)  { delEnq(delBtn.dataset.id); }
+});
 
 window.openModal = (eid, status, notes, empId) => {
   currentEid = eid;

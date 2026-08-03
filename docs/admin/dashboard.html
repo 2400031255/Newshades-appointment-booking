@@ -7,8 +7,8 @@
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -57,19 +57,20 @@
     </div>
     <div class="d-flex align-items-center gap-2">
       <span class="text-muted small" id="adminName"></span>
-      <div class="service-icon" style="width:36px;height:36px;font-size:1rem;"><i class="fas fa-user"></i></div>
+      <div id="adminAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;color:#0a0810;font-size:0.95rem;flex-shrink:0;">A</div>
     </div>
   </div>
 
   <div class="admin-page-body">
 
     <!-- Stats Row -->
-    <div class="row g-4 mb-4">
-      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Customers</div><div class="stat-number" id="statCustomers">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-users"></i></div></div></div></div>
-      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Services</div><div class="stat-number" id="statServices">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-concierge-bell"></i></div></div></div></div>
-      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#0d6efd;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Enquiries</div><div class="stat-number" id="statEnqs">—</div></div><div class="stat-icon" style="color:#0d6efd;"><i class="fas fa-clipboard-list"></i></div></div></div></div>
-      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#fd7e14;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Pending</div><div class="stat-number" id="statPending">—</div></div><div class="stat-icon" style="color:#fd7e14;"><i class="fas fa-clock"></i></div></div></div></div>
+    <div class="row g-4 mb-2">
+      <div class="col-lg-3 col-md-6"><a href="customers.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Customers</div><div class="stat-number" id="statCustomers">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-users"></i></div></div></div></a></div>
+      <div class="col-lg-3 col-md-6"><a href="services.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Services</div><div class="stat-number" id="statServices">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-concierge-bell"></i></div></div></div></a></div>
+      <div class="col-lg-3 col-md-6"><a href="enquiries.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#0d6efd;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Enquiries</div><div class="stat-number" id="statEnqs">—</div></div><div class="stat-icon" style="color:#0d6efd;"><i class="fas fa-clipboard-list"></i></div></div></div></a></div>
+      <div class="col-lg-3 col-md-6"><a href="enquiries.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#fd7e14;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Pending</div><div class="stat-number" id="statPending">—</div></div><div class="stat-icon" style="color:#fd7e14;"><i class="fas fa-clock"></i></div></div></div></a></div>
     </div>
+    <div class="mb-4"><span style="font-size:0.75rem;color:var(--text-muted);"><i class="fas fa-sync-alt me-1"></i>Last refreshed: <span id="lastRefreshed">—</span></span></div>
 
     <!-- Today's Enquiries -->
     <div class="admin-card mb-4">
@@ -96,8 +97,10 @@
 
     <!-- Quick Actions -->
     <div class="row g-4">
-      <div class="col-md-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-plus"></i></div><h6 class="fw-bold">Add New Service</h6><p class="text-muted small">Expand your service offerings</p><a href="services.html" class="btn-gold mt-2">Manage Services</a></div></div>
-      <div class="col-md-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-clipboard-list"></i></div><h6 class="fw-bold">Manage Enquiries</h6><p class="text-muted small">View, update and respond to enquiries</p><a href="enquiries.html" class="btn-gold mt-2">View All</a></div></div>
+      <div class="col-md-3 col-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-plus"></i></div><h6 class="fw-bold">Add Service</h6><p class="text-muted small">Expand your offerings</p><a href="services.html" class="btn-gold mt-2" style="font-size:0.82rem;padding:8px 16px;">Manage</a></div></div>
+      <div class="col-md-3 col-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-clipboard-list"></i></div><h6 class="fw-bold">Enquiries</h6><p class="text-muted small">View and respond</p><a href="enquiries.html" class="btn-gold mt-2" style="font-size:0.82rem;padding:8px 16px;">View All</a></div></div>
+      <div class="col-md-3 col-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3" style="color:#7ce0aa;"><i class="fas fa-calendar-check"></i></div><h6 class="fw-bold">Attendance</h6><p class="text-muted small">Mark today's attendance</p><a href="attendance.html" class="btn-gold mt-2" style="font-size:0.82rem;padding:8px 16px;">Mark Now</a></div></div>
+      <div class="col-md-3 col-6"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3" style="color:#9dc0ff;"><i class="fas fa-money-bill-wave"></i></div><h6 class="fw-bold">Payroll</h6><p class="text-muted small">View monthly payroll</p><a href="payroll.html" class="btn-gold mt-2" style="font-size:0.82rem;padding:8px 16px;">View</a></div></div>
     </div>
 
   </div>
@@ -133,14 +136,18 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllCustomers, getServices, getAllEmployees, updateEnquiry, showToast, formatDate, to12hr } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEnquiries, getAllCustomers, getServices, getAllEmployees, updateEnquiry, showToast, formatDate, to12hr, esc } from '../js/firebase.js';
 
-const [user, profile] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getUserProfile(u.uid))]);
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
+const initials = (profile?.full_name || user.email).split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
+document.getElementById('adminAvatar').textContent = initials;
+document.getElementById('lastRefreshed').textContent = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 
 const [enquiries, customers, services, employees] = await Promise.all([
   getAllEnquiries(), getAllCustomers(), getServices(), getAllEmployees()
@@ -154,7 +161,6 @@ const pending = enquiries.filter(e => e.status === 'Pending');
 document.getElementById('statPending').textContent = pending.length;
 if (pending.length) { const b=document.getElementById('pendingBadge'); b.textContent=pending.length; b.style.display=''; }
 
-// Today's enquiries
 const today = new Date().toISOString().slice(0,10);
 const todayEnqs = enquiries.filter(e => e.preferred_date === today);
 document.getElementById('todayCount').textContent = `(${todayEnqs.length})`;
@@ -162,27 +168,26 @@ const todayList = document.getElementById('todayList');
 if (todayEnqs.length) {
   todayList.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr><th>Customer</th><th>Phone</th><th>Services</th><th>Time</th><th>Status</th><th>Action</th></tr></thead><tbody>${
     todayEnqs.map(e => `<tr>
-      <td class="admin-td-bold">${e.full_name}</td>
-      <td class="admin-td-muted">${e.phone}</td>
-      <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">${e.selected_services}</td>
-      <td class="admin-td-muted">${e.preferred_time||'Flexible'}</td>
-      <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
-      <td><button class="appt-action-btn btn-edit" onclick="openModal('${e.id}','${e.status}','${(e.admin_notes||'').replace(/'/g,"\\'")}','${e.assigned_employee_id||''}')"><i class="fas fa-edit"></i></button></td>
+      <td class="admin-td-bold">${esc(e.full_name)}</td>
+      <td class="admin-td-muted">${esc(e.phone)}</td>
+      <td class="admin-td-muted" style="max-width:160px;font-size:0.82rem;">${esc(e.selected_services)}</td>
+      <td class="admin-td-muted">${esc(e.preferred_time||'Flexible')}</td>
+      <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${esc(e.status)}</span></td>
+      <td><button class="appt-action-btn btn-edit" data-id="${e.id}"><i class="fas fa-edit"></i></button></td>
     </tr>`).join('')
   }</tbody></table></div>`;
 } else {
   todayList.innerHTML = '<p class="text-muted text-center py-3" style="font-size:0.88rem;">No enquiries with today\'s preferred date.</p>';
 }
 
-// Recent
 const recentBody = document.getElementById('recentBody');
 recentBody.innerHTML = enquiries.slice(0,10).map(e => `<tr>
-  <td class="admin-td-muted">#${(e.id||'').slice(0,6)}</td>
-  <td class="admin-td-bold">${e.full_name}</td>
-  <td class="admin-td-muted">${e.phone}</td>
-  <td>${(e.selected_services||'').slice(0,40)}${(e.selected_services||'').length>40?'…':''}</td>
-  <td class="admin-td-muted">${e.preferred_date||'—'}</td>
-  <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span></td>
+  <td class="admin-td-muted">#${esc((e.id||'').slice(0,6))}</td>
+  <td class="admin-td-bold">${esc(e.full_name)}</td>
+  <td class="admin-td-muted">${esc(e.phone)}</td>
+  <td>${esc((e.selected_services||'').slice(0,40))}${(e.selected_services||'').length>40?'…':''}</td>
+  <td class="admin-td-muted">${esc(e.preferred_date||'—')}</td>
+  <td><span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${esc(e.status)}</span></td>
 </tr>`).join('') || '<tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">No enquiries yet.</td></tr>';
 
 // Populate employee dropdown
@@ -191,6 +196,12 @@ employees.forEach(emp => { const o=document.createElement('option'); o.value=emp
 
 // Modal
 let currentEid = null;
+// Safe event delegation for modal
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-edit[data-id]');
+  if (btn) { const enq = enquiries.find(x => x.id === btn.dataset.id); if (enq) openModal(enq.id, enq.status, enq.admin_notes||'', enq.assigned_employee_id||''); }
+});
+
 window.openModal = (eid, status, notes, empId) => {
   currentEid = eid;
   document.getElementById('modalEnqId').textContent = '#' + eid.slice(0,6);
@@ -216,7 +227,16 @@ document.getElementById('modalSaveBtn').addEventListener('click', async () => {
     });
     showToast('Enquiry updated!', 'success');
     closeModal();
-    setTimeout(() => location.reload(), 800);
+    // Update in-place — no page reload
+    const updated = enquiries.find(e => e.id === currentEid);
+    if (updated) {
+      updated.status = document.getElementById('modalStatus').value;
+      updated.admin_notes = document.getElementById('modalNotes').value;
+      const newPending = enquiries.filter(e => e.status === 'Pending').length;
+      document.getElementById('statPending').textContent = newPending;
+      const pb = document.getElementById('pendingBadge');
+      pb.textContent = newPending; pb.style.display = newPending ? '' : 'none';
+    }
   } catch(err) { showToast('Failed to update.', 'danger'); }
 });
 

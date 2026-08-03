@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Employee Dashboard – New Shades</title>
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
@@ -44,24 +44,25 @@
       <div class="col-md-3"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">This Month Present</div><div class="stat-number" id="statPresent">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-check-circle"></i></div></div></div></div>
       <div class="col-md-3"><div class="stat-card" style="border-left-color:#ff6b6b;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Absent</div><div class="stat-number" id="statAbsent">—</div></div><div class="stat-icon" style="color:#ff6b6b;"><i class="fas fa-times-circle"></i></div></div></div></div>
       <div class="col-md-3"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Leave Requests</div><div class="stat-number" id="statLeave">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-calendar-minus"></i></div></div></div></div>
-      <div class="col-md-3"><div class="stat-card" style="border-left-color:#25d366;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Today</div><div class="stat-number" id="statToday" style="font-size:1rem;">—</div></div><div class="stat-icon" style="color:#25d366;"><i class="fas fa-calendar-day"></i></div></div></div></div>
+      <div class="col-md-3"><div class="stat-card" style="border-left-color:#ffc107;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Half Days</div><div class="stat-number" id="statHalf">—</div></div><div class="stat-icon" style="color:#ffc107;"><i class="fas fa-adjust"></i></div></div></div></div>
     </div>
     <!-- Quick Links -->
     <div class="row g-4">
-      <div class="col-md-4"><a href="attendance.html" style="text-decoration:none;"><div class="admin-card text-center" style="cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-check"></i></div><h6 class="fw-bold">My Attendance</h6><p class="text-muted small">View your attendance history</p></div></a></div>
-      <div class="col-md-4"><a href="leave.html" style="text-decoration:none;"><div class="admin-card text-center" style="cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-minus"></i></div><h6 class="fw-bold">Apply for Leave</h6><p class="text-muted small">Submit and track leave requests</p></div></a></div>
-      <div class="col-md-4"><a href="salary.html" style="text-decoration:none;"><div class="admin-card text-center" style="cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''"><div class="service-icon mx-auto mb-3"><i class="fas fa-money-bill-wave"></i></div><h6 class="fw-bold">My Salary</h6><p class="text-muted small">View salary & payroll details</p></div></a></div>
+      <div class="col-md-4"><a href="attendance.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-check"></i></div><h6 class="fw-bold">My Attendance</h6><p class="text-muted small">View your attendance history</p></div></a></div>
+      <div class="col-md-4"><a href="leave.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-minus"></i></div><h6 class="fw-bold">Apply for Leave</h6><p class="text-muted small">Submit and track leave requests</p></div></a></div>
+      <div class="col-md-4"><a href="salary.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-money-bill-wave"></i></div><h6 class="fw-bold">My Salary</h6><p class="text-muted small">View salary & payroll details</p></div></a></div>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getEmployeeProfile, getLeaveRequests, formatDate, db } from '../js/firebase.js';
 import { getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-const [user, emp] = await Promise.all([requireAuth('../login.html'), requireAuth('../login.html').then(u => getEmployeeProfile(u.uid))]);
+const user = await requireAuth('../login.html');
+const emp = await getEmployeeProfile(user.uid);
 if (!emp) { window.location.href = '../login.html'; }
 
 document.getElementById('empName').textContent = emp.full_name || user.email;
@@ -69,7 +70,6 @@ document.getElementById('welcomeName').textContent = `Welcome, ${emp.full_name||
 document.getElementById('empRole').textContent = emp.role || 'Staff';
 document.getElementById('empJoined').textContent = emp.joined_date ? `Joined: ${formatDate(emp.joined_date)}` : '';
 
-document.getElementById('statToday').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
 
 const now = new Date();
 const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -78,6 +78,7 @@ const snap = await getDocs(query(collection(db,'attendance'), where('employee_id
 const records = snap.docs.map(d=>d.data()).filter(r=>r.date&&r.date.startsWith(monthStr));
 document.getElementById('statPresent').textContent = records.filter(r=>r.status==='Present').length;
 document.getElementById('statAbsent').textContent  = records.filter(r=>r.status==='Absent').length;
+document.getElementById('statHalf').textContent    = records.filter(r=>r.status==='Half Day').length;
 
 const leaves = await getLeaveRequests(user.uid);
 document.getElementById('statLeave').textContent = leaves.length;

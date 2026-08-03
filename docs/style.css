@@ -3828,6 +3828,45 @@ a {
   .tilt-card { transform: none !important; }
 }
 
+/* ── Reduced motion accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Admin card hover via CSS (replaces inline onmouseover) ── */
+a .admin-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+a:hover .admin-card {
+  transform: translateY(-4px);
+  box-shadow: 0 28px 70px rgba(0,0,0,0.35);
+}
+
+/* ── btn-gold-hero cursor ── */
+.btn-gold-hero { cursor: pointer; }
+
+/* ── contain: style only (not layout — avoids breaking sticky) ── */
+.appt-card, .svc-select-card, .glass-card, .admin-card,
+.booking-sidebar-card, .why-card, .svc-card {
+  contain: style;
+}
+
+/* ── Skeleton shimmer for loading states ── */
+.skeleton {
+  border-radius: 14px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.4s infinite;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ── Global overflow guard — nothing should ever cause horizontal scroll ── */
 section, .hero, .page-header, .booking-section,
 .section-services, .section-why, .section-cta,
