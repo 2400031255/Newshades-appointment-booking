@@ -129,7 +129,7 @@ async function loadEmps() {
         </div>
       </div>`).join('');
   } catch(err) {
-    document.getElementById('empList').innerHTML = `<div class="text-center py-4" style="color:#ff9a9a;"><i class="fas fa-exclamation-circle me-2"></i>Failed to load employees: ${err.message}</div>`;
+    document.getElementById('empList').innerHTML = `<div class="text-center py-5"><i class="fas fa-exclamation-triangle" style="font-size:2rem;color:rgba(255,170,77,0.5);"></i><p class="mt-3" style="color:#ffc36b;font-size:0.88rem;">Failed to load employees.<br><span style="color:var(--text-muted);font-size:0.8rem;">${err.message}</span></p><button onclick="loadEmps()" style="margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold-2);font-size:0.82rem;cursor:pointer;"><i class="fas fa-redo me-1"></i>Retry</button></div>`;
   }
 }
 loadEmps();

@@ -366,7 +366,28 @@ if (_s.maintenance_mode === true) {
   throw new Error('maintenance'); // stop rest of script
 }
 
-const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female' };
+const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female', General:'fas fa-magic' };
+
+const defaultSvcs = [
+  {service_name:'Hair Cut',category:'Hair',description:'Precision cut tailored to your face shape and style.'},
+  {service_name:'Beard Trim',category:'Beard',description:'Clean, sharp beard shaping by expert barbers.'},
+  {service_name:'Hair Color',category:'Hair',description:'Vibrant, long-lasting color using premium products.'},
+  {service_name:'Facial',category:'Skin',description:'Rejuvenating facial for glowing, healthy skin.'},
+  {service_name:'Hair Spa',category:'Wellness',description:'Deep conditioning treatment for silky smooth hair.'},
+  {service_name:'Head Massage',category:'Wellness',description:'Relaxing scalp massage to relieve stress.'},
+];
+
+function renderSvcGrid(svcs) {
+  document.getElementById('servicesGrid').innerHTML = svcs.slice(0,6).map((s,i) => `
+    <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
+      <div class="svc-card tilt-card">
+        <div class="svc-card-glow"></div>
+        <div class="svc-icon"><i class="${iconMap[s.category]||'fas fa-magic'}"></i></div>
+        <h5 class="svc-name">${s.service_name}</h5>
+        <p class="svc-desc">${s.description||'Professional service tailored for you'}</p>
+      </div>
+    </div>`).join('');
+}
 
 async function loadSettings() {
   const s = _s;
@@ -394,17 +415,15 @@ async function loadSettings() {
 }
 
 async function loadServices() {
-  const svcs = await getServices(true);
-  const grid = document.getElementById('servicesGrid');
-  grid.innerHTML = svcs.slice(0,6).map((s,i) => `
-    <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
-      <div class="svc-card tilt-card">
-        <div class="svc-card-glow"></div>
-        <div class="svc-icon"><i class="${iconMap[s.category]||'fas fa-magic'}"></i></div>
-        <h5 class="svc-name">${s.service_name}</h5>
-        <p class="svc-desc">${s.description||'Professional service tailored for you'}</p>
-      </div>
-    </div>`).join('');
+  // Show defaults immediately
+  renderSvcGrid(defaultSvcs);
+  try {
+    const svcs = await Promise.race([
+      getServices(true),
+      new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000))
+    ]);
+    if (svcs.length) renderSvcGrid(svcs);
+  } catch(e) { /* defaults already shown */ }
 }
 
 async function loadReviews() {

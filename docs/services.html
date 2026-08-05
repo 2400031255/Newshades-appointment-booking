@@ -89,48 +89,65 @@
 <script type="module">
 import { getServices, getSettings } from './js/firebase.js';
 
-const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Nails:'fas fa-paint-brush' };
+const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Nails:'fas fa-paint-brush', General:'fas fa-magic', Bridal:'fas fa-female' };
+
+const defaultServices = [
+  {service_name:'Hair Cut',category:'Hair',description:'Precision cut tailored to your face shape and style.',price:200,duration:'30 min'},
+  {service_name:'Beard Trim',category:'Beard',description:'Clean, sharp beard shaping by expert barbers.',price:100,duration:'20 min'},
+  {service_name:'Hair Color',category:'Hair',description:'Vibrant, long-lasting color using premium products.',price:800,duration:'90 min'},
+  {service_name:'Facial',category:'Skin',description:'Rejuvenating facial for glowing, healthy skin.',price:500,duration:'45 min'},
+  {service_name:'Hair Spa',category:'Wellness',description:'Deep conditioning treatment for silky smooth hair.',price:600,duration:'60 min'},
+  {service_name:'Head Massage',category:'Wellness',description:'Relaxing scalp massage to relieve stress.',price:300,duration:'30 min'},
+];
+
+function renderServices(svcs) {
+  const cats = [...new Set(svcs.map(s => s.category).filter(Boolean))];
+  if (cats.length) {
+    const cf = document.getElementById('catFilters');
+    cf.style.display = '';
+    cats.forEach(c => { const b=document.createElement('button'); b.className='cat-btn'; b.dataset.cat=c; b.textContent=c; cf.appendChild(b); });
+    cf.addEventListener('click', e => {
+      const btn = e.target.closest('.cat-btn'); if (!btn) return;
+      cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      document.querySelectorAll('.service-col').forEach(el => {
+        el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+      });
+    });
+  }
+  document.getElementById('servicesGrid').innerHTML = svcs.map((sv,i) => `
+    <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="${sv.category||''}" style="animation-delay:${i*0.06}s">
+      <div class="svc-select-card" style="cursor:default;">
+        <div class="svc-select-icon"><i class="${iconMap[sv.category]||'fas fa-magic'}"></i></div>
+        <h6 class="svc-select-name">${sv.service_name}</h6>
+        <p class="svc-select-desc">${sv.description||''}</p>
+        <div class="svc-select-footer">
+          <span class="svc-price">₹${Math.round(sv.price||0)}</span>
+          <span class="svc-dur"><i class="far fa-clock me-1"></i>${sv.duration||''}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
 
 async function load() {
+  // Show defaults immediately so page never hangs
+  renderServices(defaultServices);
   try {
-    const [svcs, s] = await Promise.all([getServices(true), getSettings()]);
-    if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
+    const timeout = new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000));
+    const [svcs, s] = await Promise.race([
+      Promise.all([getServices(true), getSettings()]),
+      timeout.then(() => { throw new Error('timeout'); })
+    ]);
+    if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}`;
     if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
     if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
     if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
     if (s.address) document.getElementById('ftAddr').textContent = s.address;
     if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
-
-    const cats = [...new Set(svcs.map(s => s.category).filter(Boolean))];
-    if (cats.length) {
-      const cf = document.getElementById('catFilters');
-      cf.style.display = '';
-      cats.forEach(c => { const b=document.createElement('button'); b.className='cat-btn'; b.dataset.cat=c; b.textContent=c; cf.appendChild(b); });
-      cf.addEventListener('click', e => {
-        const btn = e.target.closest('.cat-btn'); if (!btn) return;
-        cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const cat = btn.dataset.cat;
-        document.querySelectorAll('.service-col').forEach(el => {
-          el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
-        });
-      });
-    }
-
-    document.getElementById('servicesGrid').innerHTML = svcs.map((sv,i) => `
-      <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="${sv.category||''}" style="animation-delay:${i*0.06}s">
-        <div class="svc-select-card" style="cursor:default;">
-          <div class="svc-select-icon"><i class="${iconMap[sv.category]||'fas fa-magic'}"></i></div>
-          <h6 class="svc-select-name">${sv.service_name}</h6>
-          <p class="svc-select-desc">${sv.description||''}</p>
-          <div class="svc-select-footer">
-            <span class="svc-price">₹${Math.round(sv.price||0)}</span>
-            <span class="svc-dur"><i class="far fa-clock me-1"></i>${sv.duration||''}</span>
-          </div>
-        </div>
-      </div>`).join('') || '<div class="col-12 text-center py-5" style="color:var(--text-muted);">No services available yet.</div>';
+    if (svcs.length) renderServices(svcs);
   } catch(err) {
-    document.getElementById('servicesGrid').innerHTML = '<div class="col-12 text-center py-5" style="color:var(--text-muted);"><i class="fas fa-exclamation-circle me-2" style="color:rgba(201,168,76,0.5);"></i>Unable to load services. Please refresh the page.</div>';
+    // defaults already shown, silently keep them
   }
 }
 load();
