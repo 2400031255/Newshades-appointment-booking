@@ -92,42 +92,46 @@ import { getServices, getSettings } from './js/firebase.js';
 const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Nails:'fas fa-paint-brush' };
 
 async function load() {
-  const [svcs, s] = await Promise.all([getServices(true), getSettings()]);
-  if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
-  if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
-  if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
-  if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
-  if (s.address) document.getElementById('ftAddr').textContent = s.address;
-  if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
+  try {
+    const [svcs, s] = await Promise.all([getServices(true), getSettings()]);
+    if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
+    if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
+    if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
+    if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
+    if (s.address) document.getElementById('ftAddr').textContent = s.address;
+    if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
 
-  const cats = [...new Set(svcs.map(s => s.category).filter(Boolean))];
-  if (cats.length) {
-    const cf = document.getElementById('catFilters');
-    cf.style.display = '';
-    cats.forEach(c => { const b=document.createElement('button'); b.className='cat-btn'; b.dataset.cat=c; b.textContent=c; cf.appendChild(b); });
-    cf.addEventListener('click', e => {
-      const btn = e.target.closest('.cat-btn'); if (!btn) return;
-      cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const cat = btn.dataset.cat;
-      document.querySelectorAll('.service-col').forEach(el => {
-        el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+    const cats = [...new Set(svcs.map(s => s.category).filter(Boolean))];
+    if (cats.length) {
+      const cf = document.getElementById('catFilters');
+      cf.style.display = '';
+      cats.forEach(c => { const b=document.createElement('button'); b.className='cat-btn'; b.dataset.cat=c; b.textContent=c; cf.appendChild(b); });
+      cf.addEventListener('click', e => {
+        const btn = e.target.closest('.cat-btn'); if (!btn) return;
+        cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.cat;
+        document.querySelectorAll('.service-col').forEach(el => {
+          el.style.display = (cat === 'all' || el.dataset.cat === cat) ? '' : 'none';
+        });
       });
-    });
-  }
+    }
 
-  document.getElementById('servicesGrid').innerHTML = svcs.map((sv,i) => `
-    <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="${sv.category||''}" style="animation-delay:${i*0.06}s">
-      <div class="svc-select-card" style="cursor:default;">
-        <div class="svc-select-icon"><i class="${iconMap[sv.category]||'fas fa-magic'}"></i></div>
-        <h6 class="svc-select-name">${sv.service_name}</h6>
-        <p class="svc-select-desc">${sv.description||''}</p>
-        <div class="svc-select-footer">
-          <span class="svc-price">₹${Math.round(sv.price||0)}</span>
-          <span class="svc-dur"><i class="far fa-clock me-1"></i>${sv.duration||''}</span>
+    document.getElementById('servicesGrid').innerHTML = svcs.map((sv,i) => `
+      <div class="col-lg-4 col-md-6 service-col reveal-up" data-cat="${sv.category||''}" style="animation-delay:${i*0.06}s">
+        <div class="svc-select-card" style="cursor:default;">
+          <div class="svc-select-icon"><i class="${iconMap[sv.category]||'fas fa-magic'}"></i></div>
+          <h6 class="svc-select-name">${sv.service_name}</h6>
+          <p class="svc-select-desc">${sv.description||''}</p>
+          <div class="svc-select-footer">
+            <span class="svc-price">₹${Math.round(sv.price||0)}</span>
+            <span class="svc-dur"><i class="far fa-clock me-1"></i>${sv.duration||''}</span>
+          </div>
         </div>
-      </div>
-    </div>`).join('') || '<div class="col-12 text-center py-5" style="color:var(--text-muted);">No services available yet.</div>';
+      </div>`).join('') || '<div class="col-12 text-center py-5" style="color:var(--text-muted);">No services available yet.</div>';
+  } catch(err) {
+    document.getElementById('servicesGrid').innerHTML = '<div class="col-12 text-center py-5" style="color:var(--text-muted);"><i class="fas fa-exclamation-circle me-2" style="color:rgba(201,168,76,0.5);"></i>Unable to load services. Please refresh the page.</div>';
+  }
 }
 load();
 </script>

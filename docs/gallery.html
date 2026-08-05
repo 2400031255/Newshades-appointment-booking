@@ -91,29 +91,37 @@ const fallback = [
 ];
 
 async function load() {
-  const [photos, s] = await Promise.all([getGallery(), getSettings()]);
-  if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
-  if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
-  if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
-  if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
-  if (s.address) document.getElementById('ftAddr').textContent = s.address;
-  if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
+  try {
+    const [photos, s] = await Promise.all([getGallery(), getSettings()]);
+    if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp}`;
+    if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
+    if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
+    if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
+    if (s.address) document.getElementById('ftAddr').textContent = s.address;
+    if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
 
-  const grid = document.getElementById('galleryGrid');
-  if (photos.length) {
-    grid.innerHTML = photos.map((p,i) => `
-      <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.06}s">
-        <div class="gallery-card">
-          <img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img"/>
-          ${p.caption ? `<div class="gallery-real-caption">${p.caption}</div>` : ''}
-        </div>
-      </div>`).join('');
-  } else {
+    const grid = document.getElementById('galleryGrid');
+    if (photos.length) {
+      grid.innerHTML = photos.map((p,i) => `
+        <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.06}s">
+          <div class="gallery-card">
+            <img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img"/>
+            ${p.caption ? `<div class="gallery-real-caption">${p.caption}</div>` : ''}
+          </div>
+        </div>`).join('');
+    } else {
+      grid.innerHTML = fallback.map((f,i) => `
+        <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.07}s">
+          <div class="gallery-card"><div class="gallery-icon"><i class="${f.icon}"></i></div><div class="gallery-label">${f.label}</div></div>
+        </div>`).join('');
+      grid.insertAdjacentHTML('afterend','<p class="text-center mt-4" style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-info-circle me-2 text-gold"></i>Photos will appear here once uploaded from the admin panel.</p>');
+    }
+  } catch(err) {
+    const grid = document.getElementById('galleryGrid');
     grid.innerHTML = fallback.map((f,i) => `
       <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.07}s">
         <div class="gallery-card"><div class="gallery-icon"><i class="${f.icon}"></i></div><div class="gallery-label">${f.label}</div></div>
       </div>`).join('');
-    grid.insertAdjacentHTML('afterend','<p class="text-center mt-4" style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-info-circle me-2 text-gold"></i>Photos will appear here once uploaded from the admin panel.</p>');
   }
 }
 load();

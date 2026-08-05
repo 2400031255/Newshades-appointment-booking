@@ -59,6 +59,7 @@ document.getElementById('adminName').textContent = profile?.full_name || user.em
 document.getElementById('payMonth').value = new Date().toISOString().slice(0,7);
 
 let employees = await getAllEmployees(true);
+let currentRows = [];
 
 window.loadPayroll = async () => {
   const month = document.getElementById('payMonth').value;
@@ -66,69 +67,69 @@ window.loadPayroll = async () => {
   const grid = document.getElementById('payrollGrid');
   grid.innerHTML = '<div class="text-center py-4" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Calculating…</div>';
 
-  const [year, mon] = month.split('-').map(Number);
-  const daysInMonth = new Date(year, mon, 0).getDate();
-  const existing = await getPayroll(month);
+  try {
+    const [year, mon] = month.split('-').map(Number);
+    const daysInMonth = new Date(year, mon, 0).getDate();
+    const existing = await getPayroll(month);
 
-  // Bulk fetch ALL attendance for this month in ONE query
-  const attSnap = await getDocs(query(collection(db,'attendance'),
-    where('date','>=',`${month}-01`), where('date','<=',`${month}-${daysInMonth}`)));
-  const allAtt = attSnap.docs.map(d => d.data());
+    const attSnap = await getDocs(query(collection(db,'attendance'),
+      where('date','>=',`${month}-01`), where('date','<=',`${month}-${String(daysInMonth).padStart(2,'0')}`)));
+    const allAtt = attSnap.docs.map(d => d.data());
 
-  const rows = employees.map(emp => {
-    const ex = existing.find(p => p.employee_id === emp.id);
-    if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, saved: true };
-    const empAtt = allAtt.filter(r => r.employee_id === emp.id);
-    let present = 0;
-    empAtt.forEach(r => {
-      if (r.status === 'Present') present++;
-      else if (r.status === 'Half Day') present += 0.5;
+    currentRows = employees.map(emp => {
+      const ex = existing.find(p => p.employee_id === emp.id);
+      if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, base: ex.base_salary||emp.monthly_salary||0, saved: true };
+      const empAtt = allAtt.filter(r => r.employee_id === emp.id);
+      let present = 0;
+      empAtt.forEach(r => {
+        if (r.status === 'Present') present++;
+        else if (r.status === 'Half Day') present += 0.5;
+      });
+      const workDays = emp.working_days_per_month || 26;
+      const net = Math.round(((emp.monthly_salary || 0) / workDays) * present);
+      return { ...emp, present, absent: daysInMonth - present, net, base: emp.monthly_salary||0, saved: false };
     });
-    const workDays = emp.working_days_per_month || 26;
-    const net = Math.round(((emp.monthly_salary || 0) / workDays) * present);
-    return { ...emp, present, absent: daysInMonth - present, net, saved: false };
-  });
 
-  if (!rows.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees found.</p>'; return; }
+    if (!currentRows.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees found.</p>'; return; }
 
-  grid.innerHTML = `
-  <div class="table-responsive">
-    <table class="admin-table">
-      <thead><tr><th>Employee</th><th>Role</th><th>Monthly Salary</th><th>Present</th><th>Net Salary</th><th>UPI</th><th>Action</th></tr></thead>
-      <tbody>${rows.map(r => `<tr>
-        <td class="admin-td-bold">${r.full_name}</td>
-        <td class="admin-td-muted">${r.role}</td>
-        <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(r.monthly_salary||0).toLocaleString()}</td>
-        <td class="admin-td-muted">${r.present} / ${daysInMonth} days</td>
-        <td style="color:#7ce0aa;font-weight:700;font-size:1rem;">₹${r.net.toLocaleString()}</td>
-        <td>${r.upi_id
-          ? `<div style="font-size:0.78rem;"><div style="color:#9dc0ff;font-weight:600;">${r.upi_id}</div>${r.upi_app?`<div style="color:var(--text-muted);font-size:0.7rem;">${r.upi_app}</div>`:''}</div>`
-          : '<span style="color:rgba(240,230,211,0.25);font-size:0.75rem;">Not set</span>'}
-        </td>
-        <td>${r.saved
-          ? '<span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check-circle me-1"></i>Saved</span>'
-          : `<button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.monthly_salary||0}" style="padding:5px 14px;font-size:0.78rem;"><i class="fas fa-save me-1"></i>Save</button>`}
-        </td>
-      </tr>`).join('')}</tbody>
-    </table>
-  </div>`;
+    grid.innerHTML = `
+    <div class="table-responsive">
+      <table class="admin-table">
+        <thead><tr><th>Employee</th><th>Role</th><th>Monthly Salary</th><th>Present</th><th>Net Salary</th><th>UPI</th><th>Action</th></tr></thead>
+        <tbody>${currentRows.map(r => `<tr>
+          <td class="admin-td-bold">${r.full_name}</td>
+          <td class="admin-td-muted">${r.role}</td>
+          <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(r.monthly_salary||0).toLocaleString()}</td>
+          <td class="admin-td-muted">${r.present} / ${daysInMonth} days</td>
+          <td style="color:#7ce0aa;font-weight:700;font-size:1rem;">₹${r.net.toLocaleString()}</td>
+          <td>${r.upi_id
+            ? `<div style="font-size:0.78rem;"><div style="color:#9dc0ff;font-weight:600;">${r.upi_id}</div>${r.upi_app?`<div style="color:var(--text-muted);font-size:0.7rem;">${r.upi_app}</div>`:''}</div>`
+            : '<span style="color:rgba(240,230,211,0.25);font-size:0.75rem;">Not set</span>'}
+          </td>
+          <td>${r.saved
+            ? '<span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check-circle me-1"></i>Saved</span>'
+            : `<button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.base}" style="padding:5px 14px;font-size:0.78rem;"><i class="fas fa-save me-1"></i>Save</button>`}
+          </td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  } catch(err) {
+    grid.innerHTML = `<p style="color:#ff9a9a;"><i class="fas fa-exclamation-circle me-2"></i>Error loading payroll: ${err.message}</p>`;
+  }
 };
 
 document.addEventListener('click', async e => {
   const btn = e.target.closest('.save-pay-btn');
   if (!btn) return;
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving…';
   const empId = btn.dataset.id;
-  const emp = rows.find(r => r.id === empId);
+  const row = currentRows.find(r => r.id === empId);
   const { month, present, absent, net, base } = btn.dataset;
-  await savePay(empId, emp?.full_name||'', month, parseFloat(present), parseFloat(absent), parseFloat(net), parseFloat(base));
-});
-
-window.savePay = async (empId, empName, month, present, absent, net, base) => {
   try {
-    await savePayroll({ employee_id: empId, employee_name: empName, month, present_days: present, absent_days: absent, net_salary: net, base_salary: base||0, bonus: 0, deductions: 0, status: 'Pending' });
+    await savePayroll({ employee_id: empId, employee_name: row?.full_name||'', month, present_days: parseFloat(present), absent_days: parseFloat(absent), net_salary: parseFloat(net), base_salary: parseFloat(base)||0, bonus: 0, deductions: 0, status: 'Pending' });
     showToast('Payroll saved!', 'success');
     await loadPayroll();
-  } catch { showToast('Failed to save payroll.', 'danger'); }
+  } catch { showToast('Failed to save payroll.', 'danger'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save'; }
 };
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });

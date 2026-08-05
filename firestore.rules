@@ -29,9 +29,9 @@ service cloud.firestore {
     // ── Employees ─────────────────────────────────────────────────────────
     match /employees/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      // isOwner allows the newly-created employee to write their own doc
       allow create: if isAdmin() || isOwner(uid);
-      allow update: if isAdmin();
+      // Allow employee to update their own profile (UPI, QR, name, phone)
+      allow update: if isAdmin() || isOwner(uid);
       allow delete: if isAdmin();
     }
 
