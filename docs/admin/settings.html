@@ -203,6 +203,8 @@ document.getElementById('saveMaintBtn').addEventListener('click', async () => {
   } catch { showToast('Failed to save.', 'danger'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Maintenance Settings'; }
 });
+
+document.getElementById('saveShopBtn').addEventListener('click', async () => {
   try {
     await saveSettings({ shop_name: document.getElementById('shopName').value, address: document.getElementById('shopAddress').value, phone: document.getElementById('shopPhone').value, email: document.getElementById('shopEmail').value, maps_link: document.getElementById('shopMaps').value });
     showToast('Shop info saved!', 'success');

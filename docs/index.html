@@ -368,8 +368,9 @@ const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa',
 
 async function loadSettings() {
   const s = await getSettings();
-  if (s.whatsapp) {
-    const wa = `https://wa.me/${s.whatsapp}`;
+  const waNum = (s.wa_number || s.whatsapp || '').replace(/\D/g,'');
+  if (waNum) {
+    const wa = `https://wa.me/${waNum}`;
     document.getElementById('waFloat').href = wa;
     document.getElementById('waFloat').style.display = '';
     document.getElementById('footerWa').href = wa;
