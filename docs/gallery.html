@@ -96,17 +96,12 @@ function renderFallback() {
     <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.07}s">
       <div class="gallery-card"><div class="gallery-icon"><i class="${f.icon}"></i></div><div class="gallery-label">${f.label}</div></div>
     </div>`).join('');
+  document.getElementById('galleryGrid').insertAdjacentHTML('afterend','<p class="text-center mt-4" style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-info-circle me-2 text-gold"></i>Photos will appear here once uploaded from the admin panel.</p>');
 }
 
 async function load() {
-  // Show fallback immediately — never hang
-  renderFallback();
   try {
-    const timeout = new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000));
-    const [photos, s] = await Promise.race([
-      Promise.all([getGallery(), getSettings()]),
-      timeout.then(() => { throw new Error('timeout'); })
-    ]);
+    const [photos, s] = await Promise.all([getGallery(), getSettings()]);
     if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}`;
     if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
     if (s.hours_saturday) document.getElementById('ftSat').textContent = s.hours_saturday;
@@ -117,13 +112,15 @@ async function load() {
       document.getElementById('galleryGrid').innerHTML = photos.map((p,i) => `
         <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.06}s">
           <div class="gallery-card">
-            <img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img"/>
+            <img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img" loading="lazy"/>
             ${p.caption ? `<div class="gallery-real-caption">${p.caption}</div>` : ''}
           </div>
         </div>`).join('');
+    } else {
+      renderFallback();
     }
   } catch(err) {
-    // fallback already shown
+    renderFallback();
   }
 }
 load();

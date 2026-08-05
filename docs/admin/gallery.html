@@ -140,27 +140,25 @@ async function compressAndUpload(file) {
   prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Compressing…';
   uploadedUrl = '';
   try {
-    const compressed = await compressImage(file, 1600, 0.82);
-    prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
-    // Try Cloudinary first; fall back to base64
-    let url = '';
-    if (CLOUD_NAME && CLOUD_NAME !== 'newshades') {
-      const fd = new FormData();
-      fd.append('file', compressed);
-      fd.append('upload_preset', UPLOAD_PRESET);
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {method:'POST',body:fd});
-      const data = await res.json();
-      if (data.secure_url) url = data.secure_url;
-    }
-    if (!url) {
-      // Base64 fallback — works always, stored directly in Firestore
-      url = await new Promise(r => { const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(compressed); });
-    }
+    const compressed = await compressImage(file, 1200, 0.80);
+    prog.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading to storage…';
+    // Upload to Firebase Storage
+    const { uploadFile } = await import('../js/firebase.js');
+    const path = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g,'_')}`;
+    const url = await uploadFile(path, compressed, pct => {
+      prog.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>Uploading… ${pct}%`;
+    });
     uploadedUrl = url;
     prog.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Ready to add!</span>';
   } catch(err) {
-    prog.innerHTML = '<span style="color:#ff9a9a;">Processing failed. Try again.</span>';
-    console.error(err);
+    // Fallback: store as base64 (small compressed image)
+    try {
+      const compressed = await compressImage(file, 600, 0.70);
+      uploadedUrl = await new Promise(r => { const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(compressed); });
+      prog.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Ready to add!</span>';
+    } catch {
+      prog.innerHTML = '<span style="color:#ff9a9a;">Upload failed. Try URL tab instead.</span>';
+    }
   }
 }
 
