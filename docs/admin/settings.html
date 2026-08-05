@@ -64,7 +64,33 @@
           <button id="saveHoursBtn" class="btn-gold" style="width:100%;justify-content:center;"><i class="fas fa-save me-2"></i>Save Hours</button>
         </div>
       </div>
-      <!-- Founders -->
+      <!-- Maintenance Mode -->
+      <div class="col-12">
+        <div class="admin-card" style="border-color:rgba(255,100,100,0.25);">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+            <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-tools me-2" style="color:#ff6b6b;"></i>Maintenance Mode</h6>
+            <div id="maintBadge" style="display:none;padding:4px 14px;border-radius:999px;font-size:0.75rem;font-weight:700;background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.4);color:#ff6b6b;"><i class="fas fa-circle me-1" style="font-size:0.5rem;vertical-align:middle;"></i>MAINTENANCE ON</div>
+          </div>
+          <div style="background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.15);border-radius:16px;padding:20px 22px;margin-bottom:20px;">
+            <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+              <div>
+                <div style="font-weight:600;color:#fff;margin-bottom:4px;">Enable Maintenance Mode</div>
+                <div style="font-size:0.82rem;color:rgba(240,230,211,0.5);">When ON — public site shows maintenance page. Only admin can login.</div>
+              </div>
+              <label style="position:relative;display:inline-block;width:56px;height:28px;flex-shrink:0;cursor:pointer;">
+                <input type="checkbox" id="maintToggle" style="opacity:0;width:0;height:0;position:absolute;"/>
+                <span id="maintSlider" style="position:absolute;inset:0;border-radius:999px;background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.15);transition:all 0.3s;"></span>
+                <span id="maintThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#888;transition:all 0.3s;"></span>
+              </label>
+            </div>
+          </div>
+          <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">MAINTENANCE MESSAGE (shown to visitors)</label><textarea id="maintMsg" rows="2" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,107,107,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="We're upgrading our systems. Back shortly!"></textarea></div>
+          <div class="d-flex gap-3 flex-wrap">
+            <button id="saveMaintBtn" class="btn-gold" style="background:linear-gradient(135deg,#ff6b6b,#c0392b);box-shadow:0 8px 24px rgba(255,107,107,0.3);"><i class="fas fa-save me-2"></i>Save Maintenance Settings</button>
+            <a id="testWaBtn" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-weight:700;font-size:0.9rem;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.3);transition:transform 0.2s,box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''"><i class="fab fa-whatsapp" style="font-size:1.1rem;"></i>Test WhatsApp</a>
+          </div>
+        </div>
+      </div>
       <div class="col-12">
         <div class="admin-card">
           <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-users me-2" style="color:var(--gold);"></i>Founders Section (About Page)</h6>
@@ -145,7 +171,38 @@ if (s.founder2_img) { const p=document.getElementById('f2Preview'); p.src=s.foun
 setPreview('f1File', 'f1Preview');
 setPreview('f2File', 'f2Preview');
 
-document.getElementById('saveShopBtn').addEventListener('click', async () => {
+// Maintenance Mode
+const maintToggle = document.getElementById('maintToggle');
+const maintSlider = document.getElementById('maintSlider');
+const maintThumb  = document.getElementById('maintThumb');
+const maintBadge  = document.getElementById('maintBadge');
+function applyMaintUI(on) {
+  maintToggle.checked = on;
+  maintSlider.style.background = on ? 'rgba(255,107,107,0.4)' : 'rgba(255,255,255,0.1)';
+  maintSlider.style.borderColor = on ? 'rgba(255,107,107,0.6)' : 'rgba(255,255,255,0.15)';
+  maintThumb.style.background   = on ? '#ff6b6b' : '#888';
+  maintThumb.style.transform    = on ? 'translateX(28px)' : 'translateX(0)';
+  maintBadge.style.display      = on ? '' : 'none';
+}
+applyMaintUI(s.maintenance_mode === true);
+document.getElementById('maintMsg').value = s.maintenance_message || '';
+maintToggle.addEventListener('change', () => applyMaintUI(maintToggle.checked));
+
+// WhatsApp test button
+const waNum = (s.wa_number || s.whatsapp || '').replace(/\D/g,'');
+const waMsg = encodeURIComponent(s.wa_message || 'Hi! I would like to book an appointment.');
+document.getElementById('testWaBtn').href = waNum ? `https://wa.me/${waNum}?text=${waMsg}` : '#';
+
+document.getElementById('saveMaintBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveMaintBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
+  try {
+    await saveSettings({ maintenance_mode: maintToggle.checked, maintenance_message: document.getElementById('maintMsg').value.trim() });
+    applyMaintUI(maintToggle.checked);
+    showToast(maintToggle.checked ? 'Maintenance mode ON — site is locked.' : 'Maintenance mode OFF — site is live.', maintToggle.checked ? 'warning' : 'success');
+  } catch { showToast('Failed to save.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Maintenance Settings'; }
+});
   try {
     await saveSettings({ shop_name: document.getElementById('shopName').value, address: document.getElementById('shopAddress').value, phone: document.getElementById('shopPhone').value, email: document.getElementById('shopEmail').value, maps_link: document.getElementById('shopMaps').value });
     showToast('Shop info saved!', 'success');

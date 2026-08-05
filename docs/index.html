@@ -338,6 +338,32 @@
 <script type="module">
 import { getSettings, getServices, getReviews, getActiveOffers, createEnquiry, showToast, auth } from './js/firebase.js';
 
+// ── Maintenance mode check (runs first) ───────────────────────────────────
+const _s = await getSettings();
+if (_s.maintenance_mode === true) {
+  const _wa = (_s.wa_number || _s.whatsapp || '').replace(/\D/g,'');
+  const _waMsg = encodeURIComponent(_s.wa_message || 'Hi! I would like to book an appointment.');
+  document.body.innerHTML = `
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;background:#050407;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(212,175,55,0.07) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(212,175,55,0.05) 0%,transparent 50%);pointer-events:none;"></div>
+    <div style="position:relative;z-index:1;max-width:520px;width:100%;">
+      <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,107,107,0.1);border:2px solid rgba(255,107,107,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+        <i class="fas fa-tools" style="font-size:1.8rem;color:#ff6b6b;"></i>
+      </div>
+      <div style="display:inline-block;padding:4px 16px;border-radius:999px;background:rgba(255,107,107,0.12);border:1px solid rgba(255,107,107,0.3);color:#ff9a9a;font-size:0.72rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:20px;">Under Maintenance</div>
+      <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;color:#fff;margin-bottom:12px;">We'll Be <span style="background:linear-gradient(90deg,#F5D060,#D4AF37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Back Soon</span></h1>
+      <p style="color:rgba(240,230,211,0.55);font-size:0.95rem;line-height:1.7;margin-bottom:32px;">${_s.maintenance_message || "We're upgrading our systems to serve you better. Thank you for your patience!"}</p>
+      ${_wa ? `<a href="https://wa.me/${_wa}?text=${_waMsg}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:10px;padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-weight:700;font-size:1rem;text-decoration:none;box-shadow:0 12px 32px rgba(37,211,102,0.35);"><i class="fab fa-whatsapp" style="font-size:1.2rem;"></i>Contact us on WhatsApp</a>` : ''}
+      <div style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);">
+        <img src="images/logo.jpeg" alt="New Shades" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(212,175,55,0.3);margin-bottom:8px;"/>
+        <div style="font-family:'Playfair Display',serif;font-weight:700;color:#fff;font-size:1rem;">New Shades</div>
+        <div style="font-size:0.72rem;color:rgba(240,230,211,0.35);letter-spacing:0.15em;text-transform:uppercase;">Premium Salon · Eluru</div>
+      </div>
+    </div>
+  </div>`;
+  throw new Error('maintenance'); // stop rest of script
+}
+
 const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female' };
 
 async function loadSettings() {

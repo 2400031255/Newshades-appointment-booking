@@ -162,6 +162,20 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     const uid = cred.user.uid;
     const profile = await getUserProfile(uid);
     if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+    // Check maintenance mode — block non-admins
+    const { getSettings } = await import('./js/firebase.js');
+    const settings = await getSettings();
+    if (settings.maintenance_mode === true) {
+      const { logoutUser } = await import('./js/firebase.js');
+      await logoutUser();
+      const flash = document.createElement('div');
+      flash.className = 'anf-flash anf-flash-danger';
+      flash.innerHTML = '<i class="fas fa-tools me-2"></i>';
+      flash.appendChild(document.createTextNode('Site is under maintenance. Only admin access is allowed.'));
+      alertEl.innerHTML = ''; alertEl.appendChild(flash);
+      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+      return;
+    }
     const emp = await getEmployeeProfile(uid);
     if (emp) { window.location.href = 'employee/dashboard.html'; return; }
     window.location.href = 'customer/dashboard.html';
