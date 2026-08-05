@@ -1,20 +1,20 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 import { firebaseConfig } from './config.js';
 
 const app  = initializeApp(firebaseConfig);
 export const auth    = getAuth(app);
 export const db      = getFirestore(app);
-export const storage = getStorage(app);
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
 // ── Upload file to Firebase Storage with progress callback ────────────────
-export function uploadFile(path, file, onProgress) {
+export async function uploadFile(path, file, onProgress) {
+  const { getStorage, ref, uploadBytesResumable, getDownloadURL } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js');
+  const storage = getStorage(app);
   return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, path);
-    const task = uploadBytesResumable(storageRef, file);
+    const task = uploadBytesResumable(ref(storage, path), file);
     task.on('state_changed',
       snap => onProgress && onProgress(Math.round(snap.bytesTransferred / snap.totalBytes * 100)),
       reject,
@@ -22,9 +22,6 @@ export function uploadFile(path, file, onProgress) {
     );
   });
 }
-
-// ── Offline persistence (cache-first on repeat visits) ────────────────────
-enableIndexedDbPersistence(db).catch(() => {});
 
 // ── Session cache for profile (avoids repeat Firestore reads) ─────────────
 const _cache = {};
@@ -96,13 +93,18 @@ export async function updateUserProfile(uid, data) {
   return updateDoc(doc(db, "users", uid), data);
 }
 
-// ── Settings ──────────────────────────────────────────────────────────────
+// ── Settings (session-cached) ─────────────────────────────────────────────
 export async function getSettings() {
+  const hit = cacheGet('settings_shop'); if (hit) return hit;
   const snap = await getDoc(doc(db, "settings", "shop"));
-  return snap.exists() ? snap.data() : {};
+  const val = snap.exists() ? snap.data() : {};
+  cacheSet('settings_shop', val);
+  return val;
 }
 export async function saveSettings(data) {
   const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  try { sessionStorage.removeItem('settings_shop'); } catch{}
+  delete _cache['settings_shop'];
   return setDoc(doc(db, "settings", "shop"), data, { merge: true });
 }
 

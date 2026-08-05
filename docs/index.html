@@ -367,7 +367,7 @@ if (_s.maintenance_mode === true) {
 const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female' };
 
 async function loadSettings() {
-  const s = await getSettings();
+  const s = _s;
   const waNum = (s.wa_number || s.whatsapp || '').replace(/\D/g,'');
   if (waNum) {
     const wa = `https://wa.me/${waNum}`;
@@ -453,7 +453,6 @@ document.getElementById('enqDate').min = new Date().toISOString().slice(0,10);
 
 loadSettings();
 Promise.all([loadServices(), loadReviews()]);
-getActiveOffers(); // preload
 </script>
 
 <script>
