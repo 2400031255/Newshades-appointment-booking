@@ -52,14 +52,23 @@
       <div class="col-md-4"><a href="attendance.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-check"></i></div><h6 class="fw-bold">My Attendance</h6><p class="text-muted small">View your attendance history</p></div></a></div>
       <div class="col-md-4"><a href="leave.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-calendar-minus"></i></div><h6 class="fw-bold">Apply for Leave</h6><p class="text-muted small">Submit and track leave requests</p></div></a></div>
       <div class="col-md-4"><a href="salary.html" style="text-decoration:none;"><div class="admin-card text-center"><div class="service-icon mx-auto mb-3"><i class="fas fa-money-bill-wave"></i></div><h6 class="fw-bold">My Salary</h6><p class="text-muted small">View salary & payroll details</p></div></a></div>
-    </div>
+      <div class="col-md-4">
+        <div class="admin-card text-center" style="border-color:rgba(201,168,76,0.3);background:linear-gradient(135deg,rgba(201,168,76,0.07),rgba(201,168,76,0.02));">
+          <div class="service-icon mx-auto mb-3" style="color:var(--gold);"><i class="fas fa-file-invoice-dollar"></i></div>
+          <h6 class="fw-bold">Billing App</h6>
+          <p class="text-muted small">Launch the billing system</p>
+          <button id="launchBillingBtn" class="btn-gold mt-2" style="font-size:0.82rem;padding:8px 16px;width:100%;justify-content:center;" disabled>
+            <i class="fas fa-spinner fa-spin me-1"></i>Loading…
+          </button>
+        </div>
+      </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getEmployeeProfile, getLeaveRequests, formatDate, db } from '../js/firebase.js';
+import { requireAuth, logoutUser, getEmployeeProfile, getLeaveRequests, getAppSettings, formatDate, db } from '../js/firebase.js';
 import { getDocs, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const user = await requireAuth('../login.html');
@@ -83,6 +92,24 @@ document.getElementById('statHalf').textContent    = records.filter(r=>r.status=
 
 const leaves = await getLeaveRequests(user.uid);
 document.getElementById('statLeave').textContent = leaves.length;
+
+// Billing launch button
+getAppSettings().then(appS => {
+  const btn = document.getElementById('launchBillingBtn');
+  if (appS.billingUrl) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-external-link-alt me-1"></i>Launch';
+    btn.onclick = () => window.open(appS.billingUrl, '_blank', 'noopener,noreferrer');
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-clock me-1"></i>Unavailable';
+    btn.onclick = () => alert('Billing application is currently unavailable. Please contact the administrator.');
+  }
+}).catch(() => {
+  const btn = document.getElementById('launchBillingBtn');
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Error';
+  btn.onclick = () => alert('Could not load billing app. Check your connection.');
+});
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');

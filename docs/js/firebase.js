@@ -108,6 +108,19 @@ export async function saveSettings(data) {
   delete _cache['settings_shop'];
   return setDoc(doc(db, "settings", "shop"), data, { merge: true });
 }
+export async function getAppSettings() {
+  const hit = cacheGet('settings_app'); if (hit) return hit;
+  const snap = await getDoc(doc(db, "settings", "app"));
+  const val = snap.exists() ? snap.data() : {};
+  cacheSet('settings_app', val);
+  return val;
+}
+export async function saveAppSettings(data, adminName) {
+  const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  try { sessionStorage.removeItem('settings_app'); } catch{}
+  delete _cache['settings_app'];
+  return setDoc(doc(db, "settings", "app"), { ...data, lastUpdated: serverTimestamp(), updatedBy: adminName }, { merge: true });
+}
 
 // ── Services ──────────────────────────────────────────────────────────────
 export async function getServices(activeOnly = false) {

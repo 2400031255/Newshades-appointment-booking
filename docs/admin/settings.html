@@ -23,6 +23,7 @@
     <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
     <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
     <a href="settings.html" class="active"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="app_settings.html"><span class="sidebar-nav-label"><i class="fas fa-rocket" style="color:var(--gold);"></i> App Settings</span></a>
     <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
     <a href="reviews.html"><span class="sidebar-nav-label"><i class="fas fa-star"></i> Reviews</span></a>
     <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
@@ -65,6 +66,22 @@
         </div>
       </div>
       <!-- Maintenance Mode -->
+      <!-- Application Settings -->
+      <div class="col-12">
+        <div class="admin-card" style="border-color:rgba(201,168,76,0.25);">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-rocket me-2" style="color:var(--gold);"></i>Application Settings</h6>
+          <p style="font-size:0.83rem;color:rgba(240,230,211,0.5);margin-bottom:20px;">Manage URLs for all linked applications. These are used by the Launch buttons across the portal.</p>
+          <div id="appUrlFields">
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;"><i class="fas fa-file-invoice-dollar me-1" style="color:var(--gold);"></i>BILLING APP URL</label>
+              <input type="url" id="billingUrl" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://billing.newshades.in"/>
+              <div style="font-size:0.72rem;color:rgba(240,230,211,0.35);margin-top:4px;">e.g. https://billing.newshades.in or https://newshadesbilling.web.app</div>
+            </div>
+          </div>
+          <div id="appSettingsMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;font-size:0.85rem;"></div>
+          <button id="saveAppSettingsBtn" class="btn-gold" style="justify-content:center;"><i class="fas fa-save me-2"></i>Save Application Settings</button>
+        </div>
+      </div>
       <div class="col-12">
         <div class="admin-card" style="border-color:rgba(255,100,100,0.25);">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
@@ -129,14 +146,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getSettings, saveSettings, showToast, uploadFile } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getSettings, saveSettings, getAppSettings, saveAppSettings, showToast, uploadFile } from '../js/firebase.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
-const s = await getSettings();
+const [s, appS] = await Promise.all([getSettings(), getAppSettings()]);
+document.getElementById('billingUrl').value = appS.billingUrl || '';
 document.getElementById('shopName').value    = s.shop_name      || '';
 document.getElementById('shopAddress').value = s.address        || '';
 document.getElementById('shopPhone').value   = s.phone          || '';
@@ -250,6 +268,31 @@ document.getElementById('saveFoundersBtn').addEventListener('click', async () =>
     showToast('Founders info saved!', 'success');
   } catch(e) { showToast('Failed to save: ' + (e.message||e), 'danger'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Founders Info'; }
+});
+
+document.getElementById('saveAppSettingsBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveAppSettingsBtn');
+  const msgEl = document.getElementById('appSettingsMsg');
+  const url = document.getElementById('billingUrl').value.trim();
+  if (url && !url.match(/^https?:\/\/.+/)) {
+    msgEl.style.display = '';
+    msgEl.style.background = 'rgba(255,107,107,0.1)';
+    msgEl.style.border = '1px solid rgba(255,107,107,0.3)';
+    msgEl.style.color = '#ff6b6b';
+    msgEl.innerHTML = '<i class="fas fa-times-circle me-2"></i>Invalid URL. Must start with http:// or https://';
+    return;
+  }
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
+  try {
+    await saveAppSettings({ billingUrl: url }, profile?.full_name || user.email);
+    msgEl.style.display = '';
+    msgEl.style.background = 'rgba(37,211,102,0.08)';
+    msgEl.style.border = '1px solid rgba(37,211,102,0.25)';
+    msgEl.style.color = '#7ce0aa';
+    msgEl.innerHTML = '<i class="fas fa-check-circle me-2"></i>Application settings saved successfully!';
+    setTimeout(() => { msgEl.style.display = 'none'; }, 3500);
+  } catch { showToast('Failed to save.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Application Settings'; }
 });
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
