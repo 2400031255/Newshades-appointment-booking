@@ -117,7 +117,10 @@ async function load() {
       document.getElementById('galleryGrid').innerHTML = photos.map((p,i) => `
         <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.06}s">
           <div class="gallery-card">
-            <img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img" loading="lazy"/>
+            ${p.type === 'video'
+              ? `<video src="${p.url}" class="gallery-real-img" style="height:240px;" muted playsinline loop autoplay></video>`
+              : `<img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img" loading="lazy" onerror="this.closest('.gallery-card').style.display='none'"/>`
+            }
             ${p.caption ? `<div class="gallery-real-caption">${p.caption}</div>` : ''}
           </div>
         </div>`).join('');

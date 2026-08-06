@@ -40,7 +40,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getEnquiriesForUser, esc } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getEnquiriesForUser, db, esc } from '../js/firebase.js';
+import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
@@ -54,7 +55,17 @@ const statusStyle = {
   Closed:    'background:rgba(150,150,150,0.14);color:rgba(240,230,211,0.5);'
 };
 
-const enquiries = await getEnquiriesForUser(user.uid);
+// Fetch by user_id + also by phone to catch public form submissions
+let enquiries = await getEnquiriesForUser(user.uid);
+if (profile?.phone) {
+  try {
+    const snap = await getDocs(query(collection(db, 'enquiries'), where('phone', '==', profile.phone)));
+    const byPhone = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const ids = new Set(enquiries.map(e => e.id));
+    byPhone.forEach(e => { if (!ids.has(e.id)) enquiries.push(e); });
+    enquiries.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
+  } catch {}
+}
 document.getElementById('enqCount').textContent = `(${enquiries.length})`;
 const list = document.getElementById('enqList');
 if (!enquiries.length) {
