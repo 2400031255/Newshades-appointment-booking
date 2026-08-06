@@ -221,8 +221,13 @@ export async function deleteOffer(id) { return deleteDoc(doc(db, "offers", id));
 
 // ── Gallery ───────────────────────────────────────────────────────────────
 export async function getGallery() {
-  const snap = await getDocs(collection(db, "gallery"));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    const snap = await getDocs(query(collection(db, "gallery"), orderBy("created_at", "desc")));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch {
+    const snap = await getDocs(collection(db, "gallery"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
 }
 export async function addGalleryPhoto(data) {
   return addDoc(collection(db, "gallery"), { ...data, created_at: serverTimestamp() });

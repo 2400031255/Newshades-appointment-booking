@@ -137,11 +137,14 @@ function renderTable() {
   document.getElementById('mobileCards').innerHTML = filtered.map(e => `
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.12);border-radius:14px;padding:16px;margin-bottom:12px;">
       <div class="d-flex justify-content-between align-items-start mb-2">
-        <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${esc(e.full_name)}</div><div style="font-size:0.78rem;color:var(--text-muted);">${esc(e.phone)}</div></div>
+        <div><div style="font-weight:700;color:#fff;font-size:0.95rem;">${esc(e.full_name)}</div><div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">${esc(e.phone)}</div></div>
         <span class="admin-status-badge enq-badge-${(e.status||'pending').toLowerCase()}">${e.status}</span>
       </div>
-      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:8px;">${esc(e.selected_services)}</div>
-      <div class="d-flex gap-2">
+      <div style="font-size:0.82rem;color:rgba(240,230,211,0.6);margin-bottom:10px;">${esc(e.selected_services)}${e.preferred_date?'<span style="color:var(--text-muted);margin-left:6px;">· '+e.preferred_date+'</span>':''}</div>
+      ${e.emp_name?`<div style="font-size:0.75rem;color:#9dc0ff;margin-bottom:10px;"><i class="fas fa-user-tie me-1"></i>${e.emp_name}</div>`:''}
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="tel:${e.phone}" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1px solid rgba(37,211,102,0.4);background:rgba(37,211,102,0.1);color:#25d366;font-size:0.78rem;font-weight:600;text-decoration:none;"><i class="fas fa-phone"></i> Call</a>
+        <button onclick="navigator.clipboard.writeText('${e.phone}').then(()=>showToast('Copied!','success'))" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold-2);font-size:0.78rem;font-weight:600;cursor:pointer;"><i class="fas fa-copy"></i> Copy</button>
         <button class="appt-mob-btn btn-edit" data-id="${e.id}"><i class="fas fa-edit me-1"></i>Update</button>
         <button class="appt-mob-btn btn-delete" data-id="${e.id}"><i class="fas fa-trash me-1"></i>Delete</button>
       </div>
