@@ -233,9 +233,12 @@ window.toggleEmp = async (id, isActive) => {
   catch(err) { showToast('Failed.', 'danger'); }
 };
 window.delEmp = async (id) => {
-  if (!confirm('Delete this employee?')) return;
-  try { await deleteEmployee(id); showToast('Deleted.', 'success'); await loadEmps(); }
-  catch(err) { showToast('Failed.', 'danger'); }
+  if (!confirm('Delete this employee record?\n\nNote: Their login account will still exist but they will be deactivated. To fully remove login access, deactivate them instead.')) return;
+  try {
+    await updateEmployee(id, { is_active: 0 });
+    await deleteEmployee(id);
+    showToast('Employee removed.', 'success'); await loadEmps();
+  } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
