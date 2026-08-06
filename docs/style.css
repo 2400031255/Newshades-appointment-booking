@@ -1239,12 +1239,13 @@ a {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 780px;
+  max-width: 860px;
   margin: 0 auto;
   gap: 0;
 }
 .hero-centered .hero-badge    { margin: 0 auto 14px; }
-.hero-centered .hero-subtitle { margin: 0 auto 20px; max-width: 580px; }
+.hero-centered .hero-title    { text-align: center; width: 100%; }
+.hero-centered .hero-subtitle { margin: 0 auto 20px; max-width: 600px; text-align: center; }
 .hero-centered .hero-actions  { justify-content: center; flex-wrap: wrap; }
 .hero-centered .hero-stats    { justify-content: center; }
 

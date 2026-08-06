@@ -93,7 +93,7 @@ window.loadPayroll = async () => {
 
     currentRows = employees.map(emp => {
       const ex = existing.find(p => p.employee_id === emp.id);
-      if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, base: ex.base_salary||emp.monthly_salary||0, saved: true };
+      if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, base: ex.base_salary||emp.monthly_salary||0, saved: true, status: ex.status||'Pending', upi_qr: emp.upi_qr||'' };
       const empAtt = allAtt.filter(r => r.employee_id === emp.id);
       let present = 0;
       empAtt.forEach(r => {
@@ -102,7 +102,7 @@ window.loadPayroll = async () => {
       });
       const workDays = emp.working_days_per_month || 26;
       const net = Math.round(((emp.monthly_salary || 0) / workDays) * present);
-      return { ...emp, present, absent: daysInMonth - present, net, base: emp.monthly_salary||0, saved: false };
+      return { ...emp, present, absent: daysInMonth - present, net, base: emp.monthly_salary||0, saved: false, status: 'Pending', upi_qr: emp.upi_qr||'' };
     });
 
     if (!currentRows.length) { grid.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees found. Add employees first from the Employees page.</p></div>'; return; }
@@ -110,7 +110,7 @@ window.loadPayroll = async () => {
     grid.innerHTML = `
     <div class="table-responsive">
       <table class="admin-table">
-        <thead><tr><th>Employee</th><th>Role</th><th>Base Salary</th><th>Present Days</th><th>Net Pay</th><th>Bonus</th><th>UPI</th><th>Action</th></tr></thead>
+        <thead><tr><th>Employee</th><th>Role</th><th>Base Salary</th><th>Present Days</th><th>Net Pay</th><th>Bonus</th><th>UPI / QR</th><th>Status</th><th>Action</th></tr></thead>
         <tbody>${currentRows.map(r => `<tr>
           <td class="admin-td-bold">${r.full_name}</td>
           <td class="admin-td-muted">${r.role}</td>
@@ -120,10 +120,15 @@ window.loadPayroll = async () => {
           </td>
           <td style="color:#7ce0aa;font-weight:700;font-size:1rem;" id="net-${r.id}">₹${r.net.toLocaleString()}</td>
           <td><input type="number" class="bonus-input" data-id="${r.id}" value="${r.bonus||0}" min="0" style="width:80px;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.2);color:#7ce0aa;outline:none;font-size:0.85rem;" ${r.saved?'disabled':''}/></td>
-          <td>${r.upi_id ? `<div style="font-size:0.78rem;"><div style="color:#9dc0ff;font-weight:600;">${r.upi_id}</div>${r.upi_app?`<div style="color:var(--text-muted);font-size:0.7rem;">${r.upi_app}</div>`:''}</div>` : '<span style="color:rgba(240,230,211,0.25);font-size:0.75rem;">Not set</span>'}</td>
-          <td>${r.saved
-            ? `<div style="display:flex;gap:6px;align-items:center;"><span style="color:#7ce0aa;font-size:0.8rem;"><i class="fas fa-check-circle me-1"></i>Saved</span><button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.base}" style="padding:3px 10px;font-size:0.72rem;"><i class="fas fa-redo me-1"></i>Update</button></div>`
-            : `<button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.base}" style="padding:5px 14px;font-size:0.78rem;"><i class="fas fa-save me-1"></i>Save</button>`}
+          <td>${r.upi_qr ? `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="${r.upi_qr}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;border:1px solid rgba(201,168,76,0.3);cursor:pointer;" onclick="window.open('${r.upi_qr}','_blank')" title="Click to enlarge"/>${r.upi_id?`<div style="font-size:0.68rem;color:#9dc0ff;">${r.upi_id}</div>`:''}</div>` : r.upi_id ? `<div style="font-size:0.78rem;color:#9dc0ff;">${r.upi_id}${r.upi_app?'<br><span style="color:var(--text-muted);font-size:0.7rem;">'+r.upi_app+'</span>':''}</div>` : '<span style="color:rgba(240,230,211,0.25);font-size:0.75rem;">Not set</span>'}</td>
+          <td id="status-${r.id}"><span style="padding:4px 12px;border-radius:999px;font-size:0.75rem;font-weight:700;${(r.status||'Pending')==='Paid'?'background:rgba(37,211,102,0.16);color:#7ce0aa;':'background:rgba(255,170,77,0.16);color:#ffc36b;'}">${r.status||'Pending'}</span></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              ${r.saved
+                ? `<button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.base}" style="padding:3px 10px;font-size:0.72rem;"><i class="fas fa-redo me-1"></i>Update</button>`
+                : `<button class="btn-gold save-pay-btn" data-id="${r.id}" data-month="${month}" data-present="${r.present}" data-absent="${Math.round(daysInMonth-r.present)}" data-net="${r.net}" data-base="${r.base}" style="padding:5px 14px;font-size:0.78rem;"><i class="fas fa-save me-1"></i>Save</button>`}
+              ${r.saved && (r.status||'Pending')!=='Paid' ? `<button class="mark-paid-btn" data-id="${r.id}" data-month="${month}" style="padding:5px 12px;border-radius:999px;border:1px solid rgba(37,211,102,0.35);background:rgba(37,211,102,0.1);color:#7ce0aa;font-size:0.72rem;font-weight:700;cursor:pointer;"><i class="fas fa-check me-1"></i>Mark Paid</button>` : ''}
+            </div>
           </td>
         </tr>`).join('')}</tbody>
       </table>
@@ -149,6 +154,16 @@ window.recalcRow = (empId, daysInMonth, baseSalary) => {
 };
 
 document.addEventListener('click', async e => {
+  const paidBtn = e.target.closest('.mark-paid-btn');
+  if (paidBtn) {
+    paidBtn.disabled = true; paidBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>';
+    try {
+      await savePayroll({ employee_id: paidBtn.dataset.id, month: paidBtn.dataset.month, status: 'Paid' });
+      showToast('Marked as Paid!', 'success');
+      await loadPayroll();
+    } catch(err) { showToast('Failed: ' + err.message, 'danger'); paidBtn.disabled = false; paidBtn.innerHTML = '<i class="fas fa-check me-1"></i>Mark Paid'; }
+    return;
+  }
   const btn = e.target.closest('.save-pay-btn');
   if (!btn) return;
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving…';
