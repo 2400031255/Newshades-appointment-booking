@@ -25,6 +25,14 @@
       ]
     },
     {
+      "collectionGroup": "enquiries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assigned_employee_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "leave_requests",
       "queryScope": "COLLECTION",
       "fields": [
