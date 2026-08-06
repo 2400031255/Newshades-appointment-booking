@@ -51,6 +51,9 @@
             <div id="previewWrap" style="display:none;margin-bottom:12px;">
               <img id="previewImg" style="width:100%;border-radius:12px;max-height:180px;object-fit:cover;display:none;"/>
               <video id="previewVid" style="width:100%;border-radius:12px;max-height:180px;display:none;" controls muted playsinline></video>
+              <div id="progressWrap" style="display:none;margin-top:8px;background:rgba(255,255,255,0.06);border-radius:999px;height:6px;overflow:hidden;">
+                <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#F5D060,#D4AF37);border-radius:999px;transition:width 0.2s;"></div>
+              </div>
               <div id="uploadStatus" style="margin-top:8px;font-size:0.82rem;color:var(--gold-2);"></div>
             </div>
             <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">CAPTION</label><input type="text" id="photoCaption" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Hair Transformation"/></div>
@@ -79,14 +82,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getGallery, addGalleryPhoto, deleteGalleryPhoto, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getGallery, addGalleryPhoto, deleteGalleryPhoto, showToast, uploadFile } from '../js/firebase.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
-let photos = [], fileData = null;
+let photos = [], uploadedUrl = '';
 
 // Drag & drop
 const dz = document.getElementById('dropZone');
@@ -101,64 +104,39 @@ function handleFile(file) {
   const isImage = file.type.startsWith('image/');
   if (!isImage && !isVideo) { showToast('Please select an image or video.', 'warning'); return; }
 
-  fileData = null;
+  uploadedUrl = '';
   document.getElementById('addPhotoBtn').disabled = true;
   document.getElementById('previewWrap').style.display = '';
-  const status = document.getElementById('uploadStatus');
+  document.getElementById('previewImg').style.display = isImage ? '' : 'none';
+  document.getElementById('previewVid').style.display = isVideo ? '' : 'none';
 
-  if (isVideo) {
-    // Videos: read as base64 directly (keep under ~900KB by warning)
-    if (file.size > 10 * 1024 * 1024) { showToast('Video too large. Please trim to under 10MB.', 'warning'); return; }
-    status.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing video…';
-    document.getElementById('previewImg').style.display = 'none';
-    const vid = document.getElementById('previewVid');
-    vid.style.display = '';
-    vid.src = URL.createObjectURL(file);
-    const reader = new FileReader();
-    reader.onload = ev => {
-      fileData = { url: ev.target.result, type: 'video' };
-      status.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Ready!</span>';
-      document.getElementById('addPhotoBtn').disabled = false;
-    };
-    reader.readAsDataURL(file);
-  } else {
-    // Images: compress then base64
-    status.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Compressing…';
-    document.getElementById('previewVid').style.display = 'none';
-    const img = document.getElementById('previewImg');
-    img.style.display = '';
-    img.src = URL.createObjectURL(file);
-    compressImage(file, 900, 0.82).then(blob => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        fileData = { url: ev.target.result, type: 'image' };
-        const kb = Math.round(blob.size / 1024);
-        status.innerHTML = `<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Ready! (${kb}KB)</span>`;
-        document.getElementById('addPhotoBtn').disabled = false;
-      };
-      reader.readAsDataURL(blob);
-    });
-  }
+  if (isImage) document.getElementById('previewImg').src = URL.createObjectURL(file);
+  if (isVideo) document.getElementById('previewVid').src = URL.createObjectURL(file);
+
+  uploadToStorage(file);
 }
 
-function compressImage(file, maxPx, quality) {
-  return new Promise(resolve => {
-    const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width: w, height: h } = img;
-      if (w > maxPx || h > maxPx) {
-        if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
-        else { w = Math.round(w * maxPx / h); h = maxPx; }
-      }
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      c.getContext('2d').drawImage(img, 0, 0, w, h);
-      c.toBlob(b => resolve(b || file), 'image/jpeg', quality);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
-    img.src = url;
-  });
+async function uploadToStorage(file) {
+  const status = document.getElementById('uploadStatus');
+  const bar    = document.getElementById('progressBar');
+  const barWrap = document.getElementById('progressWrap');
+  barWrap.style.display = '';
+  status.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
+
+  try {
+    const path = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    uploadedUrl = await uploadFile(path, file, pct => {
+      bar.style.width = pct + '%';
+      status.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>Uploading… ${pct}%`;
+    });
+    bar.style.width = '100%';
+    status.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Upload complete! Ready to add.</span>';
+    document.getElementById('addPhotoBtn').disabled = false;
+  } catch(err) {
+    status.innerHTML = '<i class="fas fa-times-circle me-1" style="color:#ff6b6b;"></i><span style="color:#ff6b6b;">Upload failed. Check Firebase Storage is enabled.</span>';
+    barWrap.style.display = 'none';
+    console.error(err);
+  }
 }
 
 async function load() {
@@ -196,23 +174,22 @@ document.getElementById('galleryGrid').addEventListener('click', async e => {
 
 document.getElementById('galleryForm').addEventListener('submit', async e => {
   e.preventDefault();
-  if (!fileData) { showToast('Please select a file first.', 'warning'); return; }
+  if (!uploadedUrl) { showToast('Please wait for upload to finish.', 'warning'); return; }
   const btn = document.getElementById('addPhotoBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   try {
-    await addGalleryPhoto({ url: fileData.url, type: fileData.type || 'image', caption: document.getElementById('photoCaption').value.trim(), category: document.getElementById('photoCategory').value });
+    const isVideo = document.getElementById('previewVid').style.display !== 'none';
+    await addGalleryPhoto({ url: uploadedUrl, type: isVideo ? 'video' : 'image', caption: document.getElementById('photoCaption').value.trim(), category: document.getElementById('photoCategory').value });
     showToast('Photo added!', 'success');
     e.target.reset();
-    fileData = null;
+    uploadedUrl = '';
     document.getElementById('previewWrap').style.display = 'none';
-    document.getElementById('previewImg').style.display = 'none';
-    document.getElementById('previewVid').style.display = 'none';
+    document.getElementById('progressWrap').style.display = 'none';
+    document.getElementById('progressBar').style.width = '0%';
     document.getElementById('uploadStatus').innerHTML = '';
     document.getElementById('fileInput').value = '';
     load();
-  } catch(err) {
-    showToast(err?.message?.includes('exceeds') ? 'File too large for Firestore. Try a smaller image.' : 'Failed to save.', 'danger');
-  }
+  } catch { showToast('Failed to save.', 'danger'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus me-2"></i>Add Photo'; }
 });
 
