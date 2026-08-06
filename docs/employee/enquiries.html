@@ -52,8 +52,8 @@
       <!-- Desktop table -->
       <div class="table-responsive d-none d-md-block">
         <table class="admin-table">
-          <thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>Services</th><th>Date</th><th>Status</th><th>Notes</th></tr></thead>
-          <tbody id="enqBody"><tr><td colspan="7" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
+          <thead><tr><th>#</th><th>Customer</th><th>Phone</th><th>Services</th><th>Date</th><th>Status</th><th>Notes</th><th>Action</th></tr></thead>
+          <tbody id="enqBody"><tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
         </table>
       </div>
 
@@ -133,7 +133,8 @@ window.renderTable = function() {
     <td class="admin-td-bold" style="white-space:nowrap;">${e.preferred_date || '—'}${e.preferred_time ? '<div style="font-size:0.72rem;color:var(--text-muted);">' + e.preferred_time + '</div>' : ''}</td>
     <td><span class="admin-status-badge enq-badge-${(e.status || 'pending').toLowerCase()}">${e.status}</span></td>
     <td class="admin-td-muted" style="font-size:0.8rem;max-width:160px;">${esc(e.admin_notes || '—')}</td>
-  </tr>`).join('') || '<tr><td colspan="7" class="text-center py-4" style="color:var(--text-muted);">No enquiries assigned to you.</td></tr>';
+    <td>${e.status !== 'Closed' ? `<button class="done-btn" data-id="${e.id}" style="padding:5px 12px;border-radius:999px;border:1px solid rgba(71,188,121,0.4);background:rgba(71,188,121,0.1);color:#7ce0aa;font-size:0.75rem;font-weight:700;cursor:pointer;white-space:nowrap;"><i class="fas fa-check me-1"></i>Done</button>` : '<span style="font-size:0.75rem;color:var(--text-muted);">Closed</span>'}</td>
+  </tr>`).join('') || '<tr><td colspan="8" class="text-center py-4" style="color:var(--text-muted);">No enquiries assigned to you.</td></tr>';
 
   document.getElementById('mobileCards').innerHTML = filtered.map(e => `
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.12);border-radius:14px;padding:16px;margin-bottom:12px;">
@@ -152,11 +153,28 @@ window.renderTable = function() {
         <a href="tel:${e.phone}" class="appt-mob-btn btn-call"><i class="fas fa-phone"></i> Call</a>
         <button onclick="navigator.clipboard.writeText('${e.phone}').then(()=>showToast('Copied!','success'))"
           class="appt-mob-btn btn-copy"><i class="fas fa-copy"></i> Copy</button>
+        ${e.status !== 'Closed' ? `<button class="done-btn appt-mob-btn" data-id="${e.id}" style="border-color:rgba(71,188,121,0.4);background:rgba(71,188,121,0.1);color:#7ce0aa;"><i class="fas fa-check me-1"></i>Done</button>` : ''}
       </div>
     </div>`).join('');
 };
 
 renderTable();
+
+// Mark as Done — sets status to Closed
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('.done-btn');
+  if (!btn) return;
+  if (!confirm('Mark this enquiry as completed?')) return;
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+  try {
+    const { updateEnquiry } = await import('../js/firebase.js');
+    await updateEnquiry(btn.dataset.id, { status: 'Closed' });
+    const enq = allEnqs.find(x => x.id === btn.dataset.id);
+    if (enq) enq.status = 'Closed';
+    showToast('Marked as completed!', 'success');
+    renderTable();
+  } catch { showToast('Failed to update.', 'danger'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-check me-1"></i>Done'; }
+});
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay'), toggleBtn = document.getElementById('sidebarToggle');
