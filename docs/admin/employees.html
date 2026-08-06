@@ -75,6 +75,11 @@
     <div class="mb-3"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">PHONE</label><input id="editPhone" type="text" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
     <div class="mb-3"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">ROLE</label><select id="editRole" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(30,25,45,1);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;"><option>Consultant</option><option>Stylist</option><option>Senior Stylist</option><option>Receptionist</option><option>Barber</option><option>Beautician</option><option>Manager</option></select></div>
     <div class="mb-4"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">MONTHLY SALARY (₹)</label><input id="editSalary" type="number" min="0" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
+    <hr style="border-color:rgba(201,168,76,0.12);margin-bottom:16px;"/>
+    <div style="font-size:0.8rem;color:var(--gold);font-weight:700;margin-bottom:12px;"><i class="fas fa-wallet me-2"></i>Payment Details</div>
+    <div class="mb-3"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">UPI ID</label><input id="editUpiId" type="text" placeholder="e.g. name@upi" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
+    <div class="mb-3"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">UPI APP</label><select id="editUpiApp" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(30,25,45,1);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;"><option value="">— Select App —</option><option>GPay</option><option>PhonePe</option><option>Paytm</option><option>BHIM</option><option>Amazon Pay</option><option>Other</option></select></div>
+    <div class="mb-4"><label style="font-size:0.72rem;color:rgba(240,230,211,0.5);display:block;margin-bottom:4px;">QR IMAGE URL <span style="color:rgba(240,230,211,0.3);font-weight:400;">(paste Firebase Storage URL)</span></label><input id="editUpiQr" type="url" placeholder="https://..." style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
     <hr style="border-color:rgba(201,168,76,0.12);margin-bottom:20px;"/>
     <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-bottom:12px;"><i class="fas fa-lock me-1"></i>Reset Password (leave blank to keep current)</div>
     <div class="mb-4"><input id="editPassword" type="password" placeholder="New password (min 6 chars)" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/></div>
@@ -118,8 +123,8 @@ async function loadEmps() {
           <div>
             <div style="font-weight:700;color:${emp.is_active?'#fff':'rgba(240,230,211,0.4)'};font-size:0.95rem;">${emp.full_name}${!emp.is_active?'<span style="font-size:0.72rem;color:rgba(255,99,99,0.7);margin-left:6px;">(Inactive)</span>':''}</div>
             <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-top:3px;">${emp.email||''} · ${emp.phone||''}</div>
-            ${emp.monthly_salary?`<div style="font-size:0.7rem;color:rgba(201,168,76,0.7);margin-top:4px;">₹${Math.round(emp.monthly_salary)}/mo</div>`:''}
-            ${emp.upi_id?`<div style="font-size:0.7rem;color:#9dc0ff;margin-top:3px;"><i class="fas fa-qrcode me-1"></i>${emp.upi_id}${emp.upi_app?' · '+emp.upi_app:''}</div>`:''}
+            ${emp.monthly_salary?`<div style="font-size:0.7rem;color:rgba(201,168,76,0.7);margin-top:4px;">₹${Math.round(emp.monthly_salary).toLocaleString()}/mo</div>`:''}
+            ${emp.upi_id?`<div style="display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:3px 10px;border-radius:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);"><i class="fas fa-wallet" style="font-size:0.65rem;color:#9dc0ff;"></i><span style="font-size:0.72rem;color:#9dc0ff;">${emp.upi_id}${emp.upi_app?' · <strong>'+emp.upi_app+'</strong>':''}</span>${emp.upi_qr?'<i class="fas fa-qrcode" style="font-size:0.65rem;color:#7ce0aa;margin-left:2px;" title="QR uploaded"></i>':''}</div>`:''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span style="padding:3px 12px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(105,152,255,0.12);color:#9dc0ff;border:1px solid rgba(105,152,255,0.2);">${emp.role}</span>
@@ -187,6 +192,9 @@ window.openEditModal = (id) => {
   document.getElementById('editPhone').value = emp.phone || '';
   document.getElementById('editRole').value = emp.role || 'Stylist';
   document.getElementById('editSalary').value = emp.monthly_salary || '';
+  document.getElementById('editUpiId').value = emp.upi_id || '';
+  document.getElementById('editUpiApp').value = emp.upi_app || '';
+  document.getElementById('editUpiQr').value = emp.upi_qr || '';
   document.getElementById('editPassword').value = '';
   document.getElementById('editAlert').innerHTML = '';
   const modal = document.getElementById('editModal');
@@ -206,7 +214,10 @@ window.saveEdit = async () => {
       full_name: document.getElementById('editName').value.trim(),
       phone: document.getElementById('editPhone').value.trim(),
       role: document.getElementById('editRole').value,
-      monthly_salary: parseFloat(document.getElementById('editSalary').value) || 0
+      monthly_salary: parseFloat(document.getElementById('editSalary').value) || 0,
+      upi_id: document.getElementById('editUpiId').value.trim(),
+      upi_app: document.getElementById('editUpiApp').value,
+      upi_qr: document.getElementById('editUpiQr').value.trim()
     };
     await updateEmployee(editingId, updates);
     const newPwd = document.getElementById('editPassword').value;
