@@ -124,7 +124,7 @@ async function loadEmps() {
             <div style="font-weight:700;color:${emp.is_active?'#fff':'rgba(240,230,211,0.4)'};font-size:0.95rem;">${emp.full_name}${!emp.is_active?'<span style="font-size:0.72rem;color:rgba(255,99,99,0.7);margin-left:6px;">(Inactive)</span>':''}</div>
             <div style="font-size:0.78rem;color:rgba(240,230,211,0.45);margin-top:3px;">${emp.email||''} · ${emp.phone||''}</div>
             ${emp.monthly_salary?`<div style="font-size:0.7rem;color:rgba(201,168,76,0.7);margin-top:4px;">₹${Math.round(emp.monthly_salary).toLocaleString()}/mo</div>`:''}
-            ${emp.upi_id?`<div style="display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:3px 10px;border-radius:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);"><i class="fas fa-wallet" style="font-size:0.65rem;color:#9dc0ff;"></i><span style="font-size:0.72rem;color:#9dc0ff;">${emp.upi_id}${emp.upi_app?' · <strong>'+emp.upi_app+'</strong>':''}</span>${emp.upi_qr?'<i class="fas fa-qrcode" style="font-size:0.65rem;color:#7ce0aa;margin-left:2px;" title="QR uploaded"></i>':''}</div>`:''}
+            ${emp.upi_id?`<div style="display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:3px 10px;border-radius:8px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);"><i class="fas fa-wallet" style="font-size:0.65rem;color:#9dc0ff;"></i><span style="font-size:0.72rem;color:#9dc0ff;">${emp.upi_id}${emp.upi_app?' · <strong>'+emp.upi_app+'</strong>':''}</span>${(emp.qr_code_url||emp.upi_qr)?'<i class="fas fa-qrcode" style="font-size:0.65rem;color:#7ce0aa;margin-left:2px;" title="QR uploaded"></i>':''}</div>`:''}
           </div>
           <div class="d-flex align-items-center gap-2 flex-wrap">
             <span style="padding:3px 12px;border-radius:999px;font-size:0.7rem;font-weight:700;background:rgba(105,152,255,0.12);color:#9dc0ff;border:1px solid rgba(105,152,255,0.2);">${emp.role}</span>
@@ -194,7 +194,7 @@ window.openEditModal = (id) => {
   document.getElementById('editSalary').value = emp.monthly_salary || '';
   document.getElementById('editUpiId').value = emp.upi_id || '';
   document.getElementById('editUpiApp').value = emp.upi_app || '';
-  document.getElementById('editUpiQr').value = emp.upi_qr || '';
+  document.getElementById('editUpiQr').value = emp.qr_code_url || emp.upi_qr || '';
   document.getElementById('editPassword').value = '';
   document.getElementById('editAlert').innerHTML = '';
   const modal = document.getElementById('editModal');

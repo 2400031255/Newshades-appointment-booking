@@ -109,7 +109,7 @@ window.loadPayroll = async () => {
 
     currentRows = employees.map(emp => {
       const ex = existing.find(p => p.employee_id === emp.id);
-      if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, base: ex.base_salary||emp.monthly_salary||0, saved: true, status: ex.status||'Pending', upi_qr: emp.upi_qr||'', upi_id: emp.upi_id||'' };
+      if (ex) return { ...emp, present: ex.present_days, absent: ex.absent_days, net: ex.net_salary, base: ex.base_salary||emp.monthly_salary||0, saved: true, status: ex.status||'Pending', upi_qr: emp.qr_code_url||emp.upi_qr||'', upi_id: emp.upi_id||'' };
       const empAtt = allAtt.filter(r => r.employee_id === emp.id);
       let present = 0;
       empAtt.forEach(r => {
@@ -117,7 +117,7 @@ window.loadPayroll = async () => {
         else if (r.status === 'Half Day') present += 0.5;
       });
       const net = Math.round(((emp.monthly_salary || 0) / daysInMonth) * present);
-      return { ...emp, present, absent: daysInMonth - present, net, base: emp.monthly_salary||0, saved: false, status: 'Pending', upi_qr: emp.upi_qr||'', upi_id: emp.upi_id||'' };
+      return { ...emp, present, absent: daysInMonth - present, net, base: emp.monthly_salary||0, saved: false, status: 'Pending', upi_qr: emp.qr_code_url||emp.upi_qr||'', upi_id: emp.upi_id||'' };
     });
 
     if (!currentRows.length) { grid.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees found. Add employees first from the Employees page.</p></div>'; return; }
