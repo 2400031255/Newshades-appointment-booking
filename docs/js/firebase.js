@@ -64,9 +64,9 @@ export function requireGuest() {
       unsub();
       if (!user) { resolve(null); return; }
       const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
-      if (profile?.is_admin) { window.location.href = "admin/dashboard.html"; return; }
-      if (emp) { window.location.href = "employee/dashboard.html"; return; }
-      window.location.href = "customer/dashboard.html";
+      if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+      if (emp) { window.location.href = 'employee/dashboard.html'; return; }
+      window.location.href = 'customer/dashboard.html';
     });
   });
 }
@@ -75,18 +75,22 @@ export function requireGuest() {
 export async function getUserProfile(uid) {
   const key = `up_${uid}`;
   const hit = cacheGet(key); if (hit) return hit;
-  const snap = await getDoc(doc(db, "users", uid));
-  const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-  if (val) cacheSet(key, val);
-  return val;
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    if (val) cacheSet(key, val);
+    return val;
+  } catch { return null; }
 }
 export async function getEmployeeProfile(uid) {
   const key = `ep_${uid}`;
   const hit = cacheGet(key); if (hit) return hit;
-  const snap = await getDoc(doc(db, "employees", uid));
-  const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-  if (val) cacheSet(key, val);
-  return val;
+  try {
+    const snap = await getDoc(doc(db, "employees", uid));
+    const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+    if (val) cacheSet(key, val);
+    return val;
+  } catch { return null; }
 }
 export async function updateUserProfile(uid, data) {
   try { sessionStorage.removeItem(`up_${uid}`); } catch{}

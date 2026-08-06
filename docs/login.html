@@ -160,6 +160,10 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
 
     const cred = await loginUser(email, password);
     const uid = cred.user.uid;
+
+    // Wait for Firestore auth token to propagate
+    await new Promise(r => setTimeout(r, 600));
+
     const [profile, settings, emp] = await Promise.all([
       getUserProfile(uid),
       getSettings(),
