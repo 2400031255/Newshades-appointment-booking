@@ -158,7 +158,12 @@ document.addEventListener('click', async e => {
   if (paidBtn) {
     paidBtn.disabled = true; paidBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>';
     try {
-      await savePayroll({ employee_id: paidBtn.dataset.id, month: paidBtn.dataset.month, status: 'Paid' });
+      const empId = paidBtn.dataset.id;
+      const month = paidBtn.dataset.month;
+      // Find existing payroll doc and update only status
+      const { getDocs: _gd, collection: _col, query: _q, where: _w, updateDoc: _upd, doc: _doc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const snap = await _gd(_q(_col(db, 'payroll'), _w('employee_id','==',empId), _w('month','==',month)));
+      if (!snap.empty) await _upd(snap.docs[0].ref, { status: 'Paid' });
       showToast('Marked as Paid!', 'success');
       await loadPayroll();
     } catch(err) { showToast('Failed: ' + err.message, 'danger'); paidBtn.disabled = false; paidBtn.innerHTML = '<i class="fas fa-check me-1"></i>Mark Paid'; }

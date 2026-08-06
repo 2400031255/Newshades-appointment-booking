@@ -448,6 +448,11 @@ async function loadReviews() {
 
 document.getElementById('pubEnqForm').addEventListener('submit', async e => {
   e.preventDefault();
+  // Rate limit: 1 submission per 30 seconds
+  const lastSub = parseInt(sessionStorage.getItem('enq_last')||'0');
+  if (Date.now() - lastSub < 30000) {
+    showToast('Please wait 30 seconds before submitting again.', 'warning'); return;
+  }
   const btn = document.querySelector('#pubEnqForm button[type="submit"]');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting…'; }
   try {
@@ -460,6 +465,7 @@ document.getElementById('pubEnqForm').addEventListener('submit', async e => {
       message: document.getElementById('enqMsg')?.value.trim() || '',
       user_id: auth.currentUser?.uid || null
     });
+    sessionStorage.setItem('enq_last', Date.now().toString());
     showToast('Enquiry submitted! We\'ll contact you shortly.', 'success');
     e.target.reset();
   } catch(err) {
