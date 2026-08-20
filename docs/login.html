@@ -180,7 +180,15 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
       return;
     }
-    if (emp) { window.location.href = 'employee/dashboard.html'; return; }
+    if (emp) {
+      if (emp.is_active === 0 || emp.is_active === false) {
+        await logoutUser();
+        alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-ban me-2"></i>Your account has been deactivated. Contact the admin.</div>`;
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+        return;
+      }
+      window.location.href = 'employee/dashboard.html'; return;
+    }
     window.location.href = 'customer/dashboard.html';
   } catch(err) {
     const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'

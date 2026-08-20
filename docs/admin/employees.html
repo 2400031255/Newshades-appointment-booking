@@ -241,11 +241,12 @@ window.toggleEmp = async (id, isActive) => {
   catch(err) { showToast('Failed.', 'danger'); }
 };
 window.delEmp = async (id) => {
-  if (!confirm('Delete this employee record?\n\nNote: Their login account will still exist but they will be deactivated. To fully remove login access, deactivate them instead.')) return;
+  if (!confirm('Permanently delete this employee? Their login account will also be disabled and they cannot log in again.')) return;
   try {
-    await updateEmployee(id, { is_active: 0 });
+    // Deactivate first so they cannot log in even if doc deletion is delayed
+    await updateEmployee(id, { is_active: 0, deleted: true });
     await deleteEmployee(id);
-    showToast('Employee removed.', 'success'); await loadEmps();
+    showToast('Employee permanently deleted.', 'success'); await loadEmps();
   } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 

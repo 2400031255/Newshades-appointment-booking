@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://www.newshadeseluru.in", "https://newshadeseluru.in", "https://newshadeseluru-ec450.web.app", "https://newshadeseluru-ec450.firebaseapp.com"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Authorization", "Content-Length", "X-Requested-With"]
+  }
+]

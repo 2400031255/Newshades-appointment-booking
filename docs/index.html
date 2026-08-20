@@ -422,7 +422,7 @@ async function loadServices() {
       getServices(true),
       new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000))
     ]);
-    if (svcs.length) renderSvcGrid(svcs);
+    if (svcs && svcs.length) renderSvcGrid(svcs);
   } catch(e) { /* defaults already shown */ }
 }
 

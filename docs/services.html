@@ -139,10 +139,10 @@ async function load() {
   // Show defaults immediately so page never hangs
   renderServices(defaultServices);
   try {
-    const timeout = new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000));
+    const timeoutPromise = new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000));
     const [svcs, s] = await Promise.race([
       Promise.all([getServices(true), getSettings()]),
-      timeout.then(() => { throw new Error('timeout'); })
+      timeoutPromise
     ]);
     if (s.whatsapp) document.getElementById('footerWa').href = `https://wa.me/${s.whatsapp.replace(/\D/g,'')}`;
     if (s.hours_weekday) document.getElementById('ftWeekday').textContent = s.hours_weekday;
@@ -150,7 +150,7 @@ async function load() {
     if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
     if (s.address) document.getElementById('ftAddr').textContent = s.address;
     if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
-    if (svcs.length) renderServices(svcs);
+    if (svcs && svcs.length) renderServices(svcs);
   } catch(err) {
     // defaults already shown, silently keep them
   }

@@ -65,7 +65,16 @@ export function requireGuest() {
       if (!user) { resolve(null); return; }
       const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
       if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
-      if (emp) { window.location.href = 'employee/dashboard.html'; return; }
+      // Block deactivated employees from logging in
+      if (emp) {
+        if (emp.is_active === 0 || emp.is_active === false) {
+          await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(m => m.signOut(auth));
+          window.location.href = 'login.html?error=deactivated';
+          return;
+        }
+        window.location.href = 'employee/dashboard.html';
+        return;
+      }
       window.location.href = 'customer/dashboard.html';
     });
   });
@@ -131,8 +140,8 @@ export async function getServices(activeOnly = false) {
   const snap = await getDocs(collection(db, "services"));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!activeOnly) return all;
-  // Accept both is_active===1 (number) and is_active===true (boolean)
-  return all.filter(s => s.is_active === 1 || s.is_active === true);
+  // Accept is_active===1 (number), true (boolean), or any truthy value
+  return all.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
 }
 export async function getServiceById(id) {
   const snap = await getDoc(doc(db, "services", id));
@@ -185,7 +194,12 @@ export async function getAllEmployees(activeOnly = false) {
 export async function createEmployee(data) {
   return addDoc(collection(db, "employees"), { ...data, created_at: serverTimestamp() });
 }
-export async function updateEmployee(id, data) { return updateDoc(doc(db, "employees", id), data); }
+export async function updateEmployee(id, data) {
+  // Clear employee profile cache so deactivation takes effect immediately
+  try { sessionStorage.removeItem(`ep_${id}`); } catch{}
+  delete _cache[`ep_${id}`];
+  return updateDoc(doc(db, "employees", id), data);
+}
 export async function deleteEmployee(id) { return deleteDoc(doc(db, "employees", id)); }
 
 // ── Attendance ────────────────────────────────────────────────────────────

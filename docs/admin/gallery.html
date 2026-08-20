@@ -121,7 +121,9 @@ async function uploadToStorage(file) {
   status.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading…';
 
   try {
-    const path = `gallery/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const ext = file.name.split('.').pop();
+    const safeName = `${Date.now()}.${ext}`;
+    const path = `gallery/${safeName}`;
     uploadedUrl = await uploadFile(path, file, pct => {
       bar.style.width = pct + '%';
       status.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>Uploading… ${pct}%`;
@@ -130,9 +132,12 @@ async function uploadToStorage(file) {
     status.innerHTML = '<i class="fas fa-check-circle me-1" style="color:#7ce0aa;"></i><span style="color:#7ce0aa;">Upload complete! Ready to add.</span>';
     document.getElementById('addPhotoBtn').disabled = false;
   } catch(err) {
-    status.innerHTML = '<i class="fas fa-times-circle me-1" style="color:#ff6b6b;"></i><span style="color:#ff6b6b;">Upload failed. Check Firebase Storage is enabled.</span>';
+    status.innerHTML = '<i class="fas fa-times-circle me-1" style="color:#ff6b6b;"></i><span style="color:#ff6b6b;">Upload failed. Check Firebase Storage rules are deployed.</span>';
     barWrap.style.display = 'none';
-    console.error(err);
+    // Re-enable button so user can retry with a different file
+    document.getElementById('addPhotoBtn').disabled = false;
+    document.getElementById('addPhotoBtn').innerHTML = '<i class="fas fa-redo me-2"></i>Retry';
+    console.error('Storage upload error:', err);
   }
 }
 
