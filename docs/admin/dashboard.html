@@ -62,7 +62,7 @@
 
     <!-- Stats Row -->
     <div class="row g-4 mb-2">
-      <div class="col-lg-3 col-md-6"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Enquiries</div><div class="stat-number" id="statCustomers">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-clipboard-list"></i></div></div></div></div>
+      <div class="col-lg-3 col-md-6"><a href="employees.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#C9A84C;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Employees</div><div class="stat-number" id="statCustomers">—</div></div><div class="stat-icon" style="color:#C9A84C;"><i class="fas fa-user-tie"></i></div></div></div></a></div>
       <div class="col-lg-3 col-md-6"><a href="services.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#6f42c1;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Services</div><div class="stat-number" id="statServices">—</div></div><div class="stat-icon" style="color:#6f42c1;"><i class="fas fa-concierge-bell"></i></div></div></div></a></div>
       <div class="col-lg-3 col-md-6"><a href="enquiries.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#0d6efd;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Total Enquiries</div><div class="stat-number" id="statEnqs">—</div></div><div class="stat-icon" style="color:#0d6efd;"><i class="fas fa-clipboard-list"></i></div></div></div></a></div>
       <div class="col-lg-3 col-md-6"><a href="enquiries.html" style="text-decoration:none;"><div class="stat-card" style="border-left-color:#fd7e14;margin:0;cursor:pointer;"><div class="d-flex justify-content-between align-items-center"><div><div class="text-muted small mb-1">Pending</div><div class="stat-number" id="statPending">—</div></div><div class="stat-icon" style="color:#fd7e14;"><i class="fas fa-clock"></i></div></div></div></a></div>
@@ -178,7 +178,7 @@ getAppSettings().then(appS => {
 });
 
 // Stats
-document.getElementById('statCustomers').textContent = enquiries.length;
+document.getElementById('statCustomers').textContent = employees.length;
 document.getElementById('statServices').textContent = services.length;
 document.getElementById('statEnqs').textContent = enquiries.length;
 const pending = enquiries.filter(e => e.status === 'Pending');
