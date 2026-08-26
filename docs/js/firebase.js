@@ -75,6 +75,12 @@ export function requireGuest() {
         window.location.href = 'employee/dashboard.html';
         return;
       }
+      // No profile and no employee record — orphaned auth user, sign out
+      if (!profile) {
+        await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(m => m.signOut(auth));
+        resolve(null);
+        return;
+      }
       window.location.href = 'customer/dashboard.html';
     });
   });
