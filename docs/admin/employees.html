@@ -90,7 +90,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEmployees, updateEmployee, deleteEmployee, showToast, auth, firebaseConfig } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, listenEmployees, updateEmployee, deleteEmployee, showToast, auth, firebaseConfig } from '../js/firebase.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -107,14 +107,16 @@ document.getElementById('adminName').textContent = profile?.full_name || user.em
 
 let employees = [];
 
-async function loadEmps() {
+// Real-time listener — auto-updates list whenever Firestore changes
+listenEmployees(emps => {
+  employees = emps;
   const list = document.getElementById('empList');
-  list.innerHTML = '<div class="text-center py-4" style="color:var(--text-muted);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
-  try {
-    employees = await getAllEmployees();
-    document.getElementById('empCount').textContent = `(${employees.length})`;
-    if (!employees.length) { list.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2.5rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees yet.</p></div>'; return; }
-    list.innerHTML = employees.map(emp => `
+  document.getElementById('empCount').textContent = `(${emps.length})`;
+  if (!emps.length) {
+    list.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2.5rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees yet.</p></div>';
+    return;
+  }
+  list.innerHTML = emps.map(emp => `
       <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,${emp.is_active?'0.25':'0.08'});border-radius:16px;padding:18px 20px;margin-bottom:12px;">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
           <div>
@@ -131,11 +133,7 @@ async function loadEmps() {
           </div>
         </div>
       </div>`).join('');
-  } catch(err) {
-    document.getElementById('empList').innerHTML = `<div class="text-center py-5"><i class="fas fa-exclamation-triangle" style="font-size:2rem;color:rgba(255,170,77,0.5);"></i><p class="mt-3" style="color:#ffc36b;font-size:0.88rem;">Failed to load employees.<br><span style="color:var(--text-muted);font-size:0.8rem;">${err.message}</span></p><button onclick="loadEmps()" style="margin-top:12px;padding:8px 20px;border-radius:10px;border:1px solid rgba(201,168,76,0.3);background:rgba(201,168,76,0.08);color:var(--gold-2);font-size:0.82rem;cursor:pointer;"><i class="fas fa-redo me-1"></i>Retry</button></div>`;
-  }
-}
-loadEmps();
+});
 
 document.getElementById('createEmpForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -228,7 +226,6 @@ window.saveEdit = async () => {
     }
     showToast('Employee updated!', 'success');
     closeEditModal();
-    await loadEmps();
   } catch(err) {
     document.getElementById('editAlert').innerHTML = `<div style="padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:0.82rem;background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.28);color:#ff9a9a;"><i class="fas fa-exclamation-circle me-1"></i>${err.message}</div>`;
   } finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes'; }
@@ -237,16 +234,15 @@ window.saveEdit = async () => {
 document.getElementById('editModal').addEventListener('click', e => { if (e.target === document.getElementById('editModal')) closeEditModal(); });
 
 window.toggleEmp = async (id, isActive) => {
-  try { await updateEmployee(id, { is_active: isActive ? 0 : 1 }); showToast('Updated!', 'success'); await loadEmps(); }
+  try { await updateEmployee(id, { is_active: isActive ? 0 : 1 }); showToast('Updated!', 'success'); }
   catch(err) { showToast('Failed.', 'danger'); }
 };
 window.delEmp = async (id) => {
   if (!confirm('Permanently delete this employee? Their login account will also be disabled and they cannot log in again.')) return;
   try {
-    // Deactivate first so they cannot log in even if doc deletion is delayed
     await updateEmployee(id, { is_active: 0, deleted: true });
     await deleteEmployee(id);
-    showToast('Employee permanently deleted.', 'success'); await loadEmps();
+    showToast('Employee permanently deleted.', 'success');
   } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 

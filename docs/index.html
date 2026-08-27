@@ -336,7 +336,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
 <script src="js/main.js" defer></script>
 <script type="module">
-import { getSettings, getServices, getReviews, getActiveOffers, createEnquiry, showToast, auth } from './js/firebase.js';
+import { getSettings, listenServices, getReviews, getActiveOffers, createEnquiry, showToast, auth } from './js/firebase.js';
 
 // ── Maintenance mode check (runs first) ───────────────────────────────────
 const _s = await getSettings();
@@ -414,16 +414,14 @@ async function loadSettings() {
   }
 }
 
-async function loadServices() {
-  // Show defaults immediately
-  renderSvcGrid(defaultSvcs);
-  try {
-    const svcs = await Promise.race([
-      getServices(true),
-      new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 8000))
-    ]);
-    if (svcs && svcs.length) renderSvcGrid(svcs);
-  } catch(e) { /* defaults already shown */ }
+function loadServices() {
+  listenServices(svcs => {
+    if (svcs && svcs.length) {
+      renderSvcGrid(svcs);
+    } else {
+      document.getElementById('servicesGrid').innerHTML = '<div class="col-12 text-center" style="color:rgba(240,230,211,0.4);padding:40px 0;"><i class="fas fa-cut" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Services coming soon. Stay tuned!</div>';
+    }
+  }, true); // activeOnly=true
 }
 
 async function loadReviews() {

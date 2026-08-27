@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { firebaseConfig } from './config.js';
@@ -8,6 +8,8 @@ export { firebaseConfig };
 const app  = initializeApp(firebaseConfig);
 export const auth    = getAuth(app);
 export const db      = getFirestore(app);
+// Session-only persistence: user is logged out when browser/tab is closed
+setPersistence(auth, browserSessionPersistence).catch(() => {});
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
 // ── Upload file to Firebase Storage with progress callback ────────────────
@@ -26,8 +28,17 @@ export async function uploadFile(path, file, onProgress) {
 
 // ── Session cache for profile (avoids repeat Firestore reads) ─────────────
 const _cache = {};
-function cacheSet(key, val) { try { sessionStorage.setItem(key, JSON.stringify(val)); } catch{} _cache[key] = val; }
-function cacheGet(key) { if (_cache[key]) return _cache[key]; try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; } catch{ return null; } }
+function cacheSet(key, val, ttlMs = 0) {
+  const entry = ttlMs ? { val, exp: Date.now() + ttlMs } : { val };
+  try { sessionStorage.setItem(key, JSON.stringify(entry)); } catch{}
+  _cache[key] = entry;
+}
+function cacheGet(key) {
+  const entry = _cache[key] || (() => { try { const v = sessionStorage.getItem(key); return v ? JSON.parse(v) : null; } catch{ return null; } })();
+  if (!entry) return null;
+  if (entry.exp && Date.now() > entry.exp) { try { sessionStorage.removeItem(key); } catch{} delete _cache[key]; return null; }
+  return entry.val;
+}
 function cacheClear() { try { sessionStorage.clear(); } catch{} Object.keys(_cache).forEach(k => delete _cache[k]); }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
@@ -63,7 +74,7 @@ export function requireGuest() {
     const unsub = onAuthStateChanged(auth, async user => {
       unsub();
       if (!user) { resolve(null); return; }
-      const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
+      const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid, true)]); // bypass cache for active check
       if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
       // Block deactivated employees from logging in
       if (emp) {
@@ -97,9 +108,9 @@ export async function getUserProfile(uid) {
     return val;
   } catch { return null; }
 }
-export async function getEmployeeProfile(uid) {
+export async function getEmployeeProfile(uid, bypassCache = false) {
   const key = `ep_${uid}`;
-  const hit = cacheGet(key); if (hit) return hit;
+  if (!bypassCache) { const hit = cacheGet(key); if (hit) return hit; }
   try {
     const snap = await getDoc(doc(db, "employees", uid));
     const val = snap.exists() ? { id: snap.id, ...snap.data() } : null;
@@ -146,7 +157,6 @@ export async function getServices(activeOnly = false) {
   const snap = await getDocs(collection(db, "services"));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!activeOnly) return all;
-  // Accept is_active===1 (number), true (boolean), or any truthy value
   return all.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
 }
 export async function getServiceById(id) {
@@ -158,6 +168,13 @@ export async function createService(data) {
 }
 export async function updateService(id, data) { return updateDoc(doc(db, "services", id), data); }
 export async function deleteService(id) { return deleteDoc(doc(db, "services", id)); }
+export function listenServices(cb, activeOnly = false) {
+  return onSnapshot(collection(db, 'services'), snap => {
+    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (activeOnly) docs = docs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
+    cb(docs);
+  });
+}
 
 // ── Enquiries ─────────────────────────────────────────────────────────────
 export async function getAllEnquiries(statusFilter = "") {
@@ -197,14 +214,36 @@ export async function getAllEmployees(activeOnly = false) {
   if (!activeOnly) return all;
   return all.filter(e => e.is_active === 1 || e.is_active === true);
 }
+export function listenEmployees(cb) {
+  return onSnapshot(collection(db, 'employees'), snap => {
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
 export async function createEmployee(data) {
   return addDoc(collection(db, "employees"), { ...data, created_at: serverTimestamp() });
 }
 export async function updateEmployee(id, data) {
-  // Clear employee profile cache so deactivation takes effect immediately
   try { sessionStorage.removeItem(`ep_${id}`); } catch{}
   delete _cache[`ep_${id}`];
   return updateDoc(doc(db, "employees", id), data);
+}
+
+// Guard: require active employee — always fetches fresh from Firestore (bypasses cache)
+export async function requireActiveEmployee(redirectTo = '../login.html') {
+  const { auth: _auth } = await Promise.resolve({ auth });
+  return new Promise(resolve => {
+    const unsub = onAuthStateChanged(auth, async user => {
+      unsub();
+      if (!user) { window.location.href = redirectTo; return; }
+      const emp = await getEmployeeProfile(user.uid, true); // bypass cache
+      if (!emp || emp.is_active === 0 || emp.is_active === false) {
+        await signOut(auth);
+        window.location.href = redirectTo + '?error=deactivated';
+        return;
+      }
+      resolve({ user, emp });
+    });
+  });
 }
 export async function deleteEmployee(id) { return deleteDoc(doc(db, "employees", id)); }
 

@@ -75,7 +75,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getServices, createService, updateService, deleteService, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, listenServices, createService, updateService, deleteService, showToast } from '../js/firebase.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
@@ -84,11 +84,11 @@ document.getElementById('adminName').textContent = profile?.full_name || user.em
 
 let allSvcs = [];
 
-async function loadSvcs() {
-  allSvcs = await getServices();
-  renderSvcs(allSvcs);
-}
-loadSvcs();
+// Real-time listener — auto-updates table whenever Firestore changes
+listenServices(svcs => {
+  allSvcs = svcs;
+  renderSvcs(svcs);
+});
 
 function renderSvcs(svcs) {
   document.getElementById('svcCount').textContent = `(${svcs.length})`;
@@ -111,7 +111,7 @@ document.getElementById('svcForm').addEventListener('submit', async e => {
   try {
     if (eid) { await updateService(eid, data); showToast('Service updated!', 'success'); }
     else { await createService(data); showToast('Service added!', 'success'); }
-    cancelEdit(); await loadSvcs();
+    cancelEdit();
   } catch(err) { showToast('Failed to save.', 'danger'); }
 });
 
@@ -140,7 +140,7 @@ window.cancelEdit = () => {
 
 window.delSvc = async (id) => {
   if (!confirm('Delete this service?')) return;
-  try { await deleteService(id); allSvcs = allSvcs.filter(s => s.id !== id); renderSvcs(allSvcs); showToast('Deleted.', 'success'); }
+  try { await deleteService(id); showToast('Deleted.', 'success'); }
   catch(err) { showToast('Failed to delete.', 'danger'); }
 };
 
