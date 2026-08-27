@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, initializeFirestore, memoryLocalCache, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { firebaseConfig } from './config.js';
 export { firebaseConfig };
@@ -8,8 +8,8 @@ export { firebaseConfig };
 const app  = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 // Use persistent cache (v10 way) — snapshots fire from IndexedDB instantly on repeat visits
-export const db = initializeFirestore(app, { localCache: persistentLocalCache() });
-setPersistence(auth, browserSessionPersistence).catch(() => {});
+export const db = initializeFirestore(app, { localCache: memoryLocalCache() });
+setPersistence(auth, browserLocalPersistence).catch(() => {});
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
 // ── Upload file to Firebase Storage with progress callback ────────────────
