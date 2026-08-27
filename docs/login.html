@@ -140,6 +140,8 @@ const _unsub = onAuthStateChanged(auth, async user => {
         }
       } else if (profile) {
         window.location.href = 'customer/dashboard.html'; return;
+      } else {
+        await signOut(auth).catch(()=>{});
       }
     } catch(e) { await signOut(auth).catch(()=>{}); }
   }
@@ -183,17 +185,18 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       getEmployeeProfile(uid, true)
     ]);
 
-    if (emp?.deleted || emp?.is_active === 0 || emp?.is_active === false) {
-      await signOut(auth);
-      showError('Your account has been deactivated. Contact the admin.');
-      return;
-    }
-
+    // Admin check FIRST — admin bypasses all other checks
     if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
 
     if (settings?.maintenance_mode === true) {
       await signOut(auth);
       showError('Site is under maintenance. Only admin access is allowed.');
+      return;
+    }
+
+    if (emp?.deleted || emp?.is_active === 0 || emp?.is_active === false) {
+      await signOut(auth);
+      showError('Your account has been deactivated. Contact the admin.');
       return;
     }
 
