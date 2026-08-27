@@ -111,29 +111,50 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
 <script src="js/main.js" defer></script>
 <script type="module">
-import { loginUser, requireGuest, logoutUser, getUserProfile, getEmployeeProfile, getSettings, db } from './js/firebase.js';
+import { loginUser, getUserProfile, getEmployeeProfile, getSettings, auth, db } from './js/firebase.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { doc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// Disable form until auth state resolves to prevent flash
-const _loginBtn = document.getElementById('loginBtn');
-_loginBtn.disabled = true;
-try {
-  await requireGuest();
-} catch(e) {}
-_loginBtn.disabled = false;
+function showError(msg) {
+  const alertEl = document.getElementById('loginAlert');
+  alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i> ${msg}</div>`;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+}
+
+// Auto-redirect if already logged in
+const _btn = document.getElementById('loginBtn');
+_btn.disabled = true;
+const _unsub = onAuthStateChanged(auth, async user => {
+  _unsub();
+  if (user) {
+    try {
+      const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid, true)]);
+      if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+      if (emp) {
+        if (emp.deleted || emp.is_active === 0 || emp.is_active === false) {
+          await signOut(auth);
+        } else {
+          window.location.href = 'employee/dashboard.html'; return;
+        }
+      } else if (profile) {
+        window.location.href = 'customer/dashboard.html'; return;
+      }
+    } catch(e) { await signOut(auth).catch(()=>{}); }
+  }
+  _btn.disabled = false;
+});
 
 async function resolveEmail(identifier) {
   if (identifier.includes('@')) return identifier;
-  // Fast: check usernames collection (doc ID = username)
-  const usnap = await getDoc(doc(db, 'usernames', identifier.toLowerCase()));
-  if (usnap.exists()) return usnap.data().email;
-  // Fallback: query users collection
+  const usnap = await getDoc(doc(db, 'usernames', identifier.toLowerCase())).catch(()=>null);
+  if (usnap?.exists()) return usnap.data().email;
   const q = query(collection(db, 'users'), where('username', '==', identifier));
-  const snap = await getDocs(q).catch(() => null);
+  const snap = await getDocs(q).catch(()=>null);
   if (snap && !snap.empty) return snap.docs[0].data().email;
-  // Fallback: query employees collection
   const eq = query(collection(db, 'employees'), where('username', '==', identifier));
-  const esnap = await getDocs(eq).catch(() => null);
+  const esnap = await getDocs(eq).catch(()=>null);
   if (esnap && !esnap.empty) return esnap.docs[0].data().email;
   return null;
 }
@@ -151,62 +172,46 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     const password = document.getElementById('loginPw').value;
 
     const email = await resolveEmail(identifier);
-    if (!email) {
-      alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-exclamation-circle"></i>Username not found.</div>`;
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-      return;
-    }
+    if (!email) { showError('Username not found.'); return; }
 
     const cred = await loginUser(email, password);
     const uid = cred.user.uid;
 
-    // Wait for Firestore auth token to propagate
-    await new Promise(r => setTimeout(r, 600));
-
     const [profile, settings, emp] = await Promise.all([
       getUserProfile(uid),
       getSettings(),
-      getEmployeeProfile(uid)
+      getEmployeeProfile(uid, true)
     ]);
-    if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
-    if (settings.maintenance_mode === true) {
-      await logoutUser();
-      const flash = document.createElement('div');
-      flash.className = 'anf-flash anf-flash-danger';
-      flash.innerHTML = '<i class="fas fa-tools me-2"></i>';
-      flash.appendChild(document.createTextNode('Site is under maintenance. Only admin access is allowed.'));
-      alertEl.innerHTML = ''; alertEl.appendChild(flash);
-      btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+
+    if (emp?.deleted || emp?.is_active === 0 || emp?.is_active === false) {
+      await signOut(auth);
+      showError('Your account has been deactivated. Contact the admin.');
       return;
     }
-    if (emp) {
-      if (emp.is_active === 0 || emp.is_active === false) {
-        await logoutUser();
-        alertEl.innerHTML = `<div class="anf-flash anf-flash-danger"><i class="fas fa-ban me-2"></i>Your account has been deactivated. Contact the admin.</div>`;
-        btn.disabled = false; btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-        return;
-      }
-      window.location.href = 'employee/dashboard.html'; return;
+
+    if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+
+    if (settings?.maintenance_mode === true) {
+      await signOut(auth);
+      showError('Site is under maintenance. Only admin access is allowed.');
+      return;
     }
+
+    if (emp) { window.location.href = 'employee/dashboard.html'; return; }
     window.location.href = 'customer/dashboard.html';
+
   } catch(err) {
-    const msg = err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+    const code = err.code || '';
+    const msg = (code === 'auth/invalid-credential' || code === 'auth/wrong-password')
       ? 'Invalid username/email or password.'
-      : err.code === 'auth/too-many-requests'
+      : code === 'auth/too-many-requests'
       ? 'Too many attempts. Please try again later.'
-      : err.code === 'auth/user-not-found'
+      : code === 'auth/user-not-found'
       ? 'No account found with this email.'
-      : `Error: ${err.code || 'unknown'}`;
-    const flash = document.createElement('div');
-    flash.className = 'anf-flash anf-flash-danger';
-    flash.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-    const msgNode = document.createTextNode(msg);
-    flash.appendChild(msgNode);
-    alertEl.innerHTML = '';
-    alertEl.appendChild(flash);
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+      : code === 'auth/network-request-failed'
+      ? 'Network error. Check your connection.'
+      : `Login failed. (${code || 'unknown'})`;
+    showError(msg);
   }
 });
 </script>
