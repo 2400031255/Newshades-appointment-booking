@@ -7,7 +7,6 @@
     "rules": "storage.rules"
   },
   "hosting": {
-    "target": "salon",
     "public": "docs",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
   },
