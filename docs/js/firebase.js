@@ -78,7 +78,7 @@ export function requireGuest() {
       if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
       // Block deactivated employees from logging in
       if (emp) {
-        if (emp.is_active === 0 || emp.is_active === false) {
+        if (emp.deleted || emp.is_active === 0 || emp.is_active === false) {
           await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(m => m.signOut(auth));
           window.location.href = 'login.html?error=deactivated';
           return;

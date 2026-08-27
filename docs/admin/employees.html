@@ -94,6 +94,7 @@ import { requireAuth, logoutUser, getUserProfile, listenEmployees, updateEmploye
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 // Secondary app so admin stays signed in while creating employee accounts
 const secondaryApp = getApps().find(a => a.name === 'employee-creator') || initializeApp(firebaseConfig, 'employee-creator');
@@ -238,11 +239,13 @@ window.toggleEmp = async (id, isActive) => {
   catch(err) { showToast('Failed.', 'danger'); }
 };
 window.delEmp = async (id) => {
-  if (!confirm('Permanently delete this employee? Their login account will also be disabled and they cannot log in again.')) return;
+  if (!confirm('Permanently delete this employee? Their Firebase login will be removed — they will get invalid credentials on next login attempt.')) return;
   try {
+    const functions = getFunctions();
+    const deleteAccount = httpsCallable(functions, 'deleteEmployeeAccount');
+    await deleteAccount({ uid: id });
     await updateEmployee(id, { is_active: 0, deleted: true });
-    await deleteEmployee(id);
-    showToast('Employee permanently deleted.', 'success');
+    showToast('Employee deleted. Login credentials removed.', 'success');
   } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 
