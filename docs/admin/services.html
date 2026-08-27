@@ -77,18 +77,19 @@
 <script type="module">
 import { requireAuth, logoutUser, getUserProfile, listenServices, createService, updateService, deleteService, showToast } from '../js/firebase.js';
 
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
-document.getElementById('adminName').textContent = profile?.full_name || user.email;
-
 let allSvcs = [];
 
-// Real-time listener — auto-updates table whenever Firestore changes
+// Start real-time listener immediately — parallel with auth
 listenServices(svcs => {
   allSvcs = svcs;
   renderSvcs(svcs);
 });
+
+// Auth check runs in parallel — only blocks admin name display
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../login.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 function renderSvcs(svcs) {
   document.getElementById('svcCount').textContent = `(${svcs.length})`;

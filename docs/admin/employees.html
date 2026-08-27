@@ -100,18 +100,13 @@ const secondaryApp = getApps().find(a => a.name === 'employee-creator') || initi
 const secondaryAuth = getAuth(secondaryApp);
 const secondaryDb = getFirestore(secondaryApp);
 
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
-document.getElementById('adminName').textContent = profile?.full_name || user.email;
-
 let employees = [];
 
-// Real-time listener — auto-updates list whenever Firestore changes
+// Start real-time listener immediately — don't wait for auth
 listenEmployees(emps => {
   employees = emps;
-  const list = document.getElementById('empList');
   document.getElementById('empCount').textContent = `(${emps.length})`;
+  const list = document.getElementById('empList');
   if (!emps.length) {
     list.innerHTML = '<div class="text-center py-5"><i class="fas fa-users" style="font-size:2.5rem;color:rgba(201,168,76,0.2);"></i><p class="mt-3" style="color:var(--text-muted);">No employees yet.</p></div>';
     return;
@@ -134,6 +129,12 @@ listenEmployees(emps => {
         </div>
       </div>`).join('');
 });
+
+// Auth check runs in parallel — only blocks admin name display
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../login.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 document.getElementById('createEmpForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -158,11 +159,10 @@ document.getElementById('createEmpForm').addEventListener('submit', async e => {
     // Write username lookup
     const uname = empNameVal.split(' ')[0].toLowerCase();
     await setDoc(doc(secondaryDb, 'usernames', uname), { email: empEmail, uid: newUid }).catch(()=>{});
-    // Sign out of secondary app so it doesn't linger
-    await signOut(secondaryAuth);
+    // Sign out of secondary app in background — don't await it
+    signOut(secondaryAuth).catch(() => {});
     showToast('Employee created!', 'success');
     document.getElementById('createEmpForm').reset();
-    await loadEmps();
   } catch(err) {
     const msg = err.code === 'auth/email-already-in-use' ? 'Email already in use.' : err.message;
     document.getElementById('createAlert').innerHTML = `<div style="padding:10px 14px;border-radius:10px;margin-bottom:16px;font-size:0.84rem;background:rgba(226,93,93,0.12);border:1px solid rgba(226,93,93,0.28);color:#ff9a9a;display:flex;align-items:center;gap:8px;"><i class="fas fa-exclamation-circle"></i>${msg}</div>`;

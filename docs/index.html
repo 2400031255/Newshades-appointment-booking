@@ -338,7 +338,7 @@
 <script type="module">
 import { getSettings, listenServices, getReviews, getActiveOffers, createEnquiry, showToast, auth } from './js/firebase.js';
 
-// ── Maintenance mode check (runs first) ───────────────────────────────────
+// ── Maintenance mode check + settings (non-blocking for services) ────────
 const _s = await getSettings();
 if (_s.maintenance_mode === true) {
   const _wa = (_s.wa_number || _s.whatsapp || '').replace(/\D/g,'');
@@ -477,7 +477,9 @@ document.getElementById('pubEnqForm').addEventListener('submit', async e => {
 document.getElementById('enqDate').min = new Date().toISOString().slice(0,10);
 
 loadSettings();
-Promise.all([loadServices(), loadReviews()]);
+// Start services listener immediately — parallel with everything else
+loadServices();
+loadReviews();
 </script>
 
 <script>

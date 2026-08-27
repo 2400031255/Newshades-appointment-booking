@@ -1,14 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import { firebaseConfig } from './config.js';
 export { firebaseConfig };
 
 const app  = initializeApp(firebaseConfig);
-export const auth    = getAuth(app);
-export const db      = getFirestore(app);
-// Session-only persistence: user is logged out when browser/tab is closed
+export const auth = getAuth(app);
+// Use persistent cache (v10 way) — snapshots fire from IndexedDB instantly on repeat visits
+export const db = initializeFirestore(app, { localCache: persistentLocalCache() });
 setPersistence(auth, browserSessionPersistence).catch(() => {});
 export { collection, query, where, getDocs, orderBy, limit, onSnapshot, serverTimestamp };
 
