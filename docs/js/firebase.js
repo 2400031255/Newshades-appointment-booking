@@ -157,7 +157,7 @@ export async function getServices(activeOnly = false) {
   const snap = await getDocs(collection(db, "services"));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!activeOnly) return all;
-  return all.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
+  return all.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1' || s.is_active === undefined || s.is_active === null);
 }
 export async function getServiceById(id) {
   const snap = await getDoc(doc(db, "services", id));

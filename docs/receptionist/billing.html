@@ -209,11 +209,11 @@ window.setCat = (cat, btn) => {
 
 function renderGrid() {
   const q = (document.getElementById('svcSearch').value || '').toLowerCase();
-  const list = allSvcs.filter(s => (activeCat==='all'||s.category===activeCat) && (!q||s.name.toLowerCase().includes(q)));
+  const list = allSvcs.filter(s => s.name && (activeCat==='all'||s.category===activeCat) && (!q||(s.name||'').toLowerCase().includes(q)));
   document.getElementById('svcGrid').innerHTML = list.map(s =>
-    `<div class="svc-grid-card${sel[s.id]?' selected':''}" onclick="toggleSvc(${JSON.stringify(s.id)},${JSON.stringify(s.name)},${s.price})">
-      <div class="svc-grid-name">${esc(s.name)}</div>
-      <div class="svc-grid-price">₹${s.price}</div>
+    `<div class="svc-grid-card${sel[s.id]?' selected':''}" onclick="toggleSvc(${JSON.stringify(s.id)},${JSON.stringify(s.name||'')},${Number(s.price)||0})">
+      <div class="svc-grid-name">${esc(s.name||'')}</div>
+      <div class="svc-grid-price">₹${Number(s.price)||0}</div>
       ${s.duration?`<div class="svc-grid-dur">${s.duration} min</div>`:''}
     </div>`
   ).join('') || '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem;padding:16px;text-align:center;">No services</div>';
