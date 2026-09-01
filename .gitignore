@@ -7,3 +7,4 @@ firebase-debug.log
 
 # Node (only used locally for firebase-tools)
 node_modules/
+templates/
