@@ -353,6 +353,7 @@ document.getElementById('rptTo').value = today;
 // state
 let allSvcs = [], allCusts = [], sel = {}, activeCat = 'all';
 let custId = null, custName = '', custVisits = 0;
+window._sel = sel;
 
 // load
 async function init() {
@@ -387,6 +388,7 @@ window.setCat = (cat, btn) => {
 };
 
 // services grid
+window._renderGrid = renderGrid;
 function renderGrid() {
   const q = (document.getElementById('svcSearch')?.value || '').toLowerCase();
   const list = allSvcs.filter(s => (activeCat==='all'||s.category===activeCat) && (!q||s.name.toLowerCase().includes(q)));
@@ -400,9 +402,11 @@ window.filterBillServices = renderGrid;
 
 window.toggleSvc = (id, name, price) => {
   if (sel[id]) delete sel[id]; else sel[id] = {name, price, qty:1};
+  window._sel = sel;
   renderGrid(); renderSel(); calcTotal();
 };
 
+window._renderSel = renderSel;
 function renderSel() {
   const entries = Object.entries(sel);
   document.getElementById('selectedWrap').style.display = entries.length ? '' : 'none';
@@ -419,7 +423,7 @@ function renderSel() {
 }
 
 window.chgQty = (id, d) => {
-  if (sel[id]) { sel[id].qty = Math.max(1, sel[id].qty + d); renderSel(); calcTotal(); }
+  if (sel[id]) { sel[id].qty = Math.max(1, sel[id].qty + d); window._sel = sel; renderSel(); calcTotal(); }
 };
 
 window.calcTotal = () => {
@@ -488,7 +492,8 @@ window.saveBill = async () => {
     await updateBillingCustomer(cid, {visit_count: (window._cvisits||0) + 1});
     showToast('Bill saved!', 'success');
     window._showReceipt({id: ref.id, ...bill});
-    window._sel = {}; window._cid = null; window._cname = ''; window._cvisits = 0;
+    Object.keys(window._sel).forEach(k => delete window._sel[k]);
+    window._cid = null; window._cname = ''; window._cvisits = 0;
     document.getElementById('custPhone').value = '';
     document.getElementById('custInfo').style.display = 'none';
     document.getElementById('newCustForm').style.display = 'none';
