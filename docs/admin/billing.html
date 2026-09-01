@@ -512,8 +512,8 @@ window.calcTotal = () => {
   document.getElementById('totalAmt').textContent = '₹' + total;
 
   const dr = document.getElementById('discountRow');
-  dr.style.cssText = disc > 0 ? 'display:flex!important;font-size:0.9rem;color:#ffc36b;' : 'display:none!important;';
-  if (disc > 0) document.getElementById('discountAmt').textContent = '-₹' + Math.round(sub*disc/100);
+  dr.style.cssText = (disc > 0 && sub > 0) ? 'display:flex!important;font-size:0.9rem;color:#ffc36b;' : 'display:none!important;';
+  if (disc > 0 && sub > 0) document.getElementById('discountAmt').textContent = '-₹' + Math.round(sub*disc/100);
 
   const cr = document.getElementById('couponRow');
   cr.style.cssText = couponDisc > 0 ? 'display:flex!important;font-size:0.9rem;color:#7ce0aa;' : 'display:none!important;';
