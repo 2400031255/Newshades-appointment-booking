@@ -33,21 +33,21 @@ export async function updateBill(id, data) {
   return updateDoc(doc(db, 'bills', id), data);
 }
 
-// ── Billing Services (separate from main services) ────────────────────────
+// ── Billing Services (reads from main 'services' collection) ─────────────
 export async function getBillingServices(activeOnly = false) {
-  const snap = await getDocs(collection(db, 'billing_services'));
+  const snap = await getDocs(collection(db, 'services'));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!activeOnly) return all;
   return all.filter(s => s.is_active === true || s.is_active === 1 || s.is_active == null);
 }
 export async function createBillingService(data) {
-  return addDoc(collection(db, 'billing_services'), { ...data, created_at: serverTimestamp() });
+  return addDoc(collection(db, 'services'), { ...data, created_at: serverTimestamp() });
 }
 export async function updateBillingService(id, data) {
-  return updateDoc(doc(db, 'billing_services', id), data);
+  return updateDoc(doc(db, 'services', id), data);
 }
 export async function deleteBillingService(id) {
-  return deleteDoc(doc(db, 'billing_services', id));
+  return deleteDoc(doc(db, 'services', id));
 }
 
 // ── Billing Customers ─────────────────────────────────────────────────────
@@ -159,6 +159,7 @@ export function calcGST(amount, gstPct = 18) {
 }
 
 // ── Bill number generator ─────────────────────────────────────────────────
-export function generateBillNo(id) {
-  return 'NS' + new Date().getFullYear().toString().slice(-2) + id.slice(-6).toUpperCase();
+export function generateBillNo(id, date) {
+  const yr = date ? String(date).slice(2,4) : new Date().getFullYear().toString().slice(-2);
+  return 'NS' + yr + id.slice(-6).toUpperCase();
 }
