@@ -394,8 +394,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getServices, createService, updateService, deleteService, showToast, esc } from '../js/firebase.js';
-import { createBill, getAllBills, deleteBill, getBillingCustomers, findCustomerByPhone, createBillingCustomer, updateBillingCustomer, deleteBillingCustomer, getAllCoupons, findCoupon, createCoupon, updateCoupon, deleteCoupon, incrementCouponUsage, calcBillAnalytics, calcGST, generateBillNo } from '../js/billing.js';
+import { requireAuth, logoutUser, getUserProfile, showToast, esc } from '../js/firebase.js';
+import { createBill, getBill, getAllBills, deleteBill, getBillingCustomers, findCustomerByPhone, createBillingCustomer, updateBillingCustomer, deleteBillingCustomer, getAllCoupons, findCoupon, createCoupon, updateCoupon, deleteCoupon, incrementCouponUsage, calcBillAnalytics, generateBillNo, getBillingServices, createBillingService, updateBillingService, deleteBillingService } from '../js/billing.js';
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
@@ -420,7 +420,7 @@ window._gstOn = () => gstOn;
 window._appliedCoupon = () => appliedCoupon;
 
 async function init() {
-  [allSvcs, allCusts] = await Promise.all([getServices(true), getBillingCustomers()]);
+  [allSvcs, allCusts] = await Promise.all([getBillingServices(true), getBillingCustomers()]);
   renderCatTabs(); renderGrid(); renderCustTable(); renderSvcMgmt(); loadStats();
 }
 init();
@@ -559,11 +559,6 @@ window.applyCoupon = async () => {
   }
   calcTotal();
 };
-</script>
-
-<script type="module">
-import { showToast, esc } from '../js/firebase.js';
-import { createBill, findCustomerByPhone, createBillingCustomer, updateBillingCustomer, incrementCouponUsage, calcGST, generateBillNo } from '../js/billing.js';
 
 window.searchCustomer = async () => {
   const phone = document.getElementById('custPhone').value.trim();
@@ -719,11 +714,6 @@ window.shareWhatsApp = () => {
   const msg = `*NEWSHADES FAMILY SALON*\n*Receipt — ${b.bill_no||b.id.slice(-8).toUpperCase()}*\n\nDate: ${b.date} ${b.time}\nCustomer: ${b.customer_name}\n\n${items}\n\n*Total: ₹${b.total}*\nPayment: ${b.payment}\n\nThank you! Visit again 😊`;
   window.open('https://wa.me/91' + b.customer_phone + '?text=' + encodeURIComponent(msg), '_blank');
 };
-</script>
-
-<script type="module">
-import { showToast, esc } from '../js/firebase.js';
-import { getAllBills, deleteBill, getBillingCustomers, createBillingCustomer, deleteBillingCustomer, calcBillAnalytics, generateBillNo } from '../js/billing.js';
 
 let revenueChart = null;
 
@@ -918,11 +908,6 @@ window.deleteVisit = async (id) => {
   try { await deleteBill(id); showToast('Deleted', 'success'); document.getElementById('histModal').style.display = 'none'; }
   catch(e) { showToast('Failed', 'danger'); }
 };
-</script>
-
-<script type="module">
-import { getServices, createService, updateService, deleteService, showToast, esc } from '../js/firebase.js';
-import { getAllCoupons, createCoupon, updateCoupon, deleteCoupon } from '../js/billing.js';
 
 // ── Coupons ────────────────────────────────────────────────────────────────
 window.renderCoupons = async () => {
@@ -981,7 +966,7 @@ window.deleteCouponRow = async (id, code) => {
 
 // ── Services ───────────────────────────────────────────────────────────────
 window.renderSvcMgmt = async () => {
-  const svcs = await getServices();
+  const svcs = await getBillingServices();
   document.getElementById('svcCount').textContent = '(' + svcs.length + ')';
   document.getElementById('svcMgmtBody').innerHTML = svcs.length
     ? svcs.map((s,i) =>
@@ -1008,7 +993,7 @@ window.addService = async () => {
   const dur = parseInt(document.getElementById('newSvcDur').value) || 0;
   if (!name || !cat || isNaN(price)) { showToast('Fill name, category and price', 'warning'); return; }
   try {
-    await createService({name, category:cat, price, duration:dur, is_active:true});
+    await createBillingService({name, category:cat, price, duration:dur, is_active:true});
     showToast('Service added!', 'success');
     ['newSvcName','newSvcCat','newSvcPrice','newSvcDur'].forEach(id => document.getElementById(id).value = '');
     window.renderSvcMgmt();
@@ -1032,7 +1017,7 @@ window.saveEditSvc = async () => {
   const dur = parseInt(document.getElementById('editSvcDur').value) || 0;
   if (!name || !cat || isNaN(price)) { showToast('Fill all fields', 'warning'); return; }
   try {
-    await updateService(id, {name, category:cat, price, duration:dur});
+    await updateBillingService(id, {name, category:cat, price, duration:dur});
     document.getElementById('editSvcModal').style.display = 'none';
     showToast('Updated!', 'success');
     window.renderSvcMgmt();
@@ -1041,7 +1026,7 @@ window.saveEditSvc = async () => {
 
 window.deleteSvc = async (id, name) => {
   if (!confirm('Delete ' + name + '?')) return;
-  try { await deleteService(id); showToast('Deleted', 'success'); window.renderSvcMgmt(); }
+  try { await deleteBillingService(id); showToast('Deleted', 'success'); window.renderSvcMgmt(); }
   catch(e) { showToast('Failed', 'danger'); }
 };
 </script>

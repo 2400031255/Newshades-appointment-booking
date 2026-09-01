@@ -33,6 +33,23 @@ export async function updateBill(id, data) {
   return updateDoc(doc(db, 'bills', id), data);
 }
 
+// ── Billing Services (separate from main services) ────────────────────────
+export async function getBillingServices(activeOnly = false) {
+  const snap = await getDocs(collection(db, 'billing_services'));
+  const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  if (!activeOnly) return all;
+  return all.filter(s => s.is_active === true || s.is_active === 1 || s.is_active == null);
+}
+export async function createBillingService(data) {
+  return addDoc(collection(db, 'billing_services'), { ...data, created_at: serverTimestamp() });
+}
+export async function updateBillingService(id, data) {
+  return updateDoc(doc(db, 'billing_services', id), data);
+}
+export async function deleteBillingService(id) {
+  return deleteDoc(doc(db, 'billing_services', id));
+}
+
 // ── Billing Customers ─────────────────────────────────────────────────────
 export async function getBillingCustomers() {
   const snap = await getDocs(collection(db, 'billing_customers'));
