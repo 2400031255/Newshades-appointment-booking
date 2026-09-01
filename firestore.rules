@@ -97,5 +97,21 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // ── Billing: Bills ────────────────────────────────────────────────────
+    match /bills/{id} {
+      allow read: if isAdmin() || isEmployee();
+      allow create: if isAdmin() || isEmployee();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Billing: Customers ────────────────────────────────────────────────
+    match /billing_customers/{id} {
+      allow read: if isAdmin() || isEmployee();
+      allow create: if isAdmin() || isEmployee();
+      allow update: if isAdmin() || isEmployee();
+      allow delete: if isAdmin();
+    }
   }
 }
