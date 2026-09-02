@@ -131,7 +131,10 @@ const _unsub = onAuthStateChanged(auth, async user => {
   if (user) {
     try {
       const [profile, emp] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid, true)]);
-      if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+      if (profile?.is_admin) {
+        localStorage.setItem('ns_auth', JSON.stringify({role:'admin', name: profile.full_name || user.email}));
+        window.location.href = 'admin/dashboard.html'; return;
+      }
       if (emp) {
         if (emp.deleted || emp.is_active === 0 || emp.is_active === false) {
           await signOut(auth);
@@ -186,7 +189,10 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
     ]);
 
     // Admin check FIRST — admin bypasses all other checks
-    if (profile?.is_admin) { window.location.href = 'admin/dashboard.html'; return; }
+    if (profile?.is_admin) {
+      localStorage.setItem('ns_auth', JSON.stringify({role:'admin', name: profile.full_name || identifier}));
+      window.location.href = 'admin/dashboard.html'; return;
+    }
 
     if (settings?.maintenance_mode === true) {
       await signOut(auth);
