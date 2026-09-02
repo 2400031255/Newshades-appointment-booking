@@ -3,31 +3,57 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Billing - New Shades Admin</title>
+<title>Billing & Reports - New Shades Admin</title>
 <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
 <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/></noscript>
 <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
 <link href="../style.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
+/* ── Tabs ── */
+.bill-tab{padding:9px 20px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-size:0.85rem;cursor:pointer;transition:all 0.15s;font-weight:600;}
+.bill-tab.active{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:var(--gold-2);}
+/* ── Service cards ── */
 .svc-card{padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.15s;user-select:none;position:relative;}
 .svc-card:hover{border-color:rgba(212,175,55,0.5);background:rgba(212,175,55,0.07);transform:translateY(-1px);}
 .svc-card.selected{border-color:rgba(212,175,55,0.9);background:rgba(212,175,55,0.13);box-shadow:0 4px 16px rgba(212,175,55,0.15);}
 .svc-card-name{font-size:0.82rem;font-weight:600;color:#fff;margin-bottom:3px;line-height:1.3;}
 .svc-card-price{font-size:0.85rem;color:var(--gold-2);font-weight:700;}
 .svc-card-cat{font-size:0.68rem;color:rgba(255,255,255,0.35);margin-top:2px;}
+/* ── Category pills ── */
 .cat-pill{padding:5px 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-size:0.78rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
 .cat-pill.active{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.45);color:var(--gold-2);}
+/* ── Qty controls ── */
 .qty-ctrl{display:flex;align-items:center;gap:6px;justify-content:center;}
 .qty-btn{width:28px;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
 .qty-btn:hover{background:rgba(212,175,55,0.2);border-color:rgba(212,175,55,0.4);}
 .qty-num{color:#fff;font-weight:700;min-width:22px;text-align:center;font-size:0.9rem;}
 .remove-btn{background:none;border:none;color:rgba(255,100,100,0.6);cursor:pointer;padding:4px 6px;border-radius:6px;transition:all 0.15s;}
 .remove-btn:hover{color:#ff6b6b;background:rgba(255,100,100,0.1);}
-.printer-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
-.printer-connected{background:#22c55e;box-shadow:0 0 6px #22c55e;}
-.printer-disconnected{background:#ef4444;box-shadow:0 0 6px #ef4444;}
+/* ── Printer status ── */
+.printer-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0;}
+.printer-connected{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+.printer-disconnected{background:#ef4444;box-shadow:0 0 8px #ef4444;}
+/* ── Scrollbar ── */
+#svcGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;max-height:380px;overflow-y:auto;overflow-x:hidden;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,0.4) rgba(255,255,255,0.04);}
+#svcGrid::-webkit-scrollbar{width:5px;}
+#svcGrid::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:4px;}
+#svcGrid::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.35);border-radius:4px;}
+/* ── Report stat cards ── */
+.rpt-stat{padding:18px 20px;border-radius:16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);}
+.rpt-stat-val{font-size:1.6rem;font-weight:900;color:var(--gold-2);font-family:'Playfair Display',serif;}
+.rpt-stat-lbl{font-size:0.78rem;color:rgba(255,255,255,0.45);margin-top:2px;}
+/* ── Period pills ── */
+.period-pill{padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-size:0.8rem;cursor:pointer;transition:all 0.15s;font-weight:600;}
+.period-pill.active{background:rgba(212,175,55,0.15);border-color:rgba(212,175,55,0.5);color:var(--gold-2);}
+/* ── Phone validation ── */
+.phone-invalid{border-color:rgba(255,100,100,0.6)!important;}
+.phone-valid{border-color:rgba(34,197,94,0.6)!important;}
+/* ── Receipt ── */
 .rcpt{font-family:'Courier New',Courier,monospace;font-size:13px;color:#111;background:#fff;padding:18px 16px 24px;width:100%;box-sizing:border-box;}
 .rcpt-center{text-align:center;}
 .rcpt-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:3px solid #111;box-shadow:0 2px 8px rgba(0,0,0,0.18);}
@@ -44,21 +70,24 @@
 .rcpt-barcode{font-size:20px;letter-spacing:4px;color:#111;margin:6px 0;}
 .rcpt-barcode-num{font-size:10px;letter-spacing:3px;color:#555;margin-top:2px;}
 .rcpt-rupee{font-family:Arial,sans-serif;}
-#svcGrid::-webkit-scrollbar{width:5px;}
-#svcGrid::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:4px;}
-#svcGrid::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.35);border-radius:4px;}
-#svcGrid::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.6);}
+/* ── Quick print button ── */
+.btn-quick-print{padding:12px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;cursor:pointer;font-weight:700;font-size:0.9rem;flex:1;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-quick-print:hover{opacity:0.9;}
+/* ── Report table ── */
+.rpt-table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+.rpt-table th{padding:10px 12px;text-align:left;color:rgba(255,255,255,0.4);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid rgba(255,255,255,0.06);}
+.rpt-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);}
+.rpt-table tr:hover td{background:rgba(255,255,255,0.02);}
 @media print{
   @page{size:80mm auto;margin:0;}
   html,body{margin:0!important;padding:0!important;background:#fff!important;}
   body *{visibility:hidden!important;}
-  #thermalFrame,#thermalFrame *,#testFrame,#testFrame *{visibility:visible!important;}
-  #thermalFrame,#testFrame{position:fixed!important;top:0!important;left:0!important;width:80mm!important;display:block!important;}
+  #thermalFrame,#thermalFrame *{visibility:visible!important;}
+  #thermalFrame{position:fixed!important;top:0!important;left:0!important;width:80mm!important;display:block!important;}
 }
 </style>
 </head>
 <body class="admin-body">
-
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2">
@@ -86,164 +115,235 @@
       <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
       <h6 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar me-2" style="color:var(--gold);"></i>Billing &amp; POS</h6>
     </div>
-    <div class="d-flex align-items-center gap-3">
-      <div id="printerStatus" style="display:flex;align-items:center;font-size:0.82rem;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div style="display:flex;align-items:center;font-size:0.8rem;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);">
         <span class="printer-dot printer-disconnected" id="printerDot"></span>
-        <span id="printerLabel" style="color:rgba(255,255,255,0.6);">Printer: Checking...</span>
+        <span id="printerLabel" style="color:#ef4444;">Printer: Disconnected</span>
       </div>
       <button onclick="testPrint()" style="padding:5px 12px;border-radius:999px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);color:var(--gold);font-size:0.78rem;cursor:pointer;font-weight:600;"><i class="fas fa-print me-1"></i>Test Print</button>
       <span class="text-muted small" id="adminName"></span>
     </div>
   </div>
 
-  <div class="admin-page-body">
-    <div class="row g-4">
-      <div class="col-lg-7">
+  <!-- Tab Navigation -->
+  <div class="admin-page-body" style="padding-top:16px;">
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <button class="bill-tab active" onclick="switchTab('pos',this)"><i class="fas fa-cash-register me-2"></i>New Bill</button>
+      <button class="bill-tab" onclick="switchTab('reports',this)"><i class="fas fa-chart-bar me-2"></i>Reports &amp; Analytics</button>
+    </div>
 
-        <!-- Customer Details -->
-        <div class="admin-card mb-4">
-          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-user me-2" style="color:var(--gold);"></i>Customer Details</h6>
-          <div class="row g-3">
-            <div class="col-sm-6">
-              <label class="field-label mb-1">PHONE NUMBER</label>
-              <div class="position-relative">
-                <i class="fas fa-phone position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:var(--gold);pointer-events:none;font-size:0.82rem;"></i>
-                <input type="tel" id="custPhone" maxlength="10" placeholder="10-digit mobile" oninput="this.value=this.value.replace(/[^0-9]/g,'')" style="width:100%;padding:11px 14px 11px 38px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.95rem;"/>
-              </div>
-            </div>
-            <div class="col-sm-6">
-              <label class="field-label mb-1">CUSTOMER NAME</label>
-              <div class="position-relative">
-                <i class="fas fa-user position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:var(--gold);pointer-events:none;font-size:0.82rem;"></i>
-                <input type="text" id="custName" placeholder="Customer name" style="width:100%;padding:11px 14px 11px 38px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.95rem;"/>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Manual Service Entry -->
-        <div class="admin-card mb-4">
-          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-pen me-2" style="color:var(--gold);"></i>Add Manual Service</h6>
-          <div class="row g-2 align-items-end">
-            <div class="col-sm-5">
-              <label class="field-label mb-1">SERVICE NAME</label>
-              <input type="text" id="manualName" placeholder="e.g. Special Treatment" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
-            </div>
-            <div class="col-sm-3">
-              <label class="field-label mb-1">COST (Rs.)</label>
-              <input type="number" id="manualCost" min="0" placeholder="0" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
-            </div>
-            <div class="col-sm-2">
-              <label class="field-label mb-1">QTY</label>
-              <input type="number" id="manualQty" min="1" value="1" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
-            </div>
-            <div class="col-sm-2">
-              <button onclick="addManualService()" class="btn-gold w-100" style="padding:10px;border-radius:12px;font-size:0.88rem;justify-content:center;"><i class="fas fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Select Services from Catalogue -->
-        <div class="admin-card mb-4">
-          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-concierge-bell me-2" style="color:var(--gold);"></i>Select Services</h6>
-          <div class="position-relative mb-3">
-            <i class="fas fa-search position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3);pointer-events:none;"></i>
-            <input type="text" id="svcSearch" placeholder="Search services..." oninput="filterServices()" style="width:100%;padding:10px 14px 10px 38px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;outline:none;font-size:0.88rem;"/>
-          </div>
-          <div id="catFilter" class="d-flex gap-2 flex-wrap mb-3"></div>
-          <div id="svcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;max-height:420px;overflow-y:auto;overflow-x:hidden;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,0.4) rgba(255,255,255,0.05);"></div>
-        </div>
-
-        <!-- Selected Services Table -->
-        <div class="admin-card mb-4" id="selectedCard" style="display:none;">
-          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-list me-2" style="color:var(--gold);"></i>Selected Services</h6>
-          <div class="table-responsive">
-            <table class="admin-table">
-              <thead><tr><th>Service</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th><th></th></tr></thead>
-              <tbody id="selectedBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Discount & Payment -->
-        <div class="admin-card">
-          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-tag me-2" style="color:var(--gold);"></i>Discount &amp; Payment</h6>
-          <div class="row g-3">
-            <div class="col-sm-4">
-              <label class="field-label mb-1">DISCOUNT TYPE</label>
-              <select id="discType" onchange="calcTotal()" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(20,18,28,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
-                <option value="none">No Discount</option>
-                <option value="percent">Percentage (%)</option>
-                <option value="flat">Fixed Amount (Rs.)</option>
-              </select>
-            </div>
-            <div class="col-sm-4">
-              <label class="field-label mb-1">DISCOUNT VALUE</label>
-              <input type="number" id="discValue" min="0" placeholder="0" oninput="calcTotal()" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/>
-            </div>
-            <div class="col-sm-4">
-              <label class="field-label mb-1">PAYMENT METHOD</label>
-              <select id="payMethod" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(20,18,28,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
-                <option value="Cash">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="Card">Card</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Right Column: Bill Summary -->
-      <div class="col-lg-5">
-        <div style="position:sticky;top:80px;">
+    <!-- ══ POS TAB ══ -->
+    <div id="tabPos">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <!-- Customer -->
           <div class="admin-card mb-4">
-            <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-receipt me-2" style="color:var(--gold);"></i>Bill Summary</h6>
-            <div id="summaryLines" style="min-height:60px;margin-bottom:16px;">
-              <div style="color:rgba(255,255,255,0.3);font-size:0.88rem;text-align:center;padding:20px 0;">No services selected</div>
-            </div>
-            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
-              <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;color:rgba(255,255,255,0.6);"><span>Subtotal</span><span id="sumSubtotal">Rs.0</span></div>
-              <div class="d-flex justify-content-between mb-2" id="sumDiscRow" style="font-size:0.9rem;color:#ffc36b;display:none;"><span id="sumDiscLabel">Discount</span><span id="sumDiscount">-Rs.0</span></div>
-              <div style="border-top:2px solid rgba(201,168,76,0.3);margin:12px 0;"></div>
-              <div class="d-flex justify-content-between" style="font-size:1.2rem;font-weight:800;color:#fff;">
-                <span style="font-family:'Playfair Display',serif;">TOTAL</span>
-                <span id="sumTotal" style="color:var(--gold-2);font-family:'Playfair Display',serif;">Rs.0</span>
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-user me-2" style="color:var(--gold);"></i>Customer Details</h6>
+            <div class="row g-3">
+              <div class="col-sm-6">
+                <label class="field-label mb-1">PHONE NUMBER <span style="color:#ef4444;">*</span></label>
+                <div class="position-relative">
+                  <i class="fas fa-phone position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:var(--gold);pointer-events:none;font-size:0.82rem;"></i>
+                  <input type="tel" id="custPhone" maxlength="10" placeholder="10-digit mobile" oninput="validatePhone(this)" style="width:100%;padding:11px 14px 11px 38px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.95rem;transition:border-color 0.2s;"/>
+                </div>
+                <div id="phoneHint" style="font-size:0.75rem;margin-top:4px;color:rgba(255,255,255,0.35);">Enter 10 digits</div>
+              </div>
+              <div class="col-sm-6">
+                <label class="field-label mb-1">CUSTOMER NAME <span style="color:#ef4444;">*</span></label>
+                <div class="position-relative">
+                  <i class="fas fa-user position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:var(--gold);pointer-events:none;font-size:0.82rem;"></i>
+                  <input type="text" id="custName" placeholder="Customer name" style="width:100%;padding:11px 14px 11px 38px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.95rem;"/>
+                </div>
               </div>
             </div>
           </div>
-          <button id="generateBtn" onclick="generateBill()" class="btn-gold w-100" style="padding:16px;border-radius:14px;font-size:1.05rem;font-weight:800;justify-content:center;letter-spacing:0.03em;box-shadow:0 8px 32px rgba(212,175,55,0.3);">
-            <i class="fas fa-check-circle me-2"></i>GENERATE BILL
-          </button>
+          <!-- Manual Service -->
+          <div class="admin-card mb-4">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-pen me-2" style="color:var(--gold);"></i>Add Manual Service</h6>
+            <div class="row g-2 align-items-end">
+              <div class="col-sm-5">
+                <label class="field-label mb-1">SERVICE NAME</label>
+                <input type="text" id="manualName" placeholder="e.g. Special Treatment" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
+              </div>
+              <div class="col-sm-3">
+                <label class="field-label mb-1">COST (₹)</label>
+                <input type="number" id="manualCost" min="0" placeholder="0" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
+              </div>
+              <div class="col-sm-2">
+                <label class="field-label mb-1">QTY</label>
+                <input type="number" id="manualQty" min="1" value="1" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;"/>
+              </div>
+              <div class="col-sm-2">
+                <button onclick="addManualService()" class="btn-gold w-100" style="padding:10px;border-radius:12px;font-size:0.88rem;justify-content:center;"><i class="fas fa-plus"></i></button>
+              </div>
+            </div>
+          </div>
+          <!-- Service Catalogue -->
+          <div class="admin-card mb-4">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-concierge-bell me-2" style="color:var(--gold);"></i>Select Services</h6>
+            <div class="position-relative mb-3">
+              <i class="fas fa-search position-absolute" style="left:13px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.3);pointer-events:none;"></i>
+              <input type="text" id="svcSearch" placeholder="Search services..." oninput="renderGrid()" style="width:100%;padding:10px 14px 10px 38px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;outline:none;font-size:0.88rem;"/>
+            </div>
+            <div id="catFilter" class="d-flex gap-2 flex-wrap mb-3" style="overflow-x:auto;padding-bottom:4px;scrollbar-width:none;"></div>
+            <div id="svcGrid"></div>
+            <div id="svcCount" style="font-size:0.75rem;color:rgba(255,255,255,0.3);margin-top:8px;text-align:right;"></div>
+          </div>
+          <!-- Selected -->
+          <div class="admin-card mb-4" id="selectedCard" style="display:none;">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-list me-2" style="color:var(--gold);"></i>Selected Services</h6>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead><tr><th>Service</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th><th></th></tr></thead>
+                <tbody id="selectedBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Discount & Payment -->
+          <div class="admin-card">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-tag me-2" style="color:var(--gold);"></i>Discount &amp; Payment</h6>
+            <div class="row g-3">
+              <div class="col-sm-4">
+                <label class="field-label mb-1">DISCOUNT TYPE</label>
+                <select id="discType" onchange="calcTotal()" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(20,18,28,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
+                  <option value="none">No Discount</option>
+                  <option value="percent">Percentage (%)</option>
+                  <option value="flat">Fixed Amount (₹)</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="field-label mb-1">DISCOUNT VALUE</label>
+                <input type="number" id="discValue" min="0" placeholder="0" oninput="calcTotal()" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;"/>
+              </div>
+              <div class="col-sm-4">
+                <label class="field-label mb-1">PAYMENT METHOD</label>
+                <select id="payMethod" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(20,18,28,0.95);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;">
+                  <option value="Cash">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Card">Card</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Bill Summary -->
+        <div class="col-lg-5">
+          <div style="position:sticky;top:80px;">
+            <div class="admin-card mb-4">
+              <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-receipt me-2" style="color:var(--gold);"></i>Bill Summary</h6>
+              <div id="summaryLines" style="min-height:60px;margin-bottom:16px;">
+                <div style="color:rgba(255,255,255,0.3);font-size:0.88rem;text-align:center;padding:20px 0;">No services selected</div>
+              </div>
+              <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
+                <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;color:rgba(255,255,255,0.6);"><span>Subtotal</span><span id="sumSubtotal">₹0</span></div>
+                <div class="d-flex justify-content-between mb-2" id="sumDiscRow" style="font-size:0.9rem;color:#ffc36b;display:none;"><span id="sumDiscLabel">Discount</span><span id="sumDiscount">-₹0</span></div>
+                <div style="border-top:2px solid rgba(201,168,76,0.3);margin:12px 0;"></div>
+                <div class="d-flex justify-content-between" style="font-size:1.2rem;font-weight:800;color:#fff;">
+                  <span style="font-family:'Playfair Display',serif;">TOTAL</span>
+                  <span id="sumTotal" style="color:var(--gold-2);font-family:'Playfair Display',serif;">₹0</span>
+                </div>
+              </div>
+            </div>
+            <button id="generateBtn" onclick="generateBill()" class="btn-gold w-100" style="padding:16px;border-radius:14px;font-size:1.05rem;font-weight:800;justify-content:center;letter-spacing:0.03em;box-shadow:0 8px 32px rgba(212,175,55,0.3);">
+              <i class="fas fa-check-circle me-2"></i>GENERATE BILL
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
+
+    <!-- ══ REPORTS TAB ══ -->
+    <div id="tabReports" style="display:none;">
+      <!-- Period selector -->
+      <div class="d-flex gap-2 flex-wrap align-items-center mb-4">
+        <button class="period-pill active" data-period="today" onclick="setPeriod(this)">Today</button>
+        <button class="period-pill" data-period="week" onclick="setPeriod(this)">This Week</button>
+        <button class="period-pill" data-period="month" onclick="setPeriod(this)">This Month</button>
+        <button class="period-pill" data-period="year" onclick="setPeriod(this)">This Year</button>
+        <button class="period-pill" data-period="custom" onclick="setPeriod(this)">Custom</button>
+        <div id="customRange" style="display:none;gap:8px;" class="d-flex align-items-center">
+          <input type="date" id="dateFrom" onchange="loadReports()" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.82rem;"/>
+          <span style="color:rgba(255,255,255,0.4);">to</span>
+          <input type="date" id="dateTo" onchange="loadReports()" style="padding:6px 10px;border-radius:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.82rem;"/>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button onclick="downloadPDF()" style="padding:7px 16px;border-radius:999px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:0.8rem;cursor:pointer;font-weight:600;"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+          <button onclick="downloadCSV()" style="padding:7px 16px;border-radius:999px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#86efac;font-size:0.8rem;cursor:pointer;font-weight:600;"><i class="fas fa-file-csv me-1"></i>CSV</button>
+        </div>
+      </div>
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="rpt-stat"><div class="rpt-stat-val" id="rptBills">—</div><div class="rpt-stat-lbl"><i class="fas fa-receipt me-1"></i>Total Bills</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rpt-stat"><div class="rpt-stat-val" id="rptRevenue">—</div><div class="rpt-stat-lbl"><i class="fas fa-rupee-sign me-1"></i>Total Revenue</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rpt-stat"><div class="rpt-stat-val" id="rptAvg">—</div><div class="rpt-stat-lbl"><i class="fas fa-chart-line me-1"></i>Avg Bill Value</div></div></div>
+        <div class="col-6 col-lg-3"><div class="rpt-stat"><div class="rpt-stat-val" id="rptDiscount">—</div><div class="rpt-stat-lbl"><i class="fas fa-tag me-1"></i>Total Discounts</div></div></div>
+      </div>
+      <!-- Charts -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+          <div class="admin-card">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-chart-bar me-2" style="color:var(--gold);"></i>Revenue Over Time</h6>
+            <canvas id="revenueChart" height="100"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="admin-card">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-chart-pie me-2" style="color:var(--gold);"></i>Payment Methods</h6>
+            <canvas id="payChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+          <div class="admin-card">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-star me-2" style="color:var(--gold);"></i>Top Services</h6>
+            <canvas id="topSvcChart" height="160"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="admin-card">
+            <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-clock me-2" style="color:var(--gold);"></i>Bills by Hour</h6>
+            <canvas id="hourChart" height="160"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- Bills table -->
+      <div class="admin-card">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-list me-2" style="color:var(--gold);"></i>All Bills <span id="rptTableCount" style="color:var(--gold);font-size:0.85rem;"></span></h6>
+          <input type="text" id="rptSearch" placeholder="Search by name / phone / bill no..." oninput="renderRptTable()" style="padding:7px 14px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;outline:none;font-size:0.82rem;width:260px;"/>
+        </div>
+        <div class="table-responsive">
+          <table class="rpt-table">
+            <thead><tr><th>Bill No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Items</th><th style="text-align:right;">Subtotal</th><th style="text-align:right;">Discount</th><th style="text-align:right;">Total</th><th>Payment</th><th></th></tr></thead>
+            <tbody id="rptTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- end admin-page-body -->
+</div><!-- end admin-content -->
 
 <!-- Receipt Modal -->
-<div id="receiptModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);backdrop-filter:blur(8px);align-items:center;justify-content:center;overflow-y:auto;padding:20px;">
+<div id="receiptModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);backdrop-filter:blur(8px);align-items:center;justify-content:center;overflow-y:auto;padding:20px;">
   <div style="background:#f5f0e8;border-radius:16px;width:min(100%,420px);margin:auto;box-shadow:0 40px 100px rgba(0,0,0,0.7);overflow:hidden;">
     <div id="receiptContent"></div>
     <div class="d-flex gap-2 p-3" style="background:#fff;border-top:1px solid #e0d8cc;">
-      <button onclick="printBill()" style="flex:1;padding:12px;border-radius:10px;background:#1a1a2e;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:0.9rem;"><i class="fas fa-print me-2"></i>Print Bill</button>
-      <button onclick="shareWhatsApp()" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;cursor:pointer;font-weight:700;font-size:0.9rem;"><i class="fab fa-whatsapp me-2"></i>WhatsApp</button>
-      <button onclick="closeReceipt()" style="padding:12px 16px;border-radius:10px;background:#f0ebe0;color:#333;border:1px solid #ddd;cursor:pointer;font-weight:700;">X</button>
+      <button class="btn-quick-print" onclick="quickPrint()"><i class="fas fa-bolt me-1"></i>Quick Print</button>
+      <button onclick="shareWhatsApp()" style="flex:1;padding:12px;border-radius:10px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;border:none;cursor:pointer;font-weight:700;font-size:0.9rem;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fab fa-whatsapp"></i>WhatsApp</button>
+      <button onclick="closeReceipt()" style="padding:12px 16px;border-radius:10px;background:#f0ebe0;color:#333;border:1px solid #ddd;cursor:pointer;font-weight:700;">✕</button>
     </div>
   </div>
 </div>
 
-<!-- Thermal Print Frame -->
+<!-- Thermal Frame (hidden, used for print) -->
 <div id="thermalFrame" style="display:none;position:fixed;top:0;left:0;width:80mm;z-index:99999;background:#fff;"></div>
-
-<!-- Test Print Frame -->
-<div id="testFrame" style="display:none;position:fixed;top:0;left:0;width:80mm;z-index:99999;background:#fff;"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getUserProfile, listenServices, showToast } from '../js/firebase.js';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from '../js/config.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 
@@ -256,77 +356,66 @@ if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 // Sidebar
-const sidebar = document.getElementById('adminSidebar');
-const overlay = document.getElementById('sidebarOverlay');
+const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
 document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 
-// Printer status — default disconnected, only go green after a real print event
-let printerEverPrinted = false;
-function setPrinterStatus(connected) {
+// ── Printer Status ──────────────────────────────────────────────────────
+function setPrinterUI(connected) {
   const dot = document.getElementById('printerDot');
-  const label = document.getElementById('printerLabel');
-  if (connected) {
-    dot.className = 'printer-dot printer-connected';
-    label.textContent = 'Printer: Connected';
-    label.style.color = '#22c55e';
-  } else {
-    dot.className = 'printer-dot printer-disconnected';
-    label.textContent = 'Printer: Disconnected';
-    label.style.color = '#ef4444';
-  }
+  const lbl = document.getElementById('printerLabel');
+  dot.className = 'printer-dot ' + (connected ? 'printer-connected' : 'printer-disconnected');
+  lbl.textContent = connected ? 'Printer: Connected' : 'Printer: Disconnected';
+  lbl.style.color = connected ? '#22c55e' : '#ef4444';
 }
-// Always start as disconnected — user must actually print to confirm
-setPrinterStatus(false);
+// Default: disconnected. Only goes green after a real print event.
+setPrinterUI(false);
+window.addEventListener('afterprint', () => { setPrinterUI(true); document.getElementById('thermalFrame').style.display = 'none'; });
 
-window.addEventListener('beforeprint', () => setPrinterStatus(true));
-window.addEventListener('afterprint', () => {
-  printerEverPrinted = true;
-  document.getElementById('thermalFrame').style.display = 'none';
-  document.getElementById('testFrame').style.display = 'none';
-  // Keep green after successful print
-  setPrinterStatus(true);
-});
-
-// Test Print
-window.testPrint = () => {
-  const now = new Date();
-  const html = '<div class="rcpt">' +
-    '<div class="rcpt-center" style="margin-bottom:14px;">' +
-    '<img src="../images/logo.jpeg" class="rcpt-logo" onerror="this.style.display=\'none\'"/>' +
-    '<div class="rcpt-salon">NEWSHADES FAMILY SALON</div>' +
-    '<div class="rcpt-tagline">Look Beautiful, Feel Beautiful</div>' +
-    '</div>' +
-    '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center"><div class="rcpt-title">PRINTER TEST</div></div>' +
-    '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">&#10003; Printer is working correctly!</div>' +
-    '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + now.toLocaleTimeString('en-IN') + '</div>' +
-    '<div class="rcpt-center" style="font-size:11px;color:#555;">' + now.toLocaleDateString('en-IN') + '</div>' +
-    '</div>';
-  openThermalPrint(html);
+// ── Tab switching ───────────────────────────────────────────────────────
+window.switchTab = (tab, btn) => {
+  document.querySelectorAll('.bill-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tabPos').style.display = tab === 'pos' ? '' : 'none';
+  document.getElementById('tabReports').style.display = tab === 'reports' ? '' : 'none';
+  if (tab === 'reports') loadReports();
 };
 
-let allSvcs = [], cart = {}, manualCart = {}, activeCat = 'All', lastBill = null, manualCounter = 0;
+// ── Phone validation ────────────────────────────────────────────────────
+window.validatePhone = (inp) => {
+  inp.value = inp.value.replace(/[^0-9]/g, '');
+  const hint = document.getElementById('phoneHint');
+  if (inp.value.length === 0) {
+    inp.style.borderColor = 'rgba(201,168,76,0.25)';
+    hint.textContent = 'Enter 10 digits'; hint.style.color = 'rgba(255,255,255,0.35)';
+  } else if (inp.value.length < 10) {
+    inp.style.borderColor = 'rgba(255,100,100,0.6)';
+    hint.textContent = (10 - inp.value.length) + ' more digits needed'; hint.style.color = '#fca5a5';
+  } else {
+    inp.style.borderColor = 'rgba(34,197,94,0.6)';
+    hint.textContent = '✓ Valid number'; hint.style.color = '#86efac';
+  }
+};
+
+// ── Services ────────────────────────────────────────────────────────────
+let allSvcs = [], cart = {}, manualCart = {}, activeCat = 'All', manualCounter = 0, lastBill = null;
 
 listenServices(svcs => {
   allSvcs = svcs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
-  buildCatFilter();
-  renderGrid();
+  buildCatFilter(); renderGrid();
 });
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function buildCatFilter() {
   const cats = ['All', ...new Set(allSvcs.map(s => s.category).filter(Boolean))];
   document.getElementById('catFilter').innerHTML = cats.map(c =>
-    '<button class="cat-pill' + (c===activeCat?' active':'') + '" onclick="setCat(this)" data-cat="' + esc(c) + '">' + esc(c) + '</button>'
+    '<button class="cat-pill' + (c === activeCat ? ' active' : '') + '" data-cat="' + esc(c) + '" onclick="setCat(this)">' + esc(c) + '</button>'
   ).join('');
 }
 
-window.setCat = (btn) => {
+window.setCat = btn => {
   activeCat = btn.dataset.cat;
   document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -335,36 +424,34 @@ window.setCat = (btn) => {
 
 function renderGrid() {
   const q = (document.getElementById('svcSearch').value || '').toLowerCase();
-  const list = allSvcs.filter(s => (activeCat==='All'||s.category===activeCat) && (!q||(s.service_name||'').toLowerCase().includes(q)));
+  const list = allSvcs.filter(s =>
+    (activeCat === 'All' || s.category === activeCat) &&
+    (!q || (s.service_name || '').toLowerCase().includes(q))
+  );
+  document.getElementById('svcCount').textContent = list.length + ' service' + (list.length !== 1 ? 's' : '');
   if (!list.length) {
     document.getElementById('svcGrid').innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:0.85rem;padding:20px;text-align:center;grid-column:1/-1;">No services found</div>';
     return;
   }
   document.getElementById('svcGrid').innerHTML = list.map(s => {
     const sel = !!cart[s.id];
-    return '<div class="svc-card' + (sel?' selected':'') + '" data-id="' + esc(s.id) + '" onclick="toggleSvc(this.dataset.id)">' +
-      '<div class="svc-card-name">' + esc(s.service_name||'') + '</div>' +
-      '<div class="svc-card-price">&#8377;' + Math.round(s.price||0) + '</div>' +
-      '<div class="svc-card-cat">' + esc(s.category||'') + '</div>' +
+    return '<div class="svc-card' + (sel ? ' selected' : '') + '" data-id="' + esc(s.id) + '" onclick="toggleSvc(this.dataset.id)">' +
+      '<div class="svc-card-name">' + esc(s.service_name || '') + '</div>' +
+      '<div class="svc-card-price">&#8377;' + Math.round(s.price || 0) + '</div>' +
+      '<div class="svc-card-cat">' + esc(s.category || '') + '</div>' +
       (sel ? '<div style="position:absolute;top:6px;right:8px;color:var(--gold);font-size:0.7rem;"><i class="fas fa-check-circle"></i></div>' : '') +
       '</div>';
   }).join('');
 }
 
-window.filterServices = renderGrid;
-
-window.toggleSvc = (id) => {
+window.toggleSvc = id => {
   const svc = allSvcs.find(s => s.id === id);
   if (!svc) return;
-  if (cart[id]) {
-    delete cart[id];
-  } else {
-    cart[id] = { name: svc.service_name, price: Math.round(svc.price||0), qty: 1, type: 'catalogue' };
-  }
+  if (cart[id]) delete cart[id];
+  else cart[id] = { name: svc.service_name, price: Math.round(svc.price || 0), qty: 1, type: 'catalogue' };
   renderGrid(); renderCart(); calcTotal();
 };
 
-// Manual service add
 window.addManualService = () => {
   const name = document.getElementById('manualName').value.trim();
   const cost = parseFloat(document.getElementById('manualCost').value) || 0;
@@ -380,17 +467,20 @@ window.addManualService = () => {
   showToast('Manual service added', 'success');
 };
 
-function allCartEntries() {
-  return [...Object.entries(cart), ...Object.entries(manualCart)];
-}
+function allEntries() { return [...Object.entries(cart), ...Object.entries(manualCart)]; }
 
 function renderCart() {
-  const entries = allCartEntries();
+  const entries = allEntries();
   document.getElementById('selectedCard').style.display = entries.length ? '' : 'none';
   document.getElementById('selectedBody').innerHTML = entries.map(([id, item]) =>
     '<tr>' +
-    '<td class="admin-td-bold" style="font-size:0.88rem;">' + esc(item.name) + (item.type==='manual' ? ' <span style="font-size:0.68rem;color:rgba(212,175,55,0.7);background:rgba(212,175,55,0.1);padding:1px 6px;border-radius:4px;">manual</span>' : '') + '</td>' +
-    '<td style="text-align:center;"><div class="qty-ctrl"><button class="qty-btn" data-id="' + id + '" data-d="-1" onclick="chgQty(this.dataset.id,parseInt(this.dataset.d))">-</button><span class="qty-num">' + item.qty + '</span><button class="qty-btn" data-id="' + id + '" data-d="1" onclick="chgQty(this.dataset.id,parseInt(this.dataset.d))">+</button></div></td>' +
+    '<td class="admin-td-bold" style="font-size:0.88rem;">' + esc(item.name) +
+    (item.type === 'manual' ? ' <span style="font-size:0.68rem;color:rgba(212,175,55,0.7);background:rgba(212,175,55,0.1);padding:1px 6px;border-radius:4px;">manual</span>' : '') + '</td>' +
+    '<td style="text-align:center;"><div class="qty-ctrl">' +
+    '<button class="qty-btn" data-id="' + id + '" data-d="-1" onclick="chgQty(this.dataset.id,+this.dataset.d)">-</button>' +
+    '<span class="qty-num">' + item.qty + '</span>' +
+    '<button class="qty-btn" data-id="' + id + '" data-d="1" onclick="chgQty(this.dataset.id,+this.dataset.d)">+</button>' +
+    '</div></td>' +
     '<td style="text-align:right;color:rgba(255,255,255,0.6);font-size:0.88rem;">&#8377;' + item.price + '</td>' +
     '<td style="text-align:right;color:var(--gold-2);font-weight:700;">&#8377;' + (item.price * item.qty) + '</td>' +
     '<td><button class="remove-btn" data-id="' + id + '" onclick="removeSvc(this.dataset.id)"><i class="fas fa-times"></i></button></td>' +
@@ -399,102 +489,76 @@ function renderCart() {
 }
 
 window.chgQty = (id, d) => {
-  if (cart[id]) { cart[id].qty = Math.max(1, cart[id].qty + d); }
-  else if (manualCart[id]) { manualCart[id].qty = Math.max(1, manualCart[id].qty + d); }
+  if (cart[id]) cart[id].qty = Math.max(1, cart[id].qty + d);
+  else if (manualCart[id]) manualCart[id].qty = Math.max(1, manualCart[id].qty + d);
   renderCart(); calcTotal();
 };
-
-window.removeSvc = (id) => {
+window.removeSvc = id => {
   if (cart[id]) { delete cart[id]; renderGrid(); }
-  else if (manualCart[id]) { delete manualCart[id]; }
+  else delete manualCart[id];
   renderCart(); calcTotal();
 };
 
 window.calcTotal = () => {
-  const sub = allCartEntries().reduce((s,[,v]) => s + v.price * v.qty, 0);
+  const sub = allEntries().reduce((s, [, v]) => s + v.price * v.qty, 0);
   const dtype = document.getElementById('discType').value;
   const dval = parseFloat(document.getElementById('discValue').value) || 0;
   let disc = 0;
   if (dtype === 'percent') disc = Math.min(Math.round(sub * dval / 100), sub);
   else if (dtype === 'flat') disc = Math.min(Math.round(dval), sub);
   const total = Math.max(0, sub - disc);
-
   document.getElementById('sumSubtotal').textContent = '₹' + sub;
   document.getElementById('sumTotal').textContent = '₹' + total;
-
   const dr = document.getElementById('sumDiscRow');
   if (disc > 0) {
     dr.style.display = 'flex';
     document.getElementById('sumDiscLabel').textContent = dtype === 'percent' ? 'Discount (' + dval + '%)' : 'Discount (Flat)';
     document.getElementById('sumDiscount').textContent = '-₹' + disc;
-  } else {
-    dr.style.display = 'none';
-  }
-
-  const entries = allCartEntries();
+  } else { dr.style.display = 'none'; }
+  const entries = allEntries();
   document.getElementById('summaryLines').innerHTML = entries.length
-    ? entries.map(([,s]) => '<div class="d-flex justify-content-between mb-2" style="font-size:0.88rem;color:rgba(255,255,255,0.75);"><span>' + esc(s.name) + (s.qty > 1 ? ' x' + s.qty : '') + '</span><span>Rs.' + (s.price * s.qty) + '</span></div>').join('')
+    ? entries.map(([, s]) => '<div class="d-flex justify-content-between mb-2" style="font-size:0.88rem;color:rgba(255,255,255,0.75);"><span>' + esc(s.name) + (s.qty > 1 ? ' ×' + s.qty : '') + '</span><span>₹' + (s.price * s.qty) + '</span></div>').join('')
     : '<div style="color:rgba(255,255,255,0.3);font-size:0.88rem;text-align:center;padding:20px 0;">No services selected</div>';
 };
 
-function genBillNo() {
-  const y = new Date().getFullYear();
-  const r = Math.random().toString(36).slice(2,8).toUpperCase();
-  return 'NS-' + y + '-' + r;
-}
+// ── Generate Bill ───────────────────────────────────────────────────────
+function genBillNo() { return 'NS-' + new Date().getFullYear() + '-' + Math.random().toString(36).slice(2,8).toUpperCase(); }
 
 window.generateBill = async () => {
   const phone = document.getElementById('custPhone').value.trim();
   const name = document.getElementById('custName').value.trim();
-  const entries = allCartEntries();
-  if (!phone || phone.length !== 10) { showToast('Enter valid 10-digit phone number', 'warning'); return; }
-  if (!name) { showToast('Enter customer name', 'warning'); return; }
+  const entries = allEntries();
+  if (!phone || phone.length !== 10) { showToast('Enter valid 10-digit phone number', 'warning'); document.getElementById('custPhone').focus(); return; }
+  if (!name) { showToast('Enter customer name', 'warning'); document.getElementById('custName').focus(); return; }
   if (!entries.length) { showToast('Select at least one service', 'warning'); return; }
-
-  const sub = entries.reduce((s,[,v]) => s + v.price * v.qty, 0);
+  const sub = entries.reduce((s, [, v]) => s + v.price * v.qty, 0);
   const dtype = document.getElementById('discType').value;
   const dval = parseFloat(document.getElementById('discValue').value) || 0;
   let disc = 0;
   if (dtype === 'percent') disc = Math.min(Math.round(sub * dval / 100), sub);
   else if (dtype === 'flat') disc = Math.min(Math.round(dval), sub);
   const total = Math.max(0, sub - disc);
-
-  const billNo = genBillNo();
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-IN', {day:'2-digit',month:'2-digit',year:'numeric'});
-  const timeStr = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit',hour12:true});
-
   const billData = {
-    bill_no: billNo,
-    customer_name: name,
-    customer_phone: phone,
-    items: entries.map(([,v]) => ({ name: v.name, price: v.price, qty: v.qty, total: v.price * v.qty, type: v.type || 'catalogue' })),
-    subtotal: sub,
-    discount_type: dtype,
-    discount_value: dval,
-    discount_amount: disc,
-    total,
+    bill_no: genBillNo(),
+    customer_name: name, customer_phone: phone,
+    items: entries.map(([, v]) => ({ name: v.name, price: v.price, qty: v.qty, total: v.price * v.qty, type: v.type || 'catalogue' })),
+    subtotal: sub, discount_type: dtype, discount_value: dval, discount_amount: disc, total,
     payment_method: document.getElementById('payMethod').value,
-    date: now.toISOString().slice(0,10),
-    time: timeStr,
+    date: now.toISOString().slice(0, 10),
+    time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
     created_at: serverTimestamp()
   };
-
   const btn = document.getElementById('generateBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
   try {
     await addDoc(collection(_db, 'bills'), billData);
-    lastBill = { ...billData, dateStr, timeStr };
-    showToast('Bill generated successfully!', 'success');
+    lastBill = { ...billData, dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }) };
+    showToast('Bill generated!', 'success');
     showReceipt(lastBill);
     resetForm();
-  } catch(e) {
-    showToast('Failed: ' + e.message, 'danger');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>GENERATE BILL';
-  }
+  } catch (e) { showToast('Failed: ' + e.message, 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle me-2"></i>GENERATE BILL'; }
 };
 
 function resetForm() {
@@ -503,79 +567,71 @@ function resetForm() {
   document.getElementById('custName').value = '';
   document.getElementById('discType').value = 'none';
   document.getElementById('discValue').value = '';
+  document.getElementById('phoneHint').textContent = 'Enter 10 digits';
+  document.getElementById('phoneHint').style.color = 'rgba(255,255,255,0.35)';
+  document.getElementById('custPhone').style.borderColor = 'rgba(201,168,76,0.25)';
   renderGrid(); renderCart(); calcTotal();
 }
 
-function showReceipt(b) {
+// ── Receipt HTML builder ────────────────────────────────────────────────
+function buildReceiptHTML(b) {
   const R = '<span class="rcpt-rupee">&#8377;</span>';
   const rows = b.items.map(i =>
-    '<div class="rcpt-svc-row"><span>' + esc(i.name) + (i.qty > 1 ? ' x' + i.qty : '') + '</span><span>' + R + i.total + '</span></div>'
+    '<div class="rcpt-svc-row"><span>' + esc(i.name) + (i.qty > 1 ? ' ×' + i.qty : '') + '</span><span>' + R + i.total + '</span></div>'
   ).join('');
-
-  const subLine = b.discount_amount > 0
-    ? '<div class="rcpt-row"><span>Subtotal</span><span>' + R + b.subtotal + '</span></div>' : '';
+  const subLine = b.discount_amount > 0 ? '<div class="rcpt-row"><span>Subtotal</span><span>' + R + b.subtotal + '</span></div>' : '';
   const discLine = b.discount_amount > 0
     ? '<div class="rcpt-row"><span>Discount' + (b.discount_type === 'percent' ? ' (' + b.discount_value + '%)' : ' (Flat)') + '</span><span>- ' + R + b.discount_amount + '</span></div>' : '';
-
-  const barcode = b.bill_no.replace(/[^A-Z0-9]/g,'');
-  const html =
-    '<div class="rcpt">' +
+  const barcode = b.bill_no.replace(/[^A-Z0-9]/g, '');
+  return '<div class="rcpt">' +
     '<div class="rcpt-center" style="margin-bottom:14px;">' +
     '<img src="../images/logo.jpeg" class="rcpt-logo" onerror="this.style.display=\'none\'"/>' +
     '<div class="rcpt-salon">NEWSHADES FAMILY SALON</div>' +
-    '<div class="rcpt-tagline">Look Beautiful, Feel Beautiful</div>' +
-    '</div>' +
+    '<div class="rcpt-tagline">Look Beautiful, Feel Beautiful</div></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center"><div class="rcpt-title">PAYMENT RECEIPT</div></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-row"><span>Bill No</span><span style="font-weight:900;">' + b.bill_no + '</span></div>' +
-    '<div class="rcpt-row"><span>Date</span><span style="font-weight:700;">' + b.dateStr + '</span></div>' +
-    '<div class="rcpt-row"><span>Time</span><span style="font-weight:700;">' + b.timeStr + '</span></div>' +
+    '<div class="rcpt-row"><span>Date</span><span style="font-weight:700;">' + (b.dateStr || b.date) + '</span></div>' +
+    '<div class="rcpt-row"><span>Time</span><span style="font-weight:700;">' + b.time + '</span></div>' +
     '<div class="rcpt-row"><span>Customer</span><span style="font-weight:700;">' + esc(b.customer_name) + '</span></div>' +
     '<div class="rcpt-row"><span>Mobile</span><span style="font-weight:700;">' + b.customer_phone + '</span></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-row-bold"><span>SERVICE</span><span>AMOUNT</span></div>' +
-    '<hr class="rcpt-divider"/>' +
-    rows +
-    '<hr class="rcpt-divider"/>' +
-    subLine + discLine +
+    '<hr class="rcpt-divider"/>' + rows +
+    '<hr class="rcpt-divider"/>' + subLine + discLine +
     '<hr class="rcpt-solid"/>' +
     '<div class="rcpt-total-row"><span>TOTAL AMOUNT</span><span>' + R + b.total + '</span></div>' +
     '<hr class="rcpt-solid"/>' +
     '<div class="rcpt-row"><span>Payment Mode</span><span style="font-weight:700;">' + b.payment_method + '</span></div>' +
-    '<div class="rcpt-row"><span>Payment Status</span><span style="font-weight:900;">✓ Paid</span></div>' +
+    '<div class="rcpt-row"><span>Payment Status</span><span style="font-weight:900;">&#10003; Paid</span></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center" style="margin-top:10px;">' +
     '<div style="font-size:15px;font-weight:900;letter-spacing:2px;">Thank You! Visit Again &#128522;</div>' +
     '<div style="font-size:11px;color:#444;margin-top:6px;">Newshades Family Salon</div>' +
     '<div style="font-size:11px;color:#666;">Look Beautiful, Feel Beautiful</div>' +
     '<div class="rcpt-barcode" style="margin-top:12px;">||| |||| ||| || |||| ||| || ||||</div>' +
-    '<div class="rcpt-barcode-num">' + barcode + '</div>' +
-    '</div></div>';
+    '<div class="rcpt-barcode-num">' + barcode + '</div></div></div>';
+}
 
+function showReceipt(b) {
+  const html = buildReceiptHTML(b);
   document.getElementById('receiptContent').innerHTML = html;
   document.getElementById('thermalFrame').innerHTML = html;
   document.getElementById('receiptModal').style.display = 'flex';
 }
-
 window.closeReceipt = () => { document.getElementById('receiptModal').style.display = 'none'; };
 
-window.printBill = () => {
-  if (!lastBill) return;
-  openThermalPrint(document.getElementById('thermalFrame').innerHTML);
-};
-
+// ── Quick Print (popup window — bypasses browser headers/footers) ───────
 function openThermalPrint(html) {
-  const win = window.open('', '_blank', 'width=320,height=600,toolbar=0,menubar=0,scrollbars=0');
-  if (!win) { showToast('Allow popups for this site to print', 'warning'); return; }
+  const win = window.open('', '_blank', 'width=320,height=700,toolbar=0,menubar=0,scrollbars=0,status=0');
+  if (!win) { showToast('Allow popups for this site to enable printing', 'warning'); return; }
   win.document.write(
-    '<!DOCTYPE html><html><head>' +
-    '<meta charset="UTF-8"/>' +
+    '<!DOCTYPE html><html><head><meta charset="UTF-8"/>' +
     '<style>' +
     '@page{size:80mm auto;margin:0;}' +
     'html,body{margin:0;padding:0;background:#fff;width:80mm;}' +
-    'body{font-family:\'Courier New\',Courier,monospace;font-size:13px;color:#111;}' +
-    '.rcpt{padding:18px 16px 24px;width:80mm;box-sizing:border-box;}' +
+    '.rcpt{font-family:"Courier New",Courier,monospace;font-size:13px;color:#111;padding:18px 16px 24px;width:80mm;box-sizing:border-box;}' +
     '.rcpt-center{text-align:center;}' +
     '.rcpt-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:3px solid #111;}' +
     '.rcpt-salon{font-size:16px;font-weight:900;letter-spacing:4px;text-transform:uppercase;margin-bottom:3px;}' +
@@ -591,28 +647,257 @@ function openThermalPrint(html) {
     '.rcpt-barcode{font-size:20px;letter-spacing:4px;color:#111;margin:6px 0;}' +
     '.rcpt-barcode-num{font-size:10px;letter-spacing:3px;color:#555;margin-top:2px;}' +
     '.rcpt-rupee{font-family:Arial,sans-serif;}' +
-    '</style></head><body>' +
-    html +
+    '</style></head><body>' + html +
     '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
     '</body></html>'
   );
   win.document.close();
-  setPrinterStatus(true);
+  setPrinterUI(true);
 }
+
+window.quickPrint = () => {
+  if (!lastBill) return;
+  openThermalPrint(buildReceiptHTML(lastBill));
+};
+
+window.testPrint = () => {
+  const now = new Date();
+  const html = '<div class="rcpt"><div class="rcpt-center" style="margin-bottom:14px;">' +
+    '<img src="../images/logo.jpeg" class="rcpt-logo" onerror="this.style.display=\'none\'"/>' +
+    '<div class="rcpt-salon">NEWSHADES FAMILY SALON</div>' +
+    '<div class="rcpt-tagline">Look Beautiful, Feel Beautiful</div></div>' +
+    '<hr class="rcpt-divider"/><div class="rcpt-center"><div class="rcpt-title">PRINTER TEST</div></div>' +
+    '<hr class="rcpt-divider"/>' +
+    '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">&#10003; Printer is working correctly!</div>' +
+    '<hr class="rcpt-divider"/>' +
+    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + now.toLocaleTimeString('en-IN') + '</div>' +
+    '<div class="rcpt-center" style="font-size:11px;color:#555;">' + now.toLocaleDateString('en-IN') + '</div></div>';
+  openThermalPrint(html);
+};
 
 window.shareWhatsApp = () => {
   if (!lastBill) return;
   const b = lastBill;
-  const lines = b.items.map(i => '- ' + i.name + (i.qty > 1 ? ' x' + i.qty : '') + ' Rs.' + i.total).join('\n');
-  const disc = b.discount_amount > 0 ? '\nDiscount: -Rs.' + b.discount_amount : '';
+  const lines = b.items.map(i => '- ' + i.name + (i.qty > 1 ? ' ×' + i.qty : '') + ' ₹' + i.total).join('\n');
+  const disc = b.discount_amount > 0 ? '\nDiscount: -₹' + b.discount_amount : '';
   const msg = 'NEWSHADES FAMILY SALON\nReceipt - ' + b.bill_no +
-    '\n\nDate: ' + b.dateStr + ' ' + b.timeStr +
-    '\nCustomer: ' + b.customer_name +
-    '\n\n' + lines + disc +
-    '\n\nTOTAL: ₹' + b.total +
-    '\nPayment: ' + b.payment_method +
-    '\n\nThank you! Visit again';
+    '\n\nDate: ' + (b.dateStr || b.date) + ' ' + b.time +
+    '\nCustomer: ' + b.customer_name + '\n\n' + lines + disc +
+    '\n\nTOTAL: ₹' + b.total + '\nPayment: ' + b.payment_method + '\n\nThank you! Visit again ☺';
   window.open('https://wa.me/91' + b.customer_phone + '?text=' + encodeURIComponent(msg), '_blank');
+};
+
+// ── Reports ─────────────────────────────────────────────────────────────
+let allBills = [], currentPeriod = 'today', revenueChart, payChart, topSvcChart, hourChart;
+
+async function fetchBills() {
+  const snap = await getDocs(query(collection(_db, 'bills'), orderBy('created_at', 'desc')));
+  allBills = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+function getDateRange(period) {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  if (period === 'today') return { from: today, to: today };
+  if (period === 'week') {
+    const d = new Date(now); d.setDate(d.getDate() - d.getDay());
+    return { from: d.toISOString().slice(0, 10), to: today };
+  }
+  if (period === 'month') return { from: today.slice(0, 7) + '-01', to: today };
+  if (period === 'year') return { from: today.slice(0, 4) + '-01-01', to: today };
+  if (period === 'custom') {
+    return {
+      from: document.getElementById('dateFrom').value || today,
+      to: document.getElementById('dateTo').value || today
+    };
+  }
+  return { from: today, to: today };
+}
+
+function filterBills(period) {
+  const { from, to } = getDateRange(period);
+  return allBills.filter(b => b.date >= from && b.date <= to);
+}
+
+window.setPeriod = btn => {
+  document.querySelectorAll('.period-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPeriod = btn.dataset.period;
+  document.getElementById('customRange').style.display = currentPeriod === 'custom' ? 'flex' : 'none';
+  if (currentPeriod !== 'custom') loadReports();
+};
+
+window.loadReports = async () => {
+  await fetchBills();
+  const bills = filterBills(currentPeriod);
+  const totalRev = bills.reduce((s, b) => s + (b.total || 0), 0);
+  const totalDisc = bills.reduce((s, b) => s + (b.discount_amount || 0), 0);
+  document.getElementById('rptBills').textContent = bills.length;
+  document.getElementById('rptRevenue').textContent = '₹' + totalRev.toLocaleString('en-IN');
+  document.getElementById('rptAvg').textContent = bills.length ? '₹' + Math.round(totalRev / bills.length) : '₹0';
+  document.getElementById('rptDiscount').textContent = '₹' + totalDisc.toLocaleString('en-IN');
+  renderCharts(bills);
+  renderRptTable();
+};
+
+function renderCharts(bills) {
+  // Revenue over time
+  const revMap = {};
+  bills.forEach(b => { revMap[b.date] = (revMap[b.date] || 0) + (b.total || 0); });
+  const revDates = Object.keys(revMap).sort();
+  destroyChart(revenueChart);
+  revenueChart = new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: revDates.map(d => { const [y,m,day]=d.split('-'); return day+'/'+m; }),
+      datasets: [{ label: 'Revenue (₹)', data: revDates.map(d => revMap[d]),
+        backgroundColor: 'rgba(212,175,55,0.5)', borderColor: '#D4AF37', borderWidth: 2, borderRadius: 6 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 11 }, callback: v => '₹'+v }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+  });
+
+  // Payment methods pie
+  const payMap = {};
+  bills.forEach(b => { payMap[b.payment_method] = (payMap[b.payment_method] || 0) + 1; });
+  destroyChart(payChart);
+  payChart = new Chart(document.getElementById('payChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(payMap),
+      datasets: [{ data: Object.values(payMap), backgroundColor: ['#D4AF37','#22c55e','#3b82f6','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive: true, plugins: { legend: { labels: { color: 'rgba(255,255,255,0.6)', font: { size: 12 } } } } }
+  });
+
+  // Top services bar
+  const svcMap = {};
+  bills.forEach(b => (b.items || []).forEach(i => { svcMap[i.name] = (svcMap[i.name] || 0) + (i.total || 0); }));
+  const topSvcs = Object.entries(svcMap).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  destroyChart(topSvcChart);
+  topSvcChart = new Chart(document.getElementById('topSvcChart'), {
+    type: 'bar',
+    data: {
+      labels: topSvcs.map(([n]) => n.length > 14 ? n.slice(0,14)+'…' : n),
+      datasets: [{ label: 'Revenue', data: topSvcs.map(([,v]) => v),
+        backgroundColor: 'rgba(34,197,94,0.5)', borderColor: '#22c55e', borderWidth: 2, borderRadius: 6 }]
+    },
+    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:10}, callback: v=>'₹'+v }, grid:{color:'rgba(255,255,255,0.05)'} },
+        y: { ticks: { color: 'rgba(255,255,255,0.6)', font:{size:11} }, grid:{display:false} } } }
+  });
+
+  // Bills by hour
+  const hourMap = Array(24).fill(0);
+  bills.forEach(b => {
+    if (b.time) {
+      const match = b.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (match) {
+        let h = parseInt(match[1]);
+        if (match[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+        if (match[3].toUpperCase() === 'AM' && h === 12) h = 0;
+        hourMap[h]++;
+      }
+    }
+  });
+  const peakHours = hourMap.map((v,i) => ({ h: i, v })).filter(x => x.v > 0);
+  destroyChart(hourChart);
+  hourChart = new Chart(document.getElementById('hourChart'), {
+    type: 'line',
+    data: {
+      labels: Array.from({length:24},(_,i)=>i+':00'),
+      datasets: [{ label: 'Bills', data: hourMap, fill: true,
+        backgroundColor: 'rgba(99,179,255,0.15)', borderColor: '#63b3ff', borderWidth: 2,
+        pointBackgroundColor: '#63b3ff', tension: 0.4 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:10} }, grid:{color:'rgba(255,255,255,0.05)'} },
+        y: { ticks: { color: 'rgba(255,255,255,0.4)', font:{size:10} }, grid:{color:'rgba(255,255,255,0.05)'} } } }
+  });
+}
+
+function destroyChart(c) { if (c) { try { c.destroy(); } catch{} } }
+
+window.renderRptTable = () => {
+  const bills = filterBills(currentPeriod);
+  const q = (document.getElementById('rptSearch').value || '').toLowerCase();
+  const filtered = q ? bills.filter(b =>
+    (b.customer_name||'').toLowerCase().includes(q) ||
+    (b.customer_phone||'').includes(q) ||
+    (b.bill_no||'').toLowerCase().includes(q)
+  ) : bills;
+  document.getElementById('rptTableCount').textContent = '(' + filtered.length + ')';
+  document.getElementById('rptTableBody').innerHTML = filtered.length
+    ? filtered.map(b => '<tr>' +
+        '<td style="font-weight:700;color:var(--gold-2);">' + esc(b.bill_no||'') + '</td>' +
+        '<td>' + esc(b.date||'') + '</td>' +
+        '<td style="font-weight:600;">' + esc(b.customer_name||'') + '</td>' +
+        '<td style="color:rgba(255,255,255,0.5);">' + esc(b.customer_phone||'') + '</td>' +
+        '<td style="color:rgba(255,255,255,0.5);font-size:0.8rem;">' + ((b.items||[]).map(i=>i.name).join(', ').slice(0,40)||'—') + '</td>' +
+        '<td style="text-align:right;">₹' + (b.subtotal||0) + '</td>' +
+        '<td style="text-align:right;color:#ffc36b;">' + (b.discount_amount > 0 ? '-₹'+b.discount_amount : '—') + '</td>' +
+        '<td style="text-align:right;font-weight:700;color:var(--gold-2);">₹' + (b.total||0) + '</td>' +
+        '<td><span style="padding:3px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;background:rgba(34,197,94,0.12);color:#86efac;">' + esc(b.payment_method||'') + '</span></td>' +
+        '<td><button onclick="reprintBill(\'' + b.id + '\')" style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);color:var(--gold);font-size:0.75rem;cursor:pointer;"><i class="fas fa-print"></i></button></td>' +
+        '</tr>'
+      ).join('')
+    : '<tr><td colspan="10" style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);">No bills found</td></tr>';
+};
+
+window.reprintBill = id => {
+  const b = allBills.find(x => x.id === id);
+  if (!b) return;
+  lastBill = { ...b, dateStr: b.date };
+  showReceipt(lastBill);
+};
+
+// ── PDF Download ────────────────────────────────────────────────────────
+window.downloadPDF = () => {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const bills = filterBills(currentPeriod);
+  const { from, to } = getDateRange(currentPeriod);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text('NEWSHADES FAMILY SALON', 105, 18, { align: 'center' });
+  doc.setFontSize(11); doc.setFont('helvetica','normal');
+  doc.text('Billing Report: ' + from + ' to ' + to, 105, 26, { align: 'center' });
+  doc.setFontSize(10);
+  const totalRev = bills.reduce((s,b)=>s+(b.total||0),0);
+  doc.text('Total Bills: ' + bills.length + '   |   Total Revenue: ₹' + totalRev.toLocaleString('en-IN'), 105, 34, { align: 'center' });
+  doc.autoTable({
+    startY: 42,
+    head: [['Bill No','Date','Customer','Phone','Items','Subtotal','Discount','Total','Payment']],
+    body: bills.map(b => [
+      b.bill_no||'', b.date||'', b.customer_name||'', b.customer_phone||'',
+      (b.items||[]).map(i=>i.name).join(', ').slice(0,40),
+      '₹'+(b.subtotal||0), b.discount_amount>0?'-₹'+b.discount_amount:'—',
+      '₹'+(b.total||0), b.payment_method||''
+    ]),
+    styles: { fontSize: 8, cellPadding: 3 },
+    headStyles: { fillColor: [212,175,55], textColor: [0,0,0], fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245,245,245] },
+    theme: 'striped'
+  });
+  doc.save('NewShades_Report_' + from + '_to_' + to + '.pdf');
+};
+
+// ── CSV Download ────────────────────────────────────────────────────────
+window.downloadCSV = () => {
+  const bills = filterBills(currentPeriod);
+  const { from, to } = getDateRange(currentPeriod);
+  const rows = [['Bill No','Date','Time','Customer','Phone','Items','Subtotal','Discount Type','Discount Value','Discount Amount','Total','Payment Method']];
+  bills.forEach(b => rows.push([
+    b.bill_no||'', b.date||'', b.time||'', b.customer_name||'', b.customer_phone||'',
+    (b.items||[]).map(i=>i.name+(i.qty>1?' x'+i.qty:'')).join(' | '),
+    b.subtotal||0, b.discount_type||'none', b.discount_value||0, b.discount_amount||0,
+    b.total||0, b.payment_method||''
+  ]));
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'NewShades_Report_' + from + '_to_' + to + '.csv';
+  a.click();
 };
 </script>
 </body>
