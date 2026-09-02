@@ -393,34 +393,208 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
-<script type="module">
-import { requireAuth, logoutUser, getUserProfile, showToast, esc } from '../js/firebase.js';
-import { createBill, getBill, getAllBills, deleteBill, getBillingCustomers, findCustomerByPhone, createBillingCustomer, updateBillingCustomer, deleteBillingCustomer, getAllCoupons, findCoupon, createCoupon, updateCoupon, deleteCoupon, incrementCouponUsage, calcBillAnalytics, generateBillNo, getBillingServices, createBillingService, updateBillingService, deleteBillingService } from '../js/billing.js';
+<script>
+// ── localStorage DB ────────────────────────────────────────────────────────
+const DB = {
+  get(k) { try { return JSON.parse(localStorage.getItem('ns_'+k)||'null'); } catch { return null; } },
+  set(k,v) { localStorage.setItem('ns_'+k, JSON.stringify(v)); },
+  getServices()   { return this.get('services') || defaultServices(); },
+  saveServices(s) { this.set('services', s); },
+  getCustomers()  { return this.get('customers') || {}; },
+  saveCustomers(c){ this.set('customers', c); },
+  getBills()      { return this.get('bills') || {}; },
+  saveBills(b)    { this.set('bills', b); },
+  getCoupons()    { return this.get('coupons') || {}; },
+  saveCoupons(c)  { this.set('coupons', c); },
+  getAuth()       { return this.get('auth') || {role:null}; }
+};
+function defaultServices() {
+  return {
+    's1':{name:'Haircut',price:200,category:'Hair',duration:30,is_active:true},
+    's2':{name:'Hair Wash',price:150,category:'Hair',duration:20,is_active:true},
+    's3':{name:'Hair Coloring',price:800,category:'Hair',duration:90,is_active:true},
+    's4':{name:'Hair Spa',price:600,category:'Hair',duration:60,is_active:true},
+    's5':{name:'Facial',price:500,category:'Skin',duration:60,is_active:true},
+    's6':{name:'Cleanup',price:300,category:'Skin',duration:45,is_active:true},
+    's7':{name:'Eyebrow Threading',price:50,category:'Threading',duration:10,is_active:true},
+    's8':{name:'Upper Lip Threading',price:30,category:'Threading',duration:5,is_active:true},
+    's9':{name:'Waxing (Full Arms)',price:250,category:'Waxing',duration:30,is_active:true},
+    's10':{name:'Waxing (Full Legs)',price:350,category:'Waxing',duration:40,is_active:true},
+    's11':{name:'Manicure',price:300,category:'Nails',duration:40,is_active:true},
+    's12':{name:'Pedicure',price:350,category:'Nails',duration:50,is_active:true},
+    's13':{name:'Bridal Makeup',price:3000,category:'Makeup',duration:120,is_active:true},
+    's14':{name:'Party Makeup',price:1500,category:'Makeup',duration:90,is_active:true},
+    's15':{name:'Head Massage',price:200,category:'Wellness',duration:30,is_active:true}
+  };
+}
+function genId(p){ return p+Math.random().toString(36).slice(2,8).toUpperCase(); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function showToast(msg, type='success') {
+  let t = document.getElementById('nsToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'nsToast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:12px;font-weight:600;font-size:0.9rem;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  const colors = {success:'background:#1a3a1a;color:#7ce0aa;border:1px solid rgba(37,211,102,0.3);',
+    warning:'background:#3a2a0a;color:#ffc36b;border:1px solid rgba(255,170,77,0.3);',
+    danger:'background:#3a0a0a;color:#ff9a9a;border:1px solid rgba(255,100,100,0.3);'};
+  t.style.cssText += colors[type]||colors.success;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.style.opacity = '0', 2500);
+}
+function generateBillNo(id, date) {
+  return 'NS' + (date||'').replace(/-/g,'').slice(2) + (id||'').slice(-4).toUpperCase();
+}
 
-const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
-document.getElementById('adminName').textContent = profile?.full_name || user.email;
+// ── Auth guard ─────────────────────────────────────────────────────────────
+const _auth = DB.getAuth();
+if (!_auth || !_auth.role) { window.location.href = '../login.html'; }
+document.getElementById('adminName').textContent = _auth.name || _auth.username || 'Admin';
 
 const sidebar = document.getElementById('adminSidebar');
 const overlay = document.getElementById('sidebarOverlay');
 document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); DB.set('auth',{role:null}); window.location.href='../login.html'; });
 
 const today = new Date().toISOString().slice(0,10);
 document.getElementById('rptFrom').value = today;
 document.getElementById('rptTo').value = today;
 
 // ── State ──────────────────────────────────────────────────────────────────
-let allSvcs = [], allCusts = [], sel = {}, activeCat = 'all';
+let allSvcs = [], sel = {}, activeCat = 'all';
 let gstOn = false, appliedCoupon = null;
 window._sel = sel;
 window._gstOn = () => gstOn;
 window._appliedCoupon = () => appliedCoupon;
 
-async function init() {
-  [allSvcs, allCusts] = await Promise.all([getBillingServices(true), getBillingCustomers()]);
+function getBillingServices(activeOnly) {
+  const svcs = DB.getServices();
+  return Object.entries(svcs).map(([id,s]) => ({id,...s})).filter(s => !activeOnly || s.is_active !== false);
+}
+function getBillingCustomers() {
+  const custs = DB.getCustomers();
+  return Object.entries(custs).map(([id,c]) => ({id,...c}));
+}
+function findCustomerByPhone(phone) {
+  const custs = DB.getCustomers();
+  const entry = Object.entries(custs).find(([,c]) => c.phone === phone);
+  return entry ? {id:entry[0],...entry[1]} : null;
+}
+function createBillingCustomer(data) {
+  const custs = DB.getCustomers();
+  const id = genId('C');
+  custs[id] = {visit_count:0, total_spent:0, ...data};
+  DB.saveCustomers(custs);
+  return {id};
+}
+function updateBillingCustomer(id, data) {
+  const custs = DB.getCustomers();
+  if (custs[id]) Object.assign(custs[id], data);
+  DB.saveCustomers(custs);
+}
+function deleteBillingCustomer(id) {
+  const custs = DB.getCustomers();
+  delete custs[id];
+  DB.saveCustomers(custs);
+}
+function getAllBills() {
+  const bills = DB.getBills();
+  return Object.entries(bills).map(([id,b]) => ({id,...b})).sort((a,b) => (b.date+b.time||'') > (a.date+a.time||'') ? 1 : -1);
+}
+function getBill(id) {
+  const b = DB.getBills()[id];
+  return b ? {id,...b} : null;
+}
+function createBill(data) {
+  const bills = DB.getBills();
+  const id = genId('B');
+  bills[id] = data;
+  DB.saveBills(bills);
+  return {id};
+}
+function deleteBill(id) {
+  const bills = DB.getBills();
+  delete bills[id];
+  DB.saveBills(bills);
+}
+function getAllCoupons() {
+  const c = DB.getCoupons();
+  return Object.entries(c).map(([id,v]) => ({id,...v}));
+}
+function findCoupon(code) {
+  const today = todayStr();
+  const c = DB.getCoupons();
+  const entry = Object.entries(c).find(([,v]) => v.code === code.toUpperCase() && v.is_active && (!v.valid_until||v.valid_until>=today) && (!v.usage_limit||(v.used_count||0)<v.usage_limit));
+  return entry ? {id:entry[0],...entry[1]} : null;
+}
+function createCoupon(data) {
+  const c = DB.getCoupons();
+  const id = genId('CP');
+  c[id] = {is_active:true, used_count:0, code:data.code.toUpperCase(), ...data};
+  DB.saveCoupons(c);
+}
+function updateCoupon(id, data) {
+  const c = DB.getCoupons();
+  if (c[id]) Object.assign(c[id], data);
+  DB.saveCoupons(c);
+}
+function deleteCoupon(id) {
+  const c = DB.getCoupons();
+  delete c[id];
+  DB.saveCoupons(c);
+}
+function incrementCouponUsage(id) {
+  const c = DB.getCoupons();
+  if (c[id]) c[id].used_count = (c[id].used_count||0) + 1;
+  DB.saveCoupons(c);
+}
+function createBillingService(data) {
+  const svcs = DB.getServices();
+  const id = genId('SV');
+  svcs[id] = data;
+  DB.saveServices(svcs);
+}
+function updateBillingService(id, data) {
+  const svcs = DB.getServices();
+  if (svcs[id]) Object.assign(svcs[id], data);
+  DB.saveServices(svcs);
+}
+function deleteBillingService(id) {
+  const svcs = DB.getServices();
+  delete svcs[id];
+  DB.saveServices(svcs);
+}
+function calcBillAnalytics(bills) {
+  const today = todayStr();
+  const now = new Date();
+  const weekAgo = new Date(now - 7*864e5).toISOString().slice(0,10);
+  const monthStart = today.slice(0,7) + '-01';
+  let todayRev=0,todayCount=0,weekRev=0,weekCount=0,monthRev=0,monthCount=0,gstTotal=0;
+  const payMap={}, svcMap={}, dailyMap={};
+  for (let i=13;i>=0;i--) { const d=new Date(now-i*864e5).toISOString().slice(0,10); dailyMap[d]=0; }
+  bills.forEach(b => {
+    const t = b.total||0;
+    if (b.date===today) { todayRev+=t; todayCount++; }
+    if (b.date>=weekAgo) { weekRev+=t; weekCount++; }
+    if (b.date>=monthStart) { monthRev+=t; monthCount++; }
+    gstTotal += b.gst_amount||0;
+    payMap[b.payment] = (payMap[b.payment]||0) + t;
+    if (dailyMap[b.date]!==undefined) dailyMap[b.date]+=t;
+    (b.items||[]).forEach(i => { if(!svcMap[i.name]) svcMap[i.name]={count:0,rev:0}; svcMap[i.name].count+=i.qty||1; svcMap[i.name].rev+=i.price*(i.qty||1); });
+  });
+  const topServices = Object.entries(svcMap).sort((a,b)=>b[1].count-a[1].count).slice(0,8);
+  const avgBill = bills.length ? Math.round(bills.reduce((s,b)=>s+(b.total||0),0)/bills.length) : 0;
+  return {todayRev,todayCount,weekRev,weekCount,monthRev,monthCount,avgBill,gstTotal,payMap,topServices,dailyMap};
+}
+
+function init() {
+  allSvcs = getBillingServices(true);
   renderCatTabs(); renderGrid(); renderCustTable(); renderSvcMgmt();
 }
 init();
@@ -431,7 +605,8 @@ window.showTab = (tab, btn) => {
   document.querySelectorAll('.billing-tab').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).style.display = '';
   btn.classList.add('active');
-  if (tab === 'reports') { loadStats(); loadReport(); }  if (tab === 'customers') renderCustTable();
+  if (tab === 'reports') { loadStats(); loadReport(); }
+  else if (tab === 'customers') renderCustTable();
   if (tab === 'coupons') renderCoupons();
   if (tab === 'services-mgmt') renderSvcMgmt();
 };
@@ -899,7 +1074,7 @@ window.viewHistory = async (cid, cname) => {
       cb.map(b =>
         `<tr>
           <td class="admin-td-muted" style="font-size:0.78rem;">${generateBillNo(b.id, b.date)}</td>
-          <td class="admin-td-muted">${b.date} ${b.time||''}</td></td>
+          <td class="admin-td-muted">${b.date} ${b.time||''}</td>
           <td style="font-size:0.82rem;color:rgba(255,255,255,0.6);">${(b.items||[]).map(i=>i.name).join(', ')}</td>
           <td style="color:var(--gold-2);font-weight:700;">₹${b.total}</td>
           <td><span class="pay-badge pay-${b.payment}">${b.payment}</span></td>
