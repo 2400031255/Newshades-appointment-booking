@@ -44,6 +44,10 @@
 .rcpt-barcode{font-size:20px;letter-spacing:4px;color:#111;margin:6px 0;}
 .rcpt-barcode-num{font-size:10px;letter-spacing:3px;color:#555;margin-top:2px;}
 .rcpt-rupee{font-family:Arial,sans-serif;}
+#svcGrid::-webkit-scrollbar{width:5px;}
+#svcGrid::-webkit-scrollbar-track{background:rgba(255,255,255,0.03);border-radius:4px;}
+#svcGrid::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.35);border-radius:4px;}
+#svcGrid::-webkit-scrollbar-thumb:hover{background:rgba(212,175,55,0.6);}
 @media print{
   @page{size:80mm auto;margin:0;}
   html,body{margin:0!important;padding:0!important;background:#fff!important;}
@@ -147,7 +151,7 @@
             <input type="text" id="svcSearch" placeholder="Search services..." oninput="filterServices()" style="width:100%;padding:10px 14px 10px 38px;border-radius:12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#fff;outline:none;font-size:0.88rem;"/>
           </div>
           <div id="catFilter" class="d-flex gap-2 flex-wrap mb-3"></div>
-          <div id="svcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;max-height:300px;overflow-y:auto;"></div>
+          <div id="svcGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;max-height:420px;overflow-y:auto;overflow-x:hidden;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,0.4) rgba(255,255,255,0.05);"></div>
         </div>
 
         <!-- Selected Services Table -->
@@ -200,7 +204,7 @@
             </div>
             <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
               <div class="d-flex justify-content-between mb-2" style="font-size:0.9rem;color:rgba(255,255,255,0.6);"><span>Subtotal</span><span id="sumSubtotal">Rs.0</span></div>
-              <div class="d-flex justify-content-between mb-2" id="sumDiscRow" style="font-size:0.9rem;color:#ffc36b;display:none !important;"><span id="sumDiscLabel">Discount</span><span id="sumDiscount">-Rs.0</span></div>
+              <div class="d-flex justify-content-between mb-2" id="sumDiscRow" style="font-size:0.9rem;color:#ffc36b;display:none;"><span id="sumDiscLabel">Discount</span><span id="sumDiscount">-Rs.0</span></div>
               <div style="border-top:2px solid rgba(201,168,76,0.3);margin:12px 0;"></div>
               <div class="d-flex justify-content-between" style="font-size:1.2rem;font-weight:800;color:#fff;">
                 <span style="font-family:'Playfair Display',serif;">TOTAL</span>
@@ -258,35 +262,31 @@ document.getElementById('sidebarToggle').addEventListener('click', () => { sideb
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 
-// Printer status detection
-function checkPrinter() {
+// Printer status — default disconnected, only go green after a real print event
+let printerEverPrinted = false;
+function setPrinterStatus(connected) {
   const dot = document.getElementById('printerDot');
   const label = document.getElementById('printerLabel');
-  // Use matchMedia print to detect if a printer is available
-  const mq = window.matchMedia('print');
-  // We use beforeprint/afterprint events as a proxy; default to checking navigator
-  const hasPrinter = navigator.userAgent && !navigator.userAgent.includes('Mobile');
-  // Try a more reliable check: attempt to detect via CSS media
-  try {
-    const testMQ = window.matchMedia('(min-resolution: 1dpi)');
-    // If printing is available in browser, mark connected
-    if (window.print && typeof window.print === 'function') {
-      dot.className = 'printer-dot printer-connected';
-      label.textContent = 'Printer: Connected';
-      label.style.color = '#22c55e';
-    }
-  } catch(e) {
+  if (connected) {
+    dot.className = 'printer-dot printer-connected';
+    label.textContent = 'Printer: Connected';
+    label.style.color = '#22c55e';
+  } else {
     dot.className = 'printer-dot printer-disconnected';
     label.textContent = 'Printer: Disconnected';
     label.style.color = '#ef4444';
   }
 }
-checkPrinter();
+// Always start as disconnected — user must actually print to confirm
+setPrinterStatus(false);
 
-window.addEventListener('beforeprint', () => {
-  document.getElementById('printerDot').className = 'printer-dot printer-connected';
-  document.getElementById('printerLabel').textContent = 'Printer: Connected';
-  document.getElementById('printerLabel').style.color = '#22c55e';
+window.addEventListener('beforeprint', () => setPrinterStatus(true));
+window.addEventListener('afterprint', () => {
+  printerEverPrinted = true;
+  document.getElementById('thermalFrame').style.display = 'none';
+  document.getElementById('testFrame').style.display = 'none';
+  // Keep green after successful print
+  setPrinterStatus(true);
 });
 
 // Test Print
@@ -301,7 +301,7 @@ window.testPrint = () => {
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center"><div class="rcpt-title">PRINTER TEST</div></div>' +
     '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">✓ Printer is working correctly!</div>' +
+    '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">&#10003; Printer is working correctly!</div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + now.toLocaleTimeString('en-IN') + '</div>' +
     '<div class="rcpt-center" style="font-size:11px;color:#555;">' + now.toLocaleDateString('en-IN') + '</div>' +
@@ -311,10 +311,6 @@ window.testPrint = () => {
   frame.style.display = 'block';
   requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
 };
-window.addEventListener('afterprint', () => {
-  document.getElementById('thermalFrame').style.display = 'none';
-  document.getElementById('testFrame').style.display = 'none';
-});
 
 let allSvcs = [], cart = {}, manualCart = {}, activeCat = 'All', lastBill = null, manualCounter = 0;
 
@@ -329,12 +325,12 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 function buildCatFilter() {
   const cats = ['All', ...new Set(allSvcs.map(s => s.category).filter(Boolean))];
   document.getElementById('catFilter').innerHTML = cats.map(c =>
-    '<button class="cat-pill' + (c===activeCat?' active':'') + '" onclick="setCat(\'' + c + '\',this)">' + c + '</button>'
+    '<button class="cat-pill' + (c===activeCat?' active':'') + '" onclick="setCat(this)" data-cat="' + esc(c) + '">' + esc(c) + '</button>'
   ).join('');
 }
 
-window.setCat = (cat, btn) => {
-  activeCat = cat;
+window.setCat = (btn) => {
+  activeCat = btn.dataset.cat;
   document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderGrid();
@@ -349,9 +345,9 @@ function renderGrid() {
   }
   document.getElementById('svcGrid').innerHTML = list.map(s => {
     const sel = !!cart[s.id];
-    return '<div class="svc-card' + (sel?' selected':'') + '" onclick="toggleSvc(\'' + s.id + '\')">' +
+    return '<div class="svc-card' + (sel?' selected':'') + '" data-id="' + esc(s.id) + '" onclick="toggleSvc(this.dataset.id)">' +
       '<div class="svc-card-name">' + esc(s.service_name||'') + '</div>' +
-      '<div class="svc-card-price">Rs.' + Math.round(s.price||0) + '</div>' +
+      '<div class="svc-card-price">&#8377;' + Math.round(s.price||0) + '</div>' +
       '<div class="svc-card-cat">' + esc(s.category||'') + '</div>' +
       (sel ? '<div style="position:absolute;top:6px;right:8px;color:var(--gold);font-size:0.7rem;"><i class="fas fa-check-circle"></i></div>' : '') +
       '</div>';
@@ -397,10 +393,10 @@ function renderCart() {
   document.getElementById('selectedBody').innerHTML = entries.map(([id, item]) =>
     '<tr>' +
     '<td class="admin-td-bold" style="font-size:0.88rem;">' + esc(item.name) + (item.type==='manual' ? ' <span style="font-size:0.68rem;color:rgba(212,175,55,0.7);background:rgba(212,175,55,0.1);padding:1px 6px;border-radius:4px;">manual</span>' : '') + '</td>' +
-    '<td style="text-align:center;"><div class="qty-ctrl"><button class="qty-btn" onclick="chgQty(\'' + id + '\',-1)">-</button><span class="qty-num">' + item.qty + '</span><button class="qty-btn" onclick="chgQty(\'' + id + '\',1)">+</button></div></td>' +
-    '<td style="text-align:right;color:rgba(255,255,255,0.6);font-size:0.88rem;">Rs.' + item.price + '</td>' +
-    '<td style="text-align:right;color:var(--gold-2);font-weight:700;">Rs.' + (item.price * item.qty) + '</td>' +
-    '<td><button class="remove-btn" onclick="removeSvc(\'' + id + '\')"><i class="fas fa-times"></i></button></td>' +
+    '<td style="text-align:center;"><div class="qty-ctrl"><button class="qty-btn" data-id="' + id + '" data-d="-1" onclick="chgQty(this.dataset.id,parseInt(this.dataset.d))">-</button><span class="qty-num">' + item.qty + '</span><button class="qty-btn" data-id="' + id + '" data-d="1" onclick="chgQty(this.dataset.id,parseInt(this.dataset.d))">+</button></div></td>' +
+    '<td style="text-align:right;color:rgba(255,255,255,0.6);font-size:0.88rem;">&#8377;' + item.price + '</td>' +
+    '<td style="text-align:right;color:var(--gold-2);font-weight:700;">&#8377;' + (item.price * item.qty) + '</td>' +
+    '<td><button class="remove-btn" data-id="' + id + '" onclick="removeSvc(this.dataset.id)"><i class="fas fa-times"></i></button></td>' +
     '</tr>'
   ).join('');
 }
@@ -426,16 +422,16 @@ window.calcTotal = () => {
   else if (dtype === 'flat') disc = Math.min(Math.round(dval), sub);
   const total = Math.max(0, sub - disc);
 
-  document.getElementById('sumSubtotal').textContent = 'Rs.' + sub;
-  document.getElementById('sumTotal').textContent = 'Rs.' + total;
+  document.getElementById('sumSubtotal').textContent = '₹' + sub;
+  document.getElementById('sumTotal').textContent = '₹' + total;
 
   const dr = document.getElementById('sumDiscRow');
   if (disc > 0) {
-    dr.style.cssText = 'display:flex;font-size:0.9rem;color:#ffc36b;';
+    dr.style.display = 'flex';
     document.getElementById('sumDiscLabel').textContent = dtype === 'percent' ? 'Discount (' + dval + '%)' : 'Discount (Flat)';
-    document.getElementById('sumDiscount').textContent = '-Rs.' + disc;
+    document.getElementById('sumDiscount').textContent = '-₹' + disc;
   } else {
-    dr.style.cssText = 'display:none !important;';
+    dr.style.display = 'none';
   }
 
   const entries = allCartEntries();
