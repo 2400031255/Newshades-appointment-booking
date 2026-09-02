@@ -371,7 +371,7 @@ function setPrinterUI(connected) {
 }
 // Default: disconnected. Only goes green after a real print event.
 setPrinterUI(false);
-window.addEventListener('afterprint', () => { setPrinterUI(true); document.getElementById('thermalFrame').style.display = 'none'; });
+window.addEventListener('afterprint', () => { setPrinterUI(true); });
 
 // ── Tab switching ───────────────────────────────────────────────────────
 window.switchTab = (tab, btn) => {
@@ -624,31 +624,37 @@ window.closeReceipt = () => { document.getElementById('receiptModal').style.disp
 
 // ── Quick Print (popup window — bypasses browser headers/footers) ───────
 function openThermalPrint(html) {
+  // Convert relative logo path to absolute so popup window can load it
+  const absBase = window.location.href.replace(/\/[^\/]*$/, '/');
+  const fixedHtml = html.replace(/src="\.\.\/images\/logo\.jpeg"/g, 'src="' + absBase + '../images/logo.jpeg"');
   const win = window.open('', '_blank', 'width=320,height=700,toolbar=0,menubar=0,scrollbars=0,status=0');
   if (!win) { showToast('Allow popups for this site to enable printing', 'warning'); return; }
   win.document.write(
     '<!DOCTYPE html><html><head><meta charset="UTF-8"/>' +
     '<style>' +
-    '@page{size:80mm auto;margin:0;}' +
-    'html,body{margin:0;padding:0;background:#fff;width:80mm;}' +
-    '.rcpt{font-family:"Courier New",Courier,monospace;font-size:13px;color:#111;padding:18px 16px 24px;width:80mm;box-sizing:border-box;}' +
+    '@page{size:80mm auto;margin:0mm;}' +
+    'html,body{margin:0;padding:0;background:#fff;width:80mm;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.rcpt{font-family:"Courier New",Courier,monospace;font-size:13px;color:#111;padding:14px 14px 40px;width:80mm;box-sizing:border-box;}' +
     '.rcpt-center{text-align:center;}' +
-    '.rcpt-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:3px solid #111;}' +
-    '.rcpt-salon{font-size:16px;font-weight:900;letter-spacing:4px;text-transform:uppercase;margin-bottom:3px;}' +
-    '.rcpt-tagline{font-size:10px;font-style:italic;color:#555;margin-top:2px;letter-spacing:1px;}' +
-    '.rcpt-divider{border:none;border-top:1px dashed #bbb;margin:12px 0;}' +
-    '.rcpt-title{font-size:14px;font-weight:900;letter-spacing:6px;text-transform:uppercase;margin:6px 0;}' +
-    '.rcpt-row{display:flex;justify-content:space-between;margin:4px 0;font-size:12px;}' +
-    '.rcpt-row-bold{display:flex;justify-content:space-between;margin:5px 0;font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}' +
-    '.rcpt-svc-row{display:flex;justify-content:space-between;margin:6px 0;font-size:13px;border-bottom:1px dashed #ddd;padding-bottom:6px;}' +
+    '.rcpt-logo{width:80px;height:80px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;border:2px solid #111;}' +
+    '.rcpt-salon{font-size:15px;font-weight:900;letter-spacing:3px;text-transform:uppercase;margin-bottom:2px;}' +
+    '.rcpt-tagline{font-size:9px;font-style:italic;color:#555;margin-top:2px;letter-spacing:1px;}' +
+    '.rcpt-divider{border:none;border-top:1px dashed #bbb;margin:10px 0;}' +
+    '.rcpt-title{font-size:13px;font-weight:900;letter-spacing:5px;text-transform:uppercase;margin:5px 0;}' +
+    '.rcpt-row{display:flex;justify-content:space-between;margin:3px 0;font-size:11.5px;}' +
+    '.rcpt-row-bold{display:flex;justify-content:space-between;margin:4px 0;font-size:11.5px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}' +
+    '.rcpt-svc-row{display:flex;justify-content:space-between;margin:5px 0;font-size:12px;border-bottom:1px dashed #ddd;padding-bottom:5px;}' +
     '.rcpt-svc-row:last-child{border-bottom:none;}' +
-    '.rcpt-total-row{display:flex;justify-content:space-between;font-size:16px;font-weight:900;padding:8px 0;letter-spacing:1px;}' +
-    '.rcpt-solid{border:none;border-top:2px solid #111;margin:10px 0;}' +
-    '.rcpt-barcode{font-size:20px;letter-spacing:4px;color:#111;margin:6px 0;}' +
-    '.rcpt-barcode-num{font-size:10px;letter-spacing:3px;color:#555;margin-top:2px;}' +
+    '.rcpt-total-row{display:flex;justify-content:space-between;font-size:15px;font-weight:900;padding:7px 0;letter-spacing:1px;}' +
+    '.rcpt-solid{border:none;border-top:2px solid #111;margin:8px 0;}' +
+    '.rcpt-barcode{font-size:18px;letter-spacing:4px;color:#111;margin:5px 0;}' +
+    '.rcpt-barcode-num{font-size:9px;letter-spacing:3px;color:#555;margin-top:2px;}' +
     '.rcpt-rupee{font-family:Arial,sans-serif;}' +
-    '</style></head><body>' + html +
-    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+    '.feed{height:30px;}' +
+    '</style></head><body>' +
+    fixedHtml +
+    '<div class="feed"></div>' +
+    '<script>window.onload=function(){setTimeout(function(){window.print();window.onafterprint=function(){window.close();};},300);};<\/script>' +
     '</body></html>'
   );
   win.document.close();
@@ -801,7 +807,6 @@ function renderCharts(bills) {
       }
     }
   });
-  const peakHours = hourMap.map((v,i) => ({ h: i, v })).filter(x => x.v > 0);
   destroyChart(hourChart);
   hourChart = new Chart(document.getElementById('hourChart'), {
     type: 'line',
@@ -839,7 +844,7 @@ window.renderRptTable = () => {
         '<td style="text-align:right;color:#ffc36b;">' + (b.discount_amount > 0 ? '-₹'+b.discount_amount : '—') + '</td>' +
         '<td style="text-align:right;font-weight:700;color:var(--gold-2);">₹' + (b.total||0) + '</td>' +
         '<td><span style="padding:3px 10px;border-radius:999px;font-size:0.75rem;font-weight:700;background:rgba(34,197,94,0.12);color:#86efac;">' + esc(b.payment_method||'') + '</span></td>' +
-        '<td><button onclick="reprintBill(\'' + b.id + '\')" style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);color:var(--gold);font-size:0.75rem;cursor:pointer;"><i class="fas fa-print"></i></button></td>' +
+        '<td><button data-bid="' + esc(b.id) + '" onclick="reprintBill(this.dataset.bid)" style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);color:var(--gold);font-size:0.75rem;cursor:pointer;"><i class="fas fa-print"></i></button></td>' +
         '</tr>'
       ).join('')
     : '<tr><td colspan="10" style="text-align:center;padding:30px;color:rgba(255,255,255,0.3);">No bills found</td></tr>';
@@ -864,15 +869,15 @@ window.downloadPDF = () => {
   doc.text('Billing Report: ' + from + ' to ' + to, 105, 26, { align: 'center' });
   doc.setFontSize(10);
   const totalRev = bills.reduce((s,b)=>s+(b.total||0),0);
-  doc.text('Total Bills: ' + bills.length + '   |   Total Revenue: ₹' + totalRev.toLocaleString('en-IN'), 105, 34, { align: 'center' });
+  doc.text('Total Bills: ' + bills.length + '   |   Total Revenue: Rs.' + totalRev.toLocaleString('en-IN'), 105, 34, { align: 'center' });
   doc.autoTable({
     startY: 42,
     head: [['Bill No','Date','Customer','Phone','Items','Subtotal','Discount','Total','Payment']],
     body: bills.map(b => [
       b.bill_no||'', b.date||'', b.customer_name||'', b.customer_phone||'',
       (b.items||[]).map(i=>i.name).join(', ').slice(0,40),
-      '₹'+(b.subtotal||0), b.discount_amount>0?'-₹'+b.discount_amount:'—',
-      '₹'+(b.total||0), b.payment_method||''
+      'Rs.'+(b.subtotal||0), b.discount_amount>0?'-Rs.'+b.discount_amount:'—',
+      'Rs.'+(b.total||0), b.payment_method||''
     ]),
     styles: { fontSize: 8, cellPadding: 3 },
     headStyles: { fillColor: [212,175,55], textColor: [0,0,0], fontStyle: 'bold' },
