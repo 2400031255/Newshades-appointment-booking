@@ -151,7 +151,6 @@ if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 
 const [s, appS] = await Promise.all([getSettings(), getAppSettings()]);
-document.getElementById('billingUrl').value = appS.billingUrl || '';
 document.getElementById('shopName').value    = s.shop_name      || '';
 document.getElementById('shopAddress').value = s.address        || '';
 document.getElementById('shopPhone').value   = s.phone          || '';
@@ -260,18 +259,9 @@ document.getElementById('saveFoundersBtn').addEventListener('click', async () =>
 document.getElementById('saveAppSettingsBtn').addEventListener('click', async () => {
   const btn = document.getElementById('saveAppSettingsBtn');
   const msgEl = document.getElementById('appSettingsMsg');
-  const url = document.getElementById('billingUrl').value.trim();
-  if (url && !url.match(/^https?:\/\/.+/)) {
-    msgEl.style.display = '';
-    msgEl.style.background = 'rgba(255,107,107,0.1)';
-    msgEl.style.border = '1px solid rgba(255,107,107,0.3)';
-    msgEl.style.color = '#ff6b6b';
-    msgEl.innerHTML = '<i class="fas fa-times-circle me-2"></i>Invalid URL. Must start with http:// or https://';
-    return;
-  }
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   try {
-    await saveAppSettings({ billingUrl: url }, profile?.full_name || user.email);
+    await saveAppSettings({}, profile?.full_name || user.email);
     msgEl.style.display = '';
     msgEl.style.background = 'rgba(37,211,102,0.08)';
     msgEl.style.border = '1px solid rgba(37,211,102,0.25)';
