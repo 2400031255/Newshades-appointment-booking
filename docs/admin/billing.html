@@ -306,10 +306,7 @@ window.testPrint = () => {
     '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + now.toLocaleTimeString('en-IN') + '</div>' +
     '<div class="rcpt-center" style="font-size:11px;color:#555;">' + now.toLocaleDateString('en-IN') + '</div>' +
     '</div>';
-  const frame = document.getElementById('testFrame');
-  frame.innerHTML = html;
-  frame.style.display = 'block';
-  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+  openThermalPrint(html);
 };
 
 let allSvcs = [], cart = {}, manualCart = {}, activeCat = 'All', lastBill = null, manualCounter = 0;
@@ -564,9 +561,44 @@ function showReceipt(b) {
 window.closeReceipt = () => { document.getElementById('receiptModal').style.display = 'none'; };
 
 window.printBill = () => {
-  document.getElementById('thermalFrame').style.display = 'block';
-  requestAnimationFrame(() => requestAnimationFrame(() => window.print()));
+  if (!lastBill) return;
+  openThermalPrint(document.getElementById('thermalFrame').innerHTML);
 };
+
+function openThermalPrint(html) {
+  const win = window.open('', '_blank', 'width=320,height=600,toolbar=0,menubar=0,scrollbars=0');
+  if (!win) { showToast('Allow popups for this site to print', 'warning'); return; }
+  win.document.write(
+    '<!DOCTYPE html><html><head>' +
+    '<meta charset="UTF-8"/>' +
+    '<style>' +
+    '@page{size:80mm auto;margin:0;}' +
+    'html,body{margin:0;padding:0;background:#fff;width:80mm;}' +
+    'body{font-family:\'Courier New\',Courier,monospace;font-size:13px;color:#111;}' +
+    '.rcpt{padding:18px 16px 24px;width:80mm;box-sizing:border-box;}' +
+    '.rcpt-center{text-align:center;}' +
+    '.rcpt-logo{width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;display:block;border:3px solid #111;}' +
+    '.rcpt-salon{font-size:16px;font-weight:900;letter-spacing:4px;text-transform:uppercase;margin-bottom:3px;}' +
+    '.rcpt-tagline{font-size:10px;font-style:italic;color:#555;margin-top:2px;letter-spacing:1px;}' +
+    '.rcpt-divider{border:none;border-top:1px dashed #bbb;margin:12px 0;}' +
+    '.rcpt-title{font-size:14px;font-weight:900;letter-spacing:6px;text-transform:uppercase;margin:6px 0;}' +
+    '.rcpt-row{display:flex;justify-content:space-between;margin:4px 0;font-size:12px;}' +
+    '.rcpt-row-bold{display:flex;justify-content:space-between;margin:5px 0;font-size:12px;font-weight:900;letter-spacing:2px;text-transform:uppercase;}' +
+    '.rcpt-svc-row{display:flex;justify-content:space-between;margin:6px 0;font-size:13px;border-bottom:1px dashed #ddd;padding-bottom:6px;}' +
+    '.rcpt-svc-row:last-child{border-bottom:none;}' +
+    '.rcpt-total-row{display:flex;justify-content:space-between;font-size:16px;font-weight:900;padding:8px 0;letter-spacing:1px;}' +
+    '.rcpt-solid{border:none;border-top:2px solid #111;margin:10px 0;}' +
+    '.rcpt-barcode{font-size:20px;letter-spacing:4px;color:#111;margin:6px 0;}' +
+    '.rcpt-barcode-num{font-size:10px;letter-spacing:3px;color:#555;margin-top:2px;}' +
+    '.rcpt-rupee{font-family:Arial,sans-serif;}' +
+    '</style></head><body>' +
+    html +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+    '</body></html>'
+  );
+  win.document.close();
+  setPrinterStatus(true);
+}
 
 window.shareWhatsApp = () => {
   if (!lastBill) return;
