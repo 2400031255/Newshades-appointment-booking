@@ -576,13 +576,16 @@ function resetForm() {
 // ── Receipt HTML builder ────────────────────────────────────────────────
 function buildReceiptHTML(b) {
   const R = '<span class="rcpt-rupee">&#8377;</span>';
-  const rows = b.items.map(i =>
-    '<div class="rcpt-svc-row"><span>' + esc(i.name) + (i.qty > 1 ? ' ×' + i.qty : '') + '</span><span>' + R + i.total + '</span></div>'
+  const items = b.items || [];
+  const rows = items.map(i =>
+    '<div class="rcpt-svc-row"><span>' + esc(i.name||'') + (i.qty > 1 ? ' ×' + i.qty : '') + '</span><span>' + R + (i.total||0) + '</span></div>'
   ).join('');
-  const subLine = b.discount_amount > 0 ? '<div class="rcpt-row"><span>Subtotal</span><span>' + R + b.subtotal + '</span></div>' : '';
-  const discLine = b.discount_amount > 0
-    ? '<div class="rcpt-row"><span>Discount' + (b.discount_type === 'percent' ? ' (' + b.discount_value + '%)' : ' (Flat)') + '</span><span>- ' + R + b.discount_amount + '</span></div>' : '';
-  const barcode = b.bill_no.replace(/[^A-Z0-9]/g, '');
+  const discAmt = b.discount_amount || 0;
+  const subLine = discAmt > 0 ? '<div class="rcpt-row"><span>Subtotal</span><span>' + R + (b.subtotal||0) + '</span></div>' : '';
+  const discLine = discAmt > 0
+    ? '<div class="rcpt-row"><span>Discount' + (b.discount_type === 'percent' ? ' (' + (b.discount_value||0) + '%)' : ' (Flat)') + '</span><span>- ' + R + discAmt + '</span></div>' : '';
+  const billNo = b.bill_no || 'N/A';
+  const barcode = billNo.replace(/[^A-Z0-9]/g, '');
   return '<div class="rcpt">' +
     '<div class="rcpt-center" style="margin-bottom:14px;">' +
     '<img src="../images/logo.jpeg" class="rcpt-logo" onerror="this.style.display=\'none\'"/>' +
@@ -591,19 +594,19 @@ function buildReceiptHTML(b) {
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center"><div class="rcpt-title">PAYMENT RECEIPT</div></div>' +
     '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-row"><span>Bill No</span><span style="font-weight:900;">' + b.bill_no + '</span></div>' +
-    '<div class="rcpt-row"><span>Date</span><span style="font-weight:700;">' + (b.dateStr || b.date) + '</span></div>' +
-    '<div class="rcpt-row"><span>Time</span><span style="font-weight:700;">' + b.time + '</span></div>' +
-    '<div class="rcpt-row"><span>Customer</span><span style="font-weight:700;">' + esc(b.customer_name) + '</span></div>' +
-    '<div class="rcpt-row"><span>Mobile</span><span style="font-weight:700;">' + b.customer_phone + '</span></div>' +
+    '<div class="rcpt-row"><span>Bill No</span><span style="font-weight:900;">' + esc(billNo) + '</span></div>' +
+    '<div class="rcpt-row"><span>Date</span><span style="font-weight:700;">' + esc(b.dateStr||b.date||'') + '</span></div>' +
+    '<div class="rcpt-row"><span>Time</span><span style="font-weight:700;">' + esc(b.time||'') + '</span></div>' +
+    '<div class="rcpt-row"><span>Customer</span><span style="font-weight:700;">' + esc(b.customer_name||'') + '</span></div>' +
+    '<div class="rcpt-row"><span>Mobile</span><span style="font-weight:700;">' + esc(b.customer_phone||'') + '</span></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-row-bold"><span>SERVICE</span><span>AMOUNT</span></div>' +
     '<hr class="rcpt-divider"/>' + rows +
     '<hr class="rcpt-divider"/>' + subLine + discLine +
     '<hr class="rcpt-solid"/>' +
-    '<div class="rcpt-total-row"><span>TOTAL AMOUNT</span><span>' + R + b.total + '</span></div>' +
+    '<div class="rcpt-total-row"><span>TOTAL AMOUNT</span><span>' + R + (b.total||0) + '</span></div>' +
     '<hr class="rcpt-solid"/>' +
-    '<div class="rcpt-row"><span>Payment Mode</span><span style="font-weight:700;">' + b.payment_method + '</span></div>' +
+    '<div class="rcpt-row"><span>Payment Mode</span><span style="font-weight:700;">' + esc(b.payment_method||'') + '</span></div>' +
     '<div class="rcpt-row"><span>Payment Status</span><span style="font-weight:900;">&#10003; Paid</span></div>' +
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center" style="margin-top:10px;">' +
@@ -611,7 +614,7 @@ function buildReceiptHTML(b) {
     '<div style="font-size:11px;color:#444;margin-top:6px;">Newshades Family Salon</div>' +
     '<div style="font-size:11px;color:#666;">Look Beautiful, Feel Beautiful</div>' +
     '<div class="rcpt-barcode" style="margin-top:12px;">||| |||| ||| || |||| ||| || ||||</div>' +
-    '<div class="rcpt-barcode-num">' + barcode + '</div></div></div>';
+    '<div class="rcpt-barcode-num">' + esc(barcode) + '</div></div></div>';
 }
 
 function showReceipt(b) {
@@ -662,7 +665,7 @@ function openThermalPrint(html) {
 }
 
 window.quickPrint = () => {
-  if (!lastBill) return;
+  if (!lastBill) { showToast('No bill to print', 'warning'); return; }
   openThermalPrint(buildReceiptHTML(lastBill));
 };
 
@@ -682,15 +685,15 @@ window.testPrint = () => {
 };
 
 window.shareWhatsApp = () => {
-  if (!lastBill) return;
+  if (!lastBill) { showToast('No bill to share', 'warning'); return; }
   const b = lastBill;
-  const lines = b.items.map(i => '- ' + i.name + (i.qty > 1 ? ' ×' + i.qty : '') + ' ₹' + i.total).join('\n');
-  const disc = b.discount_amount > 0 ? '\nDiscount: -₹' + b.discount_amount : '';
-  const msg = 'NEWSHADES FAMILY SALON\nReceipt - ' + b.bill_no +
-    '\n\nDate: ' + (b.dateStr || b.date) + ' ' + b.time +
-    '\nCustomer: ' + b.customer_name + '\n\n' + lines + disc +
-    '\n\nTOTAL: ₹' + b.total + '\nPayment: ' + b.payment_method + '\n\nThank you! Visit again ☺';
-  window.open('https://wa.me/91' + b.customer_phone + '?text=' + encodeURIComponent(msg), '_blank');
+  const lines = (b.items||[]).map(i => '- ' + (i.name||'') + (i.qty > 1 ? ' ×' + i.qty : '') + ' ₹' + (i.total||0)).join('\n');
+  const disc = (b.discount_amount||0) > 0 ? '\nDiscount: -₹' + b.discount_amount : '';
+  const msg = 'NEWSHADES FAMILY SALON\nReceipt - ' + (b.bill_no||'') +
+    '\n\nDate: ' + (b.dateStr||b.date||'') + ' ' + (b.time||'') +
+    '\nCustomer: ' + (b.customer_name||'') + '\n\n' + lines + disc +
+    '\n\nTOTAL: ₹' + (b.total||0) + '\nPayment: ' + (b.payment_method||'') + '\n\nThank you! Visit again ☺';
+  window.open('https://wa.me/91' + (b.customer_phone||'') + '?text=' + encodeURIComponent(msg), '_blank');
 };
 
 // ── Reports ─────────────────────────────────────────────────────────────
@@ -706,7 +709,7 @@ function getDateRange(period) {
   const today = now.toISOString().slice(0, 10);
   if (period === 'today') return { from: today, to: today };
   if (period === 'week') {
-    const d = new Date(now); d.setDate(d.getDate() - d.getDay());
+    const d = new Date(now); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Monday start
     return { from: d.toISOString().slice(0, 10), to: today };
   }
   if (period === 'month') return { from: today.slice(0, 7) + '-01', to: today };
@@ -734,6 +737,7 @@ window.setPeriod = btn => {
 };
 
 window.loadReports = async () => {
+  try {
   await fetchBills();
   const bills = filterBills(currentPeriod);
   const totalRev = bills.reduce((s, b) => s + (b.total || 0), 0);
@@ -744,12 +748,22 @@ window.loadReports = async () => {
   document.getElementById('rptDiscount').textContent = '₹' + totalDisc.toLocaleString('en-IN');
   renderCharts(bills);
   renderRptTable();
+  } catch(e) { showToast('Failed to load reports: ' + e.message, 'danger'); }
 };
 
 function renderCharts(bills) {
+  if (!bills.length) {
+    ['revenueChart','payChart','topSvcChart','hourChart'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { const ctx = el.getContext('2d'); ctx.clearRect(0,0,el.width,el.height); }
+    });
+    destroyChart(revenueChart); destroyChart(payChart); destroyChart(topSvcChart); destroyChart(hourChart);
+    revenueChart = payChart = topSvcChart = hourChart = null;
+    return;
+  }
   // Revenue over time
   const revMap = {};
-  bills.forEach(b => { revMap[b.date] = (revMap[b.date] || 0) + (b.total || 0); });
+  bills.forEach(b => { if (b.date) revMap[b.date] = (revMap[b.date] || 0) + (b.total || 0); });
   const revDates = Object.keys(revMap).sort();
   destroyChart(revenueChart);
   revenueChart = new Chart(document.getElementById('revenueChart'), {
@@ -766,7 +780,7 @@ function renderCharts(bills) {
 
   // Payment methods pie
   const payMap = {};
-  bills.forEach(b => { payMap[b.payment_method] = (payMap[b.payment_method] || 0) + 1; });
+  bills.forEach(b => { const pm = b.payment_method || 'Unknown'; payMap[pm] = (payMap[pm] || 0) + 1; });
   destroyChart(payChart);
   payChart = new Chart(document.getElementById('payChart'), {
     type: 'doughnut',
@@ -853,12 +867,13 @@ window.renderRptTable = () => {
 window.reprintBill = id => {
   const b = allBills.find(x => x.id === id);
   if (!b) return;
-  lastBill = { ...b, dateStr: b.date };
+  lastBill = { ...b, dateStr: b.date, time: b.time || '' };
   showReceipt(lastBill);
 };
 
 // ── PDF Download ────────────────────────────────────────────────────────
 window.downloadPDF = () => {
+  if (!window.jspdf) { showToast('PDF library not loaded yet, try again', 'warning'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const bills = filterBills(currentPeriod);
@@ -890,6 +905,7 @@ window.downloadPDF = () => {
 // ── CSV Download ────────────────────────────────────────────────────────
 window.downloadCSV = () => {
   const bills = filterBills(currentPeriod);
+  if (!bills.length) { showToast('No bills in this period to export', 'warning'); return; }
   const { from, to } = getDateRange(currentPeriod);
   const rows = [['Bill No','Date','Time','Customer','Phone','Items','Subtotal','Discount Type','Discount Value','Discount Amount','Total','Payment Method']];
   bills.forEach(b => rows.push([
@@ -902,7 +918,7 @@ window.downloadCSV = () => {
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
   a.download = 'NewShades_Report_' + from + '_to_' + to + '.csv';
-  a.click();
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 };
 </script>
 </body>
