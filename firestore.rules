@@ -4,14 +4,26 @@ service cloud.firestore {
 
     // ── Helpers ──────────────────────────────────────────────────────────
     function isSignedIn() { return request.auth != null; }
+
     function isAdmin() {
       return isSignedIn() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.is_admin in [1, true];
     }
+
+    // Active, non-deleted employee only
     function isEmployee() {
       return isSignedIn() &&
-        exists(/databases/$(database)/documents/employees/$(request.auth.uid));
+        exists(/databases/$(database)/documents/employees/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.is_active in [1, true] &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.get('deleted', false) != true;
     }
+
+    // Receptionist is an active employee with role == 'receptionist'
+    function isReceptionist() {
+      return isEmployee() &&
+        get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == 'receptionist';
+    }
+
     function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
 
     // ── Users ─────────────────────────────────────────────────────────────
@@ -20,17 +32,17 @@ service cloud.firestore {
       allow write: if isOwner(uid) || isAdmin();
     }
 
-    // ── Usernames (public lookup map: username → email) ───────────────────
+    // ── Usernames (login lookup map) ──────────────────────────────────────
     match /usernames/{username} {
       allow read: if true;
-      allow write: if isAdmin() || isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
 
     // ── Employees ─────────────────────────────────────────────────────────
     match /employees/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isAdmin() || isOwner(uid);
-      // Allow employee to update their own profile (UPI, QR, name, phone)
       allow update: if isAdmin() || isOwner(uid);
       allow delete: if isAdmin();
     }
@@ -44,22 +56,20 @@ service cloud.firestore {
     // ── Enquiries ─────────────────────────────────────────────────────────
     match /enquiries/{id} {
       allow read: if isAdmin() || isEmployee();
-      // Public visitors submit from home page — no auth required
       allow create: if true;
       allow update: if isAdmin() || isEmployee();
       allow delete: if isAdmin();
     }
 
     // ── Attendance ────────────────────────────────────────────────────────
-    // Allow all employees to list/read — resource.data is null on list queries
     match /attendance/{id} {
       allow read: if isAdmin() || isEmployee();
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isReceptionist();
     }
 
     // ── Leave Requests ────────────────────────────────────────────────────
     match /leave_requests/{id} {
-      allow read: if isAdmin() || isEmployee();
+      allow read: if isAdmin() || (isEmployee() && resource.data.employee_id == request.auth.uid);
       allow create: if isEmployee();
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -67,7 +77,7 @@ service cloud.firestore {
 
     // ── Payroll ───────────────────────────────────────────────────────────
     match /payroll/{id} {
-      allow read: if isAdmin() || isEmployee();
+      allow read: if isAdmin() || (isEmployee() && resource.data.employee_id == request.auth.uid);
       allow write: if isAdmin();
     }
 
@@ -75,8 +85,7 @@ service cloud.firestore {
     match /reviews/{id} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update: if isAdmin() ||
-        (isSignedIn() && resource.data.user_id == request.auth.uid);
+      allow update: if isAdmin() || (isSignedIn() && resource.data.user_id == request.auth.uid);
       allow delete: if isAdmin();
     }
 
@@ -98,7 +107,7 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ── Billing: Bills ────────────────────────────────────────────────────
+    // ── Bills ─────────────────────────────────────────────────────────────
     match /bills/{id} {
       allow read: if isAdmin() || isEmployee();
       allow create: if isAdmin() || isEmployee();
@@ -106,7 +115,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── Billing: Customers ────────────────────────────────────────────────
+    // ── Billing Customers ─────────────────────────────────────────────────
     match /billing_customers/{id} {
       allow read: if isAdmin() || isEmployee();
       allow create: if isAdmin() || isEmployee();

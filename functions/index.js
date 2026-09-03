@@ -6,7 +6,6 @@ const { getFirestore } = require("firebase-admin/firestore");
 initializeApp();
 
 exports.deleteEmployeeAccount = onCall(async (request) => {
-  // Must be called by a signed-in admin
   if (!request.auth) throw new HttpsError("unauthenticated", "Not signed in.");
 
   const callerUid = request.auth.uid;
@@ -19,6 +18,8 @@ exports.deleteEmployeeAccount = onCall(async (request) => {
   const { uid } = request.data;
   if (!uid) throw new HttpsError("invalid-argument", "uid is required.");
 
+  // Delete Auth user and Firestore doc atomically
   await getAuth().deleteUser(uid);
+  await db.collection("employees").doc(uid).delete();
   return { success: true };
 });

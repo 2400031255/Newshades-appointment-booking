@@ -138,6 +138,8 @@ const _unsub = onAuthStateChanged(auth, async user => {
       if (emp) {
         if (emp.deleted || emp.is_active === 0 || emp.is_active === false) {
           await signOut(auth);
+        } else if (emp.role === 'receptionist') {
+          window.location.href = 'admin/billing.html'; return;
         } else {
           window.location.href = 'employee/dashboard.html'; return;
         }
@@ -206,7 +208,10 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
       return;
     }
 
-    if (emp) { window.location.href = 'employee/dashboard.html'; return; }
+    if (emp) { 
+      if (emp.role === 'receptionist') { window.location.href = 'admin/billing.html'; return; }
+      window.location.href = 'employee/dashboard.html'; return; 
+    }
     window.location.href = 'customer/dashboard.html';
 
   } catch(err) {

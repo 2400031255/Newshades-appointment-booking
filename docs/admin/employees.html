@@ -49,7 +49,7 @@
             <div class="mb-4"><label class="field-label mb-1" style="font-size:0.75rem;">PASSWORD *</label><input type="password" id="empPassword" required minlength="6" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="Min 6 characters"/></div>
             <button type="submit" class="btn-gold" style="width:100%;justify-content:center;" id="createEmpBtn"><i class="fas fa-plus me-2"></i>Create Employee</button>
           </form>
-          <div style="margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(105,152,255,0.07);border:1px solid rgba(105,152,255,0.18);font-size:0.8rem;color:#9dc0ff;"><i class="fas fa-info-circle me-1"></i>Employee logs in at <strong>employee/dashboard.html</strong> with their email &amp; password.</div>
+          <div style="margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(105,152,255,0.07);border:1px solid rgba(105,152,255,0.18);font-size:0.8rem;color:#9dc0ff;"><i class="fas fa-info-circle me-1"></i>Staff logs in at <strong>employee/dashboard.html</strong>. <strong>Receptionist</strong> role logs in at <strong>admin/billing.html</strong>.</div>
         </div>
       </div>
       <div class="col-lg-8">
@@ -154,7 +154,7 @@ document.getElementById('createEmpForm').addEventListener('submit', async e => {
       full_name: empNameVal,
       email: empEmail,
       phone: document.getElementById('empPhone').value.trim(),
-      role: document.getElementById('empRole').value,
+      role: document.getElementById('empRole').value.toLowerCase(),
       monthly_salary: parseFloat(document.getElementById('empSalary').value)||0,
       is_active: 1,
       created_at: serverTimestamp()
@@ -211,7 +211,7 @@ window.saveEdit = async () => {
     const updates = {
       full_name: document.getElementById('editName').value.trim(),
       phone: document.getElementById('editPhone').value.trim(),
-      role: document.getElementById('editRole').value,
+      role: document.getElementById('editRole').value.toLowerCase(),
       monthly_salary: parseFloat(document.getElementById('editSalary').value) || 0,
       upi_id: document.getElementById('editUpiId').value.trim(),
       upi_app: document.getElementById('editUpiApp').value,

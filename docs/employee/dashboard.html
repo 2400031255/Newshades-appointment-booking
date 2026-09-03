@@ -97,10 +97,10 @@ document.getElementById('statLeave').textContent = leaves.length;
 // Billing launch button
 getAppSettings().then(appS => {
   const btn = document.getElementById('launchBillingBtn');
-  if (appS.billingUrl) {
+  if (appS?.billing_url) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-external-link-alt me-1"></i>Launch';
-    btn.onclick = () => window.open(appS.billingUrl, '_blank', 'noopener,noreferrer');
+    btn.onclick = () => window.open(appS.billing_url, '_blank', 'noopener,noreferrer');
   } else {
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-clock me-1"></i>Unavailable';
