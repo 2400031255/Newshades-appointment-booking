@@ -237,17 +237,19 @@ window.saveEdit = async () => {
 document.getElementById('editModal').addEventListener('click', e => { if (e.target === document.getElementById('editModal')) closeEditModal(); });
 
 window.toggleEmp = async (id, isActive) => {
-  try { await updateEmployee(id, { is_active: isActive ? 0 : 1 }); showToast('Updated!', 'success'); }
-  catch(err) { showToast('Failed.', 'danger'); }
+  try {
+    await updateEmployee(id, { is_active: isActive === 1 ? 0 : 1 });
+    showToast(isActive === 1 ? 'Employee deactivated.' : 'Employee activated.', 'success');
+  } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 window.delEmp = async (id) => {
-  if (!confirm('Permanently delete this employee? Their Firebase login will be removed — they will get invalid credentials on next login attempt.')) return;
+  if (!confirm('Permanently delete this employee? This cannot be undone.')) return;
   try {
     const functions = getFunctions();
     const deleteAccount = httpsCallable(functions, 'deleteEmployeeAccount');
-    await deleteAccount({ uid: id });
-    await updateEmployee(id, { is_active: 0, deleted: true });
-    showToast('Employee deleted. Login credentials removed.', 'success');
+    await deleteAccount({ uid: id }).catch(() => {}); // best-effort auth delete
+    await deleteEmployee(id);
+    showToast('Employee deleted.', 'success');
   } catch(err) { showToast('Failed: ' + err.message, 'danger'); }
 };
 
