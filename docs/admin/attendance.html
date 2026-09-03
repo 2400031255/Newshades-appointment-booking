@@ -6,87 +6,76 @@
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    .time-input {
-      background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 8px; color: #fff; font-size: 0.78rem;
-      padding: 4px 8px; outline: none; color-scheme: dark; width: 100px;
-    }
-    .time-input:focus { border-color: rgba(201,168,76,0.5); }
-    .att-action-btn { padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer; border: none; }
-    .btn-present { border: 1px solid rgba(37,211,102,0.3); background: rgba(37,211,102,0.08); color: #7ce0aa; }
-    .btn-absent  { border: 1px solid rgba(255,99,99,0.3);  background: rgba(255,99,99,0.08);  color: #ff9a9a; }
-    .btn-halfday { border: 1px solid rgba(255,193,7,0.3);  background: rgba(255,193,7,0.08);  color: #ffc107; }
-    .btn-edit    { border: 1px solid rgba(99,179,255,0.3); background: rgba(99,179,255,0.08); color: #9dc0ff; }
-    .att-modal-backdrop {
-      display: none; position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7); z-index: 9999;
-      align-items: center; justify-content: center;
-    }
-    .att-modal-backdrop.show { display: flex; }
-    .att-modal {
-      background: #0e0b14; border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 18px; padding: 28px 24px; width: 100%; max-width: 420px;
-      box-shadow: 0 24px 70px rgba(0,0,0,0.7);
-    }
-    .att-modal h6 { color: var(--gold, #c9a84c); font-weight: 700; margin-bottom: 20px; }
-    .att-modal label { font-size: 0.82rem; color: rgba(245,235,215,0.6); margin-bottom: 4px; display: block; }
-    .att-modal select, .att-modal input[type="time"] {
-      width: 100%; background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(201,168,76,0.2); border-radius: 10px;
-      color: #fff; padding: 9px 14px; font-size: 0.88rem;
-      outline: none; color-scheme: dark; margin-bottom: 14px;
-    }
-    .att-modal select option { background: #0e0b14; }
-    .summary-bar { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-    .summary-chip { padding: 6px 16px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
-    /* Monthly Report */
-    .rpt-month-select {
-      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 10px; color: #fff; padding: 8px 14px;
-      font-size: 0.88rem; outline: none; color-scheme: dark;
-    }
-    .rpt-month-select:focus { border-color: rgba(201,168,76,0.5); }
-    .rpt-stat-card {
-      flex: 1; min-width: 120px; padding: 18px 16px; border-radius: 16px;
-      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); text-align: center;
-    }
-    .rpt-stat-val { font-size: 1.8rem; font-weight: 900; font-family: 'Playfair Display', serif; }
-    .rpt-stat-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.07em; }
-    .rpt-header-row {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
-      gap: 8px; padding: 6px 16px 10px;
-      font-size: 0.7rem; color: rgba(255,255,255,0.35);
-      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; text-align: center;
-    }
-    .rpt-header-row div:first-child { text-align: left; }
-    .rpt-emp-row {
-      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
-      gap: 8px; align-items: center; padding: 12px 16px;
-      border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
-      background: rgba(255,255,255,0.02); margin-bottom: 8px; transition: background 0.15s;
-    }
-    .rpt-emp-row:hover { background: rgba(255,255,255,0.04); }
-    .rpt-emp-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
-    .rpt-emp-role { font-size: 0.7rem; color: rgba(255,255,255,0.38); margin-top: 2px; }
-    .rpt-cell { font-size: 0.88rem; font-weight: 700; text-align: center; }
-    .rpt-pct-bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 6px; }
-    .rpt-pct-fill { height: 100%; border-radius: 999px; transition: width 0.7s ease; }
-    .btn-pdf {
-      padding: 8px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700;
-      font-size: 0.85rem; display: inline-flex; align-items: center; gap: 7px;
-      background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.12));
-      border: 1px solid rgba(239,68,68,0.35); color: #fca5a5; transition: all 0.15s;
-    }
-    .btn-pdf:hover { background: linear-gradient(135deg, rgba(239,68,68,0.35), rgba(239,68,68,0.2)); }
-    @media (max-width:600px) {
-      .rpt-emp-row, .rpt-header-row { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
-      .rpt-emp-row > div:last-child, .rpt-header-row > div:last-child { display: none; }
+    /* ── Date bar ── */
+    .att-date-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+    .att-date-input{padding:9px 16px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.25);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;}
+    .att-date-input:focus{border-color:rgba(201,168,76,0.6);}
+    /* ── Summary chips ── */
+    .att-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;}
+    .att-chip{padding:7px 18px;border-radius:999px;font-size:0.8rem;font-weight:700;display:flex;align-items:center;gap:7px;}
+    /* ── Employee cards grid ── */
+    .emp-att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+    .emp-att-card{border-radius:16px;border:1.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);padding:16px 18px;transition:all 0.2s;position:relative;overflow:hidden;}
+    .emp-att-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:rgba(255,255,255,0.06);transition:background 0.2s;}
+    .emp-att-card.status-present{border-color:rgba(34,197,94,0.35);background:rgba(34,197,94,0.04);}
+    .emp-att-card.status-present::before{background:linear-gradient(90deg,#22c55e,#16a34a);}
+    .emp-att-card.status-absent{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.04);}
+    .emp-att-card.status-absent::before{background:linear-gradient(90deg,#ef4444,#dc2626);}
+    .emp-att-card.status-halfday{border-color:rgba(234,179,8,0.35);background:rgba(234,179,8,0.04);}
+    .emp-att-card.status-halfday::before{background:linear-gradient(90deg,#eab308,#ca8a04);}
+    /* ── Avatar ── */
+    .emp-avatar{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;flex-shrink:0;letter-spacing:0.5px;}
+    /* ── Status toggle buttons ── */
+    .status-btns{display:flex;gap:6px;margin-top:12px;}
+    .s-btn{flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid transparent;font-size:0.75rem;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;letter-spacing:0.02em;}
+    .s-btn-present{border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.07);color:#86efac;}
+    .s-btn-present:hover,.s-btn-present.active{border-color:#22c55e;background:rgba(34,197,94,0.2);color:#4ade80;box-shadow:0 0 12px rgba(34,197,94,0.2);}
+    .s-btn-absent{border-color:rgba(239,68,68,0.25);background:rgba(239,68,68,0.07);color:#fca5a5;}
+    .s-btn-absent:hover,.s-btn-absent.active{border-color:#ef4444;background:rgba(239,68,68,0.2);color:#f87171;box-shadow:0 0 12px rgba(239,68,68,0.2);}
+    .s-btn-half{border-color:rgba(234,179,8,0.25);background:rgba(234,179,8,0.07);color:#fde68a;}
+    .s-btn-half:hover,.s-btn-half.active{border-color:#eab308;background:rgba(234,179,8,0.2);color:#fbbf24;box-shadow:0 0 12px rgba(234,179,8,0.2);}
+    /* ── Time inputs ── */
+    .time-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+    .time-lbl{font-size:0.68rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;}
+    .time-inp{flex:1;padding:5px 10px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:0.8rem;outline:none;color-scheme:dark;min-width:0;}
+    .time-inp:focus{border-color:rgba(201,168,76,0.5);}
+    /* ── Edit modal ── */
+    .att-modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+    .att-modal-backdrop.show{display:flex;}
+    .att-modal{background:#0e0b14;border:1.5px solid rgba(201,168,76,0.25);border-radius:20px;padding:28px 24px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.8);}
+    .att-modal-title{color:var(--gold,#c9a84c);font-weight:800;font-size:1rem;margin-bottom:6px;}
+    .att-modal-sub{font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:20px;}
+    .att-modal label{font-size:0.78rem;color:rgba(245,235,215,0.55);margin-bottom:5px;display:block;}
+    .att-modal select,.att-modal input[type="time"]{width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);border-radius:10px;color:#fff;padding:10px 14px;font-size:0.88rem;outline:none;color-scheme:dark;margin-bottom:14px;}
+    .att-modal select option{background:#0e0b14;}
+    /* ── Monthly report ── */
+    .rpt-month-sel{padding:9px 14px;border-radius:10px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;font-size:0.88rem;outline:none;color-scheme:dark;}
+    .rpt-month-sel:focus{border-color:rgba(201,168,76,0.5);}
+    .rpt-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:24px;}
+    .rpt-stat-card{padding:18px 14px;border-radius:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);text-align:center;}
+    .rpt-stat-val{font-size:1.9rem;font-weight:900;font-family:'Playfair Display',serif;line-height:1;}
+    .rpt-stat-lbl{font-size:0.68rem;color:rgba(255,255,255,0.38);margin-top:6px;text-transform:uppercase;letter-spacing:0.07em;}
+    .rpt-table-wrap{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+    .rpt-thead{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1.6fr;gap:0;background:rgba(255,255,255,0.04);padding:10px 16px;font-size:0.68rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;font-weight:700;}
+    .rpt-thead div:not(:first-child){text-align:center;}
+    .rpt-row{display:grid;grid-template-columns:2.2fr 1fr 1fr 1fr 1.6fr;gap:0;padding:13px 16px;border-top:1px solid rgba(255,255,255,0.04);align-items:center;transition:background 0.15s;}
+    .rpt-row:hover{background:rgba(255,255,255,0.03);}
+    .rpt-cell{text-align:center;font-weight:700;font-size:0.88rem;}
+    .rpt-name{font-weight:700;font-size:0.88rem;color:#fff;}
+    .rpt-role{font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:2px;}
+    .rpt-bar-wrap{height:5px;border-radius:999px;background:rgba(255,255,255,0.07);overflow:hidden;margin-top:5px;}
+    .rpt-bar-fill{height:100%;border-radius:999px;transition:width 0.8s ease;}
+    .btn-pdf{padding:9px 20px;border-radius:12px;cursor:pointer;font-weight:700;font-size:0.85rem;display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.08));border:1.5px solid rgba(239,68,68,0.4);color:#fca5a5;transition:all 0.15s;}
+    .btn-pdf:hover{background:linear-gradient(135deg,rgba(239,68,68,0.32),rgba(239,68,68,0.15));}
+    @media(max-width:600px){
+      .rpt-thead,.rpt-row{grid-template-columns:2fr 1fr 1fr 1fr;}
+      .rpt-thead div:last-child,.rpt-row div:last-child{display:none;}
+      .emp-att-grid{grid-template-columns:1fr;}
     }
   </style>
 </head>
@@ -113,21 +102,21 @@
 <!-- Edit Modal -->
 <div class="att-modal-backdrop" id="editModal">
   <div class="att-modal">
-    <h6><i class="fas fa-edit me-2"></i>Edit Attendance</h6>
-    <p id="editEmpName" style="color:#fff;font-weight:600;margin-bottom:16px;font-size:0.95rem;"></p>
+    <div class="att-modal-title"><i class="fas fa-user-edit me-2"></i>Edit Attendance</div>
+    <div class="att-modal-sub" id="editEmpName"></div>
     <label>Status</label>
     <select id="editStatus">
-      <option value="Present">Present</option>
-      <option value="Absent">Absent</option>
-      <option value="Half Day">Half Day</option>
+      <option value="Present">✅ Present</option>
+      <option value="Absent">❌ Absent</option>
+      <option value="Half Day">🌓 Half Day</option>
     </select>
-    <label>Check In</label>
+    <label>Check In Time</label>
     <input type="time" id="editCheckIn"/>
-    <label>Check Out</label>
+    <label>Check Out Time</label>
     <input type="time" id="editCheckOut"/>
     <div class="d-flex gap-2 mt-2">
-      <button onclick="saveEdit()" class="btn-gold" style="flex:1;padding:10px;">Save</button>
-      <button onclick="closeEdit()" style="flex:1;padding:10px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(245,235,215,0.6);cursor:pointer;">Cancel</button>
+      <button onclick="saveEdit()" class="btn-gold" style="flex:1;padding:11px;font-size:0.9rem;">Save Changes</button>
+      <button onclick="closeEdit()" style="flex:1;padding:11px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(245,235,215,0.6);cursor:pointer;font-size:0.9rem;">Cancel</button>
     </div>
   </div>
 </div>
@@ -142,47 +131,50 @@
   </div>
   <div class="admin-page-body">
 
-    <!-- Monthly Report Card -->
+    <!-- ── SECTION 1: Mark Attendance ── -->
     <div class="admin-card mb-4">
       <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
-          <h6 class="fw-bold mb-1" style="color:#fff;"><i class="fas fa-chart-bar me-2" style="color:var(--gold);"></i>Monthly Attendance Report</h6>
-          <p class="mb-0" style="font-size:0.78rem;color:rgba(255,255,255,0.4);">Days present, absent, half-day & attendance % per employee</p>
+          <h6 class="fw-bold mb-1" style="color:#fff;font-size:1rem;"><i class="fas fa-calendar-check me-2" style="color:var(--gold);"></i>Mark Daily Attendance</h6>
+          <p class="mb-0" style="font-size:0.78rem;color:rgba(255,255,255,0.4);">Select a date and mark each employee's attendance</p>
+        </div>
+        <div class="att-date-bar" style="margin-bottom:0;">
+          <input type="date" id="attDate" class="att-date-input"/>
+          <button onclick="loadAtt()" class="btn-gold" style="padding:9px 22px;"><i class="fas fa-search me-2"></i>Load</button>
+        </div>
+      </div>
+      <div id="attSummary" class="att-summary" style="display:none;"></div>
+      <div id="attGrid"><p style="color:rgba(255,255,255,0.3);font-size:0.88rem;">Select a date and click Load.</p></div>
+    </div>
+
+    <!-- ── SECTION 2: Monthly Report ── -->
+    <div class="admin-card mb-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <h6 class="fw-bold mb-1" style="color:#fff;font-size:1rem;"><i class="fas fa-chart-bar me-2" style="color:var(--gold);"></i>Monthly Attendance Report</h6>
+          <p class="mb-0" style="font-size:0.78rem;color:rgba(255,255,255,0.4);">Present days, absent days & attendance % per employee</p>
         </div>
         <div class="d-flex gap-2 align-items-center flex-wrap">
-          <select id="rptMonth" class="rpt-month-select"></select>
-          <button onclick="loadMonthlyReport()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-sync-alt me-2"></i>Generate</button>
+          <select id="rptMonth" class="rpt-month-sel"></select>
+          <button onclick="loadMonthlyReport()" class="btn-gold" style="padding:9px 22px;"><i class="fas fa-sync-alt me-2"></i>Generate</button>
           <button onclick="downloadReportPDF()" id="btnPdf" class="btn-pdf" style="display:none;"><i class="fas fa-file-pdf"></i>Download PDF</button>
         </div>
       </div>
-      <div id="rptStats" style="display:none;">
-        <div class="d-flex gap-3 flex-wrap mb-4" id="rptStatCards"></div>
-        <div class="rpt-header-row">
-          <div>Employee</div><div>Present</div><div>Absent</div><div>Half Day</div><div>Attendance %</div>
-        </div>
-        <div id="rptRows"></div>
+      <div id="rptContent">
+        <p id="rptEmpty" style="color:rgba(255,255,255,0.3);font-size:0.88rem;margin:0;">Select a month and click Generate.</p>
       </div>
-      <p id="rptEmpty" style="color:rgba(255,255,255,0.35);font-size:0.88rem;margin:0;">Select a month and click Generate.</p>
-    </div>
-
-    <!-- Mark Attendance Card -->
-    <div class="admin-card mb-4">
-      <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
-        <h6 class="fw-bold mb-0" style="color:#fff;">Mark Attendance</h6>
-        <input type="date" id="attDate" style="padding:8px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;"/>
-        <button onclick="loadAtt()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-search me-2"></i>Load</button>
-      </div>
-      <div class="summary-bar" id="summaryBar" style="display:none!important;"></div>
-      <div id="attGrid"><p style="color:var(--text-muted);font-size:0.88rem;">Select a date and click Load.</p></div>
     </div>
 
   </div>
 </div>
 
+<!-- Hidden canvas for logo in PDF -->
+<canvas id="logoCanvas" style="display:none;"></canvas>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, markAttendance, showToast, esc, db } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, markAttendance, showToast, esc } from '../js/firebase.js';
 import { getFirestore, doc, updateDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from '../js/config.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -194,277 +186,103 @@ const user    = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = profile?.role === 'receptionist';
-
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
 
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 document.getElementById('attDate').value = new Date().toISOString().slice(0,10);
-
-if (!isAdmin) {
-  document.querySelectorAll('.admin-only-link').forEach(a => a.style.display = 'none');
-}
+if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
 
 let employees = await getAllEmployees(true);
 let currentRecords = [];
 let editTarget = null;
+let monthlyData = [];
 
-// ── Populate month selector ───────────────────────────────────────────────
-(function() {
+// Avatar color palette
+const COLORS = ['#7c3aed','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#0284c7','#16a34a'];
+function avatarColor(name) { let h=0; for(let c of name) h=(h+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+// ── Month selector ────────────────────────────────────────────────────────
+(function(){
   const sel = document.getElementById('rptMonth');
   const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+  for(let i=0;i<12;i++){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
     const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    const lbl = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-    const opt = document.createElement('option');
-    opt.value = val; opt.textContent = lbl;
-    if (i === 0) opt.selected = true;
-    sel.appendChild(opt);
+    const lbl = d.toLocaleString('default',{month:'long',year:'numeric'});
+    const o = document.createElement('option');
+    o.value=val; o.textContent=lbl; if(i===0) o.selected=true;
+    sel.appendChild(o);
   }
 })();
 
-let monthlyData = [];
-
-// ── Monthly Report ────────────────────────────────────────────────────────
-window.loadMonthlyReport = async () => {
-  const [year, month] = document.getElementById('rptMonth').value.split('-').map(Number);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
-  const dateTo   = `${year}-${String(month).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
-
-  document.getElementById('rptEmpty').textContent = 'Loading…';
-  document.getElementById('rptStats').style.display = 'none';
-  document.getElementById('btnPdf').style.display = 'none';
-
-  const snap = await getDocs(query(collection(_db, 'attendance'), where('date','>=',dateFrom), where('date','<=',dateTo)));
-  const allRecs = snap.docs.map(d => d.data());
-
-  monthlyData = employees.map(emp => {
-    const recs    = allRecs.filter(r => r.employee_id === emp.id);
-    const present = recs.filter(r => r.status === 'Present').length;
-    const halfday = recs.filter(r => r.status === 'Half Day').length;
-    const absent  = recs.filter(r => r.status === 'Absent').length;
-    const worked  = present + halfday * 0.5;
-    const pct     = daysInMonth > 0 ? Math.round((worked / daysInMonth) * 100) : 0;
-    return { name: emp.full_name, role: emp.role || '', present, halfday, absent, pct, daysInMonth };
-  }).sort((a, b) => b.pct - a.pct);
-
-  const totPresent = monthlyData.reduce((s,e) => s+e.present, 0);
-  const totAbsent  = monthlyData.reduce((s,e) => s+e.absent,  0);
-  const totHalf    = monthlyData.reduce((s,e) => s+e.halfday, 0);
-  const avgPct     = monthlyData.length ? Math.round(monthlyData.reduce((s,e) => s+e.pct, 0) / monthlyData.length) : 0;
-
-  document.getElementById('rptStatCards').innerHTML = `
-    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#7ce0aa;">${totPresent}</div><div class="rpt-stat-lbl">Total Present Days</div></div>
-    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#ff9a9a;">${totAbsent}</div><div class="rpt-stat-lbl">Total Absent Days</div></div>
-    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#ffc107;">${totHalf}</div><div class="rpt-stat-lbl">Half Days</div></div>
-    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:var(--gold-2);">${avgPct}%</div><div class="rpt-stat-lbl">Avg Attendance</div></div>
-  `;
-
-  document.getElementById('rptRows').innerHTML = monthlyData.map(e => {
-    const color = e.pct >= 75 ? '#7ce0aa' : e.pct >= 50 ? '#ffc107' : '#ff9a9a';
-    return `<div class="rpt-emp-row">
-      <div><div class="rpt-emp-name">${esc(e.name)}</div><div class="rpt-emp-role">${esc(e.role)}</div></div>
-      <div class="rpt-cell" style="color:#7ce0aa;">${e.present}</div>
-      <div class="rpt-cell" style="color:#ff9a9a;">${e.absent}</div>
-      <div class="rpt-cell" style="color:#ffc107;">${e.halfday}</div>
-      <div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <span class="rpt-cell" style="color:${color};">${e.pct}%</span>
-        </div>
-        <div class="rpt-pct-bar"><div class="rpt-pct-fill" style="width:${e.pct}%;background:${color};"></div></div>
-      </div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('rptStats').style.display = 'block';
-  document.getElementById('rptEmpty').textContent = '';
-  document.getElementById('btnPdf').style.display = 'inline-flex';
-};
-
-// ── PDF Download ──────────────────────────────────────────────────────────
-window.downloadReportPDF = () => {
-  if (!monthlyData.length) return;
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const W = pdf.internal.pageSize.getWidth();
-  const monthLabel = document.getElementById('rptMonth').options[document.getElementById('rptMonth').selectedIndex].text;
-
-  // Dark background
-  pdf.setFillColor(12, 10, 20);
-  pdf.rect(0, 0, W, 297, 'F');
-
-  // Header panel
-  pdf.setFillColor(22, 17, 38);
-  pdf.roundedRect(8, 7, W-16, 40, 5, 5, 'F');
-  pdf.setDrawColor(212, 175, 55);
-  pdf.setLineWidth(0.6);
-  pdf.roundedRect(8, 7, W-16, 40, 5, 5, 'S');
-
-  // Gold circle logo
-  pdf.setFillColor(212, 175, 55);
-  pdf.circle(22, 27, 9, 'F');
-  pdf.setFontSize(8); pdf.setFont('helvetica','bold');
-  pdf.setTextColor(12, 10, 20);
-  pdf.text('NS', 22, 29.5, { align: 'center' });
-
-  // Salon name
-  pdf.setFontSize(17); pdf.setFont('helvetica','bold');
-  pdf.setTextColor(212, 175, 55);
-  pdf.text('NEW SHADES', 36, 22);
-  pdf.setFontSize(8); pdf.setFont('helvetica','normal');
-  pdf.setTextColor(180, 155, 100);
-  pdf.text('Premium Salon & Spa', 36, 29);
-
-  // Right side title
-  pdf.setFontSize(10); pdf.setFont('helvetica','bold');
-  pdf.setTextColor(245, 235, 215);
-  pdf.text('MONTHLY ATTENDANCE REPORT', W-14, 19, { align: 'right' });
-  pdf.setFontSize(8.5); pdf.setFont('helvetica','normal');
-  pdf.setTextColor(212, 175, 55);
-  pdf.text(monthLabel.toUpperCase(), W-14, 27, { align: 'right' });
-  pdf.setFontSize(7.5); pdf.setTextColor(150, 130, 90);
-  pdf.text('Generated: ' + new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), W-14, 34, { align: 'right' });
-
-  // Gold divider
-  pdf.setDrawColor(212, 175, 55); pdf.setLineWidth(0.4);
-  pdf.line(8, 50, W-8, 50);
-
-  // Stat boxes
-  const totPresent = monthlyData.reduce((s,e)=>s+e.present,0);
-  const totAbsent  = monthlyData.reduce((s,e)=>s+e.absent,0);
-  const totHalf    = monthlyData.reduce((s,e)=>s+e.halfday,0);
-  const avgPct     = Math.round(monthlyData.reduce((s,e)=>s+e.pct,0)/monthlyData.length);
-  const stats = [
-    { label:'Total Present', val: String(totPresent), color:[34,197,94] },
-    { label:'Total Absent',  val: String(totAbsent),  color:[239,68,68] },
-    { label:'Half Days',     val: String(totHalf),    color:[234,179,8] },
-    { label:'Avg Attendance',val: avgPct+'%',          color:[212,175,55] },
-  ];
-  const bw = (W - 16 - 9) / 4;
-  stats.forEach((s, i) => {
-    const x = 8 + i*(bw+3);
-    pdf.setFillColor(22,17,38); pdf.roundedRect(x, 55, bw, 22, 3, 3, 'F');
-    pdf.setDrawColor(...s.color); pdf.setLineWidth(0.35);
-    pdf.roundedRect(x, 55, bw, 22, 3, 3, 'S');
-    pdf.setFontSize(15); pdf.setFont('helvetica','bold');
-    pdf.setTextColor(...s.color);
-    pdf.text(s.val, x+bw/2, 65, { align:'center' });
-    pdf.setFontSize(6); pdf.setFont('helvetica','normal');
-    pdf.setTextColor(140,120,90);
-    pdf.text(s.label.toUpperCase(), x+bw/2, 71, { align:'center' });
-  });
-
-  // Table
-  pdf.autoTable({
-    startY: 83,
-    head: [['#','Employee','Role','Present','Absent','Half Day','Attendance %']],
-    body: monthlyData.map((e,i) => [i+1, e.name, e.role||'—', e.present, e.absent, e.halfday, e.pct+'%']),
-    styles: {
-      font:'helvetica', fontSize:9,
-      cellPadding:{top:5,bottom:5,left:6,right:6},
-      textColor:[220,210,190],
-      fillColor:[12,10,20],
-      lineColor:[35,28,55], lineWidth:0.3,
-    },
-    headStyles: {
-      fillColor:[22,17,38], textColor:[212,175,55],
-      fontStyle:'bold', fontSize:7.5, halign:'center',
-    },
-    columnStyles: {
-      0:{halign:'center',cellWidth:10},
-      1:{cellWidth:44},
-      2:{cellWidth:32},
-      3:{halign:'center',textColor:[34,197,94]},
-      4:{halign:'center',textColor:[239,68,68]},
-      5:{halign:'center',textColor:[234,179,8]},
-      6:{halign:'center',fontStyle:'bold'},
-    },
-    alternateRowStyles:{ fillColor:[18,14,30] },
-    didParseCell(data) {
-      if (data.section==='body' && data.column.index===6) {
-        const p = parseInt(data.cell.raw);
-        data.cell.styles.textColor = p>=75?[34,197,94]:p>=50?[234,179,8]:[239,68,68];
-      }
-    },
-    margin:{ left:8, right:8 },
-  });
-
-  // Footer on each page
-  const pages = pdf.internal.getNumberOfPages();
-  for (let p=1; p<=pages; p++) {
-    pdf.setPage(p);
-    pdf.setDrawColor(212,175,55,50); pdf.setLineWidth(0.25);
-    pdf.line(8,287,W-8,287);
-    pdf.setFontSize(7); pdf.setTextColor(100,85,65);
-    pdf.text('New Shades Salon — Confidential', 8, 292);
-    pdf.text(`Page ${p} of ${pages}`, W-8, 292, { align:'right' });
-  }
-
-  pdf.save(`Attendance_Report_${document.getElementById('rptMonth').value}.pdf`);
-};
-
-// ── Daily Attendance ──────────────────────────────────────────────────────
+// ── Load daily attendance ─────────────────────────────────────────────────
 window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;
   if (!date) return;
+  document.getElementById('attGrid').innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
   currentRecords = await getAttendance(date);
   renderGrid(date);
 };
 
+function statusClass(status) {
+  if (status==='Present') return 'status-present';
+  if (status==='Absent')  return 'status-absent';
+  if (status==='Half Day') return 'status-halfday';
+  return '';
+}
+
 function renderGrid(date) {
   const grid = document.getElementById('attGrid');
-  const bar  = document.getElementById('summaryBar');
-  if (!employees.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees.</p>'; bar.style.display='none'; return; }
+  const summary = document.getElementById('attSummary');
+  if (!employees.length) { grid.innerHTML='<p style="color:rgba(255,255,255,0.3);">No active employees found.</p>'; summary.style.display='none'; return; }
 
-  const present  = currentRecords.filter(r => r.status==='Present').length;
-  const absent   = currentRecords.filter(r => r.status==='Absent').length;
-  const halfday  = currentRecords.filter(r => r.status==='Half Day').length;
-  const unmarked = employees.length - currentRecords.filter(r => employees.find(e => e.id===r.employee_id)).length;
+  const present  = currentRecords.filter(r=>r.status==='Present').length;
+  const absent   = currentRecords.filter(r=>r.status==='Absent').length;
+  const halfday  = currentRecords.filter(r=>r.status==='Half Day').length;
+  const unmarked = employees.length - currentRecords.filter(r=>employees.find(e=>e.id===r.employee_id)).length;
 
-  bar.style.removeProperty('display');
-  bar.innerHTML = `
-    <span class="summary-chip" style="background:rgba(37,211,102,0.12);color:#7ce0aa;">✓ Present: ${present}</span>
-    <span class="summary-chip" style="background:rgba(255,99,99,0.12);color:#ff9a9a;">✗ Absent: ${absent}</span>
-    <span class="summary-chip" style="background:rgba(255,193,7,0.12);color:#ffc107;">◑ Half Day: ${halfday}</span>
-    <span class="summary-chip" style="background:rgba(255,255,255,0.06);color:rgba(245,235,215,0.5);">— Unmarked: ${unmarked}</span>
+  summary.style.display='flex';
+  summary.innerHTML = `
+    <span class="att-chip" style="background:rgba(34,197,94,0.12);color:#4ade80;border:1px solid rgba(34,197,94,0.2);"><i class="fas fa-check-circle"></i> Present <strong>${present}</strong></span>
+    <span class="att-chip" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);"><i class="fas fa-times-circle"></i> Absent <strong>${absent}</strong></span>
+    <span class="att-chip" style="background:rgba(234,179,8,0.12);color:#fbbf24;border:1px solid rgba(234,179,8,0.2);"><i class="fas fa-adjust"></i> Half Day <strong>${halfday}</strong></span>
+    <span class="att-chip" style="background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.08);"><i class="fas fa-minus-circle"></i> Unmarked <strong>${unmarked}</strong></span>
   `;
 
-  grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr>
-    <th>Employee</th><th>Role</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Action</th>
-  </tr></thead><tbody>${
-    employees.map(emp => {
-      const rec = currentRecords.find(r => r.employee_id===emp.id);
-      const statusClass = rec?.status==='Present'?'badge-status-confirmed':rec?.status==='Absent'?'badge-status-cancelled':'badge-status-pending';
-      const safeName = emp.full_name.replace(/'/g,"\\'");
-      const showTimes = rec?.status==='Present'||rec?.status==='Half Day';
-      const timeInputs = showTimes ? `
-        <div class="d-flex gap-1 align-items-center mt-1">
-          <input type="time" class="time-input" id="ci_${emp.id}" value="${rec?.check_in||''}"
-            onchange="saveTime('${emp.id}','${safeName}','${date}','check_in',this.value)" title="Check In"/>
-          <span style="color:rgba(245,235,215,0.3);font-size:0.75rem;">→</span>
-          <input type="time" class="time-input" id="co_${emp.id}" value="${rec?.check_out||''}"
-            onchange="saveTime('${emp.id}','${safeName}','${date}','check_out',this.value)" title="Check Out"/>
-        </div>` : `<div style="color:rgba(245,235,215,0.3);font-size:0.78rem;margin-top:2px;">—</div>`;
-      const editBtn = isAdmin ? `<button class="att-action-btn btn-edit" onclick="openEdit('${emp.id}','${safeName}','${date}')"><i class="fas fa-edit me-1"></i>Edit</button>` : '';
-      return `<tr>
-        <td class="admin-td-bold">${esc(emp.full_name)}</td>
-        <td class="admin-td-muted">${esc(emp.role||'')}</td>
-        <td><span class="admin-status-badge ${statusClass}">${rec?.status||'Not Marked'}</span></td>
-        <td class="admin-td-muted">${rec?.check_in?`<span style="color:#7ce0aa;">${rec.check_in}</span>`:'—'}</td>
-        <td class="admin-td-muted">${rec?.check_out?`<span style="color:#ff9a9a;">${rec.check_out}</span>`:'—'}</td>
-        <td>
-          <div class="d-flex gap-1 flex-wrap align-items-start">
-            <button class="att-action-btn btn-present" onclick="mark('${emp.id}','${safeName}','Present','${date}')">Present</button>
-            <button class="att-action-btn btn-absent"  onclick="mark('${emp.id}','${safeName}','Absent','${date}')">Absent</button>
-            <button class="att-action-btn btn-halfday" onclick="mark('${emp.id}','${safeName}','Half Day','${date}')">Half Day</button>
-            ${editBtn}
-          </div>
-          ${timeInputs}
-        </td>
-      </tr>`;
-    }).join('')
-  }</tbody></table></div>`;
+  grid.innerHTML = `<div class="emp-att-grid">${employees.map(emp => {
+    const rec = currentRecords.find(r=>r.employee_id===emp.id);
+    const status = rec?.status || '';
+    const sc = statusClass(status);
+    const safe = emp.full_name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const showTimes = status==='Present'||status==='Half Day';
+    const color = avatarColor(emp.full_name);
+    const ini = initials(emp.full_name);
+    const editBtn = isAdmin ? `<button onclick="openEdit('${emp.id}','${safe}','${date}')" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(99,179,255,0.3);background:rgba(99,179,255,0.08);color:#93c5fd;font-size:0.72rem;cursor:pointer;font-weight:600;"><i class="fas fa-pen me-1"></i>Edit</button>` : '';
+
+    return `<div class="emp-att-card ${sc}" id="card-${emp.id}">
+      <div class="d-flex align-items-center gap-12" style="gap:12px;">
+        <div class="emp-avatar" style="background:${color}22;color:${color};border:1.5px solid ${color}44;">${ini}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:0.9rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(emp.full_name)}</div>
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.38);margin-top:1px;">${esc(emp.role||'Employee')}</div>
+        </div>
+        ${status ? `<span style="font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:999px;${status==='Present'?'background:rgba(34,197,94,0.15);color:#4ade80;':status==='Absent'?'background:rgba(239,68,68,0.15);color:#f87171;':'background:rgba(234,179,8,0.15);color:#fbbf24;'}">${status}</span>` : ''}
+      </div>
+      <div class="status-btns">
+        <button class="s-btn s-btn-present ${status==='Present'?'active':''}" onclick="mark('${emp.id}','${safe}','Present','${date}')"><i class="fas fa-check"></i> Present</button>
+        <button class="s-btn s-btn-absent ${status==='Absent'?'active':''}" onclick="mark('${emp.id}','${safe}','Absent','${date}')"><i class="fas fa-times"></i> Absent</button>
+        <button class="s-btn s-btn-half ${status==='Half Day'?'active':''}" onclick="mark('${emp.id}','${safe}','Half Day','${date}')"><i class="fas fa-adjust"></i> Half</button>
+        ${editBtn}
+      </div>
+      ${showTimes ? `<div class="time-row">
+        <span class="time-lbl">In</span>
+        <input type="time" class="time-inp" value="${rec?.check_in||''}" onchange="saveTime('${emp.id}','${safe}','${date}','check_in',this.value)" title="Check In"/>
+        <span class="time-lbl" style="margin-left:4px;">Out</span>
+        <input type="time" class="time-inp" value="${rec?.check_out||''}" onchange="saveTime('${emp.id}','${safe}','${date}','check_out',this.value)" title="Check Out"/>
+      </div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
 }
 
 window.mark = async (empId, empName, status, date) => {
@@ -478,20 +296,17 @@ window.mark = async (empId, empName, status, date) => {
 
 window.saveTime = async (empId, empName, date, field, value) => {
   try {
-    const rec = currentRecords.find(r => r.employee_id===empId);
-    if (rec?.id) {
-      await updateDoc(doc(_db,'attendance',rec.id), { [field]:value });
-    } else {
-      await markAttendance({ employee_id:empId, employee_name:empName, date, status:'Present', [field]:value });
-    }
+    const rec = currentRecords.find(r=>r.employee_id===empId);
+    if (rec?.id) await updateDoc(doc(_db,'attendance',rec.id),{[field]:value});
+    else await markAttendance({employee_id:empId,employee_name:empName,date,status:'Present',[field]:value});
     currentRecords = await getAttendance(date);
-    showToast(`${field==='check_in'?'Check In':'Check Out'} saved`, 'success');
-  } catch { showToast('Failed to save time.', 'danger'); }
+    showToast(`${field==='check_in'?'Check In':'Check Out'} saved`,'success');
+  } catch { showToast('Failed to save time.','danger'); }
 };
 
 window.openEdit = (empId, empName, date) => {
   if (!isAdmin) return;
-  const rec = currentRecords.find(r => r.employee_id===empId);
+  const rec = currentRecords.find(r=>r.employee_id===empId);
   editTarget = { docId:rec?.id||null, empId, empName, date };
   document.getElementById('editEmpName').textContent = empName;
   document.getElementById('editStatus').value   = rec?.status   || 'Present';
@@ -499,31 +314,251 @@ window.openEdit = (empId, empName, date) => {
   document.getElementById('editCheckOut').value = rec?.check_out || '';
   document.getElementById('editModal').classList.add('show');
 };
-
 window.closeEdit = () => { document.getElementById('editModal').classList.remove('show'); editTarget=null; };
-
 window.saveEdit = async () => {
   if (!editTarget) return;
   const status   = document.getElementById('editStatus').value;
   const checkIn  = document.getElementById('editCheckIn').value;
   const checkOut = document.getElementById('editCheckOut').value;
   try {
-    await markAttendance({ employee_id:editTarget.empId, employee_name:editTarget.empName, date:editTarget.date, status, check_in:checkIn||null, check_out:checkOut||null });
-    showToast('Attendance updated', 'success');
+    await markAttendance({employee_id:editTarget.empId,employee_name:editTarget.empName,date:editTarget.date,status,check_in:checkIn||null,check_out:checkOut||null});
+    showToast('Attendance updated','success');
     closeEdit();
-    currentRecords = await getAttendance(editTarget?.date || document.getElementById('attDate').value);
+    currentRecords = await getAttendance(editTarget.date);
     renderGrid(document.getElementById('attDate').value);
-  } catch { showToast('Failed to update.', 'danger'); }
+  } catch { showToast('Failed to update.','danger'); }
+};
+document.getElementById('editModal').addEventListener('click', e=>{ if(e.target===document.getElementById('editModal')) closeEdit(); });
+
+// ── Monthly Report ────────────────────────────────────────────────────────
+window.loadMonthlyReport = async () => {
+  const [year, month] = document.getElementById('rptMonth').value.split('-').map(Number);
+  const dim = new Date(year, month, 0).getDate();
+  const dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
+  const dateTo   = `${year}-${String(month).padStart(2,'0')}-${String(dim).padStart(2,'0')}`;
+
+  document.getElementById('rptContent').innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
+  document.getElementById('btnPdf').style.display = 'none';
+
+  const snap = await getDocs(query(collection(_db,'attendance'),where('date','>=',dateFrom),where('date','<=',dateTo)));
+  const allRecs = snap.docs.map(d=>d.data());
+
+  monthlyData = employees.map(emp => {
+    const recs    = allRecs.filter(r=>r.employee_id===emp.id);
+    const present = recs.filter(r=>r.status==='Present').length;
+    const halfday = recs.filter(r=>r.status==='Half Day').length;
+    const absent  = recs.filter(r=>r.status==='Absent').length;
+    const worked  = present + halfday*0.5;
+    const pct     = dim>0 ? Math.round((worked/dim)*100) : 0;
+    return { name:emp.full_name, role:emp.role||'', present, halfday, absent, pct, dim };
+  }).sort((a,b)=>b.pct-a.pct);
+
+  const totP = monthlyData.reduce((s,e)=>s+e.present,0);
+  const totA = monthlyData.reduce((s,e)=>s+e.absent,0);
+  const totH = monthlyData.reduce((s,e)=>s+e.halfday,0);
+  const avg  = monthlyData.length ? Math.round(monthlyData.reduce((s,e)=>s+e.pct,0)/monthlyData.length) : 0;
+
+  const statsHtml = `<div class="rpt-stat-grid">
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#4ade80;">${totP}</div><div class="rpt-stat-lbl">Total Present</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#f87171;">${totA}</div><div class="rpt-stat-lbl">Total Absent</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#fbbf24;">${totH}</div><div class="rpt-stat-lbl">Half Days</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:var(--gold-2,#d4af37);">${avg}%</div><div class="rpt-stat-lbl">Avg Attendance</div></div>
+  </div>`;
+
+  const rowsHtml = monthlyData.map(e => {
+    const color = e.pct>=75?'#4ade80':e.pct>=50?'#fbbf24':'#f87171';
+    return `<div class="rpt-row">
+      <div><div class="rpt-name">${esc(e.name)}</div><div class="rpt-role">${esc(e.role)}</div></div>
+      <div class="rpt-cell" style="color:#4ade80;">${e.present}</div>
+      <div class="rpt-cell" style="color:#f87171;">${e.absent}</div>
+      <div class="rpt-cell" style="color:#fbbf24;">${e.halfday}</div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span class="rpt-cell" style="color:${color};">${e.pct}%</span>
+        </div>
+        <div class="rpt-bar-wrap"><div class="rpt-bar-fill" style="width:${e.pct}%;background:${color};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rptContent').innerHTML = `${statsHtml}
+    <div class="rpt-table-wrap">
+      <div class="rpt-thead"><div>Employee</div><div>Present</div><div>Absent</div><div>Half Day</div><div>Attendance %</div></div>
+      ${rowsHtml}
+    </div>`;
+  document.getElementById('btnPdf').style.display = 'inline-flex';
 };
 
-document.getElementById('editModal').addEventListener('click', e => { if (e.target===document.getElementById('editModal')) closeEdit(); });
+// ── PDF Download (White Professional) ────────────────────────────────────
+function loadLogoAsBase64(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.getElementById('logoCanvas');
+      canvas.width = img.naturalWidth || 120;
+      canvas.height = img.naturalHeight || 120;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+window.downloadReportPDF = async () => {
+  if (!monthlyData.length) return;
+  const btn = document.getElementById('btnPdf');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…';
+  btn.disabled = true;
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = pdf.internal.pageSize.getWidth();
+  const monthLabel = document.getElementById('rptMonth').options[document.getElementById('rptMonth').selectedIndex].text;
+
+  // White background
+  pdf.setFillColor(255,255,255);
+  pdf.rect(0,0,W,297,'F');
+
+  // Top gold accent bar
+  pdf.setFillColor(212,175,55);
+  pdf.rect(0,0,W,2,'F');
+
+  // Header area light bg
+  pdf.setFillColor(252,250,245);
+  pdf.rect(0,2,W,46,'F');
+  pdf.setDrawColor(230,220,195);
+  pdf.setLineWidth(0.4);
+  pdf.line(0,48,W,48);
+
+  // Logo
+  const logoB64 = await loadLogoAsBase64('../images/logo.jpeg');
+  if (logoB64) {
+    pdf.addImage(logoB64,'JPEG',10,6,32,32,undefined,'FAST');
+  } else {
+    pdf.setFillColor(212,175,55);
+    pdf.circle(26,22,14,'F');
+    pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+    pdf.setTextColor(255,255,255);
+    pdf.text('NS',26,25.5,{align:'center'});
+  }
+
+  // Salon name
+  pdf.setFontSize(20); pdf.setFont('helvetica','bold');
+  pdf.setTextColor(30,20,10);
+  pdf.text('NEW SHADES', 48, 18);
+  pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+  pdf.setTextColor(140,120,80);
+  pdf.text('Premium Salon & Spa', 48, 25);
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(180,160,120);
+  pdf.text('Excellence in Beauty & Wellness', 48, 31);
+
+  // Right: report title
+  pdf.setFontSize(11); pdf.setFont('helvetica','bold');
+  pdf.setTextColor(50,35,10);
+  pdf.text('ATTENDANCE REPORT', W-12, 16, {align:'right'});
+  pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+  pdf.setTextColor(212,175,55);
+  pdf.text(monthLabel.toUpperCase(), W-12, 24, {align:'right'});
+  pdf.setFontSize(7.5); pdf.setTextColor(160,140,100);
+  pdf.text('Generated: '+new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), W-12, 31, {align:'right'});
+
+  // Gold divider
+  pdf.setDrawColor(212,175,55); pdf.setLineWidth(0.8);
+  pdf.line(10,48,W-10,48);
+
+  // Stat boxes
+  const totP = monthlyData.reduce((s,e)=>s+e.present,0);
+  const totA = monthlyData.reduce((s,e)=>s+e.absent,0);
+  const totH = monthlyData.reduce((s,e)=>s+e.halfday,0);
+  const avg  = Math.round(monthlyData.reduce((s,e)=>s+e.pct,0)/monthlyData.length);
+  const stats = [
+    {label:'TOTAL PRESENT', val:String(totP), color:[22,163,74],  bg:[240,253,244]},
+    {label:'TOTAL ABSENT',  val:String(totA), color:[220,38,38],  bg:[254,242,242]},
+    {label:'HALF DAYS',     val:String(totH), color:[161,98,7],   bg:[254,252,232]},
+    {label:'AVG ATTENDANCE',val:avg+'%',       color:[146,109,20], bg:[254,249,235]},
+  ];
+  const bw = (W-20-9)/4;
+  stats.forEach((s,i) => {
+    const x = 10+i*(bw+3);
+    pdf.setFillColor(...s.bg); pdf.roundedRect(x,53,bw,22,3,3,'F');
+    pdf.setDrawColor(...s.color,60); pdf.setLineWidth(0.3);
+    pdf.roundedRect(x,53,bw,22,3,3,'S');
+    pdf.setFontSize(16); pdf.setFont('helvetica','bold');
+    pdf.setTextColor(...s.color);
+    pdf.text(s.val, x+bw/2, 63, {align:'center'});
+    pdf.setFontSize(5.5); pdf.setFont('helvetica','bold');
+    pdf.setTextColor(...s.color);
+    pdf.text(s.label, x+bw/2, 70, {align:'center'});
+  });
+
+  // Table
+  pdf.autoTable({
+    startY: 81,
+    head: [['#','Employee Name','Role','Present','Absent','Half Day','Attendance %']],
+    body: monthlyData.map((e,i) => [i+1, e.name, e.role||'—', e.present, e.absent, e.halfday, e.pct+'%']),
+    styles: {
+      font:'helvetica', fontSize:9.5,
+      cellPadding:{top:6,bottom:6,left:7,right:7},
+      textColor:[40,30,15],
+      fillColor:[255,255,255],
+      lineColor:[230,220,195], lineWidth:0.3,
+    },
+    headStyles: {
+      fillColor:[212,175,55], textColor:[255,255,255],
+      fontStyle:'bold', fontSize:8, halign:'center',
+      cellPadding:{top:7,bottom:7,left:7,right:7},
+    },
+    columnStyles: {
+      0:{halign:'center',cellWidth:10,textColor:[150,130,90]},
+      1:{cellWidth:48,fontStyle:'bold'},
+      2:{cellWidth:35,textColor:[100,85,60]},
+      3:{halign:'center',textColor:[22,163,74],fontStyle:'bold'},
+      4:{halign:'center',textColor:[220,38,38],fontStyle:'bold'},
+      5:{halign:'center',textColor:[161,98,7],fontStyle:'bold'},
+      6:{halign:'center',fontStyle:'bold'},
+    },
+    alternateRowStyles:{fillColor:[252,250,245]},
+    didParseCell(data) {
+      if (data.section==='body' && data.column.index===6) {
+        const p = parseInt(data.cell.raw);
+        data.cell.styles.textColor = p>=75?[22,163,74]:p>=50?[161,98,7]:[220,38,38];
+      }
+    },
+    margin:{left:10,right:10},
+  });
+
+  // Footer
+  const pages = pdf.internal.getNumberOfPages();
+  for(let p=1;p<=pages;p++){
+    pdf.setPage(p);
+    pdf.setFillColor(252,250,245);
+    pdf.rect(0,284,W,13,'F');
+    pdf.setDrawColor(212,175,55); pdf.setLineWidth(0.3);
+    pdf.line(10,284,W-10,284);
+    pdf.setFontSize(7); pdf.setFont('helvetica','normal');
+    pdf.setTextColor(160,140,100);
+    pdf.text('New Shades Salon — Confidential Document', 12, 290);
+    pdf.text(`Page ${p} of ${pages}`, W-12, 290, {align:'right'});
+    // Bottom gold bar
+    pdf.setFillColor(212,175,55);
+    pdf.rect(0,295,W,2,'F');
+  }
+
+  pdf.save(`Attendance_Report_${document.getElementById('rptMonth').value}.pdf`);
+  btn.innerHTML = '<i class="fas fa-file-pdf"></i> Download PDF';
+  btn.disabled = false;
+};
 
 await loadAtt();
 
-document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
-const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
-document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow='hidden'; });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow=''; });
+document.getElementById('logoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click',()=>{ sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow='hidden'; });
+overlay.addEventListener('click',()=>{ sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow=''; });
 </script>
 </body>
 </html>
