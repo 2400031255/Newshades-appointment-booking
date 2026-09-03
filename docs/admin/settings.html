@@ -72,9 +72,9 @@
           <p style="font-size:0.83rem;color:rgba(240,230,211,0.5);margin-bottom:20px;">Manage URLs for all linked applications. These are used by the Launch buttons across the portal.</p>
           <div id="appUrlFields">
             <div class="mb-3">
-              <label class="field-label mb-1" style="font-size:0.75rem;"><i class="fas fa-file-invoice-dollar me-1" style="color:var(--gold);"></i>BILLING APP URL</label>
-              <input type="url" id="billingUrl" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://billing.newshades.in"/>
-              <div style="font-size:0.72rem;color:rgba(240,230,211,0.35);margin-top:4px;">e.g. https://billing.newshades.in or https://newshadesbilling.web.app</div>
+              <label class="field-label mb-1" style="font-size:0.75rem;"><i class="fas fa-external-link-alt me-1" style="color:var(--gold);"></i>APP URL</label>
+              <input type="url" id="billingUrl" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="https://your-app-url.com"/>
+              <div style="font-size:0.72rem;color:rgba(240,230,211,0.35);margin-top:4px;">The main app URL shown as a launch button on the dashboard.</div>
             </div>
           </div>
           <div id="appSettingsMsg" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;font-size:0.85rem;"></div>
@@ -190,6 +190,7 @@ document.getElementById('waMessage').value   = s.wa_message     || '';
 document.getElementById('hoursWeekday').value  = s.hours_weekday  || '';
 document.getElementById('hoursSaturday').value = s.hours_saturday || '';
 document.getElementById('hoursSunday').value   = s.hours_sunday   || '';
+document.getElementById('billingUrl').value    = appS?.billing_url || '';
 
 // Founders
 document.getElementById('f1Name').value  = s.founder1_name  || '';
@@ -290,12 +291,12 @@ document.getElementById('saveAppSettingsBtn').addEventListener('click', async ()
   const msgEl = document.getElementById('appSettingsMsg');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   try {
-    await saveAppSettings({}, profile?.full_name || user.email);
+    await saveAppSettings({ billing_url: document.getElementById('billingUrl').value.trim() }, profile?.full_name || user.email);
     msgEl.style.display = '';
     msgEl.style.background = 'rgba(37,211,102,0.08)';
     msgEl.style.border = '1px solid rgba(37,211,102,0.25)';
     msgEl.style.color = '#7ce0aa';
-    msgEl.innerHTML = '<i class="fas fa-check-circle me-2"></i>Application settings saved successfully!';
+    msgEl.innerHTML = '<i class="fas fa-check-circle me-2"></i>App settings saved successfully!';
     setTimeout(() => { msgEl.style.display = 'none'; }, 3500);
   } catch { showToast('Failed to save.', 'danger'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Application Settings'; }
