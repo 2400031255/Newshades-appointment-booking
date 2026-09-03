@@ -83,6 +83,10 @@ export function requireGuest() {
           window.location.href = 'login.html?error=deactivated';
           return;
         }
+        if (emp.role === 'receptionist') {
+          window.location.href = 'admin/attendance.html';
+          return;
+        }
         window.location.href = 'employee/dashboard.html';
         return;
       }
