@@ -352,11 +352,27 @@ const _db = getFirestore(_app);
 
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
+// Allow admin OR receptionist role only
+const isAdmin = !!profile?.is_admin;
+const isReceptionist = profile?.role === 'receptionist';
+if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
+// Hide reports tab for receptionist (billing only)
+if (!isAdmin) {
+  document.querySelector('.bill-tab[onclick*="reports"]').style.display = 'none';
+}
 
-// Sidebar
+// Sidebar — hide admin-only links for receptionist
 const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
+if (!isAdmin) {
+  // Receptionist sees only Billing and Profile
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    const href = a.getAttribute('href') || '';
+    if (!href.includes('billing') && !href.includes('profile') && a.id !== 'logoutBtn') {
+      a.style.display = 'none';
+    }
+  });
+}
 document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
@@ -443,6 +459,9 @@ function renderGrid() {
       '</div>';
   }).join('');
 }
+
+window.renderGrid = renderGrid;
+window.filterServices = renderGrid;
 
 window.toggleSvc = id => {
   const svc = allSvcs.find(s => s.id === id);
