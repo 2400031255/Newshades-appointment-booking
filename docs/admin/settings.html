@@ -105,6 +105,33 @@
           </div>
         </div>
       </div>
+      <!-- Location Lock -->
+      <div class="col-12">
+        <div class="admin-card" style="border-color:rgba(99,179,255,0.25);">
+          <h6 class="fw-bold mb-2" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-map-marker-alt me-2" style="color:#63b3ff;"></i>Employee Location Lock</h6>
+          <p style="font-size:0.83rem;color:rgba(240,230,211,0.5);margin-bottom:20px;">Employees can only access their portal when physically inside the salon. Set the salon GPS coordinates and allowed radius below.</p>
+          <div class="row g-3 mb-3">
+            <div class="col-sm-4">
+              <label class="field-label mb-1" style="font-size:0.75rem;">LATITUDE</label>
+              <input type="number" step="any" id="salonLat" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(99,179,255,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 16.9174"/>
+            </div>
+            <div class="col-sm-4">
+              <label class="field-label mb-1" style="font-size:0.75rem;">LONGITUDE</label>
+              <input type="number" step="any" id="salonLng" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(99,179,255,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 81.1022"/>
+            </div>
+            <div class="col-sm-4">
+              <label class="field-label mb-1" style="font-size:0.75rem;">ALLOWED RADIUS (meters)</label>
+              <input type="number" id="salonRadius" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(99,179,255,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 150" min="50" max="5000"/>
+            </div>
+          </div>
+          <div class="d-flex gap-3 flex-wrap align-items-center">
+            <button id="useMyLocBtn" style="padding:10px 20px;border-radius:12px;border:1.5px solid rgba(99,179,255,0.35);background:rgba(99,179,255,0.08);color:#9dc0ff;font-size:0.88rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;"><i class="fas fa-crosshairs"></i>Use My Current Location</button>
+            <button id="saveLocBtn" class="btn-gold" style="padding:10px 24px;"><i class="fas fa-save me-2"></i>Save Location Settings</button>
+            <span id="locStatus" style="font-size:0.8rem;color:rgba(240,230,211,0.4);"></span>
+          </div>
+          <div id="locPreview" style="display:none;margin-top:14px;padding:10px 14px;border-radius:10px;background:rgba(99,179,255,0.06);border:1px solid rgba(99,179,255,0.2);font-size:0.82rem;color:#9dc0ff;"></div>
+        </div>
+      </div>
       <div class="col-12">
         <div class="admin-card">
           <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-users me-2" style="color:var(--gold);"></i>Founders Section (About Page)</h6>
@@ -273,6 +300,41 @@ document.getElementById('saveAppSettingsBtn').addEventListener('click', async ()
 });
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+
+// ── Location Lock ─────────────────────────────────────────────────────────
+document.getElementById('salonLat').value    = s.salon_lat    || '';
+document.getElementById('salonLng').value    = s.salon_lng    || '';
+document.getElementById('salonRadius').value = s.salon_radius || 150;
+if (s.salon_lat && s.salon_lng) {
+  document.getElementById('locPreview').style.display = '';
+  document.getElementById('locPreview').textContent = `📍 Saved: ${s.salon_lat}, ${s.salon_lng} — radius ${s.salon_radius||150}m`;
+}
+document.getElementById('useMyLocBtn').addEventListener('click', () => {
+  const st = document.getElementById('locStatus');
+  st.textContent = 'Getting location…';
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById('salonLat').value = pos.coords.latitude.toFixed(7);
+      document.getElementById('salonLng').value = pos.coords.longitude.toFixed(7);
+      st.textContent = '✓ Location captured!';
+      st.style.color = '#7ce0aa';
+    },
+    () => { st.textContent = 'Location denied. Enable browser location.'; st.style.color = '#ff9a9a'; }
+  );
+});
+document.getElementById('saveLocBtn').addEventListener('click', async () => {
+  const lat = parseFloat(document.getElementById('salonLat').value);
+  const lng = parseFloat(document.getElementById('salonLng').value);
+  const radius = parseInt(document.getElementById('salonRadius').value) || 150;
+  if (isNaN(lat) || isNaN(lng)) { showToast('Enter valid coordinates.', 'danger'); return; }
+  try {
+    await saveSettings({ salon_lat: lat, salon_lng: lng, salon_radius: radius });
+    document.getElementById('locPreview').style.display = '';
+    document.getElementById('locPreview').textContent = `📍 Saved: ${lat}, ${lng} — radius ${radius}m`;
+    showToast('Location settings saved!', 'success');
+  } catch { showToast('Failed to save.', 'danger'); }
+});
+
 const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
 toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
 overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});

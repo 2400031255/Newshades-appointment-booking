@@ -247,6 +247,61 @@ export async function requireActiveEmployee(redirectTo = '../login.html') {
 }
 export async function deleteEmployee(id) { return deleteDoc(doc(db, "employees", id)); }
 
+// ── Location Lock (employee portal) ─────────────────────────────────────
+export async function checkSalonLocation() {
+  // Fetch salon coords from settings
+  let settings;
+  try {
+    settings = await getSettings();
+  } catch { return; } // if settings fail, don't block
+
+  const sLat = parseFloat(settings?.salon_lat);
+  const sLng = parseFloat(settings?.salon_lng);
+  const radius = parseInt(settings?.salon_radius) || 150;
+
+  // If admin hasn't set location yet, skip check
+  if (!sLat || !sLng) return;
+
+  return new Promise(resolve => {
+    if (!navigator.geolocation) { showLocationBlock('Location services not supported on this device.'); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const dist = haversine(pos.coords.latitude, pos.coords.longitude, sLat, sLng);
+        if (dist <= radius) { resolve(); }
+        else { showLocationBlock(`You are ${Math.round(dist)}m away from the salon. Access is only allowed within ${radius}m of the salon location.`); }
+      },
+      err => {
+        const msg = err.code === 1
+          ? 'Location permission denied. Please allow location access to use the employee portal.'
+          : 'Unable to get your location. Please enable GPS and try again.';
+        showLocationBlock(msg);
+      },
+      { timeout: 10000, maximumAge: 60000 }
+    );
+  });
+}
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+function showLocationBlock(msg) {
+  document.body.innerHTML = `
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#050407;padding:24px;">
+      <div style="max-width:420px;width:100%;text-align:center;">
+        <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,107,107,0.12);border:2px solid rgba(255,107,107,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+          <i class="fas fa-map-marker-alt" style="font-size:2rem;color:#ff6b6b;"></i>
+        </div>
+        <h5 style="color:#fff;font-family:'Playfair Display',serif;margin-bottom:12px;">Access Restricted</h5>
+        <p style="color:rgba(240,230,211,0.6);font-size:0.9rem;line-height:1.6;margin-bottom:28px;">${msg}</p>
+        <button onclick="location.reload()" style="padding:12px 28px;border-radius:12px;border:1.5px solid rgba(201,168,76,0.35);background:rgba(201,168,76,0.1);color:#c9a84c;font-size:0.9rem;font-weight:600;cursor:pointer;margin-right:10px;"><i class="fas fa-redo me-2"></i>Try Again</button>
+        <button onclick="(async()=>{const {logoutUser}=await import('../js/firebase.js');logoutUser();})()" style="padding:12px 28px;border-radius:12px;border:1.5px solid rgba(255,107,107,0.3);background:rgba(255,107,107,0.08);color:#ff6b6b;font-size:0.9rem;font-weight:600;cursor:pointer;"><i class="fas fa-sign-out-alt me-2"></i>Logout</button>
+      </div>
+    </div>`;
+}
+
 // ── Attendance ────────────────────────────────────────────────────────────
 export async function getAttendance(date) {
   const q = query(collection(db, "attendance"), where("date", "==", date));
