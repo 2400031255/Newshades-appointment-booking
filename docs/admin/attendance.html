@@ -4,32 +4,120 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Attendance – New Shades Admin</title>
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
+  <style>
+    .time-input {
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.78rem;
+      padding: 4px 8px;
+      outline: none;
+      color-scheme: dark;
+      width: 100px;
+    }
+    .time-input:focus { border-color: rgba(201,168,76,0.5); }
+    .att-action-btn {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-present { border: 1px solid rgba(37,211,102,0.3); background: rgba(37,211,102,0.08); color: #7ce0aa; }
+    .btn-absent  { border: 1px solid rgba(255,99,99,0.3);  background: rgba(255,99,99,0.08);  color: #ff9a9a; }
+    .btn-halfday { border: 1px solid rgba(255,193,7,0.3);  background: rgba(255,193,7,0.08);  color: #ffc107; }
+    .btn-edit    { border: 1px solid rgba(99,179,255,0.3); background: rgba(99,179,255,0.08); color: #9dc0ff; }
+    /* Edit Modal */
+    .att-modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7); z-index: 9999;
+      align-items: center; justify-content: center;
+    }
+    .att-modal-backdrop.show { display: flex; }
+    .att-modal {
+      background: #0e0b14;
+      border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 18px;
+      padding: 28px 24px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.7);
+    }
+    .att-modal h6 { color: var(--gold, #c9a84c); font-weight: 700; margin-bottom: 20px; }
+    .att-modal label { font-size: 0.82rem; color: rgba(245,235,215,0.6); margin-bottom: 4px; display: block; }
+    .att-modal select, .att-modal input[type="time"] {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 10px;
+      color: #fff;
+      padding: 9px 14px;
+      font-size: 0.88rem;
+      outline: none;
+      color-scheme: dark;
+      margin-bottom: 14px;
+    }
+    .att-modal select option { background: #0e0b14; }
+    .summary-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .summary-chip {
+      padding: 6px 16px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+    }
+  </style>
 </head>
 <body class="admin-body">
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
   <nav class="sidebar-nav">
-    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
-    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
-    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
-    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="dashboard.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="billing.html"><span class="sidebar-nav-label"><i class="fas fa-file-invoice-dollar" style="color:var(--gold);"></i> Billing</span></a>
+    <a href="services.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="employees.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
     <a href="attendance.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
-    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
-    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
-    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
-    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="payroll.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
     <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
     <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
   </nav>
 </div>
+
+<!-- Edit Modal (admin only) -->
+<div class="att-modal-backdrop" id="editModal">
+  <div class="att-modal">
+    <h6><i class="fas fa-edit me-2"></i>Edit Attendance</h6>
+    <p id="editEmpName" style="color:#fff;font-weight:600;margin-bottom:16px;font-size:0.95rem;"></p>
+    <label>Status</label>
+    <select id="editStatus">
+      <option value="Present">Present</option>
+      <option value="Absent">Absent</option>
+      <option value="Half Day">Half Day</option>
+    </select>
+    <label>Check In</label>
+    <input type="time" id="editCheckIn"/>
+    <label>Check Out</label>
+    <input type="time" id="editCheckOut"/>
+    <div class="d-flex gap-2 mt-2">
+      <button onclick="saveEdit()" class="btn-gold" style="flex:1;padding:10px;">Save</button>
+      <button onclick="closeEdit()" style="flex:1;padding:10px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.1);background:transparent;color:rgba(245,235,215,0.6);cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="admin-content">
   <div class="admin-topbar">
-    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Attendance</h6></div>
+    <div class="d-flex align-items-center gap-3">
+      <button id="sidebarToggle"><i class="fas fa-bars"></i></button>
+      <h6 class="mb-0 fw-bold">Attendance</h6>
+    </div>
     <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
   </div>
   <div class="admin-page-body">
@@ -39,60 +127,196 @@
         <input type="date" id="attDate" style="padding:8px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;"/>
         <button onclick="loadAtt()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-search me-2"></i>Load</button>
       </div>
+      <!-- Summary chips -->
+      <div class="summary-bar" id="summaryBar" style="display:none!important;"></div>
       <div id="attGrid"><p style="color:var(--text-muted);font-size:0.88rem;">Select a date and click Load.</p></div>
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, markAttendance, showToast, esc } from '../js/firebase.js';
-const user = await requireAuth('../login.html');
+import { getFirestore, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { firebaseConfig } from '../js/config.js';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+
+const _app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const _db  = getFirestore(_app);
+
+const user    = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
+const isAdmin = !!profile?.is_admin;
+const isReceptionist = profile?.role === 'receptionist';
+
+if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
+
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 document.getElementById('attDate').value = new Date().toISOString().slice(0,10);
 
+// Hide admin-only sidebar links for receptionist
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only-link').forEach(a => a.style.display = 'none');
+}
+
 let employees = await getAllEmployees(true);
+let currentRecords = [];
+let editTarget = null; // { docId, empId, empName }
 
 window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;
   if (!date) return;
-  const records = await getAttendance(date);
+  currentRecords = await getAttendance(date);
+  renderGrid(date);
+};
+
+function renderGrid(date) {
   const grid = document.getElementById('attGrid');
-  if (!employees.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees.</p>'; return; }
-  grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr><th>Employee</th><th>Role</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Action</th></tr></thead><tbody>${
+  const bar  = document.getElementById('summaryBar');
+
+  if (!employees.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);">No active employees.</p>';
+    bar.style.display = 'none';
+    return;
+  }
+
+  // Summary counts
+  const present  = currentRecords.filter(r => r.status === 'Present').length;
+  const absent   = currentRecords.filter(r => r.status === 'Absent').length;
+  const halfday  = currentRecords.filter(r => r.status === 'Half Day').length;
+  const unmarked = employees.length - currentRecords.filter(r => employees.find(e => e.id === r.employee_id)).length;
+
+  bar.style.removeProperty('display');
+  bar.innerHTML = `
+    <span class="summary-chip" style="background:rgba(37,211,102,0.12);color:#7ce0aa;">✓ Present: ${present}</span>
+    <span class="summary-chip" style="background:rgba(255,99,99,0.12);color:#ff9a9a;">✗ Absent: ${absent}</span>
+    <span class="summary-chip" style="background:rgba(255,193,7,0.12);color:#ffc107;">◑ Half Day: ${halfday}</span>
+    <span class="summary-chip" style="background:rgba(255,255,255,0.06);color:rgba(245,235,215,0.5);">— Unmarked: ${unmarked}</span>
+  `;
+
+  grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr>
+    <th>Employee</th><th>Role</th><th>Status</th>
+    <th>Check In</th><th>Check Out</th><th>Action</th>
+  </tr></thead><tbody>${
     employees.map(emp => {
-      const rec = records.find(r => r.employee_id === emp.id);
+      const rec = currentRecords.find(r => r.employee_id === emp.id);
+      const statusClass = rec?.status === 'Present' ? 'badge-status-confirmed'
+                        : rec?.status === 'Absent'   ? 'badge-status-cancelled'
+                        : rec?.status === 'Half Day' ? 'badge-status-pending'
+                        : 'badge-status-pending';
+      const safeName = emp.full_name.replace(/'/g, "\\'");
+
+      // Check-in / check-out inputs (shown only when status is Present or Half Day)
+      const showTimes = rec?.status === 'Present' || rec?.status === 'Half Day';
+      const timeInputs = showTimes ? `
+        <div class="d-flex gap-1 align-items-center mt-1">
+          <input type="time" class="time-input" id="ci_${emp.id}" value="${rec?.check_in||''}"
+            onchange="saveTime('${emp.id}','${safeName}','${date}','check_in',this.value)"
+            title="Check In"/>
+          <span style="color:rgba(245,235,215,0.3);font-size:0.75rem;">→</span>
+          <input type="time" class="time-input" id="co_${emp.id}" value="${rec?.check_out||''}"
+            onchange="saveTime('${emp.id}','${safeName}','${date}','check_out',this.value)"
+            title="Check Out"/>
+        </div>` : `<div style="color:rgba(245,235,215,0.3);font-size:0.78rem;margin-top:2px;">—</div>`;
+
+      const editBtn = isAdmin
+        ? `<button class="att-action-btn btn-edit" onclick="openEdit('${emp.id}','${safeName}','${date}')"><i class="fas fa-edit me-1"></i>Edit</button>`
+        : '';
+
       return `<tr>
         <td class="admin-td-bold">${esc(emp.full_name)}</td>
-        <td class="admin-td-muted">${esc(emp.role)}</td>
-        <td><span class="admin-status-badge ${rec?.status==='Present'?'badge-status-confirmed':rec?.status==='Absent'?'badge-status-cancelled':'badge-status-pending'}">${rec?.status||'Not Marked'}</span></td>
-        <td class="admin-td-muted">${rec?.check_in||'—'}</td>
-        <td class="admin-td-muted">${rec?.check_out||'—'}</td>
+        <td class="admin-td-muted">${esc(emp.role||'')}</td>
+        <td><span class="admin-status-badge ${statusClass}">${rec?.status||'Not Marked'}</span></td>
+        <td class="admin-td-muted">${rec?.check_in ? `<span style="color:#7ce0aa;">${rec.check_in}</span>` : '—'}</td>
+        <td class="admin-td-muted">${rec?.check_out ? `<span style="color:#ff9a9a;">${rec.check_out}</span>` : '—'}</td>
         <td>
-          <div class="d-flex gap-1 flex-wrap">
-            <button onclick="mark('${emp.id}','${emp.full_name.replace(/'/g,"\\'")}','Present','${date}')" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(37,211,102,0.3);background:rgba(37,211,102,0.08);color:#7ce0aa;font-size:0.72rem;cursor:pointer;">Present</button>
-            <button onclick="mark('${emp.id}','${emp.full_name.replace(/'/g,"\\'")}','Absent','${date}')" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,99,99,0.3);background:rgba(255,99,99,0.08);color:#ff9a9a;font-size:0.72rem;cursor:pointer;">Absent</button>
-            <button onclick="mark('${emp.id}','${emp.full_name.replace(/'/g,"\\'")}','Half Day','${date}')" style="padding:4px 10px;border-radius:8px;border:1px solid rgba(255,193,7,0.3);background:rgba(255,193,7,0.08);color:#ffc107;font-size:0.72rem;cursor:pointer;">Half Day</button>
+          <div class="d-flex gap-1 flex-wrap align-items-start">
+            <button class="att-action-btn btn-present" onclick="mark('${emp.id}','${safeName}','Present','${date}')">Present</button>
+            <button class="att-action-btn btn-absent"  onclick="mark('${emp.id}','${safeName}','Absent','${date}')">Absent</button>
+            <button class="att-action-btn btn-halfday" onclick="mark('${emp.id}','${safeName}','Half Day','${date}')">Half Day</button>
+            ${editBtn}
           </div>
+          ${timeInputs}
         </td>
       </tr>`;
     }).join('')
   }</tbody></table></div>`;
+}
+
+window.mark = async (empId, empName, status, date) => {
+  try {
+    await markAttendance({ employee_id: empId, employee_name: empName, status, date });
+    showToast(`${empName}: ${status}`, 'success');
+    currentRecords = await getAttendance(date);
+    renderGrid(date);
+  } catch { showToast('Failed to mark attendance.', 'danger'); }
 };
+
+// Save check-in or check-out time inline
+window.saveTime = async (empId, empName, date, field, value) => {
+  try {
+    const rec = currentRecords.find(r => r.employee_id === empId);
+    if (rec?.id) {
+      await updateDoc(doc(_db, 'attendance', rec.id), { [field]: value });
+    } else {
+      // No record yet — create with current status + time
+      await markAttendance({ employee_id: empId, employee_name: empName, date, status: 'Present', [field]: value });
+    }
+    currentRecords = await getAttendance(date);
+    showToast(`${field === 'check_in' ? 'Check In' : 'Check Out'} saved`, 'success');
+  } catch { showToast('Failed to save time.', 'danger'); }
+};
+
+// ── Admin Edit Modal ──────────────────────────────────────────────────────
+window.openEdit = (empId, empName, date) => {
+  if (!isAdmin) return;
+  const rec = currentRecords.find(r => r.employee_id === empId);
+  editTarget = { docId: rec?.id || null, empId, empName, date };
+  document.getElementById('editEmpName').textContent = empName;
+  document.getElementById('editStatus').value   = rec?.status   || 'Present';
+  document.getElementById('editCheckIn').value  = rec?.check_in  || '';
+  document.getElementById('editCheckOut').value = rec?.check_out || '';
+  document.getElementById('editModal').classList.add('show');
+};
+
+window.closeEdit = () => {
+  document.getElementById('editModal').classList.remove('show');
+  editTarget = null;
+};
+
+window.saveEdit = async () => {
+  if (!editTarget) return;
+  const status   = document.getElementById('editStatus').value;
+  const checkIn  = document.getElementById('editCheckIn').value;
+  const checkOut = document.getElementById('editCheckOut').value;
+  try {
+    await markAttendance({
+      employee_id: editTarget.empId,
+      employee_name: editTarget.empName,
+      date: editTarget.date,
+      status,
+      check_in:  checkIn  || null,
+      check_out: checkOut || null
+    });
+    showToast('Attendance updated', 'success');
+    closeEdit();
+    currentRecords = await getAttendance(editTarget?.date || document.getElementById('attDate').value);
+    renderGrid(document.getElementById('attDate').value);
+  } catch { showToast('Failed to update.', 'danger'); }
+};
+
+// Close modal on backdrop click
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEdit();
+});
 
 await loadAtt();
 
-window.mark = async (empId, empName, status, date) => {
-  try { await markAttendance({ employee_id: empId, employee_name: empName, status, date }); showToast(`${empName}: ${status}`, 'success'); await loadAtt(); }
-  catch(err) { showToast('Failed.', 'danger'); }
-};
-
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
-const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
-toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
-overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
+document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow = 'hidden'; });
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow = ''; });
 </script>
 </body>
 </html>

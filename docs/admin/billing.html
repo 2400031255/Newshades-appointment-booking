@@ -368,7 +368,7 @@ if (!isAdmin) {
   // Receptionist sees only Billing and Profile
   document.querySelectorAll('.sidebar-nav a').forEach(a => {
     const href = a.getAttribute('href') || '';
-    if (!href.includes('billing') && !href.includes('profile') && a.id !== 'logoutBtn') {
+    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && a.id !== 'logoutBtn') {
       a.style.display = 'none';
     }
   });
