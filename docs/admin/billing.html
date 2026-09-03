@@ -343,7 +343,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, listenServices, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getEmployeeProfile, listenServices, showToast } from '../js/firebase.js';
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from '../js/config.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -352,12 +352,12 @@ const _app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const _db = getFirestore(_app);
 
 const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
+const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
 // Allow admin OR receptionist role only
 const isAdmin = !!profile?.is_admin;
-const isReceptionist = profile?.role === 'receptionist';
+const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
-document.getElementById('adminName').textContent = profile?.full_name || user.email;
+document.getElementById('adminName').textContent = (profile?.full_name || empProfile?.full_name) || user.email;
 // Hide reports tab for receptionist (billing only)
 if (!isAdmin) {
   document.querySelector('.bill-tab[onclick*="reports"]').style.display = 'none';
