@@ -8,31 +8,21 @@
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
     .time-input {
       background: rgba(255,255,255,0.06);
       border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 8px;
-      color: #fff;
-      font-size: 0.78rem;
-      padding: 4px 8px;
-      outline: none;
-      color-scheme: dark;
-      width: 100px;
+      border-radius: 8px; color: #fff; font-size: 0.78rem;
+      padding: 4px 8px; outline: none; color-scheme: dark; width: 100px;
     }
     .time-input:focus { border-color: rgba(201,168,76,0.5); }
-    .att-action-btn {
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      cursor: pointer;
-      border: none;
-    }
+    .att-action-btn { padding: 4px 10px; border-radius: 8px; font-size: 0.72rem; cursor: pointer; border: none; }
     .btn-present { border: 1px solid rgba(37,211,102,0.3); background: rgba(37,211,102,0.08); color: #7ce0aa; }
     .btn-absent  { border: 1px solid rgba(255,99,99,0.3);  background: rgba(255,99,99,0.08);  color: #ff9a9a; }
     .btn-halfday { border: 1px solid rgba(255,193,7,0.3);  background: rgba(255,193,7,0.08);  color: #ffc107; }
     .btn-edit    { border: 1px solid rgba(99,179,255,0.3); background: rgba(99,179,255,0.08); color: #9dc0ff; }
-    /* Edit Modal */
     .att-modal-backdrop {
       display: none; position: fixed; inset: 0;
       background: rgba(0,0,0,0.7); z-index: 9999;
@@ -40,33 +30,63 @@
     }
     .att-modal-backdrop.show { display: flex; }
     .att-modal {
-      background: #0e0b14;
-      border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 18px;
-      padding: 28px 24px;
-      width: 100%; max-width: 420px;
+      background: #0e0b14; border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 18px; padding: 28px 24px; width: 100%; max-width: 420px;
       box-shadow: 0 24px 70px rgba(0,0,0,0.7);
     }
     .att-modal h6 { color: var(--gold, #c9a84c); font-weight: 700; margin-bottom: 20px; }
     .att-modal label { font-size: 0.82rem; color: rgba(245,235,215,0.6); margin-bottom: 4px; display: block; }
     .att-modal select, .att-modal input[type="time"] {
-      width: 100%;
-      background: rgba(255,255,255,0.06);
-      border: 1.5px solid rgba(201,168,76,0.2);
-      border-radius: 10px;
-      color: #fff;
-      padding: 9px 14px;
-      font-size: 0.88rem;
-      outline: none;
-      color-scheme: dark;
-      margin-bottom: 14px;
+      width: 100%; background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(201,168,76,0.2); border-radius: 10px;
+      color: #fff; padding: 9px 14px; font-size: 0.88rem;
+      outline: none; color-scheme: dark; margin-bottom: 14px;
     }
     .att-modal select option { background: #0e0b14; }
-    .summary-bar {
-      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
+    .summary-bar { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .summary-chip { padding: 6px 16px; border-radius: 999px; font-size: 0.78rem; font-weight: 600; }
+    /* Monthly Report */
+    .rpt-month-select {
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(201,168,76,0.2);
+      border-radius: 10px; color: #fff; padding: 8px 14px;
+      font-size: 0.88rem; outline: none; color-scheme: dark;
     }
-    .summary-chip {
-      padding: 6px 16px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+    .rpt-month-select:focus { border-color: rgba(201,168,76,0.5); }
+    .rpt-stat-card {
+      flex: 1; min-width: 120px; padding: 18px 16px; border-radius: 16px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); text-align: center;
+    }
+    .rpt-stat-val { font-size: 1.8rem; font-weight: 900; font-family: 'Playfair Display', serif; }
+    .rpt-stat-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.4); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.07em; }
+    .rpt-header-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
+      gap: 8px; padding: 6px 16px 10px;
+      font-size: 0.7rem; color: rgba(255,255,255,0.35);
+      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; text-align: center;
+    }
+    .rpt-header-row div:first-child { text-align: left; }
+    .rpt-emp-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
+      gap: 8px; align-items: center; padding: 12px 16px;
+      border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02); margin-bottom: 8px; transition: background 0.15s;
+    }
+    .rpt-emp-row:hover { background: rgba(255,255,255,0.04); }
+    .rpt-emp-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
+    .rpt-emp-role { font-size: 0.7rem; color: rgba(255,255,255,0.38); margin-top: 2px; }
+    .rpt-cell { font-size: 0.88rem; font-weight: 700; text-align: center; }
+    .rpt-pct-bar { height: 5px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; margin-top: 6px; }
+    .rpt-pct-fill { height: 100%; border-radius: 999px; transition: width 0.7s ease; }
+    .btn-pdf {
+      padding: 8px 20px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700;
+      font-size: 0.85rem; display: inline-flex; align-items: center; gap: 7px;
+      background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.12));
+      border: 1px solid rgba(239,68,68,0.35); color: #fca5a5; transition: all 0.15s;
+    }
+    .btn-pdf:hover { background: linear-gradient(135deg, rgba(239,68,68,0.35), rgba(239,68,68,0.2)); }
+    @media (max-width:600px) {
+      .rpt-emp-row, .rpt-header-row { grid-template-columns: 1.5fr 1fr 1fr 1fr; }
+      .rpt-emp-row > div:last-child, .rpt-header-row > div:last-child { display: none; }
     }
   </style>
 </head>
@@ -90,7 +110,7 @@
   </nav>
 </div>
 
-<!-- Edit Modal (admin only) -->
+<!-- Edit Modal -->
 <div class="att-modal-backdrop" id="editModal">
   <div class="att-modal">
     <h6><i class="fas fa-edit me-2"></i>Edit Attendance</h6>
@@ -121,24 +141,49 @@
     <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
   </div>
   <div class="admin-page-body">
+
+    <!-- Monthly Report Card -->
+    <div class="admin-card mb-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <h6 class="fw-bold mb-1" style="color:#fff;"><i class="fas fa-chart-bar me-2" style="color:var(--gold);"></i>Monthly Attendance Report</h6>
+          <p class="mb-0" style="font-size:0.78rem;color:rgba(255,255,255,0.4);">Days present, absent, half-day & attendance % per employee</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <select id="rptMonth" class="rpt-month-select"></select>
+          <button onclick="loadMonthlyReport()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-sync-alt me-2"></i>Generate</button>
+          <button onclick="downloadReportPDF()" id="btnPdf" class="btn-pdf" style="display:none;"><i class="fas fa-file-pdf"></i>Download PDF</button>
+        </div>
+      </div>
+      <div id="rptStats" style="display:none;">
+        <div class="d-flex gap-3 flex-wrap mb-4" id="rptStatCards"></div>
+        <div class="rpt-header-row">
+          <div>Employee</div><div>Present</div><div>Absent</div><div>Half Day</div><div>Attendance %</div>
+        </div>
+        <div id="rptRows"></div>
+      </div>
+      <p id="rptEmpty" style="color:rgba(255,255,255,0.35);font-size:0.88rem;margin:0;">Select a month and click Generate.</p>
+    </div>
+
+    <!-- Mark Attendance Card -->
     <div class="admin-card mb-4">
       <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
         <h6 class="fw-bold mb-0" style="color:#fff;">Mark Attendance</h6>
         <input type="date" id="attDate" style="padding:8px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;color-scheme:dark;"/>
         <button onclick="loadAtt()" class="btn-gold" style="padding:8px 20px;"><i class="fas fa-search me-2"></i>Load</button>
       </div>
-      <!-- Summary chips -->
       <div class="summary-bar" id="summaryBar" style="display:none!important;"></div>
       <div id="attGrid"><p style="color:var(--text-muted);font-size:0.88rem;">Select a date and click Load.</p></div>
     </div>
+
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, markAttendance, showToast, esc } from '../js/firebase.js';
-import { getFirestore, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, getAttendance, markAttendance, showToast, esc, db } from '../js/firebase.js';
+import { getFirestore, doc, updateDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { firebaseConfig } from '../js/config.js';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 
@@ -155,15 +200,211 @@ if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
 document.getElementById('attDate').value = new Date().toISOString().slice(0,10);
 
-// Hide admin-only sidebar links for receptionist
 if (!isAdmin) {
   document.querySelectorAll('.admin-only-link').forEach(a => a.style.display = 'none');
 }
 
 let employees = await getAllEmployees(true);
 let currentRecords = [];
-let editTarget = null; // { docId, empId, empName }
+let editTarget = null;
 
+// ── Populate month selector ───────────────────────────────────────────────
+(function() {
+  const sel = document.getElementById('rptMonth');
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const lbl = d.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = lbl;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+})();
+
+let monthlyData = [];
+
+// ── Monthly Report ────────────────────────────────────────────────────────
+window.loadMonthlyReport = async () => {
+  const [year, month] = document.getElementById('rptMonth').value.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
+  const dateTo   = `${year}-${String(month).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+  document.getElementById('rptEmpty').textContent = 'Loading…';
+  document.getElementById('rptStats').style.display = 'none';
+  document.getElementById('btnPdf').style.display = 'none';
+
+  const snap = await getDocs(query(collection(_db, 'attendance'), where('date','>=',dateFrom), where('date','<=',dateTo)));
+  const allRecs = snap.docs.map(d => d.data());
+
+  monthlyData = employees.map(emp => {
+    const recs    = allRecs.filter(r => r.employee_id === emp.id);
+    const present = recs.filter(r => r.status === 'Present').length;
+    const halfday = recs.filter(r => r.status === 'Half Day').length;
+    const absent  = recs.filter(r => r.status === 'Absent').length;
+    const worked  = present + halfday * 0.5;
+    const pct     = daysInMonth > 0 ? Math.round((worked / daysInMonth) * 100) : 0;
+    return { name: emp.full_name, role: emp.role || '', present, halfday, absent, pct, daysInMonth };
+  }).sort((a, b) => b.pct - a.pct);
+
+  const totPresent = monthlyData.reduce((s,e) => s+e.present, 0);
+  const totAbsent  = monthlyData.reduce((s,e) => s+e.absent,  0);
+  const totHalf    = monthlyData.reduce((s,e) => s+e.halfday, 0);
+  const avgPct     = monthlyData.length ? Math.round(monthlyData.reduce((s,e) => s+e.pct, 0) / monthlyData.length) : 0;
+
+  document.getElementById('rptStatCards').innerHTML = `
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#7ce0aa;">${totPresent}</div><div class="rpt-stat-lbl">Total Present Days</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#ff9a9a;">${totAbsent}</div><div class="rpt-stat-lbl">Total Absent Days</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:#ffc107;">${totHalf}</div><div class="rpt-stat-lbl">Half Days</div></div>
+    <div class="rpt-stat-card"><div class="rpt-stat-val" style="color:var(--gold-2);">${avgPct}%</div><div class="rpt-stat-lbl">Avg Attendance</div></div>
+  `;
+
+  document.getElementById('rptRows').innerHTML = monthlyData.map(e => {
+    const color = e.pct >= 75 ? '#7ce0aa' : e.pct >= 50 ? '#ffc107' : '#ff9a9a';
+    return `<div class="rpt-emp-row">
+      <div><div class="rpt-emp-name">${esc(e.name)}</div><div class="rpt-emp-role">${esc(e.role)}</div></div>
+      <div class="rpt-cell" style="color:#7ce0aa;">${e.present}</div>
+      <div class="rpt-cell" style="color:#ff9a9a;">${e.absent}</div>
+      <div class="rpt-cell" style="color:#ffc107;">${e.halfday}</div>
+      <div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <span class="rpt-cell" style="color:${color};">${e.pct}%</span>
+        </div>
+        <div class="rpt-pct-bar"><div class="rpt-pct-fill" style="width:${e.pct}%;background:${color};"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rptStats').style.display = 'block';
+  document.getElementById('rptEmpty').textContent = '';
+  document.getElementById('btnPdf').style.display = 'inline-flex';
+};
+
+// ── PDF Download ──────────────────────────────────────────────────────────
+window.downloadReportPDF = () => {
+  if (!monthlyData.length) return;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = pdf.internal.pageSize.getWidth();
+  const monthLabel = document.getElementById('rptMonth').options[document.getElementById('rptMonth').selectedIndex].text;
+
+  // Dark background
+  pdf.setFillColor(12, 10, 20);
+  pdf.rect(0, 0, W, 297, 'F');
+
+  // Header panel
+  pdf.setFillColor(22, 17, 38);
+  pdf.roundedRect(8, 7, W-16, 40, 5, 5, 'F');
+  pdf.setDrawColor(212, 175, 55);
+  pdf.setLineWidth(0.6);
+  pdf.roundedRect(8, 7, W-16, 40, 5, 5, 'S');
+
+  // Gold circle logo
+  pdf.setFillColor(212, 175, 55);
+  pdf.circle(22, 27, 9, 'F');
+  pdf.setFontSize(8); pdf.setFont('helvetica','bold');
+  pdf.setTextColor(12, 10, 20);
+  pdf.text('NS', 22, 29.5, { align: 'center' });
+
+  // Salon name
+  pdf.setFontSize(17); pdf.setFont('helvetica','bold');
+  pdf.setTextColor(212, 175, 55);
+  pdf.text('NEW SHADES', 36, 22);
+  pdf.setFontSize(8); pdf.setFont('helvetica','normal');
+  pdf.setTextColor(180, 155, 100);
+  pdf.text('Premium Salon & Spa', 36, 29);
+
+  // Right side title
+  pdf.setFontSize(10); pdf.setFont('helvetica','bold');
+  pdf.setTextColor(245, 235, 215);
+  pdf.text('MONTHLY ATTENDANCE REPORT', W-14, 19, { align: 'right' });
+  pdf.setFontSize(8.5); pdf.setFont('helvetica','normal');
+  pdf.setTextColor(212, 175, 55);
+  pdf.text(monthLabel.toUpperCase(), W-14, 27, { align: 'right' });
+  pdf.setFontSize(7.5); pdf.setTextColor(150, 130, 90);
+  pdf.text('Generated: ' + new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), W-14, 34, { align: 'right' });
+
+  // Gold divider
+  pdf.setDrawColor(212, 175, 55); pdf.setLineWidth(0.4);
+  pdf.line(8, 50, W-8, 50);
+
+  // Stat boxes
+  const totPresent = monthlyData.reduce((s,e)=>s+e.present,0);
+  const totAbsent  = monthlyData.reduce((s,e)=>s+e.absent,0);
+  const totHalf    = monthlyData.reduce((s,e)=>s+e.halfday,0);
+  const avgPct     = Math.round(monthlyData.reduce((s,e)=>s+e.pct,0)/monthlyData.length);
+  const stats = [
+    { label:'Total Present', val: String(totPresent), color:[34,197,94] },
+    { label:'Total Absent',  val: String(totAbsent),  color:[239,68,68] },
+    { label:'Half Days',     val: String(totHalf),    color:[234,179,8] },
+    { label:'Avg Attendance',val: avgPct+'%',          color:[212,175,55] },
+  ];
+  const bw = (W - 16 - 9) / 4;
+  stats.forEach((s, i) => {
+    const x = 8 + i*(bw+3);
+    pdf.setFillColor(22,17,38); pdf.roundedRect(x, 55, bw, 22, 3, 3, 'F');
+    pdf.setDrawColor(...s.color); pdf.setLineWidth(0.35);
+    pdf.roundedRect(x, 55, bw, 22, 3, 3, 'S');
+    pdf.setFontSize(15); pdf.setFont('helvetica','bold');
+    pdf.setTextColor(...s.color);
+    pdf.text(s.val, x+bw/2, 65, { align:'center' });
+    pdf.setFontSize(6); pdf.setFont('helvetica','normal');
+    pdf.setTextColor(140,120,90);
+    pdf.text(s.label.toUpperCase(), x+bw/2, 71, { align:'center' });
+  });
+
+  // Table
+  pdf.autoTable({
+    startY: 83,
+    head: [['#','Employee','Role','Present','Absent','Half Day','Attendance %']],
+    body: monthlyData.map((e,i) => [i+1, e.name, e.role||'—', e.present, e.absent, e.halfday, e.pct+'%']),
+    styles: {
+      font:'helvetica', fontSize:9,
+      cellPadding:{top:5,bottom:5,left:6,right:6},
+      textColor:[220,210,190],
+      fillColor:[12,10,20],
+      lineColor:[35,28,55], lineWidth:0.3,
+    },
+    headStyles: {
+      fillColor:[22,17,38], textColor:[212,175,55],
+      fontStyle:'bold', fontSize:7.5, halign:'center',
+    },
+    columnStyles: {
+      0:{halign:'center',cellWidth:10},
+      1:{cellWidth:44},
+      2:{cellWidth:32},
+      3:{halign:'center',textColor:[34,197,94]},
+      4:{halign:'center',textColor:[239,68,68]},
+      5:{halign:'center',textColor:[234,179,8]},
+      6:{halign:'center',fontStyle:'bold'},
+    },
+    alternateRowStyles:{ fillColor:[18,14,30] },
+    didParseCell(data) {
+      if (data.section==='body' && data.column.index===6) {
+        const p = parseInt(data.cell.raw);
+        data.cell.styles.textColor = p>=75?[34,197,94]:p>=50?[234,179,8]:[239,68,68];
+      }
+    },
+    margin:{ left:8, right:8 },
+  });
+
+  // Footer on each page
+  const pages = pdf.internal.getNumberOfPages();
+  for (let p=1; p<=pages; p++) {
+    pdf.setPage(p);
+    pdf.setDrawColor(212,175,55,50); pdf.setLineWidth(0.25);
+    pdf.line(8,287,W-8,287);
+    pdf.setFontSize(7); pdf.setTextColor(100,85,65);
+    pdf.text('New Shades Salon — Confidential', 8, 292);
+    pdf.text(`Page ${p} of ${pages}`, W-8, 292, { align:'right' });
+  }
+
+  pdf.save(`Attendance_Report_${document.getElementById('rptMonth').value}.pdf`);
+};
+
+// ── Daily Attendance ──────────────────────────────────────────────────────
 window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;
   if (!date) return;
@@ -174,18 +415,12 @@ window.loadAtt = async () => {
 function renderGrid(date) {
   const grid = document.getElementById('attGrid');
   const bar  = document.getElementById('summaryBar');
+  if (!employees.length) { grid.innerHTML = '<p style="color:var(--text-muted);">No active employees.</p>'; bar.style.display='none'; return; }
 
-  if (!employees.length) {
-    grid.innerHTML = '<p style="color:var(--text-muted);">No active employees.</p>';
-    bar.style.display = 'none';
-    return;
-  }
-
-  // Summary counts
-  const present  = currentRecords.filter(r => r.status === 'Present').length;
-  const absent   = currentRecords.filter(r => r.status === 'Absent').length;
-  const halfday  = currentRecords.filter(r => r.status === 'Half Day').length;
-  const unmarked = employees.length - currentRecords.filter(r => employees.find(e => e.id === r.employee_id)).length;
+  const present  = currentRecords.filter(r => r.status==='Present').length;
+  const absent   = currentRecords.filter(r => r.status==='Absent').length;
+  const halfday  = currentRecords.filter(r => r.status==='Half Day').length;
+  const unmarked = employees.length - currentRecords.filter(r => employees.find(e => e.id===r.employee_id)).length;
 
   bar.style.removeProperty('display');
   bar.innerHTML = `
@@ -196,40 +431,28 @@ function renderGrid(date) {
   `;
 
   grid.innerHTML = `<div class="table-responsive"><table class="admin-table"><thead><tr>
-    <th>Employee</th><th>Role</th><th>Status</th>
-    <th>Check In</th><th>Check Out</th><th>Action</th>
+    <th>Employee</th><th>Role</th><th>Status</th><th>Check In</th><th>Check Out</th><th>Action</th>
   </tr></thead><tbody>${
     employees.map(emp => {
-      const rec = currentRecords.find(r => r.employee_id === emp.id);
-      const statusClass = rec?.status === 'Present' ? 'badge-status-confirmed'
-                        : rec?.status === 'Absent'   ? 'badge-status-cancelled'
-                        : rec?.status === 'Half Day' ? 'badge-status-pending'
-                        : 'badge-status-pending';
-      const safeName = emp.full_name.replace(/'/g, "\\'");
-
-      // Check-in / check-out inputs (shown only when status is Present or Half Day)
-      const showTimes = rec?.status === 'Present' || rec?.status === 'Half Day';
+      const rec = currentRecords.find(r => r.employee_id===emp.id);
+      const statusClass = rec?.status==='Present'?'badge-status-confirmed':rec?.status==='Absent'?'badge-status-cancelled':'badge-status-pending';
+      const safeName = emp.full_name.replace(/'/g,"\\'");
+      const showTimes = rec?.status==='Present'||rec?.status==='Half Day';
       const timeInputs = showTimes ? `
         <div class="d-flex gap-1 align-items-center mt-1">
           <input type="time" class="time-input" id="ci_${emp.id}" value="${rec?.check_in||''}"
-            onchange="saveTime('${emp.id}','${safeName}','${date}','check_in',this.value)"
-            title="Check In"/>
+            onchange="saveTime('${emp.id}','${safeName}','${date}','check_in',this.value)" title="Check In"/>
           <span style="color:rgba(245,235,215,0.3);font-size:0.75rem;">→</span>
           <input type="time" class="time-input" id="co_${emp.id}" value="${rec?.check_out||''}"
-            onchange="saveTime('${emp.id}','${safeName}','${date}','check_out',this.value)"
-            title="Check Out"/>
+            onchange="saveTime('${emp.id}','${safeName}','${date}','check_out',this.value)" title="Check Out"/>
         </div>` : `<div style="color:rgba(245,235,215,0.3);font-size:0.78rem;margin-top:2px;">—</div>`;
-
-      const editBtn = isAdmin
-        ? `<button class="att-action-btn btn-edit" onclick="openEdit('${emp.id}','${safeName}','${date}')"><i class="fas fa-edit me-1"></i>Edit</button>`
-        : '';
-
+      const editBtn = isAdmin ? `<button class="att-action-btn btn-edit" onclick="openEdit('${emp.id}','${safeName}','${date}')"><i class="fas fa-edit me-1"></i>Edit</button>` : '';
       return `<tr>
         <td class="admin-td-bold">${esc(emp.full_name)}</td>
         <td class="admin-td-muted">${esc(emp.role||'')}</td>
         <td><span class="admin-status-badge ${statusClass}">${rec?.status||'Not Marked'}</span></td>
-        <td class="admin-td-muted">${rec?.check_in ? `<span style="color:#7ce0aa;">${rec.check_in}</span>` : '—'}</td>
-        <td class="admin-td-muted">${rec?.check_out ? `<span style="color:#ff9a9a;">${rec.check_out}</span>` : '—'}</td>
+        <td class="admin-td-muted">${rec?.check_in?`<span style="color:#7ce0aa;">${rec.check_in}</span>`:'—'}</td>
+        <td class="admin-td-muted">${rec?.check_out?`<span style="color:#ff9a9a;">${rec.check_out}</span>`:'—'}</td>
         <td>
           <div class="d-flex gap-1 flex-wrap align-items-start">
             <button class="att-action-btn btn-present" onclick="mark('${emp.id}','${safeName}','Present','${date}')">Present</button>
@@ -246,33 +469,30 @@ function renderGrid(date) {
 
 window.mark = async (empId, empName, status, date) => {
   try {
-    await markAttendance({ employee_id: empId, employee_name: empName, status, date });
+    await markAttendance({ employee_id:empId, employee_name:empName, status, date });
     showToast(`${empName}: ${status}`, 'success');
     currentRecords = await getAttendance(date);
     renderGrid(date);
   } catch { showToast('Failed to mark attendance.', 'danger'); }
 };
 
-// Save check-in or check-out time inline
 window.saveTime = async (empId, empName, date, field, value) => {
   try {
-    const rec = currentRecords.find(r => r.employee_id === empId);
+    const rec = currentRecords.find(r => r.employee_id===empId);
     if (rec?.id) {
-      await updateDoc(doc(_db, 'attendance', rec.id), { [field]: value });
+      await updateDoc(doc(_db,'attendance',rec.id), { [field]:value });
     } else {
-      // No record yet — create with current status + time
-      await markAttendance({ employee_id: empId, employee_name: empName, date, status: 'Present', [field]: value });
+      await markAttendance({ employee_id:empId, employee_name:empName, date, status:'Present', [field]:value });
     }
     currentRecords = await getAttendance(date);
-    showToast(`${field === 'check_in' ? 'Check In' : 'Check Out'} saved`, 'success');
+    showToast(`${field==='check_in'?'Check In':'Check Out'} saved`, 'success');
   } catch { showToast('Failed to save time.', 'danger'); }
 };
 
-// ── Admin Edit Modal ──────────────────────────────────────────────────────
 window.openEdit = (empId, empName, date) => {
   if (!isAdmin) return;
-  const rec = currentRecords.find(r => r.employee_id === empId);
-  editTarget = { docId: rec?.id || null, empId, empName, date };
+  const rec = currentRecords.find(r => r.employee_id===empId);
+  editTarget = { docId:rec?.id||null, empId, empName, date };
   document.getElementById('editEmpName').textContent = empName;
   document.getElementById('editStatus').value   = rec?.status   || 'Present';
   document.getElementById('editCheckIn').value  = rec?.check_in  || '';
@@ -280,10 +500,7 @@ window.openEdit = (empId, empName, date) => {
   document.getElementById('editModal').classList.add('show');
 };
 
-window.closeEdit = () => {
-  document.getElementById('editModal').classList.remove('show');
-  editTarget = null;
-};
+window.closeEdit = () => { document.getElementById('editModal').classList.remove('show'); editTarget=null; };
 
 window.saveEdit = async () => {
   if (!editTarget) return;
@@ -291,14 +508,7 @@ window.saveEdit = async () => {
   const checkIn  = document.getElementById('editCheckIn').value;
   const checkOut = document.getElementById('editCheckOut').value;
   try {
-    await markAttendance({
-      employee_id: editTarget.empId,
-      employee_name: editTarget.empName,
-      date: editTarget.date,
-      status,
-      check_in:  checkIn  || null,
-      check_out: checkOut || null
-    });
+    await markAttendance({ employee_id:editTarget.empId, employee_name:editTarget.empName, date:editTarget.date, status, check_in:checkIn||null, check_out:checkOut||null });
     showToast('Attendance updated', 'success');
     closeEdit();
     currentRecords = await getAttendance(editTarget?.date || document.getElementById('attDate').value);
@@ -306,17 +516,14 @@ window.saveEdit = async () => {
   } catch { showToast('Failed to update.', 'danger'); }
 };
 
-// Close modal on backdrop click
-document.getElementById('editModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('editModal')) closeEdit();
-});
+document.getElementById('editModal').addEventListener('click', e => { if (e.target===document.getElementById('editModal')) closeEdit(); });
 
 await loadAtt();
 
 document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
-document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow = 'hidden'; });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow = ''; });
+document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow='hidden'; });
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow=''; });
 </script>
 </body>
 </html>
