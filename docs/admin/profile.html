@@ -20,7 +20,7 @@
     <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
     <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
     <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
-    <a href="attendance.html#monthly-report" class="admin-only-link"><span class="sidebar-nav-label" style="padding-left:18px;font-size:0.8rem;"><i class="fas fa-chart-bar" style="color:var(--gold);"></i> Monthly Report</span></a>
+    <a href="attendance.html#monthly-report"><span class="sidebar-nav-label" style="padding-left:18px;font-size:0.8rem;"><i class="fas fa-chart-bar" style="color:var(--gold);"></i> Monthly Report</span></a>
     <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
     <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
     <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
@@ -42,7 +42,7 @@
         <div class="admin-card text-center" style="padding:32px 20px;">
           <div id="avatarCircle" style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--gold-2),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;color:#120e08;margin:0 auto 16px;box-shadow:0 12px 32px rgba(201,168,76,0.35);">A</div>
           <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#fff;" id="cardName">—</div>
-          <div style="font-size:0.78rem;color:var(--gold-2);margin-top:4px;">Administrator</div>
+          <div style="font-size:0.78rem;color:var(--gold-2);margin-top:4px;" id="cardRole">Administrator</div>
           <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;" id="cardEmail">—</div>
         </div>
       </div>
@@ -91,21 +91,34 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, updateUserProfile, showToast, auth } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, getEmployeeProfile, updateUserProfile, updateEmployee, showToast, auth } from '../js/firebase.js';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const user = await requireAuth('../login.html');
-const profile = await getUserProfile(user.uid);
-if (!profile?.is_admin) { window.location.href = '../login.html'; }
+const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEmployeeProfile(user.uid)]);
+const isAdmin = !!profile?.is_admin;
+const isReceptionist = empProfile?.role === 'receptionist';
+if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
 
-const name = profile?.full_name || user.email;
+const name = profile?.full_name || empProfile?.full_name || user.email;
 document.getElementById('adminName').textContent = name;
 document.getElementById('cardName').textContent = name;
 document.getElementById('cardEmail').textContent = user.email;
-document.getElementById('avatarCircle').textContent = name[0].toUpperCase();
-document.getElementById('editName').value  = profile?.full_name || '';
-document.getElementById('editPhone').value = profile?.phone || '';
+document.getElementById('avatarCircle').textContent = name[0]?.toUpperCase() || 'R';
+document.getElementById('cardRole').textContent = isAdmin ? 'Administrator' : 'Receptionist';
+document.getElementById('editName').value  = profile?.full_name || empProfile?.full_name || '';
+document.getElementById('editPhone').value = profile?.phone || empProfile?.phone || '';
 document.getElementById('editEmail').value = user.email;
+
+// Hide admin-only sidebar links for receptionist
+if (!isAdmin) {
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    const href = a.getAttribute('href') || '';
+    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && a.id !== 'logoutBtn') {
+      a.style.display = 'none';
+    }
+  });
+}
 
 function flash(elId, msg, type='danger') {
   const colors = { danger:'rgba(226,93,93,0.12)|rgba(226,93,93,0.28)|#ff9a9a', success:'rgba(37,211,102,0.1)|rgba(37,211,102,0.28)|#7ce0aa' };
@@ -118,9 +131,14 @@ document.getElementById('saveInfoBtn').addEventListener('click', async () => {
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
   try {
     const newName = document.getElementById('editName').value.trim();
-    await updateUserProfile(user.uid, { full_name: newName, phone: document.getElementById('editPhone').value.trim() });
+    const phone = document.getElementById('editPhone').value.trim();
+    if (isAdmin) {
+      await updateUserProfile(user.uid, { full_name: newName, phone });
+    } else {
+      await updateEmployee(user.uid, { full_name: newName, phone });
+    }
     document.getElementById('cardName').textContent = newName;
-    document.getElementById('avatarCircle').textContent = newName[0]?.toUpperCase() || 'A';
+    document.getElementById('avatarCircle').textContent = newName[0]?.toUpperCase() || 'R';
     flash('infoAlert', 'Profile updated successfully!', 'success');
   } catch { flash('infoAlert', 'Failed to update profile.'); }
   finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Changes'; }
