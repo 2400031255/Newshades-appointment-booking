@@ -80,7 +80,7 @@
   </style>
 </head>
 <body class="admin-body">
-<div id="pageLoader" style="position:fixed;inset:0;background:#050407;z-index:99999;display:flex;align-items:center;justify-content:center;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:rgba(201,168,76,0.7);"></i></div>
+
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
@@ -200,7 +200,7 @@ if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style
 let [employees, currentRecords] = await Promise.all([
   getAllEmployees(true),
   getAttendance(todayDate)
-]).catch(e => { document.getElementById('pageLoader').style.display='none'; throw e; });
+]);
 let editTarget = null;
 let monthlyData = [];
 
@@ -562,7 +562,6 @@ window.downloadReportPDF = async () => {
 
 // Render today immediately — no extra fetch needed
 renderGrid(todayDate);
-document.getElementById('pageLoader').style.display = 'none';
 
 document.getElementById('logoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
 const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay');
