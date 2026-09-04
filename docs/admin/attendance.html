@@ -227,7 +227,6 @@ function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2
 window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;
   if (!date) return;
-  document.getElementById('attGrid').innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
   [employees, currentRecords] = await Promise.all([employees.length ? Promise.resolve(employees) : getAllEmployees(true), getAttendance(date)]);
   renderGrid(date);
 };
@@ -344,7 +343,6 @@ window.loadMonthlyReport = async () => {
   const dateFrom = `${year}-${String(month).padStart(2,'0')}-01`;
   const dateTo   = `${year}-${String(month).padStart(2,'0')}-${String(dim).padStart(2,'0')}`;
 
-  document.getElementById('rptContent').innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
   document.getElementById('btnPdf').style.display = 'none';
 
   const snap = await getDocs(query(collection(_db,'attendance'),where('date','>=',dateFrom),where('date','<=',dateTo)));
@@ -417,7 +415,6 @@ function loadLogoAsBase64(url) {
 window.downloadReportPDF = async () => {
   if (!monthlyData.length) return;
   const btn = document.getElementById('btnPdf');
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…';
   btn.disabled = true;
 
   const { jsPDF } = window.jspdf;
