@@ -10,6 +10,7 @@
   <link href="../style.css" rel="stylesheet"/>
 </head>
 <body class="admin-body">
+<div id="pageLoader" style="position:fixed;inset:0;background:#050407;z-index:99999;display:flex;align-items:center;justify-content:center;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:rgba(201,168,76,0.7);"></i></div>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
@@ -99,7 +100,7 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
-
+document.getElementById('pageLoader').style.display = 'none';
 const name = profile?.full_name || empProfile?.full_name || user.email;
 document.getElementById('adminName').textContent = name;
 document.getElementById('cardName').textContent = name;
