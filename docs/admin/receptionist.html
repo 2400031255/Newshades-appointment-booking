@@ -4,338 +4,290 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Receptionist – New Shades</title>
-  <style>html,body{background:#000!important;color:rgba(245,235,215,0.92);visibility:hidden;}</style>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-  <link href="../style.css" rel="stylesheet"/>
   <style>
-  /* ── Layout ── */
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:#000;min-height:100vh;}
+  html,body{background:#000;color:rgba(245,235,215,0.92);font-family:'DM Sans',sans-serif;min-height:100vh;}
+  body{opacity:0;transition:opacity 0.18s ease;}
+  body.ready{opacity:1;}
 
-  /* ── Sidebar ── */
-  .r-sidebar{
-    position:fixed;top:0;left:0;height:100vh;width:240px;
-    background:linear-gradient(180deg,#0a0810 0%,#050407 100%);
-    border-right:1px solid rgba(212,175,55,0.12);
-    display:flex;flex-direction:column;z-index:200;
-    transition:transform 0.3s cubic-bezier(.4,0,.2,1);
-  }
-  .r-brand{padding:24px 20px 20px;border-bottom:1px solid rgba(212,175,55,0.1);display:flex;align-items:center;gap:12px;}
-  .r-brand img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,0.3);}
-  .r-brand-text h5{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin:0;}
-  .r-brand-text span{font-size:0.68rem;color:rgba(212,175,55,0.7);letter-spacing:0.08em;text-transform:uppercase;}
-  .r-nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
-  .r-nav a{
-    display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;
-    color:rgba(255,255,255,0.55);font-size:0.875rem;font-weight:500;text-decoration:none;
-    transition:all 0.2s;position:relative;
-  }
-  .r-nav a i{width:18px;text-align:center;font-size:0.9rem;}
-  .r-nav a:hover{background:rgba(212,175,55,0.08);color:rgba(255,255,255,0.85);}
-  .r-nav a.active{background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));color:#F5D060;border:1px solid rgba(212,175,55,0.2);}
+  :root{--gold:#D4AF37;--gold2:#F5D060;}
+
+  /* Sidebar */
+  .r-sidebar{position:fixed;top:0;left:0;height:100vh;width:240px;background:linear-gradient(180deg,#0a0810,#050407);border-right:1px solid rgba(212,175,55,0.12);display:flex;flex-direction:column;z-index:200;transition:transform 0.28s cubic-bezier(.4,0,.2,1);}
+  .r-brand{padding:22px 18px 18px;border-bottom:1px solid rgba(212,175,55,0.1);display:flex;align-items:center;gap:11px;}
+  .r-brand img{width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,0.3);}
+  .r-brand h5{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:#fff;margin:0;}
+  .r-brand small{font-size:0.65rem;color:rgba(212,175,55,0.65);letter-spacing:0.08em;text-transform:uppercase;display:block;margin-top:1px;}
+  .r-nav{flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;}
+  .r-nav a{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;color:rgba(255,255,255,0.5);font-size:0.855rem;font-weight:500;text-decoration:none;transition:all 0.18s;border:1px solid transparent;}
+  .r-nav a i{width:17px;text-align:center;font-size:0.88rem;flex-shrink:0;}
+  .r-nav a:hover{background:rgba(212,175,55,0.07);color:rgba(255,255,255,0.82);}
+  .r-nav a.active{background:linear-gradient(135deg,rgba(212,175,55,0.16),rgba(212,175,55,0.07));color:#F5D060;border-color:rgba(212,175,55,0.2);}
   .r-nav a.active i{color:#F5D060;}
-  .r-nav .nav-badge{margin-left:auto;background:rgba(255,100,80,0.9);color:#fff;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:999px;min-width:20px;text-align:center;}
-  .r-nav .logout-link{margin-top:auto;color:rgba(255,100,100,0.6)!important;}
-  .r-nav .logout-link:hover{background:rgba(255,80,80,0.08)!important;color:#ff6b6b!important;}
-  .r-sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);}
-  .r-user-chip{display:flex;align-items:center;gap:10px;}
-  .r-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0810;font-size:0.8rem;flex-shrink:0;font-family:'Playfair Display',serif;}
-  .r-user-info p{font-size:0.8rem;font-weight:600;color:rgba(255,255,255,0.85);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
-  .r-user-info span{font-size:0.68rem;color:rgba(212,175,55,0.6);text-transform:uppercase;letter-spacing:0.06em;}
+  .r-nav .nbadge{margin-left:auto;background:#e05252;color:#fff;font-size:0.62rem;font-weight:700;padding:2px 6px;border-radius:999px;min-width:18px;text-align:center;}
+  .r-nav .r-logout{margin-top:auto;color:rgba(255,90,90,0.55)!important;}
+  .r-nav .r-logout:hover{background:rgba(255,80,80,0.07)!important;color:#ff6b6b!important;}
+  .r-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;}
+  .r-foot-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0810;font-size:0.75rem;flex-shrink:0;font-family:'Playfair Display',serif;}
+  .r-foot-name{font-size:0.78rem;font-weight:600;color:rgba(255,255,255,0.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+  .r-foot-role{font-size:0.63rem;color:rgba(212,175,55,0.55);text-transform:uppercase;letter-spacing:0.06em;}
 
-  /* ── Overlay ── */
-  .r-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:199;}
-  .r-overlay.show{display:block;}
+  /* Overlay */
+  .r-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:199;}
+  .r-ov.show{display:block;}
 
-  /* ── Main ── */
+  /* Main */
   .r-main{margin-left:240px;min-height:100vh;display:flex;flex-direction:column;}
-  .r-topbar{
-    position:sticky;top:0;z-index:100;
-    background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);
-    border-bottom:1px solid rgba(212,175,55,0.1);
-    padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;
-  }
-  .r-topbar-left{display:flex;align-items:center;gap:14px;}
-  .r-menu-btn{display:none;background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.1rem;cursor:pointer;padding:6px;}
-  .r-page-title{font-size:0.95rem;font-weight:600;color:rgba(255,255,255,0.85);}
-  .r-topbar-right{display:flex;align-items:center;gap:10px;}
-  .r-topbar-name{font-size:0.8rem;color:rgba(255,255,255,0.45);}
-  .r-topbar-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0810;font-size:0.75rem;font-family:'Playfair Display',serif;}
+  .r-topbar{position:sticky;top:0;z-index:100;background:rgba(0,0,0,0.88);backdrop-filter:blur(18px);border-bottom:1px solid rgba(212,175,55,0.09);padding:0 26px;height:58px;display:flex;align-items:center;justify-content:space-between;}
+  .r-topbar-l{display:flex;align-items:center;gap:13px;}
+  .r-mbtn{display:none;background:none;border:none;color:rgba(255,255,255,0.65);font-size:1.05rem;cursor:pointer;padding:5px;}
+  .r-ptitle{font-size:0.92rem;font-weight:600;color:rgba(255,255,255,0.82);}
+  .r-topbar-r{display:flex;align-items:center;gap:9px;}
+  .r-tname{font-size:0.78rem;color:rgba(255,255,255,0.38);}
+  .r-tav{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F5D060,#D4AF37);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0a0810;font-size:0.72rem;font-family:'Playfair Display',serif;}
 
-  /* ── Page body ── */
-  .r-body{padding:28px;flex:1;}
+  /* Body */
+  .r-body{padding:26px;flex:1;}
 
-  /* ── Tabs ── */
-  .r-tabs{display:flex;gap:6px;margin-bottom:28px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:5px;}
-  .r-tab{flex:1;padding:9px 16px;border-radius:10px;border:none;background:none;color:rgba(255,255,255,0.45);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
-  .r-tab.active{background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1));color:#F5D060;border:1px solid rgba(212,175,55,0.25);}
+  /* Date chip */
+  .r-datechip{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.16);border-radius:999px;padding:5px 14px;font-size:0.73rem;color:rgba(212,175,55,0.75);font-weight:600;margin-bottom:22px;}
 
-  /* ── Stat cards ── */
-  .r-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
-  .r-stat{
-    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
-    border-radius:18px;padding:20px;position:relative;overflow:hidden;
-    transition:border-color 0.2s,transform 0.2s;cursor:default;
-  }
-  .r-stat:hover{border-color:rgba(212,175,55,0.25);transform:translateY(-2px);}
-  .r-stat::before{content:'';position:absolute;inset:0;background:var(--accent-bg,rgba(212,175,55,0.04));pointer-events:none;}
-  .r-stat-icon{width:40px;height:40px;border-radius:12px;background:var(--accent-bg2,rgba(212,175,55,0.1));display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
-  .r-stat-icon i{font-size:1rem;color:var(--accent-color,#F5D060);}
-  .r-stat-val{font-size:1.8rem;font-weight:700;color:#fff;font-family:'Playfair Display',serif;line-height:1;}
-  .r-stat-label{font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:4px;font-weight:500;}
+  /* Stats */
+  .r-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+  .r-stat{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
+  .r-stat:hover{border-color:rgba(212,175,55,0.22);transform:translateY(-2px);}
+  .r-stat-ico{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+  .r-stat-ico i{font-size:0.95rem;}
+  .r-stat-val{font-size:1.7rem;font-weight:700;color:#fff;font-family:'Playfair Display',serif;line-height:1;}
+  .r-stat-lbl{font-size:0.72rem;color:rgba(255,255,255,0.38);margin-top:4px;font-weight:500;}
 
-  /* ── Quick actions ── */
-  .r-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px;}
-  .r-action{
-    background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);
-    border-radius:18px;padding:20px 22px;display:flex;align-items:center;gap:16px;
-    text-decoration:none;transition:all 0.22s;cursor:pointer;
-  }
-  .r-action:hover{background:rgba(212,175,55,0.07);border-color:rgba(212,175,55,0.3);transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.3);}
-  .r-action-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .r-action-icon i{font-size:1.1rem;}
-  .r-action-text h6{font-size:0.88rem;font-weight:700;color:#fff;margin:0 0 2px;}
-  .r-action-text p{font-size:0.75rem;color:rgba(255,255,255,0.4);margin:0;}
-  .r-action-arrow{margin-left:auto;color:rgba(255,255,255,0.2);font-size:0.8rem;transition:transform 0.2s;}
-  .r-action:hover .r-action-arrow{transform:translateX(4px);color:rgba(212,175,55,0.6);}
+  /* Actions */
+  .r-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px;}
+  .r-action{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;text-decoration:none;transition:all 0.2s;}
+  .r-action:hover{background:rgba(212,175,55,0.06);border-color:rgba(212,175,55,0.28);transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,0.28);}
+  .r-action-ico{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .r-action-ico i{font-size:1.05rem;}
+  .r-action-txt h6{font-size:0.86rem;font-weight:700;color:#fff;margin:0 0 2px;}
+  .r-action-txt p{font-size:0.72rem;color:rgba(255,255,255,0.38);margin:0;}
+  .r-arr{margin-left:auto;color:rgba(255,255,255,0.18);font-size:0.75rem;transition:transform 0.18s;}
+  .r-action:hover .r-arr{transform:translateX(3px);color:rgba(212,175,55,0.5);}
 
-  /* ── Section card ── */
-  .r-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:22px;margin-bottom:20px;}
-  .r-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
-  .r-card-title{font-size:0.9rem;font-weight:700;color:#fff;}
-  .r-card-link{font-size:0.78rem;color:rgba(212,175,55,0.7);text-decoration:none;font-weight:600;padding:6px 14px;border-radius:8px;border:1px solid rgba(212,175,55,0.2);transition:all 0.2s;}
-  .r-card-link:hover{background:rgba(212,175,55,0.1);color:#F5D060;}
+  /* Card */
+  .r-card{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:20px;margin-bottom:18px;}
+  .r-card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .r-card-ttl{font-size:0.88rem;font-weight:700;color:#fff;}
+  .r-card-lnk{font-size:0.75rem;color:rgba(212,175,55,0.65);text-decoration:none;font-weight:600;padding:5px 13px;border-radius:8px;border:1px solid rgba(212,175,55,0.18);transition:all 0.18s;}
+  .r-card-lnk:hover{background:rgba(212,175,55,0.09);color:#F5D060;}
 
-  /* ── Enquiry list ── */
-  .r-enq-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
-  .r-enq-item:last-child{border-bottom:none;padding-bottom:0;}
-  .r-enq-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;font-family:'Playfair Display',serif;}
-  .r-enq-info{flex:1;min-width:0;}
-  .r-enq-name{font-size:0.85rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .r-enq-sub{font-size:0.73rem;color:rgba(255,255,255,0.38);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .r-enq-right{text-align:right;flex-shrink:0;}
-  .r-enq-time{font-size:0.72rem;color:rgba(255,255,255,0.3);margin-bottom:4px;}
-  .r-badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:0.68rem;font-weight:700;letter-spacing:0.03em;}
-  .badge-pending{background:rgba(255,170,77,0.15);color:#ffc36b;}
-  .badge-contacted{background:rgba(105,152,255,0.15);color:#9dc0ff;}
-  .badge-confirmed{background:rgba(71,188,121,0.15);color:#7ce0aa;}
-  .badge-closed{background:rgba(150,150,150,0.12);color:rgba(240,230,211,0.4);}
+  /* Enquiry row */
+  .r-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.045);}
+  .r-row:last-child{border-bottom:none;padding-bottom:0;}
+  .r-row-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;flex-shrink:0;font-family:'Playfair Display',serif;}
+  .r-row-info{flex:1;min-width:0;}
+  .r-row-name{font-size:0.83rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .r-row-sub{font-size:0.7rem;color:rgba(255,255,255,0.35);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .r-row-r{text-align:right;flex-shrink:0;}
+  .r-row-time{font-size:0.68rem;color:rgba(255,255,255,0.28);margin-bottom:3px;}
+  .rbadge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.65rem;font-weight:700;}
+  .rbadge-pending{background:rgba(255,170,77,0.14);color:#ffc36b;}
+  .rbadge-contacted{background:rgba(105,152,255,0.14);color:#9dc0ff;}
+  .rbadge-confirmed{background:rgba(71,188,121,0.14);color:#7ce0aa;}
+  .rbadge-closed{background:rgba(150,150,150,0.1);color:rgba(240,230,211,0.38);}
 
-  /* ── Empty state ── */
-  .r-empty{text-align:center;padding:32px 16px;color:rgba(255,255,255,0.25);font-size:0.85rem;}
-  .r-empty i{font-size:2rem;margin-bottom:10px;display:block;opacity:0.3;}
+  /* Empty */
+  .r-empty{text-align:center;padding:28px 16px;color:rgba(255,255,255,0.22);font-size:0.82rem;}
+  .r-empty i{font-size:1.8rem;margin-bottom:8px;display:block;opacity:0.25;}
 
-  /* ── Date chip ── */
-  .r-date-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.18);border-radius:999px;padding:5px 14px;font-size:0.75rem;color:rgba(212,175,55,0.8);font-weight:600;margin-bottom:20px;}
-
-  /* ── Mobile ── */
+  /* Mobile */
   @media(max-width:768px){
     .r-sidebar{transform:translateX(-100%);}
     .r-sidebar.open{transform:translateX(0);}
     .r-main{margin-left:0;}
-    .r-menu-btn{display:block;}
+    .r-mbtn{display:block;}
     .r-stats{grid-template-columns:repeat(2,1fr);}
     .r-actions{grid-template-columns:1fr;}
-    .r-body{padding:16px;}
-    .r-topbar{padding:0 16px;}
+    .r-body{padding:14px;}
+    .r-topbar{padding:0 14px;}
   }
-  @media(max-width:400px){
-    .r-stats{grid-template-columns:1fr;}
-  }
+  @media(max-width:380px){.r-stats{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
 
-<div class="r-overlay" id="rOverlay"></div>
+<div class="r-ov" id="rOv"></div>
 
-<!-- Sidebar -->
 <div class="r-sidebar" id="rSidebar">
   <div class="r-brand">
     <img src="../images/logo.jpeg" alt="New Shades"/>
-    <div class="r-brand-text">
-      <h5>New Shades</h5>
-      <span>Receptionist</span>
-    </div>
+    <div><h5>New Shades</h5><small>Receptionist</small></div>
   </div>
-  <nav class="r-nav" id="rNav">
-    <a href="receptionist.html" class="active" data-page="dashboard"><i class="fas fa-home"></i> Dashboard</a>
-    <a href="billing.html" data-page="billing"><i class="fas fa-file-invoice-dollar" style="color:#F5D060;"></i> Billing</a>
-    <a href="attendance.html" data-page="attendance"><i class="fas fa-calendar-check"></i> Attendance</a>
-    <a href="enquiries.html" data-page="enquiries"><i class="fas fa-clipboard-list"></i> Enquiries <span class="nav-badge" id="navPendingBadge" style="display:none;"></span></a>
-    <a href="profile.html" data-page="profile"><i class="fas fa-user-circle"></i> My Profile</a>
-    <a href="#" id="rLogoutBtn" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  <nav class="r-nav">
+    <a href="receptionist.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
+    <a href="billing.html"><i class="fas fa-file-invoice-dollar" style="color:#F5D060;"></i> Billing</a>
+    <a href="attendance.html"><i class="fas fa-calendar-check"></i> Attendance</a>
+    <a href="enquiries.html"><i class="fas fa-clipboard-list"></i> Enquiries <span class="nbadge" id="navBadge" style="display:none;"></span></a>
+    <a href="profile.html"><i class="fas fa-user-circle"></i> My Profile</a>
+    <a href="#" id="rLogout" class="r-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
   </nav>
-  <div class="r-sidebar-footer">
-    <div class="r-user-chip">
-      <div class="r-avatar" id="sidebarAvatar">R</div>
-      <div class="r-user-info">
-        <p id="sidebarName">Receptionist</p>
-        <span>Receptionist</span>
-      </div>
+  <div class="r-foot">
+    <div class="r-foot-av" id="footAv">R</div>
+    <div>
+      <div class="r-foot-name" id="footName">Receptionist</div>
+      <div class="r-foot-role">Receptionist</div>
     </div>
   </div>
 </div>
 
-<!-- Main -->
 <div class="r-main">
   <div class="r-topbar">
-    <div class="r-topbar-left">
-      <button class="r-menu-btn" id="rMenuBtn"><i class="fas fa-bars"></i></button>
-      <span class="r-page-title">Dashboard</span>
+    <div class="r-topbar-l">
+      <button class="r-mbtn" id="rMbtn"><i class="fas fa-bars"></i></button>
+      <span class="r-ptitle">Dashboard</span>
     </div>
-    <div class="r-topbar-right">
-      <span class="r-topbar-name" id="topbarName"></span>
-      <div class="r-topbar-avatar" id="topbarAvatar">R</div>
+    <div class="r-topbar-r">
+      <span class="r-tname" id="tName"></span>
+      <div class="r-tav" id="tAv">R</div>
     </div>
   </div>
 
   <div class="r-body">
 
-    <!-- Date -->
-    <div class="r-date-chip"><i class="fas fa-calendar-day"></i> <span id="todayLabel"></span></div>
+    <div class="r-datechip"><i class="fas fa-calendar-day"></i> <span id="dateLabel"></span></div>
 
-    <!-- Stats -->
     <div class="r-stats">
-      <div class="r-stat" style="--accent-bg:rgba(212,175,55,0.05);--accent-bg2:rgba(212,175,55,0.12);--accent-color:#F5D060;">
-        <div class="r-stat-icon"><i class="fas fa-clipboard-list"></i></div>
-        <div class="r-stat-val" id="statTotal">—</div>
-        <div class="r-stat-label">Total Enquiries</div>
+      <div class="r-stat">
+        <div class="r-stat-ico" style="background:rgba(212,175,55,0.1);"><i class="fas fa-clipboard-list" style="color:#F5D060;"></i></div>
+        <div class="r-stat-val" id="sTotal">—</div>
+        <div class="r-stat-lbl">Total Enquiries</div>
       </div>
-      <div class="r-stat" style="--accent-bg:rgba(255,170,77,0.05);--accent-bg2:rgba(255,170,77,0.12);--accent-color:#ffc36b;">
-        <div class="r-stat-icon"><i class="fas fa-clock"></i></div>
-        <div class="r-stat-val" id="statPending">—</div>
-        <div class="r-stat-label">Pending</div>
+      <div class="r-stat">
+        <div class="r-stat-ico" style="background:rgba(255,170,77,0.1);"><i class="fas fa-clock" style="color:#ffc36b;"></i></div>
+        <div class="r-stat-val" id="sPending">—</div>
+        <div class="r-stat-lbl">Pending</div>
       </div>
-      <div class="r-stat" style="--accent-bg:rgba(71,188,121,0.05);--accent-bg2:rgba(71,188,121,0.12);--accent-color:#7ce0aa;">
-        <div class="r-stat-icon"><i class="fas fa-calendar-day"></i></div>
-        <div class="r-stat-val" id="statToday">—</div>
-        <div class="r-stat-label">Today's Bookings</div>
+      <div class="r-stat">
+        <div class="r-stat-ico" style="background:rgba(71,188,121,0.1);"><i class="fas fa-calendar-day" style="color:#7ce0aa;"></i></div>
+        <div class="r-stat-val" id="sToday">—</div>
+        <div class="r-stat-lbl">Today's Bookings</div>
       </div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="r-actions">
       <a href="billing.html" class="r-action">
-        <div class="r-action-icon" style="background:rgba(212,175,55,0.12);"><i class="fas fa-file-invoice-dollar" style="color:#F5D060;"></i></div>
-        <div class="r-action-text"><h6>New Bill</h6><p>Create a billing invoice</p></div>
-        <i class="fas fa-chevron-right r-action-arrow"></i>
+        <div class="r-action-ico" style="background:rgba(212,175,55,0.1);"><i class="fas fa-file-invoice-dollar" style="color:#F5D060;"></i></div>
+        <div class="r-action-txt"><h6>New Bill</h6><p>Create a billing invoice</p></div>
+        <i class="fas fa-chevron-right r-arr"></i>
       </a>
       <a href="enquiries.html" class="r-action">
-        <div class="r-action-icon" style="background:rgba(105,152,255,0.12);"><i class="fas fa-clipboard-list" style="color:#9dc0ff;"></i></div>
-        <div class="r-action-text"><h6>Enquiries</h6><p>View &amp; manage all enquiries</p></div>
-        <i class="fas fa-chevron-right r-action-arrow"></i>
+        <div class="r-action-ico" style="background:rgba(105,152,255,0.1);"><i class="fas fa-clipboard-list" style="color:#9dc0ff;"></i></div>
+        <div class="r-action-txt"><h6>Enquiries</h6><p>View &amp; manage all</p></div>
+        <i class="fas fa-chevron-right r-arr"></i>
       </a>
       <a href="attendance.html" class="r-action">
-        <div class="r-action-icon" style="background:rgba(71,188,121,0.12);"><i class="fas fa-calendar-check" style="color:#7ce0aa;"></i></div>
-        <div class="r-action-text"><h6>Attendance</h6><p>Mark today's attendance</p></div>
-        <i class="fas fa-chevron-right r-action-arrow"></i>
+        <div class="r-action-ico" style="background:rgba(71,188,121,0.1);"><i class="fas fa-calendar-check" style="color:#7ce0aa;"></i></div>
+        <div class="r-action-txt"><h6>Attendance</h6><p>Mark today's attendance</p></div>
+        <i class="fas fa-chevron-right r-arr"></i>
       </a>
       <a href="profile.html" class="r-action">
-        <div class="r-action-icon" style="background:rgba(180,120,255,0.12);"><i class="fas fa-user-circle" style="color:#c084fc;"></i></div>
-        <div class="r-action-text"><h6>My Profile</h6><p>View &amp; edit your profile</p></div>
-        <i class="fas fa-chevron-right r-action-arrow"></i>
+        <div class="r-action-ico" style="background:rgba(180,120,255,0.1);"><i class="fas fa-user-circle" style="color:#c084fc;"></i></div>
+        <div class="r-action-txt"><h6>My Profile</h6><p>View &amp; edit profile</p></div>
+        <i class="fas fa-chevron-right r-arr"></i>
       </a>
     </div>
 
-    <!-- Today's Enquiries -->
     <div class="r-card">
-      <div class="r-card-header">
-        <span class="r-card-title">Today's Bookings <span id="todayCountLabel" style="color:rgba(212,175,55,0.6);font-size:0.8rem;"></span></span>
-        <a href="enquiries.html" class="r-card-link">View All</a>
+      <div class="r-card-hd">
+        <span class="r-card-ttl">Today's Bookings <span id="todayCnt" style="color:rgba(212,175,55,0.55);font-size:0.78rem;"></span></span>
+        <a href="enquiries.html" class="r-card-lnk">View All</a>
       </div>
-      <div id="todayList"><div class="r-empty"><i class="fas fa-calendar-day"></i>Loading…</div></div>
+      <div id="todayList"><div class="r-empty"><i class="fas fa-calendar-day"></i>No bookings for today</div></div>
     </div>
 
-    <!-- Recent Enquiries -->
     <div class="r-card">
-      <div class="r-card-header">
-        <span class="r-card-title">Recent Enquiries</span>
-        <a href="enquiries.html" class="r-card-link">View All</a>
+      <div class="r-card-hd">
+        <span class="r-card-ttl">Recent Enquiries</span>
+        <a href="enquiries.html" class="r-card-lnk">View All</a>
       </div>
-      <div id="recentList"><div class="r-empty"><i class="fas fa-clipboard-list"></i>Loading…</div></div>
+      <div id="recentList"><div class="r-empty"><i class="fas fa-clipboard-list"></i>No enquiries yet</div></div>
     </div>
 
   </div>
 </div>
 
-<script src="../js/main.js"></script>
 <script type="module">
 import { requireAuth, logoutUser, getEmployeeProfile, getAllEnquiries, esc } from '../js/firebase.js';
 
+// Auth check — getEmployeeProfile only (receptionists have no admin profile)
 const user = await requireAuth('../login.html');
-const empProfile = await getEmployeeProfile(user.uid);
-if (!empProfile || empProfile.role !== 'receptionist') { window.location.href = '../login.html'; }else{
+const emp  = await getEmployeeProfile(user.uid);
 
-// Show page
-document.body.style.visibility = 'visible';
+if (!emp || emp.role !== 'receptionist') {
+  window.location.href = '../login.html';
+} else {
+  // Show page
+  document.body.classList.add('ready');
 
-const name = empProfile.full_name || user.email;
-const initials = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-document.getElementById('sidebarName').textContent = name;
-document.getElementById('sidebarAvatar').textContent = initials;
-document.getElementById('topbarName').textContent = name;
-document.getElementById('topbarAvatar').textContent = initials;
+  // Fill name
+  const name = emp.full_name || user.email;
+  const ini  = name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('footAv').textContent   = ini;
+  document.getElementById('footName').textContent = name;
+  document.getElementById('tName').textContent    = name;
+  document.getElementById('tAv').textContent      = ini;
 
-// Date label
-const now = new Date();
-document.getElementById('todayLabel').textContent = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const todayStr = now.toISOString().slice(0,10);
+  // Date
+  const now      = new Date();
+  const todayStr = now.toISOString().slice(0,10);
+  document.getElementById('dateLabel').textContent = now.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-// Load enquiries
-const enquiries = await getAllEnquiries();
-const pending = enquiries.filter(e => e.status === 'Pending');
-const todayEnqs = enquiries.filter(e => e.preferred_date === todayStr);
+  // Load data
+  const enqs    = await getAllEnquiries();
+  const pending = enqs.filter(e => e.status === 'Pending');
+  const today   = enqs.filter(e => e.preferred_date === todayStr);
 
-document.getElementById('statTotal').textContent = enquiries.length;
-document.getElementById('statPending').textContent = pending.length;
-document.getElementById('statToday').textContent = todayEnqs.length;
+  document.getElementById('sTotal').textContent   = enqs.length;
+  document.getElementById('sPending').textContent = pending.length;
+  document.getElementById('sToday').textContent   = today.length;
 
-if (pending.length) {
-  const b = document.getElementById('navPendingBadge');
-  b.textContent = pending.length; b.style.display = '';
-}
+  if (pending.length) {
+    const b = document.getElementById('navBadge');
+    b.textContent = pending.length; b.style.display = '';
+  }
 
-// Avatar colors
-const COLORS = ['#7c3aed','#0891b2','#059669','#d97706','#dc2626','#0284c7','#16a34a','#9333ea'];
-function aColor(n){ let h=0; for(let c of (n||'')) h=(h+c.charCodeAt(0))%COLORS.length; return COLORS[h]; }
-function ini(n){ return (n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
-function badgeClass(s){ return 'badge-'+(s||'pending').toLowerCase(); }
+  // Colors
+  const C = ['#7c3aed','#0891b2','#059669','#d97706','#dc2626','#0284c7','#16a34a','#9333ea'];
+  const ac = n => { let h=0; for(const c of (n||'')) h=(h+c.charCodeAt(0))%C.length; return C[h]; };
+  const ii = n => (n||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const bc = s => 'rbadge-'+(s||'pending').toLowerCase();
 
-function enqItem(e){
-  const col = aColor(e.full_name);
-  return `<div class="r-enq-item">
-    <div class="r-enq-avatar" style="background:${col}22;color:${col};">${ini(e.full_name)}</div>
-    <div class="r-enq-info">
-      <div class="r-enq-name">${esc(e.full_name)}</div>
-      <div class="r-enq-sub">${esc(e.phone)} · ${esc(e.selected_services||'')}</div>
-    </div>
-    <div class="r-enq-right">
-      <div class="r-enq-time">${esc(e.preferred_time||'Flexible')}</div>
-      <span class="r-badge ${badgeClass(e.status)}">${esc(e.status||'Pending')}</span>
-    </div>
-  </div>`;
-}
+  const row = e => {
+    const col = ac(e.full_name);
+    return `<div class="r-row">
+      <div class="r-row-av" style="background:${col}20;color:${col};">${ii(e.full_name)}</div>
+      <div class="r-row-info">
+        <div class="r-row-name">${esc(e.full_name)}</div>
+        <div class="r-row-sub">${esc(e.phone||'')} · ${esc(e.selected_services||'')}</div>
+      </div>
+      <div class="r-row-r">
+        <div class="r-row-time">${esc(e.preferred_time||'Flexible')}</div>
+        <span class="rbadge ${bc(e.status)}">${esc(e.status||'Pending')}</span>
+      </div>
+    </div>`;
+  };
 
-const todayList = document.getElementById('todayList');
-document.getElementById('todayCountLabel').textContent = todayEnqs.length ? `(${todayEnqs.length})` : '';
-todayList.innerHTML = todayEnqs.length
-  ? todayEnqs.map(enqItem).join('')
-  : '<div class="r-empty"><i class="fas fa-calendar-check"></i>No bookings for today</div>';
+  document.getElementById('todayCnt').textContent = today.length ? `(${today.length})` : '';
+  document.getElementById('todayList').innerHTML  = today.length  ? today.map(row).join('')  : '<div class="r-empty"><i class="fas fa-calendar-check"></i>No bookings for today</div>';
+  document.getElementById('recentList').innerHTML = enqs.length   ? enqs.slice(0,8).map(row).join('') : '<div class="r-empty"><i class="fas fa-clipboard-list"></i>No enquiries yet</div>';
 
-const recentList = document.getElementById('recentList');
-recentList.innerHTML = enquiries.length
-  ? enquiries.slice(0,8).map(enqItem).join('')
-  : '<div class="r-empty"><i class="fas fa-clipboard-list"></i>No enquiries yet</div>';
-
-// Sidebar toggle
-const sidebar = document.getElementById('rSidebar');
-const overlay = document.getElementById('rOverlay');
-document.getElementById('rMenuBtn').addEventListener('click',()=>{ sidebar.classList.add('open'); overlay.classList.add('show'); });
-overlay.addEventListener('click',()=>{ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-document.getElementById('rLogoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
+  // Sidebar toggle
+  const sb = document.getElementById('rSidebar'), ov = document.getElementById('rOv');
+  document.getElementById('rMbtn').addEventListener('click', () => { sb.classList.add('open'); ov.classList.add('show'); });
+  ov.addEventListener('click', () => { sb.classList.remove('open'); ov.classList.remove('show'); });
+  document.getElementById('rLogout').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
 }
 </script>
 </body>

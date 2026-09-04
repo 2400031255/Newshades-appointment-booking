@@ -79,7 +79,7 @@
     }
   </style>
 </head>
-<body class="admin-body" style="visibility:hidden;">
+<body class="admin-body" style="opacity:0;transition:opacity 0.15s ease;">
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
@@ -190,7 +190,7 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
-document.body.style.visibility = 'visible';
+document.body.style.opacity = '1';
 
 document.getElementById('adminName').textContent = profile?.full_name || empProfile?.full_name || user.email;
 const todayDate = new Date().toISOString().slice(0,10);
