@@ -195,7 +195,12 @@ document.body.style.visibility = 'visible';
 document.getElementById('adminName').textContent = profile?.full_name || empProfile?.full_name || user.email;
 const todayDate = new Date().toISOString().slice(0,10);
 document.getElementById('attDate').value = todayDate;
-if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
+  // Point Dashboard link to receptionist page
+  const dashLink = document.querySelector('.sidebar-nav a[href="dashboard.html"]');
+  if (dashLink) dashLink.href = 'receptionist.html';
+}
 
 // Fetch employees + today's attendance in parallel
 let [employees, currentRecords] = await Promise.all([

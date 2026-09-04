@@ -24,7 +24,7 @@
   .appt-action-btn:hover{transform:scale(1.1);}
   </style>
 </head>
-<body class="admin-body">
+<body class="admin-body" style="visibility:hidden;">
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
@@ -96,8 +96,13 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
+document.body.style.visibility = 'visible';
 document.getElementById('adminName').textContent = profile?.full_name || empProfile?.full_name || user.email;
-if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
+if (!isAdmin) {
+  document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
+  const dashLink = document.querySelector('.sidebar-nav a[href="dashboard.html"]');
+  if (dashLink) dashLink.href = 'receptionist.html';
+}
 
 let allEnqs = [], employees = [], currentEid = null, activeFilter = '';
 

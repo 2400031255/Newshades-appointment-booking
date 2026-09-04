@@ -96,7 +96,7 @@
     <div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div>
   </div>
   <nav class="sidebar-nav">
-    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="receptionist.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
     <a href="billing.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-file-invoice-dollar" style="color:var(--gold);"></i> Billing</span></a>
     <a href="services.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
     <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
@@ -368,12 +368,10 @@ if (!isAdmin) {
 // Sidebar — hide admin-only links for receptionist
 const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
 if (!isAdmin) {
-  // Receptionist sees Billing, Attendance, Enquiries, Dashboard, Profile
   document.querySelectorAll('.sidebar-nav a').forEach(a => {
     const href = a.getAttribute('href') || '';
-    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && !href.includes('enquiries') && !href.includes('dashboard') && a.id !== 'logoutBtn') {
-      a.style.display = 'none';
-    }
+    const keep = href.includes('receptionist') || href.includes('billing') || href.includes('attendance') || href.includes('enquiries') || href.includes('profile') || a.id === 'logoutBtn';
+    if (!keep) a.style.display = 'none';
   });
 }
 document.getElementById('sidebarToggle').addEventListener('click', () => { sidebar.classList.add('open'); overlay.classList.add('show'); });

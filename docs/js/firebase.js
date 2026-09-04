@@ -84,7 +84,7 @@ export function requireGuest() {
           return;
         }
         if (emp.role === 'receptionist') {
-          window.location.href = 'admin/billing.html';
+          window.location.href = 'admin/receptionist.html';
           return;
         }
         window.location.href = 'employee/dashboard.html';

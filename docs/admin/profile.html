@@ -9,8 +9,8 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
 </head>
-<body class="admin-body">
-<div id="pageLoader" style="position:fixed;inset:0;background:#050407;z-index:99999;display:flex;align-items:center;justify-content:center;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:rgba(201,168,76,0.7);"></i></div>
+<body class="admin-body" style="visibility:hidden;">
+
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
@@ -100,7 +100,7 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
-document.getElementById('pageLoader').style.display = 'none';
+document.body.style.visibility = 'visible';
 const name = profile?.full_name || empProfile?.full_name || user.email;
 document.getElementById('adminName').textContent = name;
 document.getElementById('cardName').textContent = name;
@@ -115,10 +115,11 @@ document.getElementById('editEmail').value = user.email;
 if (!isAdmin) {
   document.querySelectorAll('.sidebar-nav a').forEach(a => {
     const href = a.getAttribute('href') || '';
-    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && a.id !== 'logoutBtn') {
-      a.style.display = 'none';
-    }
+    const keep = href.includes('receptionist') || href.includes('billing') || href.includes('attendance') || href.includes('enquiries') || href.includes('profile') || a.id === 'logoutBtn';
+    if (!keep) a.style.display = 'none';
   });
+  const dashLink = document.querySelector('.sidebar-nav a[href="dashboard.html"]');
+  if (dashLink) dashLink.href = 'receptionist.html';
 }
 
 function flash(elId, msg, type='danger') {
