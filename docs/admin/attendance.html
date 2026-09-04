@@ -190,13 +190,17 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
-document.getElementById('pageLoader').style.display = 'none';
+
 document.getElementById('adminName').textContent = profile?.full_name || empProfile?.full_name || user.email;
-document.getElementById('attDate').value = new Date().toISOString().slice(0,10);
+const todayDate = new Date().toISOString().slice(0,10);
+document.getElementById('attDate').value = todayDate;
 if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style.display='none');
 
-let employees = await getAllEmployees(true);
-let currentRecords = [];
+// Fetch employees + today's attendance in parallel
+let [employees, currentRecords] = await Promise.all([
+  getAllEmployees(true),
+  getAttendance(todayDate)
+]);
 let editTarget = null;
 let monthlyData = [];
 
@@ -224,7 +228,7 @@ window.loadAtt = async () => {
   const date = document.getElementById('attDate').value;
   if (!date) return;
   document.getElementById('attGrid').innerHTML = '<div class="text-center py-4" style="color:rgba(255,255,255,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</div>';
-  currentRecords = await getAttendance(date);
+  [employees, currentRecords] = await Promise.all([employees.length ? Promise.resolve(employees) : getAllEmployees(true), getAttendance(date)]);
   renderGrid(date);
 };
 
@@ -556,7 +560,8 @@ window.downloadReportPDF = async () => {
   btn.disabled = false;
 };
 
-await loadAtt();
+// Render today immediately — no extra fetch needed
+renderGrid(todayDate);
 
 document.getElementById('logoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
 const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay');
