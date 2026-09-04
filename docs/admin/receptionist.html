@@ -263,11 +263,11 @@
 
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getEmployeeProfile, getAllEnquiries, showToast, esc, formatDate } from '../js/firebase.js';
+import { requireAuth, logoutUser, getEmployeeProfile, getAllEnquiries, esc } from '../js/firebase.js';
 
 const user = await requireAuth('../login.html');
 const empProfile = await getEmployeeProfile(user.uid);
-if (!empProfile || empProfile.role !== 'receptionist') { window.location.href = '../login.html'; return; }
+if (!empProfile || empProfile.role !== 'receptionist') { window.location.href = '../login.html'; }else{
 
 // Show page
 document.body.style.visibility = 'visible';
@@ -336,6 +336,7 @@ const overlay = document.getElementById('rOverlay');
 document.getElementById('rMenuBtn').addEventListener('click',()=>{ sidebar.classList.add('open'); overlay.classList.add('show'); });
 overlay.addEventListener('click',()=>{ sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 document.getElementById('rLogoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
+}
 </script>
 </body>
 </html>

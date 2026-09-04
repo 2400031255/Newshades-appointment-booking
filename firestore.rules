@@ -41,7 +41,7 @@ service cloud.firestore {
 
     // ── Employees ─────────────────────────────────────────────────────────
     match /employees/{uid} {
-      allow read: if isOwner(uid) || isAdmin() || isReceptionist();
+      allow read: if isAdmin() || isEmployee();
       allow create: if isAdmin() || isOwner(uid);
       allow update: if isAdmin() || isOwner(uid);
       allow delete: if isAdmin();
