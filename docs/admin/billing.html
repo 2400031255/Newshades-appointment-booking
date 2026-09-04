@@ -87,7 +87,7 @@
 }
 </style>
 </head>
-<body class="admin-body">
+<body class="admin-body" style="visibility:hidden;">
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
@@ -358,6 +358,7 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
+document.body.style.visibility = 'visible';
 document.getElementById('adminName').textContent = (profile?.full_name || empProfile?.full_name) || user.email;
 // Hide reports tab for receptionist (billing only)
 if (!isAdmin) {
@@ -367,10 +368,10 @@ if (!isAdmin) {
 // Sidebar — hide admin-only links for receptionist
 const sidebar = document.getElementById('adminSidebar'), overlay = document.getElementById('sidebarOverlay');
 if (!isAdmin) {
-  // Receptionist sees only Billing and Profile
+  // Receptionist sees Billing, Attendance, Enquiries, Dashboard, Profile
   document.querySelectorAll('.sidebar-nav a').forEach(a => {
     const href = a.getAttribute('href') || '';
-    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && a.id !== 'logoutBtn') {
+    if (!href.includes('billing') && !href.includes('profile') && !href.includes('attendance') && !href.includes('enquiries') && !href.includes('dashboard') && a.id !== 'logoutBtn') {
       a.style.display = 'none';
     }
   });

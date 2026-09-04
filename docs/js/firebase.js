@@ -216,7 +216,7 @@ export async function getAllEmployees(activeOnly = false) {
   const snap = await getDocs(collection(db, "employees"));
   const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   if (!activeOnly) return all;
-  return all.filter(e => e.is_active === 1 || e.is_active === true);
+  return all.filter(e => !e.deleted && e.is_active !== 0 && e.is_active !== false);
 }
 export function listenEmployees(cb) {
   return onSnapshot(collection(db, 'employees'), snap => {

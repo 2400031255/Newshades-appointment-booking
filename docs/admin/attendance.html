@@ -79,16 +79,16 @@
     }
   </style>
 </head>
-<body class="admin-body">
+<body class="admin-body" style="visibility:hidden;">
 
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="admin-sidebar" id="adminSidebar">
   <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
   <nav class="sidebar-nav">
-    <a href="dashboard.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
     <a href="billing.html"><span class="sidebar-nav-label"><i class="fas fa-file-invoice-dollar" style="color:var(--gold);"></i> Billing</span></a>
     <a href="services.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
-    <a href="enquiries.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
     <a href="employees.html" class="admin-only-link"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
     <a href="attendance.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
     <a href="#monthly-report"><span class="sidebar-nav-label" style="padding-left:18px;font-size:0.8rem;"><i class="fas fa-chart-bar" style="color:var(--gold);"></i> Monthly Report</span></a>
@@ -190,6 +190,7 @@ const [profile, empProfile] = await Promise.all([getUserProfile(user.uid), getEm
 const isAdmin = !!profile?.is_admin;
 const isReceptionist = empProfile?.role === 'receptionist';
 if (!isAdmin && !isReceptionist) { window.location.href = '../login.html'; }
+document.body.style.visibility = 'visible';
 
 document.getElementById('adminName').textContent = profile?.full_name || empProfile?.full_name || user.email;
 const todayDate = new Date().toISOString().slice(0,10);
