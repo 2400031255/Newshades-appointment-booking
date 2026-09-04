@@ -200,7 +200,7 @@ if (!isAdmin) document.querySelectorAll('.admin-only-link').forEach(a => a.style
 let [employees, currentRecords] = await Promise.all([
   getAllEmployees(true),
   getAttendance(todayDate)
-]);
+]).catch(e => { document.getElementById('pageLoader').style.display='none'; throw e; });
 let editTarget = null;
 let monthlyData = [];
 
@@ -562,6 +562,7 @@ window.downloadReportPDF = async () => {
 
 // Render today immediately — no extra fetch needed
 renderGrid(todayDate);
+document.getElementById('pageLoader').style.display = 'none';
 
 document.getElementById('logoutBtn').addEventListener('click', e=>{ e.preventDefault(); logoutUser(); });
 const sidebar=document.getElementById('adminSidebar'), overlay=document.getElementById('sidebarOverlay');
