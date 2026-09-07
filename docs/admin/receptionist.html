@@ -227,7 +227,10 @@ const emp  = await getEmployeeProfile(user.uid);
 
 if (!emp || emp.role !== 'receptionist') {
   window.location.href = '../login.html';
-} else {
+  throw new Error('redirect');
+}
+
+try {
   // Show page
   document.body.classList.add('ready');
 
@@ -288,6 +291,11 @@ if (!emp || emp.role !== 'receptionist') {
   document.getElementById('rMbtn').addEventListener('click', () => { sb.classList.add('open'); ov.classList.add('show'); });
   ov.addEventListener('click', () => { sb.classList.remove('open'); ov.classList.remove('show'); });
   document.getElementById('rLogout').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+} catch(err) {
+  if (err.message !== 'redirect') {
+    document.body.classList.add('ready');
+    document.getElementById('recentList').innerHTML = '<div class="r-empty"><i class="fas fa-exclamation-circle"></i>Failed to load data. Please refresh.</div>';
+  }
 }
 </script>
 </body>
