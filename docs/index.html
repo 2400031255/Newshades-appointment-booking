@@ -130,13 +130,16 @@
       <h2 class="section-title">What We <span>Offer</span></h2>
       <div class="section-line"></div>
     </div>
-    <div class="row g-4 mt-2" id="servicesGrid">
-      <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:200px;"></div></div>
-      <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:200px;"></div></div>
-      <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:200px;"></div></div>
+    <!-- Horizontal scroll carousel -->
+    <div style="position:relative;">
+      <div id="servicesGrid" style="display:flex;gap:18px;overflow-x:auto;overflow-y:hidden;padding:8px 4px 20px;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,0.35) rgba(255,255,255,0.04);scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;">
+        <div class="svc-home-skeleton"></div>
+        <div class="svc-home-skeleton"></div>
+        <div class="svc-home-skeleton"></div>
+      </div>
     </div>
-    <div class="text-center mt-5 reveal-up d-flex gap-3 justify-content-center flex-wrap">
-      <a href="services.html" id="svcViewAll" style="display:none;" class="btn-gold-hero"><i class="fas fa-th-list me-2"></i>View All Services</a>
+    <div class="text-center mt-4 reveal-up d-flex gap-3 justify-content-center flex-wrap">
+      <a href="services.html" id="svcViewAll" class="btn-gold-hero"><i class="fas fa-th-list me-2"></i>View All Services</a>
       <a href="#enquire" class="btn-gold-hero">Enquire Now <i class="fas fa-arrow-right ms-2"></i></a>
     </div>
   </div>
@@ -379,19 +382,21 @@ const defaultSvcs = [
 ];
 
 function renderSvcGrid(svcs) {
-  const show = svcs.slice(0, 6);
-  document.getElementById('servicesGrid').innerHTML = show.map((s,i) => `
-    <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
-      <div class="svc-card tilt-card">
-        <div class="svc-card-glow"></div>
-        <div class="svc-icon"><i class="${iconMap[s.category]||'fas fa-magic'}"></i></div>
-        <h5 class="svc-name">${s.service_name}</h5>
-        <p class="svc-desc">${s.description||'Professional service tailored for you'}</p>
-        ${s.price ? `<div class="svc-footer"><span style="color:var(--gold-2);font-weight:700;font-family:'Playfair Display',serif;">₹${Math.round(s.price)}</span>${s.duration?`<span style="color:var(--text-muted);font-size:0.8rem;"><i class="far fa-clock me-1"></i>${s.duration}</span>`:''}</div>` : ''}
-      </div>
-    </div>`).join('');
-  const viewAllBtn = document.getElementById('svcViewAll');
-  if (viewAllBtn) viewAllBtn.style.display = svcs.length > 6 ? '' : 'none';
+  document.getElementById('servicesGrid').innerHTML = svcs.map((s,i) => {
+    const desc = (s.description || 'Professional service tailored for you');
+    const shortDesc = desc.length > 65 ? desc.slice(0,65) + '\u2026' : desc;
+    const footer = s.price
+      ? '<div class="svc-home-footer"><span>\u20b9' + Math.round(s.price) + '</span>' +
+        (s.duration ? '<span><i class="far fa-clock me-1"></i>' + s.duration + '</span>' : '') + '</div>'
+      : '';
+    return '<div class="svc-home-card">' +
+      '<div class="svc-home-icon"><i class="' + (iconMap[s.category] || 'fas fa-magic') + '"></i></div>' +
+      '<div class="svc-home-cat">' + (s.category || '') + '</div>' +
+      '<h6 class="svc-home-name">' + s.service_name + '</h6>' +
+      '<p class="svc-home-desc">' + shortDesc + '</p>' +
+      footer +
+      '</div>';
+  }).join('');
 }
 
 async function loadSettings() {
