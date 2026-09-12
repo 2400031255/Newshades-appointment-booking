@@ -156,9 +156,15 @@ async function load() {
     if (catSnap.exists() && Array.isArray(catSnap.data().list)) savedCats = catSnap.data().list;
   } catch(err) {}
   let rendered = false;
+  const fallback = setTimeout(() => {
+    if (!rendered) {
+      rendered = true;
+      renderServices(defaultServices, savedCats);
+    }
+  }, 5000);
   listenServices(svcs => {
-    // Ignore empty snapshots on cold start (Firestore cache miss)
     if (!svcs.length && !rendered) return;
+    clearTimeout(fallback);
     rendered = true;
     const active = svcs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1' || s.is_active === undefined || s.is_active === null);
     if (active.length) {
