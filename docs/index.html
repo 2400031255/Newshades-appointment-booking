@@ -430,13 +430,21 @@ async function loadSettings() {
 }
 
 function loadServices() {
+  let rendered = false;
+  // Timeout fallback — if Firestore takes too long, show default services
+  const fallbackTimer = setTimeout(() => {
+    if (!rendered) renderSvcGrid(defaultSvcs);
+  }, 4000);
   listenServices(svcs => {
-    // Show active services (is_active truthy or not set)
+    // Only update if we got real data (ignore empty snapshots on cold start)
+    if (!svcs.length && !rendered) return;
+    clearTimeout(fallbackTimer);
+    rendered = true;
     const active = svcs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1' || s.is_active === undefined || s.is_active === null);
     if (active.length) {
       renderSvcGrid(active);
     } else {
-      document.getElementById('servicesGrid').innerHTML = '<div class="col-12 text-center" style="color:rgba(240,230,211,0.4);padding:40px 0;"><i class="fas fa-cut" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Services coming soon. Stay tuned!</div>';
+      document.getElementById('servicesGrid').innerHTML = '<div style="flex:0 0 100%;text-align:center;color:rgba(240,230,211,0.4);padding:40px 0;"><i class="fas fa-cut" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Services coming soon. Stay tuned!</div>';
     }
   });
 }
