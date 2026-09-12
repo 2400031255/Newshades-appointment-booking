@@ -423,13 +423,11 @@ window.validatePhone = (inp) => {
 // ── Services ────────────────────────────────────────────────────────────
 let allSvcs = [], cart = {}, manualCart = {}, activeCat = 'All', manualCounter = 0, lastBill = null, firestoreCats = [];
 
-// Load categories from Firestore so newly added categories show even without services
-(async () => {
-  try {
-    const snap = await getDoc(doc(_db, 'settings', 'categories'));
-    if (snap.exists() && Array.isArray(snap.data().list)) firestoreCats = snap.data().list;
-  } catch(e) {}
-})();
+// Load categories FIRST, then start services listener so buildCatFilter has them
+try {
+  const snap = await getDoc(doc(_db, 'settings', 'categories'));
+  if (snap.exists() && Array.isArray(snap.data().list)) firestoreCats = snap.data().list;
+} catch(e) {}
 
 listenServices(svcs => {
   allSvcs = svcs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1');
