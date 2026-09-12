@@ -98,6 +98,7 @@
             <input type="text" id="newCatInput" class="cat-add-input" placeholder="New category name…" maxlength="30"/>
             <button type="button" class="cat-add-btn" onclick="addCategory()"><i class="fas fa-plus me-1"></i>Add</button>
           </div>
+          <button type="button" id="saveCatsBtn" onclick="saveAllCategories()" style="margin-top:10px;width:100%;padding:9px;border-radius:10px;background:rgba(212,175,55,0.15);border:1.5px solid rgba(212,175,55,0.4);color:var(--gold-2);font-weight:700;font-size:0.88rem;cursor:pointer;"><i class="fas fa-save me-2"></i>Save Categories</button>
         </div>
       </div>
 
@@ -158,17 +159,16 @@ function populateCatSelect(selected) {
   sel.innerHTML = categories.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
 }
 
-window.deleteCategory = async (cat) => {
+window.deleteCategory = (cat) => {
   if (categories.length <= 1) { showToast('Need at least one category.', 'warning'); return; }
   if (!confirm(`Delete category "${cat}"? Services using it won't be affected.`)) return;
   categories = categories.filter(c => c !== cat);
   renderCategoryTags();
   populateCatSelect();
-  await saveCategories();
-  showToast('Category deleted.', 'success');
+  showToast('Category removed. Click "Save Categories" to save.', 'info');
 };
 
-window.addCategory = async () => {
+window.addCategory = () => {
   const inp = document.getElementById('newCatInput');
   const val = inp.value.trim();
   if (!val) return;
@@ -177,8 +177,17 @@ window.addCategory = async () => {
   inp.value = '';
   renderCategoryTags();
   populateCatSelect(val);
-  await saveCategories();
-  showToast('Category added!', 'success');
+  showToast('Category added! Click "Save Categories" to save.', 'info');
+};
+
+window.saveAllCategories = async () => {
+  const btn = document.getElementById('saveCatsBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving…';
+  try {
+    await saveCategories();
+    showToast('Categories saved!', 'success');
+  } catch(e) { showToast('Failed to save categories.', 'danger'); }
+  finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-2"></i>Save Categories'; }
 };
 
 document.getElementById('newCatInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); window.addCategory(); } });
