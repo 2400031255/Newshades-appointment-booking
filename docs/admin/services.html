@@ -4,10 +4,27 @@
   <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Services – New Shades Admin</title>
   <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="../style.css" rel="stylesheet"/>
+  <style>
+    .svc-table-wrap { max-height: 520px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(212,175,55,0.3) rgba(255,255,255,0.04); }
+    .svc-table-wrap::-webkit-scrollbar { width: 6px; }
+    .svc-table-wrap::-webkit-scrollbar-track { background: rgba(255,255,255,0.04); border-radius: 999px; }
+    .svc-table-wrap::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.3); border-radius: 999px; }
+    .cat-tag { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.2); color:var(--gold-2); font-size:0.78rem; font-weight:600; }
+    .cat-tag-del { background:none; border:none; color:rgba(255,100,100,0.7); cursor:pointer; padding:0; font-size:0.75rem; line-height:1; }
+    .cat-tag-del:hover { color:#ff6b6b; }
+    .cat-add-row { display:flex; gap:8px; margin-top:10px; }
+    .cat-add-input { flex:1; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.06); border:1.5px solid rgba(201,168,76,0.2); color:#fff; outline:none; font-size:0.85rem; }
+    .cat-add-input:focus { border-color:var(--gold); }
+    .cat-add-btn { padding:8px 14px; border-radius:10px; background:rgba(212,175,55,0.12); border:1px solid rgba(212,175,55,0.3); color:var(--gold-2); font-size:0.85rem; font-weight:700; cursor:pointer; white-space:nowrap; }
+    .cat-add-btn:hover { background:rgba(212,175,55,0.22); }
+    .cats-wrap { display:flex; flex-wrap:wrap; gap:6px; min-height:28px; }
+    .form-input-style { width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem; }
+    .form-input-style:focus { border-color:var(--gold); }
+  </style>
 </head>
 <body class="admin-body">
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -42,19 +59,48 @@
           <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;" id="formTitle"><i class="fas fa-plus me-2" style="color:var(--gold);"></i>Add Service</h6>
           <form id="svcForm">
             <input type="hidden" id="editId"/>
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">SERVICE NAME *</label><input type="text" id="svcName" required style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. Hair Cut"/></div>
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">CATEGORY</label><select id="svcCat" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;cursor:pointer;"><option>Hair</option><option>Beard</option><option>Skin</option><option>Wellness</option><option>Nails</option><option>Bridal</option><option>Other</option></select></div>
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">PRICE (₹)</label><input type="number" id="svcPrice" min="0" step="0.01" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 250"/></div>
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">DURATION</label><input type="text" id="svcDur" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;" placeholder="e.g. 30 mins"/></div>
-            <div class="mb-3"><label class="field-label mb-1" style="font-size:0.75rem;">DESCRIPTION</label><textarea id="svcDesc" rows="3" style="width:100%;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);color:#fff;outline:none;font-size:0.9rem;resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="Short description…"></textarea></div>
-            <div class="mb-4 d-flex align-items-center gap-2"><input type="checkbox" id="svcActive" checked style="accent-color:#D4AF37;width:16px;height:16px;"/><label for="svcActive" style="color:rgba(240,230,211,0.7);font-size:0.88rem;cursor:pointer;">Active (visible to customers)</label></div>
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;">SERVICE NAME *</label>
+              <input type="text" id="svcName" required class="form-input-style" placeholder="e.g. Hair Cut"/>
+            </div>
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;">CATEGORY</label>
+              <select id="svcCat" class="form-input-style" style="cursor:pointer;"></select>
+            </div>
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;">PRICE (₹)</label>
+              <input type="number" id="svcPrice" min="0" step="0.01" class="form-input-style" placeholder="e.g. 250"/>
+            </div>
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;">DURATION</label>
+              <input type="text" id="svcDur" class="form-input-style" placeholder="e.g. 30 mins"/>
+            </div>
+            <div class="mb-3">
+              <label class="field-label mb-1" style="font-size:0.75rem;">DESCRIPTION</label>
+              <textarea id="svcDesc" rows="3" class="form-input-style" style="resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="Short description…"></textarea>
+            </div>
+            <div class="mb-4 d-flex align-items-center gap-2">
+              <input type="checkbox" id="svcActive" checked style="accent-color:#D4AF37;width:16px;height:16px;"/>
+              <label for="svcActive" style="color:rgba(240,230,211,0.7);font-size:0.88rem;cursor:pointer;">Active (visible to customers)</label>
+            </div>
             <div class="d-flex gap-2">
               <button type="submit" class="btn-gold" style="flex:1;justify-content:center;" id="svcSubmitBtn"><i class="fas fa-plus me-2"></i>Add Service</button>
               <button type="button" id="cancelEditBtn" style="display:none;flex:1;padding:10px 16px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:rgba(240,230,211,0.8);font-weight:700;cursor:pointer;" onclick="cancelEdit()">Cancel</button>
             </div>
           </form>
         </div>
+
+        <!-- Category Manager -->
+        <div class="admin-card mt-4">
+          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-tags me-2" style="color:var(--gold);"></i>Manage Categories</h6>
+          <div class="cats-wrap" id="catsWrap"></div>
+          <div class="cat-add-row">
+            <input type="text" id="newCatInput" class="cat-add-input" placeholder="New category name…" maxlength="30"/>
+            <button type="button" class="cat-add-btn" onclick="addCategory()"><i class="fas fa-plus me-1"></i>Add</button>
+          </div>
+        </div>
       </div>
+
       <!-- Services List -->
       <div class="col-lg-8">
         <div class="admin-card">
@@ -62,7 +108,7 @@
             <h6 class="fw-bold mb-0" style="color:#fff;">All Services <span style="color:var(--gold);" id="svcCount"></span></h6>
             <input type="text" placeholder="Search…" style="padding:7px 12px;border-radius:999px;border:1px solid rgba(201,168,76,0.24);background:rgba(255,255,255,0.06);color:#fff;outline:none;font-size:0.85rem;width:180px;" oninput="filterSvcs(this.value)"/>
           </div>
-          <div class="table-responsive">
+          <div class="svc-table-wrap">
             <table class="admin-table">
               <thead><tr><th>Service</th><th>Category</th><th>Price</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody id="svcBody"><tr><td colspan="6" class="text-center py-4" style="color:var(--text-muted);">Loading…</td></tr></tbody>
@@ -74,31 +120,89 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 <script src="../js/main.js"></script>
 <script type="module">
-import { requireAuth, logoutUser, getUserProfile, listenServices, createService, updateService, deleteService, showToast } from '../js/firebase.js';
+import { requireAuth, logoutUser, getUserProfile, listenServices, createService, updateService, deleteService, showToast, db } from '../js/firebase.js';
+import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+const DEFAULT_CATS = ['Hair','Beard','Skin','Wellness','Nails','Bridal','Other'];
 let allSvcs = [];
+let categories = [...DEFAULT_CATS];
 
-// Start real-time listener immediately — parallel with auth
+// ── Load categories from Firestore ────────────────────────────────────────
+async function loadCategories() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'categories'));
+    if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length) {
+      categories = snap.data().list;
+    }
+  } catch(e) {}
+  renderCategoryTags();
+  populateCatSelect();
+}
+
+async function saveCategories() {
+  try { await setDoc(doc(db, 'settings', 'categories'), { list: categories }, { merge: false }); } catch(e) {}
+}
+
+function renderCategoryTags() {
+  document.getElementById('catsWrap').innerHTML = categories.map(c => `
+    <span class="cat-tag">${c}<button class="cat-tag-del" onclick="window.deleteCategory('${c}')" title="Delete category"><i class="fas fa-times"></i></button></span>
+  `).join('');
+}
+
+function populateCatSelect(selected) {
+  const sel = document.getElementById('svcCat');
+  const cur = selected || sel.value;
+  sel.innerHTML = categories.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+}
+
+window.deleteCategory = async (cat) => {
+  if (categories.length <= 1) { showToast('Need at least one category.', 'warning'); return; }
+  if (!confirm(`Delete category "${cat}"? Services using it won't be affected.`)) return;
+  categories = categories.filter(c => c !== cat);
+  renderCategoryTags();
+  populateCatSelect();
+  await saveCategories();
+  showToast('Category deleted.', 'success');
+};
+
+window.addCategory = async () => {
+  const inp = document.getElementById('newCatInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (categories.map(c=>c.toLowerCase()).includes(val.toLowerCase())) { showToast('Category already exists.', 'warning'); return; }
+  categories.push(val);
+  inp.value = '';
+  renderCategoryTags();
+  populateCatSelect(val);
+  await saveCategories();
+  showToast('Category added!', 'success');
+};
+
+document.getElementById('newCatInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); window.addCategory(); } });
+
+// ── Services listener ─────────────────────────────────────────────────────
 listenServices(svcs => {
   allSvcs = svcs;
   renderSvcs(svcs);
 });
 
-// Auth check runs in parallel — only blocks admin name display
+// ── Auth ──────────────────────────────────────────────────────────────────
 const user = await requireAuth('../login.html');
 const profile = await getUserProfile(user.uid);
 if (!profile?.is_admin) { window.location.href = '../login.html'; }
 document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+await loadCategories();
 
 function renderSvcs(svcs) {
   document.getElementById('svcCount').textContent = `(${svcs.length})`;
   document.getElementById('svcBody').innerHTML = svcs.map(s => `<tr>
     <td><div class="admin-td-bold">${s.service_name}</div><div style="font-size:0.8rem;color:var(--text-muted);">${(s.description||'').slice(0,50)}${(s.description||'').length>50?'…':''}</div></td>
     <td><span class="admin-badge">${s.category||'—'}</span></td>
-    <td style="color:var(--gold-2);font-weight:700;">${s.price_on_request?'<span style="color:#7ce0aa;font-size:0.82rem;">At Salon</span>':'₹'+Math.round(s.price||0)}</td>
+    <td style="color:var(--gold-2);font-weight:700;">₹${Math.round(s.price||0)}</td>
     <td class="admin-td-muted">${s.duration||'—'}</td>
     <td><span class="admin-status-badge ${s.is_active?'badge-status-confirmed':'badge-status-cancelled'}">${s.is_active?'Active':'Inactive'}</span></td>
     <td><div class="d-flex gap-2"><button class="admin-action-btn" onclick="editSvc('${s.id}')"><i class="fas fa-edit"></i></button><button class="admin-action-btn admin-action-danger" onclick="delSvc('${s.id}')"><i class="fas fa-trash"></i></button></div></td>
@@ -110,7 +214,14 @@ window.filterSvcs = q => { q=q.toLowerCase(); renderSvcs(allSvcs.filter(s=>(s.se
 document.getElementById('svcForm').addEventListener('submit', async e => {
   e.preventDefault();
   const eid = document.getElementById('editId').value;
-  const data = { service_name: document.getElementById('svcName').value.trim(), category: document.getElementById('svcCat').value, price: parseFloat(document.getElementById('svcPrice').value)||0, duration: document.getElementById('svcDur').value.trim(), description: document.getElementById('svcDesc').value.trim(), is_active: document.getElementById('svcActive').checked?1:0 };
+  const data = {
+    service_name: document.getElementById('svcName').value.trim(),
+    category: document.getElementById('svcCat').value,
+    price: parseFloat(document.getElementById('svcPrice').value)||0,
+    duration: document.getElementById('svcDur').value.trim(),
+    description: document.getElementById('svcDesc').value.trim(),
+    is_active: document.getElementById('svcActive').checked ? 1 : 0
+  };
   try {
     if (eid) { await updateService(eid, data); showToast('Service updated!', 'success'); }
     else { await createService(data); showToast('Service added!', 'success'); }
@@ -122,7 +233,7 @@ window.editSvc = (id) => {
   const s = allSvcs.find(x => x.id === id); if (!s) return;
   document.getElementById('editId').value = id;
   document.getElementById('svcName').value = s.service_name||'';
-  document.getElementById('svcCat').value = s.category||'Hair';
+  populateCatSelect(s.category||categories[0]);
   document.getElementById('svcPrice').value = s.price||'';
   document.getElementById('svcDur').value = s.duration||'';
   document.getElementById('svcDesc').value = s.description||'';
@@ -130,12 +241,14 @@ window.editSvc = (id) => {
   document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2" style="color:var(--gold);"></i>Edit Service';
   document.getElementById('svcSubmitBtn').innerHTML = '<i class="fas fa-save me-2"></i>Save Changes';
   document.getElementById('cancelEditBtn').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.cancelEdit = () => {
   document.getElementById('editId').value = '';
   document.getElementById('svcForm').reset();
   document.getElementById('svcActive').checked = true;
+  populateCatSelect(categories[0]);
   document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus me-2" style="color:var(--gold);"></i>Add Service';
   document.getElementById('svcSubmitBtn').innerHTML = '<i class="fas fa-plus me-2"></i>Add Service';
   document.getElementById('cancelEditBtn').style.display = 'none';

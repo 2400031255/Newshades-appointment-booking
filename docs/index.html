@@ -378,13 +378,14 @@ const defaultSvcs = [
 ];
 
 function renderSvcGrid(svcs) {
-  document.getElementById('servicesGrid').innerHTML = svcs.slice(0,6).map((s,i) => `
+  document.getElementById('servicesGrid').innerHTML = svcs.map((s,i) => `
     <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
       <div class="svc-card tilt-card">
         <div class="svc-card-glow"></div>
         <div class="svc-icon"><i class="${iconMap[s.category]||'fas fa-magic'}"></i></div>
         <h5 class="svc-name">${s.service_name}</h5>
         <p class="svc-desc">${s.description||'Professional service tailored for you'}</p>
+        ${s.price ? `<div class="svc-footer"><span style="color:var(--gold-2);font-weight:700;font-family:'Playfair Display',serif;">₹${Math.round(s.price)}</span>${s.duration?`<span style="color:var(--text-muted);font-size:0.8rem;"><i class="far fa-clock me-1"></i>${s.duration}</span>`:''}</div>` : ''}
       </div>
     </div>`).join('');
 }
@@ -416,12 +417,14 @@ async function loadSettings() {
 
 function loadServices() {
   listenServices(svcs => {
-    if (svcs && svcs.length) {
-      renderSvcGrid(svcs);
+    // Show active services (is_active truthy or not set)
+    const active = svcs.filter(s => s.is_active === 1 || s.is_active === true || s.is_active === '1' || s.is_active === undefined || s.is_active === null);
+    if (active.length) {
+      renderSvcGrid(active);
     } else {
       document.getElementById('servicesGrid').innerHTML = '<div class="col-12 text-center" style="color:rgba(240,230,211,0.4);padding:40px 0;"><i class="fas fa-cut" style="font-size:2rem;margin-bottom:12px;display:block;"></i>Services coming soon. Stay tuned!</div>';
     }
-  }, true); // activeOnly=true
+  });
 }
 
 async function loadReviews() {

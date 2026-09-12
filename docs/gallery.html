@@ -9,16 +9,38 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
+  <noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/></noscript>
   <link href="style.css" rel="stylesheet"/>
+  <style>
+    .gallery-photo-card{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1;background:#111;cursor:pointer;}
+    .gallery-photo-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.4s ease;}
+    .gallery-photo-card:hover img{transform:scale(1.07);}
+    .gallery-photo-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 55%);opacity:0;transition:opacity 0.3s ease;display:flex;flex-direction:column;justify-content:flex-end;padding:14px;}
+    .gallery-photo-card:hover .gallery-photo-overlay{opacity:1;}
+    .gallery-photo-zoom{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0.8);opacity:0;transition:all 0.3s ease;width:44px;height:44px;border-radius:50%;background:rgba(212,175,55,0.9);display:flex;align-items:center;justify-content:center;color:#000;font-size:1rem;}
+    .gallery-photo-card:hover .gallery-photo-zoom{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.94);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;}
+    .lightbox.open{display:flex;}
+    .lightbox img{max-width:90vw;max-height:85vh;border-radius:12px;object-fit:contain;box-shadow:0 30px 80px rgba(0,0,0,0.6);}
+    .lightbox-close{position:absolute;top:20px;right:24px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+    .lightbox-close:hover{background:rgba(255,255,255,0.2);}
+    .lightbox-caption{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.85);font-size:0.9rem;background:rgba(0,0,0,0.6);padding:7px 18px;border-radius:999px;white-space:nowrap;max-width:80vw;overflow:hidden;text-overflow:ellipsis;}
+  </style>
 </head>
 <body>
 <div id="pageTransition" style="position:fixed;inset:0;background:#000;z-index:99998;opacity:0;pointer-events:none;transition:opacity 0.15s ease;"></div>
 <div class="cursor-glow" id="cursorGlow"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="if(event.target===this)this.classList.remove('open')">
+  <button class="lightbox-close" onclick="document.getElementById('lightbox').classList.remove('open')"><i class="fas fa-times"></i></button>
+  <img id="lightboxImg" src="" alt=""/>
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
 
 <nav class="navbar navbar-expand-lg fixed-top" id="mainNav">
   <div class="container">
@@ -56,6 +78,9 @@
 
 <section class="booking-section">
   <div class="container">
+    <div class="cat-filters mb-4 reveal-up" id="catFilters" style="display:none;overflow-x:auto;overflow-y:hidden;white-space:nowrap;padding-bottom:6px;scrollbar-width:thin;scrollbar-color:rgba(212,175,55,0.4) rgba(255,255,255,0.05);">
+      <button type="button" class="cat-btn active" data-cat="all">All</button>
+    </div>
     <div class="row g-4" id="galleryGrid">
       <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:260px;border-radius:16px;"></div></div>
       <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:260px;border-radius:16px;"></div></div>
@@ -83,25 +108,49 @@
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous" defer></script>
 <script src="js/main.js" defer></script>
 <script type="module">
 import { getGallery, getSettings } from './js/firebase.js';
 
-const fallback = [
-  {icon:'fas fa-cut',label:'Hair Cut'},{icon:'fas fa-user-tie',label:'Beard Trim'},
-  {icon:'fas fa-palette',label:'Hair Color'},{icon:'fas fa-spa',label:'Facial'},
-  {icon:'fas fa-magic',label:'Hair Spa'},{icon:'fas fa-hands',label:'Head Massage'},
-  {icon:'fas fa-star',label:'Styling'},{icon:'fas fa-gem',label:'Premium'},{icon:'fas fa-crown',label:'VIP Treatment'}
-];
+let allPhotos = [];
 
-function renderFallback() {
+function renderPhotos(photos) {
   const grid = document.getElementById('galleryGrid');
-  grid.innerHTML = fallback.map((f,i) => `
-    <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.07}s">
-      <div class="gallery-card"><div class="gallery-icon"><i class="${f.icon}"></i></div><div class="gallery-label">${f.label}</div></div>
+  if (!photos.length) {
+    grid.innerHTML = '<div class="col-12 text-center py-5" style="color:rgba(240,230,211,0.4);"><i class="fas fa-images" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:16px;"></i><p>No photos yet. Check back soon!</p></div>';
+    return;
+  }
+  grid.innerHTML = photos.map((p, i) => `
+    <div class="col-lg-4 col-md-6 reveal-up gallery-item" data-cat="${p.category||''}" style="animation-delay:${i*0.05}s">
+      <div class="gallery-photo-card" onclick="openLightbox('${p.url}','${(p.caption||'').replace(/'/g,"\\'")}')">
+        ${p.type === 'video'
+          ? `<video src="${p.url}" style="width:100%;height:100%;object-fit:cover;" muted playsinline loop autoplay></video>`
+          : `<img src="${p.url}" alt="${p.caption||''}" loading="lazy" onerror="this.closest('.gallery-item').style.display='none'"/>`
+        }
+        <div class="gallery-photo-overlay">
+          ${p.caption ? `<div style="font-size:0.85rem;color:#fff;font-weight:600;">${p.caption}</div>` : ''}
+          ${p.category ? `<div style="font-size:0.72rem;color:var(--gold-2);">${p.category}</div>` : ''}
+        </div>
+        <div class="gallery-photo-zoom"><i class="fas fa-expand"></i></div>
+      </div>
     </div>`).join('');
-  document.getElementById('galleryGrid').insertAdjacentHTML('afterend','<p class="text-center mt-4" style="color:var(--text-muted);font-size:0.9rem;"><i class="fas fa-info-circle me-2 text-gold"></i>Photos will appear here once uploaded from the admin panel.</p>');
+}
+
+function renderCatFilters(photos) {
+  const cats = [...new Set(photos.map(p => p.category).filter(Boolean))];
+  const cf = document.getElementById('catFilters');
+  if (!cats.length) { cf.style.display = 'none'; return; }
+  cf.style.display = '';
+  cf.innerHTML = '<button type="button" class="cat-btn active" data-cat="all">All</button>' +
+    cats.map(c => `<button type="button" class="cat-btn" data-cat="${c}">${c}</button>`).join('');
+  cf.onclick = e => {
+    const btn = e.target.closest('.cat-btn'); if (!btn) return;
+    cf.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    renderPhotos(cat === 'all' ? allPhotos : allPhotos.filter(p => p.category === cat));
+  };
 }
 
 async function load() {
@@ -113,25 +162,23 @@ async function load() {
     if (s.hours_sunday) document.getElementById('ftSun').textContent = s.hours_sunday;
     if (s.address) document.getElementById('ftAddr').textContent = s.address;
     if (s.phone) { const p=document.getElementById('ftPhone'); p.textContent=s.phone; p.href=`tel:${s.phone}`; }
-    if (photos.length) {
-      document.getElementById('galleryGrid').innerHTML = photos.map((p,i) => `
-        <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.06}s">
-          <div class="gallery-card">
-            ${p.type === 'video'
-              ? `<video src="${p.url}" class="gallery-real-img" style="height:240px;" muted playsinline loop autoplay></video>`
-              : `<img src="${p.url||('images/gallery/'+p.filename)}" alt="${p.caption||''}" class="gallery-real-img" loading="lazy" onerror="this.closest('.gallery-card').style.display='none'"/>`
-            }
-            ${p.caption ? `<div class="gallery-real-caption">${p.caption}</div>` : ''}
-          </div>
-        </div>`).join('');
-    } else {
-      renderFallback();
-    }
+    allPhotos = photos;
+    renderCatFilters(photos);
+    renderPhotos(photos);
   } catch(err) {
-    renderFallback();
+    document.getElementById('galleryGrid').innerHTML = '<div class="col-12 text-center py-5" style="color:rgba(240,230,211,0.4);"><i class="fas fa-images" style="font-size:3rem;opacity:0.2;display:block;margin-bottom:16px;"></i><p>Unable to load gallery. Please try again later.</p></div>';
   }
 }
 load();
+
+window.openLightbox = (url, caption) => {
+  document.getElementById('lightboxImg').src = url;
+  const cap = document.getElementById('lightboxCaption');
+  cap.textContent = caption;
+  cap.style.display = caption ? '' : 'none';
+  document.getElementById('lightbox').classList.add('open');
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('open'); });
 </script>
 </body>
 </html>
