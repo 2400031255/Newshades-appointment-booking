@@ -370,7 +370,8 @@ if (_s.maintenance_mode === true) {
   throw new Error('maintenance'); // stop rest of script
 }
 
-const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female', General:'fas fa-magic' };
+const iconMap = { Hair:'fas fa-cut', Beard:'fas fa-user-tie', Skin:'fas fa-spa', Wellness:'fas fa-hands', Bridal:'fas fa-female', Nails:'fas fa-paint-brush', General:'fas fa-magic', Other:'fas fa-magic' };
+function getIcon(cat) { return iconMap[cat] || 'fas fa-concierge-bell'; }
 
 const defaultSvcs = [
   {service_name:'Hair Cut',category:'Hair',description:'Precision cut tailored to your face shape and style.'},
@@ -382,20 +383,24 @@ const defaultSvcs = [
 ];
 
 function renderSvcGrid(svcs) {
-  document.getElementById('servicesGrid').innerHTML = svcs.map((s,i) => {
+  document.getElementById('servicesGrid').innerHTML = svcs.map((s) => {
     const desc = (s.description || 'Professional service tailored for you');
-    const shortDesc = desc.length > 65 ? desc.slice(0,65) + '\u2026' : desc;
+    const shortDesc = desc.length > 70 ? desc.slice(0, 70) + '…' : desc;
     const footer = s.price
-      ? '<div class="svc-home-footer"><span>\u20b9' + Math.round(s.price) + '</span>' +
-        (s.duration ? '<span><i class="far fa-clock me-1"></i>' + s.duration + '</span>' : '') + '</div>'
+      ? '<div class="svc-home-footer">' +
+          '<span class="svc-home-price">&#8377;' + Math.round(s.price) + '</span>' +
+          (s.duration ? '<span class="svc-home-dur"><i class="far fa-clock"></i>' + s.duration + '</span>' : '') +
+        '</div>'
       : '';
     return '<div class="svc-home-card">' +
-      '<div class="svc-home-icon"><i class="' + (iconMap[s.category] || 'fas fa-magic') + '"></i></div>' +
-      '<div class="svc-home-cat">' + (s.category || '') + '</div>' +
-      '<h6 class="svc-home-name">' + s.service_name + '</h6>' +
-      '<p class="svc-home-desc">' + shortDesc + '</p>' +
-      footer +
-      '</div>';
+      '<div class="svc-home-card-inner">' +
+        '<div class="svc-home-icon"><i class="' + getIcon(s.category) + '"></i></div>' +
+        '<div class="svc-home-cat">' + (s.category || '') + '</div>' +
+        '<h6 class="svc-home-name">' + s.service_name + '</h6>' +
+        '<p class="svc-home-desc">' + shortDesc + '</p>' +
+        footer +
+      '</div>' +
+    '</div>';
   }).join('');
 }
 
