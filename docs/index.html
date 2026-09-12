@@ -135,7 +135,8 @@
       <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:200px;"></div></div>
       <div class="col-lg-4 col-md-6"><div class="skeleton" style="height:200px;"></div></div>
     </div>
-    <div class="text-center mt-5 reveal-up">
+    <div class="text-center mt-5 reveal-up d-flex gap-3 justify-content-center flex-wrap">
+      <a href="services.html" id="svcViewAll" style="display:none;" class="btn-gold-hero"><i class="fas fa-th-list me-2"></i>View All Services</a>
       <a href="#enquire" class="btn-gold-hero">Enquire Now <i class="fas fa-arrow-right ms-2"></i></a>
     </div>
   </div>
@@ -378,7 +379,8 @@ const defaultSvcs = [
 ];
 
 function renderSvcGrid(svcs) {
-  document.getElementById('servicesGrid').innerHTML = svcs.map((s,i) => `
+  const show = svcs.slice(0, 6);
+  document.getElementById('servicesGrid').innerHTML = show.map((s,i) => `
     <div class="col-lg-4 col-md-6 reveal-up" style="animation-delay:${i*0.08}s">
       <div class="svc-card tilt-card">
         <div class="svc-card-glow"></div>
@@ -388,6 +390,8 @@ function renderSvcGrid(svcs) {
         ${s.price ? `<div class="svc-footer"><span style="color:var(--gold-2);font-weight:700;font-family:'Playfair Display',serif;">₹${Math.round(s.price)}</span>${s.duration?`<span style="color:var(--text-muted);font-size:0.8rem;"><i class="far fa-clock me-1"></i>${s.duration}</span>`:''}</div>` : ''}
       </div>
     </div>`).join('');
+  const viewAllBtn = document.getElementById('svcViewAll');
+  if (viewAllBtn) viewAllBtn.style.display = svcs.length > 6 ? '' : 'none';
 }
 
 async function loadSettings() {
