@@ -571,7 +571,7 @@ window.generateBill = async () => {
     subtotal: sub, discount_type: dtype, discount_value: dval, discount_amount: disc, total,
     payment_method: document.getElementById('payMethod').value,
     date: now.toISOString().slice(0, 10),
-    time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
+    time: (() => { let h = now.getHours(), m = now.getMinutes(), ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + String(m).padStart(2,'0') + ' ' + ampm; })(),
     created_at: serverTimestamp()
   };
   const btn = document.getElementById('generateBtn');
@@ -892,7 +892,10 @@ window.renderRptTable = () => {
 window.reprintBill = id => {
   const b = allBills.find(x => x.id === id);
   if (!b) return;
-  lastBill = { ...b, dateStr: b.date, time: b.time || '' };
+  // Format date as DD/MM/YYYY for display
+  const [y,m,d] = (b.date||'').split('-');
+  const dateStr = (d && m && y) ? d+'/'+m+'/'+y : (b.date||'');
+  lastBill = { ...b, dateStr, time: b.time || '' };
   showReceipt(lastBill);
 };
 
