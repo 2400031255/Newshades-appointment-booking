@@ -144,7 +144,7 @@ async function loadCategories() {
 }
 
 async function saveCategories() {
-  try { await setDoc(doc(db, 'settings', 'categories'), { list: categories }, { merge: false }); } catch(e) {}
+  await setDoc(doc(db, 'settings', 'categories'), { list: categories }, { merge: false });
 }
 
 function renderCategoryTags() {
