@@ -226,6 +226,7 @@
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
 <body class="admin-body">
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -573,33 +574,26 @@ window.applyTemplate = function(title, desc) {
   generateCert();
 };
 
-window.printCert = function() {
-  const paper = document.getElementById('certPaper');
-  const printWin = window.open('', '_blank', 'width=1000,height=720');
-  // Collect only same-origin style rules (avoids CORS errors from CDN stylesheets)
-  let inlineStyles = '';
-  Array.from(document.styleSheets).forEach(s => {
-    try {
-      Array.from(s.cssRules).forEach(r => { inlineStyles += r.cssText + '\n'; });
-    } catch(e) { /* skip cross-origin sheets */ }
-  });
-  printWin.document.write(`<!DOCTYPE html><html><head>
-    <meta charset="UTF-8"/>
-    <title>Certificate – New Shades</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Cinzel:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
-    <style>
-      *{margin:0;padding:0;box-sizing:border-box;}
-      html,body{background:#000!important;}
-      body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-      ${inlineStyles}
-      @media print{
-        body{padding:0;}
-        .cert-paper{box-shadow:none!important;}
-      }
-    </style>
-  </head><body>${paper.outerHTML}<script>window.onload=()=>{setTimeout(()=>window.print(),800);}<\/script></body></html>`);
-  printWin.document.close();
+window.printCert = async function() {
+  const btn = document.getElementById('printBtn');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…'; }
+  try {
+    const canvas = await html2canvas(document.getElementById('certPaper'), {
+      scale: 2, useCORS: true, backgroundColor: '#0d0b06', logging: false
+    });
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    // A4 landscape
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+    const name = document.getElementById('certCustomName').value.trim() || 'certificate';
+    pdf.save(`certificate-${name.replace(/\s+/g, '-')}.pdf`);
+    if (btn) { btn.innerHTML = '<i class="fas fa-check"></i> Downloaded!'; setTimeout(() => { btn.disabled = false; btn.innerHTML = origText; }, 2000); }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+    alert('Failed to generate PDF: ' + e.message);
+  }
 };
 
 window.shareOnWhatsApp = async function(btnEl) {
