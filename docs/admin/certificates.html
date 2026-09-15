@@ -599,46 +599,46 @@ window.shareOnWhatsApp = async function(btnEl) {
   btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Generating…';
 
   try {
-    const paper = document.getElementById('certPaper');
-    const canvas = await html2canvas(paper, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#0d0b06',
-      logging: false
+    const canvas = await html2canvas(document.getElementById('certPaper'), {
+      scale: 2, useCORS: true, backgroundColor: '#0d0b06', logging: false
     });
 
     canvas.toBlob(async (blob) => {
-      const file = new File([blob], `certificate-${name.replace(/\s+/g,'-')}.png`, { type: 'image/png' });
+      const fileName = `certificate-${name.replace(/\s+/g,'-')}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
       const msg  = `🏆 *${title}*\n\nDear *${name}*,\n\nPlease find your certificate from *New Shades* attached. Congratulations! 🎉\n\n— New Shades Team`;
 
-      // Try Web Share API (works on mobile / Chrome Android)
+      // Mobile / Chrome Android — Web Share API with file (shares directly to WhatsApp)
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({ files: [file], title: title, text: msg });
           btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Shared!';
           setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp'; }, 2500);
           return;
-        } catch(e) { /* user cancelled or not WhatsApp — fall through */ }
+        } catch(e) { if (e.name !== 'AbortError') console.warn('Share failed:', e); }
       }
 
-      // Desktop fallback: download image + open WhatsApp with message
+      // Desktop fallback:
+      // 1. Auto-download the certificate image
       const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      a.href = url; a.download = file.name; a.click();
-      URL.revokeObjectURL(url);
+      const a = document.createElement('a');
+      a.href = url; a.download = fileName; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
 
-      // Open WhatsApp with pre-filled message (user picks contact)
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg + '\n\n(Certificate image downloaded — please attach it)')}` ;
-      setTimeout(() => window.open(waUrl, '_blank'), 600);
+      // 2. Immediately open WhatsApp (desktop app deep link, falls back to web)
+      const waMsg = encodeURIComponent(msg + '\n\n_(Certificate image has been downloaded — please attach it to this chat)_');
+      window.open(`whatsapp://send?text=${waMsg}`, '_blank');
+      // Small delay then also try web.whatsapp.com as fallback if desktop app not installed
+      setTimeout(() => window.open(`https://web.whatsapp.com/`, '_blank'), 1500);
 
-      btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Downloaded + WhatsApp Opened';
-      setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp'; }, 3000);
+      btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Image Downloaded ✓';
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp'; }, 3500);
     }, 'image/png');
 
   } catch(e) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp';
-    alert('Failed to generate image: ' + e.message);
+    alert('Failed to generate certificate image: ' + e.message);
   }
 };
 
