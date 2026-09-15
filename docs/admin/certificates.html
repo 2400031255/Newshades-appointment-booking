@@ -137,12 +137,15 @@
       text-align:center;font-family:'Great Vibes',cursive;
       font-size:3.2rem;color:#F5D060;
       text-shadow:0 2px 20px rgba(212,175,55,0.35);
-      line-height:1.1;margin-bottom:2px;
+      line-height:1.2;margin-bottom:6px;
+      word-break:break-word;overflow-wrap:break-word;
+      max-width:100%;display:block;
     }
     .cert-recipient-role {
       text-align:center;font-family:'Cinzel',serif;
       font-size:0.7rem;letter-spacing:3px;
       color:rgba(212,175,55,0.55);text-transform:uppercase;
+      margin-top:2px;display:block;
     }
 
     /* Description text */
@@ -289,7 +292,7 @@
 
           <div class="mb-3">
             <label class="field-label mb-1" style="font-size:0.75rem;">ISSUED BY (SIGNATURE NAME)</label>
-            <input type="text" id="certIssuer" class="cert-form-input" placeholder="e.g. Nikhil Kumar" value="Nikhil Kumar"/>
+            <input type="text" id="certIssuer" class="cert-form-input" placeholder="e.g. Nikhil Kumar"/>
           </div>
 
           <div class="mb-4">
@@ -440,7 +443,7 @@
                       <div class="cert-seal-text">New Shades<br/>Official Seal</div>
                     </div>
                     <div class="cert-footer-col">
-                      <div class="cert-sign-name" id="certIssuerDisplay">Nikhil Kumar</div>
+                      <div class="cert-sign-name" id="certIssuerDisplay"></div>
                       <div class="cert-sign-line"></div>
                       <div class="cert-sign-label">Authorized Signature</div>
                     </div>
@@ -547,7 +550,7 @@ function updatePreviewOnly() {
   const name   = document.getElementById('certCustomName').value.trim() || 'Employee Name';
   const role   = document.getElementById('certRole').value.trim() || '';
   const desc   = document.getElementById('certDesc').value.trim() || 'In recognition of outstanding dedication, exceptional skill and remarkable contribution to our team.';
-  const issuer = document.getElementById('certIssuer').value.trim() || 'Management';
+  const issuer = document.getElementById('certIssuer').value.trim();
   const dateVal = document.getElementById('certDate').value;
   if (dateVal) updateDateDisplay(new Date(dateVal + 'T00:00:00'));
   document.getElementById('certTitleDisplay').textContent = title;
@@ -647,9 +650,15 @@ window.saveCertToFirestore = async function() {
   const desc   = document.getElementById('certDesc').value.trim();
   const issuer = document.getElementById('certIssuer').value.trim() || 'Management';
   const dateVal = document.getElementById('certDate').value;
-  const certNum = document.getElementById('certNumDisplay').textContent;
 
   if (!name) { alert('Please enter an employee name before saving.'); return; }
+
+  // Ensure a cert number exists (generate one if Preview was never clicked)
+  let certNum = document.getElementById('certNumDisplay').textContent.trim();
+  if (!certNum || certNum === 'CERT-NS-001') {
+    certNum = 'CERT-NS-' + String(Math.floor(Math.random()*900)+100);
+    document.getElementById('certNumDisplay').textContent = certNum;
+  }
 
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
@@ -695,7 +704,8 @@ window.loadHistory = async function() {
       </tr>`;
     }).join('');
   } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ff6b6b;">Failed to load history.</td></tr>';
+    console.error('loadHistory error:', e);
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:24px;text-align:center;color:#ff6b6b;">Failed to load history: ${e.message}</td></tr>`;
   }
 };
 
@@ -708,7 +718,7 @@ window.reloadCert = function(id) {
   document.getElementById('certDesc').value = c.description || '';
   document.getElementById('certIssuer').value = c.issued_by || '';
   if (c.date) document.getElementById('certDate').value = c.date;
-  generateCert();
+  updatePreviewOnly();
   document.getElementById('certNumDisplay').textContent = c.cert_number || 'CERT-NS-001';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
