@@ -395,6 +395,21 @@ export async function savePayroll(data) {
   return addDoc(collection(db, "payroll"), { ...data, created_at: serverTimestamp() });
 }
 
+// ── Certificates ─────────────────────────────────────────────────────────
+export async function saveCertificate(data) {
+  return addDoc(collection(db, "certificates"), { ...data, created_at: serverTimestamp() });
+}
+export async function getCertificates() {
+  try {
+    const snap = await getDocs(query(collection(db, "certificates"), orderBy("created_at", "desc")));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch {
+    const snap = await getDocs(collection(db, "certificates"));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+  }
+}
+export async function deleteCertificate(id) { return deleteDoc(doc(db, "certificates", id)); }
+
 // ── Utilities ─────────────────────────────────────────────────────────────
 export function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 

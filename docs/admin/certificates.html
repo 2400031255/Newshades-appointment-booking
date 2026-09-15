@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Certificates – New Shades Admin</title>
+  <style>html,body{background:#050407!important;color:rgba(245,235,215,0.92);}</style>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous"/></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/></noscript>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Great+Vibes&family=Cinzel:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'"><noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Great+Vibes&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet"/></noscript>
+  <link href="../style.css" rel="stylesheet"/>
+  <style>
+    .cert-form-input {
+      width:100%;padding:10px 14px;border-radius:12px;
+      background:rgba(255,255,255,0.06);border:1.5px solid rgba(201,168,76,0.2);
+      color:#fff;outline:none;font-size:0.9rem;
+    }
+    .cert-form-input:focus { border-color:var(--gold); }
+    .cert-preview-wrap {
+      background:rgba(255,255,255,0.02);border:1px solid rgba(201,168,76,0.15);
+      border-radius:20px;padding:24px;overflow:auto;
+    }
+
+    /* ===== CERTIFICATE DESIGN ===== */
+    .cert-paper {
+      width:900px;min-height:640px;margin:0 auto;position:relative;
+      background: linear-gradient(145deg, #1a1208 0%, #0d0b06 40%, #1a1208 100%);
+      border-radius:4px;overflow:hidden;
+      box-shadow:0 30px 80px rgba(0,0,0,0.8), inset 0 0 120px rgba(212,175,55,0.04);
+      font-family:'DM Sans',sans-serif;
+    }
+
+    /* Outer gold border frame */
+    .cert-border-outer {
+      position:absolute;inset:12px;
+      border:2px solid rgba(212,175,55,0.6);
+      border-radius:2px;pointer-events:none;z-index:2;
+    }
+    .cert-border-inner {
+      position:absolute;inset:20px;
+      border:1px solid rgba(212,175,55,0.25);
+      border-radius:1px;pointer-events:none;z-index:2;
+    }
+
+    /* Corner ornaments */
+    .cert-corner {
+      position:absolute;width:60px;height:60px;z-index:3;
+    }
+    .cert-corner svg { width:100%;height:100%; }
+    .cert-corner.tl { top:8px;left:8px; }
+    .cert-corner.tr { top:8px;right:8px;transform:scaleX(-1); }
+    .cert-corner.bl { bottom:8px;left:8px;transform:scaleY(-1); }
+    .cert-corner.br { bottom:8px;right:8px;transform:scale(-1,-1); }
+
+    /* Background watermark pattern */
+    .cert-bg-pattern {
+      position:absolute;inset:0;z-index:0;opacity:0.04;
+      background-image:
+        radial-gradient(circle at 20% 20%, #D4AF37 1px, transparent 1px),
+        radial-gradient(circle at 80% 80%, #D4AF37 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, #D4AF37 0.5px, transparent 0.5px);
+      background-size:40px 40px, 40px 40px, 20px 20px;
+    }
+
+    /* Gold shimmer top bar */
+    .cert-top-bar {
+      position:relative;z-index:4;
+      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.15), rgba(212,175,55,0.3), rgba(212,175,55,0.15), transparent);
+      height:4px;margin:28px 28px 0;
+    }
+    .cert-bottom-bar {
+      position:relative;z-index:4;
+      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.15), rgba(212,175,55,0.3), rgba(212,175,55,0.15), transparent);
+      height:4px;margin:0 28px 28px;
+    }
+
+    .cert-body { position:relative;z-index:4;padding:10px 60px 20px; }
+
+    /* Header section */
+    .cert-header { text-align:center;margin-bottom:8px; }
+    .cert-logo-wrap {
+      width:72px;height:72px;border-radius:50%;
+      border:2px solid rgba(212,175,55,0.5);
+      background:rgba(212,175,55,0.08);
+      display:flex;align-items:center;justify-content:center;
+      margin:0 auto 10px;overflow:hidden;
+      box-shadow:0 0 20px rgba(212,175,55,0.2);
+    }
+    .cert-logo-wrap img { width:100%;height:100%;object-fit:cover; }
+    .cert-salon-name {
+      font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;
+      letter-spacing:4px;color:rgba(212,175,55,0.9);text-transform:uppercase;
+      margin-bottom:2px;
+    }
+    .cert-salon-tagline {
+      font-size:0.7rem;color:rgba(240,220,160,0.5);letter-spacing:2px;text-transform:uppercase;
+    }
+
+    /* Divider */
+    .cert-divider {
+      display:flex;align-items:center;gap:12px;margin:10px 0;
+    }
+    .cert-divider-line {
+      flex:1;height:1px;
+      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+    }
+    .cert-divider-diamond {
+      width:8px;height:8px;background:rgba(212,175,55,0.7);
+      transform:rotate(45deg);flex-shrink:0;
+    }
+
+    /* Certificate of title */
+    .cert-of-label {
+      text-align:center;font-family:'Cinzel',serif;
+      font-size:0.65rem;letter-spacing:6px;color:rgba(212,175,55,0.6);
+      text-transform:uppercase;margin-bottom:4px;
+    }
+    .cert-title {
+      text-align:center;font-family:'Cinzel',serif;
+      font-size:2.2rem;font-weight:700;
+      color:#D4AF37;letter-spacing:2px;
+      text-shadow:0 0 40px rgba(212,175,55,0.4);
+      line-height:1.1;margin-bottom:4px;
+    }
+    .cert-subtitle {
+      text-align:center;font-family:'Playfair Display',serif;
+      font-style:italic;font-size:0.85rem;
+      color:rgba(240,220,160,0.55);letter-spacing:1px;
+    }
+
+    /* Presented to */
+    .cert-presented {
+      text-align:center;font-size:0.72rem;letter-spacing:3px;
+      color:rgba(240,220,160,0.45);text-transform:uppercase;
+      margin:14px 0 4px;
+    }
+    .cert-recipient {
+      text-align:center;font-family:'Great Vibes',cursive;
+      font-size:3.2rem;color:#F5D060;
+      text-shadow:0 2px 20px rgba(212,175,55,0.35);
+      line-height:1.1;margin-bottom:2px;
+    }
+    .cert-recipient-role {
+      text-align:center;font-family:'Cinzel',serif;
+      font-size:0.7rem;letter-spacing:3px;
+      color:rgba(212,175,55,0.55);text-transform:uppercase;
+    }
+
+    /* Description text */
+    .cert-desc-text {
+      text-align:center;font-family:'Playfair Display',serif;
+      font-style:italic;font-size:0.88rem;
+      color:rgba(240,220,160,0.65);line-height:1.7;
+      max-width:580px;margin:12px auto 0;
+    }
+
+    /* Footer row */
+    .cert-footer {
+      display:flex;align-items:flex-end;justify-content:space-between;
+      margin-top:20px;padding:0 10px;
+    }
+    .cert-footer-col { text-align:center;min-width:140px; }
+    .cert-footer-date-label {
+      font-size:0.62rem;letter-spacing:2px;color:rgba(212,175,55,0.45);
+      text-transform:uppercase;margin-bottom:2px;
+    }
+    .cert-footer-date-val {
+      font-family:'Cinzel',serif;font-size:0.78rem;
+      color:rgba(240,220,160,0.75);letter-spacing:1px;
+    }
+    .cert-seal {
+      width:80px;height:80px;border-radius:50%;
+      border:2px solid rgba(212,175,55,0.4);
+      background:radial-gradient(circle, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 70%);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      box-shadow:0 0 20px rgba(212,175,55,0.15), inset 0 0 20px rgba(212,175,55,0.05);
+    }
+    .cert-seal-icon { font-size:1.4rem;color:rgba(212,175,55,0.7); }
+    .cert-seal-text {
+      font-family:'Cinzel',serif;font-size:0.38rem;
+      letter-spacing:1.5px;color:rgba(212,175,55,0.5);
+      text-transform:uppercase;margin-top:2px;text-align:center;
+    }
+    .cert-sign-line {
+      width:120px;height:1px;
+      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+      margin:0 auto 4px;
+    }
+    .cert-sign-label {
+      font-size:0.6rem;letter-spacing:2px;color:rgba(212,175,55,0.45);
+      text-transform:uppercase;
+    }
+    .cert-sign-name {
+      font-family:'Great Vibes',cursive;font-size:1.3rem;
+      color:rgba(240,210,120,0.7);line-height:1;margin-bottom:2px;
+    }
+
+    /* Certificate number badge */
+    .cert-number {
+      position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+      font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:2px;
+      color:rgba(212,175,55,0.3);z-index:4;white-space:nowrap;
+    }
+
+    /* Ribbon accent */
+    .cert-ribbon-left, .cert-ribbon-right {
+      position:absolute;top:0;bottom:0;width:6px;z-index:3;
+    }
+    .cert-ribbon-left {
+      left:26px;
+      background:linear-gradient(180deg, transparent, rgba(212,175,55,0.15) 20%, rgba(212,175,55,0.25) 50%, rgba(212,175,55,0.15) 80%, transparent);
+    }
+    .cert-ribbon-right {
+      right:26px;
+      background:linear-gradient(180deg, transparent, rgba(212,175,55,0.15) 20%, rgba(212,175,55,0.25) 50%, rgba(212,175,55,0.15) 80%, transparent);
+    }
+
+    /* Print styles */
+    @media print {
+      body * { visibility:hidden; }
+      #certPrintArea, #certPrintArea * { visibility:visible; }
+      #certPrintArea { position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000; }
+      .cert-paper { box-shadow:none; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="admin-body">
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="admin-sidebar" id="adminSidebar">
+  <div class="brand d-flex align-items-center gap-2"><img src="../images/logo.jpeg" alt="NS" class="admin-brand-logo"/><div><h4>New Shades</h4><small style="color:rgba(255,255,255,0.4);font-size:0.75rem;">Admin Panel</small></div></div>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html"><span class="sidebar-nav-label"><i class="fas fa-tachometer-alt"></i> Dashboard</span></a>
+    <a href="billing.html"><span class="sidebar-nav-label"><i class="fas fa-file-invoice-dollar" style="color:var(--gold);"></i> Billing</span></a>
+    <a href="services.html"><span class="sidebar-nav-label"><i class="fas fa-concierge-bell"></i> Services</span></a>
+    <a href="enquiries.html"><span class="sidebar-nav-label"><i class="fas fa-clipboard-list"></i> Enquiries</span></a>
+    <a href="employees.html"><span class="sidebar-nav-label"><i class="fas fa-user-tie"></i> Employees</span></a>
+    <a href="attendance.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-check"></i> Attendance</span></a>
+    <a href="attendance.html#monthly-report" class="admin-only-link"><span class="sidebar-nav-label" style="padding-left:18px;font-size:0.8rem;"><i class="fas fa-chart-bar" style="color:var(--gold);"></i> Monthly Report</span></a>
+    <a href="payroll.html"><span class="sidebar-nav-label"><i class="fas fa-money-bill-wave"></i> Payroll</span></a>
+    <a href="leave_requests.html"><span class="sidebar-nav-label"><i class="fas fa-calendar-minus"></i> Leave Requests</span></a>
+    <a href="settings.html"><span class="sidebar-nav-label"><i class="fab fa-whatsapp" style="color:#25d366;"></i> Settings</span></a>
+    <a href="gallery.html"><span class="sidebar-nav-label"><i class="fas fa-images"></i> Gallery</span></a>
+    <a href="certificates.html" class="active"><span class="sidebar-nav-label"><i class="fas fa-award" style="color:var(--gold);"></i> Certificates</span></a>
+    <a href="profile.html"><span class="sidebar-nav-label"><i class="fas fa-user-circle"></i> My Profile</span></a>
+    <a href="#" id="logoutBtn" style="margin-top:auto;color:#ff6b6b;"><span class="sidebar-nav-label"><i class="fas fa-sign-out-alt"></i> Logout</span></a>
+  </nav>
+</div>
+
+<div class="admin-content">
+  <div class="admin-topbar">
+    <div class="d-flex align-items-center gap-3"><button id="sidebarToggle"><i class="fas fa-bars"></i></button><h6 class="mb-0 fw-bold">Employee Certificates</h6></div>
+    <div class="d-flex align-items-center gap-2"><span class="text-muted small" id="adminName"></span></div>
+  </div>
+
+  <div class="admin-page-body">
+    <div class="row g-4">
+
+      <!-- LEFT: Form -->
+      <div class="col-lg-4">
+        <div class="admin-card">
+          <h6 class="fw-bold mb-4" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-certificate me-2" style="color:var(--gold);"></i>Generate Certificate</h6>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">CERTIFICATE TITLE *</label>
+            <input type="text" id="certTitle" class="cert-form-input" placeholder="e.g. Best Employee of the Month" value="Best Employee of the Month"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">EMPLOYEE NAME *</label>
+            <select id="certEmpSelect" class="cert-form-input" style="cursor:pointer;">
+              <option value="">— Select Employee —</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">OR TYPE CUSTOM NAME</label>
+            <input type="text" id="certCustomName" class="cert-form-input" placeholder="Type name manually…"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">EMPLOYEE ROLE / DESIGNATION</label>
+            <input type="text" id="certRole" class="cert-form-input" placeholder="e.g. Senior Stylist"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">DESCRIPTION</label>
+            <textarea id="certDesc" rows="3" class="cert-form-input" style="resize:vertical;font-family:'DM Sans',sans-serif;" placeholder="In recognition of outstanding dedication, exceptional skill and remarkable contribution…"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="field-label mb-1" style="font-size:0.75rem;">ISSUED BY (SIGNATURE NAME)</label>
+            <input type="text" id="certIssuer" class="cert-form-input" placeholder="e.g. Nikhil Kumar" value="Nikhil Kumar"/>
+          </div>
+
+          <div class="mb-4">
+            <label class="field-label mb-1" style="font-size:0.75rem;">DATE</label>
+            <input type="date" id="certDate" class="cert-form-input"/>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <button onclick="generateCert()" class="btn-gold" style="flex:1;justify-content:center;"><i class="fas fa-eye me-2"></i>Preview</button>
+            <button onclick="printCert()" id="printBtn" style="flex:1;padding:10px 16px;border-radius:999px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:var(--gold-2);font-weight:700;cursor:pointer;font-size:0.88rem;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-print"></i> Print / Save</button>
+            <button onclick="saveCertToFirestore()" id="saveBtn" style="width:100%;padding:10px 16px;border-radius:999px;background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#7ce0aa;font-weight:700;cursor:pointer;font-size:0.88rem;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-cloud-upload-alt"></i> Save to Records</button>
+            <button onclick="shareOnWhatsApp(this)" id="waShareBtn" style="width:100%;padding:10px 16px;border-radius:999px;background:rgba(37,211,102,0.15);border:1px solid rgba(37,211,102,0.4);color:#25d366;font-weight:700;cursor:pointer;font-size:0.88rem;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp</button>
+          </div>
+        </div>
+
+        <!-- Quick templates -->
+        <div class="admin-card mt-4">
+          <h6 class="fw-bold mb-3" style="color:#fff;font-family:'Playfair Display',serif;font-size:0.9rem;"><i class="fas fa-magic me-2" style="color:var(--gold);"></i>Quick Templates</h6>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="tpl-btn" onclick="applyTemplate('Best Employee of the Month','In recognition of outstanding dedication, exceptional skill and remarkable contribution to our team this month.')"><i class="fas fa-star me-2" style="color:#F5D060;"></i>Best Employee of the Month</button>
+            <button class="tpl-btn" onclick="applyTemplate('Excellence in Service','For demonstrating exceptional customer service, professionalism and a commitment to excellence in every interaction.')"><i class="fas fa-gem me-2" style="color:#9dc0ff;"></i>Excellence in Service</button>
+            <button class="tpl-btn" onclick="applyTemplate('Certificate of Achievement','In recognition of outstanding achievement, hard work and dedication that has significantly contributed to the success of New Shades.')"><i class="fas fa-trophy me-2" style="color:#ffc97a;"></i>Certificate of Achievement</button>
+            <button class="tpl-btn" onclick="applyTemplate('Top Performer Award','Awarded for consistently exceeding performance expectations and setting a benchmark of excellence for the entire team.')"><i class="fas fa-crown me-2" style="color:#D4AF37;"></i>Top Performer Award</button>
+            <button class="tpl-btn" onclick="applyTemplate('Certificate of Appreciation','With heartfelt appreciation for your unwavering commitment, positive attitude and invaluable contribution to New Shades.')"><i class="fas fa-heart me-2" style="color:#ff9a9a;"></i>Certificate of Appreciation</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Preview -->
+      <div class="col-lg-8">
+        <div class="admin-card">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-eye me-2" style="color:var(--gold);"></i>Certificate Preview</h6>
+            <div class="d-flex gap-2">
+              <button onclick="shareOnWhatsApp(this)" style="padding:7px 16px;border-radius:999px;background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.35);color:#25d366;font-size:0.8rem;font-weight:700;cursor:pointer;"><i class="fab fa-whatsapp me-1"></i>WhatsApp</button>
+              <button onclick="printCert()" style="padding:7px 18px;border-radius:999px;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:var(--gold-2);font-size:0.8rem;font-weight:700;cursor:pointer;"><i class="fas fa-download me-1"></i>Print / Save PDF</button>
+            </div>
+          </div>
+          <div class="cert-preview-wrap">
+            <div id="certPrintArea">
+              <div class="cert-paper" id="certPaper">
+
+                <!-- Background pattern -->
+                <div class="cert-bg-pattern"></div>
+
+                <!-- Side ribbons -->
+                <div class="cert-ribbon-left"></div>
+                <div class="cert-ribbon-right"></div>
+
+                <!-- Borders -->
+                <div class="cert-border-outer"></div>
+                <div class="cert-border-inner"></div>
+
+                <!-- Corner ornaments -->
+                <div class="cert-corner tl">
+                  <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 5 L55 5 L55 12 L12 12 L12 55 L5 55 Z" fill="none" stroke="rgba(212,175,55,0.7)" stroke-width="1.5"/>
+                    <path d="M5 5 L20 5 M5 5 L5 20" stroke="rgba(212,175,55,0.9)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="5" cy="5" r="3" fill="rgba(212,175,55,0.8)"/>
+                    <path d="M18 18 L42 18 M18 18 L18 42" stroke="rgba(212,175,55,0.3)" stroke-width="0.8"/>
+                    <circle cx="18" cy="18" r="2" fill="rgba(212,175,55,0.4)"/>
+                    <path d="M30 5 L30 12 M5 30 L12 30" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+                    <circle cx="30" cy="5" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                    <circle cx="5" cy="30" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                  </svg>
+                </div>
+                <div class="cert-corner tr">
+                  <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 5 L55 5 L55 12 L12 12 L12 55 L5 55 Z" fill="none" stroke="rgba(212,175,55,0.7)" stroke-width="1.5"/>
+                    <path d="M5 5 L20 5 M5 5 L5 20" stroke="rgba(212,175,55,0.9)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="5" cy="5" r="3" fill="rgba(212,175,55,0.8)"/>
+                    <path d="M18 18 L42 18 M18 18 L18 42" stroke="rgba(212,175,55,0.3)" stroke-width="0.8"/>
+                    <circle cx="18" cy="18" r="2" fill="rgba(212,175,55,0.4)"/>
+                    <path d="M30 5 L30 12 M5 30 L12 30" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+                    <circle cx="30" cy="5" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                    <circle cx="5" cy="30" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                  </svg>
+                </div>
+                <div class="cert-corner bl">
+                  <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 5 L55 5 L55 12 L12 12 L12 55 L5 55 Z" fill="none" stroke="rgba(212,175,55,0.7)" stroke-width="1.5"/>
+                    <path d="M5 5 L20 5 M5 5 L5 20" stroke="rgba(212,175,55,0.9)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="5" cy="5" r="3" fill="rgba(212,175,55,0.8)"/>
+                    <path d="M18 18 L42 18 M18 18 L18 42" stroke="rgba(212,175,55,0.3)" stroke-width="0.8"/>
+                    <circle cx="18" cy="18" r="2" fill="rgba(212,175,55,0.4)"/>
+                    <path d="M30 5 L30 12 M5 30 L12 30" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+                    <circle cx="30" cy="5" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                    <circle cx="5" cy="30" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                  </svg>
+                </div>
+                <div class="cert-corner br">
+                  <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 5 L55 5 L55 12 L12 12 L12 55 L5 55 Z" fill="none" stroke="rgba(212,175,55,0.7)" stroke-width="1.5"/>
+                    <path d="M5 5 L20 5 M5 5 L5 20" stroke="rgba(212,175,55,0.9)" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="5" cy="5" r="3" fill="rgba(212,175,55,0.8)"/>
+                    <path d="M18 18 L42 18 M18 18 L18 42" stroke="rgba(212,175,55,0.3)" stroke-width="0.8"/>
+                    <circle cx="18" cy="18" r="2" fill="rgba(212,175,55,0.4)"/>
+                    <path d="M30 5 L30 12 M5 30 L12 30" stroke="rgba(212,175,55,0.4)" stroke-width="1"/>
+                    <circle cx="30" cy="5" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                    <circle cx="5" cy="30" r="1.5" fill="rgba(212,175,55,0.5)"/>
+                  </svg>
+                </div>
+
+                <!-- Top bar -->
+                <div class="cert-top-bar"></div>
+
+                <!-- Body -->
+                <div class="cert-body">
+                  <div class="cert-header">
+                    <div class="cert-logo-wrap">
+                      <img src="../images/logo.jpeg" alt="New Shades Logo" id="certLogoImg"/>
+                    </div>
+                    <div class="cert-salon-name">New Shades</div>
+                    <div class="cert-salon-tagline">Premium Salon &amp; Beauty Studio · Eluru</div>
+                  </div>
+
+                  <div class="cert-divider">
+                    <div class="cert-divider-line"></div>
+                    <div class="cert-divider-diamond"></div>
+                    <div class="cert-divider-line"></div>
+                  </div>
+
+                  <div class="cert-of-label">This Certificate is Proudly Presented</div>
+                  <div class="cert-title" id="certTitleDisplay">Best Employee of the Month</div>
+                  <div class="cert-subtitle">New Shades Recognition Program</div>
+
+                  <div class="cert-presented">Presented To</div>
+                  <div class="cert-recipient" id="certNameDisplay">Employee Name</div>
+                  <div class="cert-recipient-role" id="certRoleDisplay">Senior Stylist</div>
+
+                  <div class="cert-desc-text" id="certDescDisplay">
+                    In recognition of outstanding dedication, exceptional skill and remarkable contribution to our team this month.
+                  </div>
+
+                  <div class="cert-divider" style="margin-top:16px;">
+                    <div class="cert-divider-line"></div>
+                    <div class="cert-divider-diamond"></div>
+                    <div class="cert-divider-line"></div>
+                  </div>
+
+                  <div class="cert-footer">
+                    <div class="cert-footer-col">
+                      <div class="cert-footer-date-label">Date of Issue</div>
+                      <div class="cert-footer-date-val" id="certDateDisplay">—</div>
+                    </div>
+                    <div class="cert-seal">
+                      <div class="cert-seal-icon"><i class="fas fa-award"></i></div>
+                      <div class="cert-seal-text">New Shades<br/>Official Seal</div>
+                    </div>
+                    <div class="cert-footer-col">
+                      <div class="cert-sign-name" id="certIssuerDisplay">Nikhil Kumar</div>
+                      <div class="cert-sign-line"></div>
+                      <div class="cert-sign-label">Authorized Signature</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bottom bar -->
+                <div class="cert-bottom-bar"></div>
+
+                <!-- Certificate number -->
+                <div class="cert-number" id="certNumDisplay">CERT-NS-001</div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Panel -->
+      <div class="col-12">
+        <div class="admin-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0" style="color:#fff;font-family:'Playfair Display',serif;"><i class="fas fa-history me-2" style="color:var(--gold);"></i>Issued Certificates</h6>
+            <button onclick="loadHistory()" style="padding:6px 14px;border-radius:999px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);color:var(--gold-2);font-size:0.78rem;cursor:pointer;"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="w-100" style="border-collapse:collapse;font-size:0.85rem;">
+              <thead>
+                <tr style="border-bottom:1px solid rgba(212,175,55,0.15);">
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Cert #</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Title</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Employee</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Role</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Issued By</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Date</th>
+                  <th style="padding:8px 12px;color:rgba(212,175,55,0.6);font-weight:600;text-align:left;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="certHistoryBody">
+                <tr><td colspan="7" style="padding:24px;text-align:center;color:rgba(240,230,211,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+<script src="../js/main.js"></script>
+<script type="module">
+import { requireAuth, logoutUser, getUserProfile, getAllEmployees, saveCertificate, getCertificates, deleteCertificate } from '../js/firebase.js';
+
+const user = await requireAuth('../login.html');
+const profile = await getUserProfile(user.uid);
+if (!profile?.is_admin) { window.location.href = '../login.html'; }
+document.getElementById('adminName').textContent = profile?.full_name || user.email;
+
+// Set today's date
+const today = new Date();
+document.getElementById('certDate').value = today.toISOString().slice(0,10);
+updateDateDisplay(today);
+
+// Load employees into select
+try {
+  const emps = await getAllEmployees();
+  const sel = document.getElementById('certEmpSelect');
+  emps.filter(e => !e.deleted && e.is_active !== 0 && e.is_active !== false).forEach(emp => {
+    const o = document.createElement('option');
+    o.value = emp.full_name;
+    o.dataset.role = emp.role || '';
+    o.textContent = emp.full_name + (emp.role ? ` (${emp.role})` : '');
+    sel.appendChild(o);
+  });
+  sel.addEventListener('change', () => {
+    const opt = sel.options[sel.selectedIndex];
+    if (opt.value) {
+      document.getElementById('certCustomName').value = opt.value;
+      document.getElementById('certRole').value = opt.dataset.role || '';
+      generateCert();
+    }
+  });
+} catch(e) {}
+
+// Date input change
+document.getElementById('certDate').addEventListener('change', () => {
+  const d = new Date(document.getElementById('certDate').value + 'T00:00:00');
+  updateDateDisplay(d);
+});
+
+// Live preview on any input change (without regenerating cert number)
+['certTitle','certCustomName','certRole','certDesc','certIssuer'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updatePreviewOnly);
+});
+
+function updateDateDisplay(d) {
+  document.getElementById('certDateDisplay').textContent = d.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
+}
+
+function updatePreviewOnly() {
+  const title  = document.getElementById('certTitle').value.trim() || 'Certificate of Excellence';
+  const name   = document.getElementById('certCustomName').value.trim() || 'Employee Name';
+  const role   = document.getElementById('certRole').value.trim() || '';
+  const desc   = document.getElementById('certDesc').value.trim() || 'In recognition of outstanding dedication, exceptional skill and remarkable contribution to our team.';
+  const issuer = document.getElementById('certIssuer').value.trim() || 'Management';
+  const dateVal = document.getElementById('certDate').value;
+  if (dateVal) updateDateDisplay(new Date(dateVal + 'T00:00:00'));
+  document.getElementById('certTitleDisplay').textContent = title;
+  document.getElementById('certNameDisplay').textContent = name;
+  document.getElementById('certRoleDisplay').textContent = role;
+  document.getElementById('certDescDisplay').textContent = desc;
+  document.getElementById('certIssuerDisplay').textContent = issuer;
+}
+
+window.generateCert = function() {
+  updatePreviewOnly();
+  // Generate a fresh cert number only when Preview button is clicked
+  const num = 'CERT-NS-' + String(Math.floor(Math.random()*900)+100);
+  document.getElementById('certNumDisplay').textContent = num;
+};
+
+window.applyTemplate = function(title, desc) {
+  document.getElementById('certTitle').value = title;
+  document.getElementById('certDesc').value = desc;
+  generateCert();
+};
+
+window.printCert = function() {
+  const paper = document.getElementById('certPaper');
+  const printWin = window.open('', '_blank', 'width=1000,height=720');
+  printWin.document.write(`<!DOCTYPE html><html><head>
+    <meta charset="UTF-8"/>
+    <title>Certificate – New Shades</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Cinzel:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+      *{margin:0;padding:0;box-sizing:border-box;}
+      body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+      ${Array.from(document.styleSheets).filter(s=>{try{return s.cssRules;}catch{return false;}}).map(s=>Array.from(s.cssRules).map(r=>r.cssText).join('')).join('')}
+    </style>
+  </head><body>${paper.outerHTML}<script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  printWin.document.close();
+};
+
+window.shareOnWhatsApp = async function(btnEl) {
+  const name  = document.getElementById('certCustomName').value.trim() || 'Employee';
+  const title = document.getElementById('certTitle').value.trim() || 'Certificate of Excellence';
+  const btn   = btnEl || document.getElementById('waShareBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Generating…';
+
+  try {
+    const paper = document.getElementById('certPaper');
+    const canvas = await html2canvas(paper, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#0d0b06',
+      logging: false
+    });
+
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], `certificate-${name.replace(/\s+/g,'-')}.png`, { type: 'image/png' });
+      const msg  = `🏆 *${title}*\n\nDear *${name}*,\n\nPlease find your certificate from *New Shades* attached. Congratulations! 🎉\n\n— New Shades Team`;
+
+      // Try Web Share API (works on mobile / Chrome Android)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: title, text: msg });
+          btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Shared!';
+          setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp'; }, 2500);
+          return;
+        } catch(e) { /* user cancelled or not WhatsApp — fall through */ }
+      }
+
+      // Desktop fallback: download image + open WhatsApp with message
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href = url; a.download = file.name; a.click();
+      URL.revokeObjectURL(url);
+
+      // Open WhatsApp with pre-filled message (user picks contact)
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(msg + '\n\n(Certificate image downloaded — please attach it)')}` ;
+      setTimeout(() => window.open(waUrl, '_blank'), 600);
+
+      btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Downloaded + WhatsApp Opened';
+      setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp'; }, 3000);
+    }, 'image/png');
+
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fab fa-whatsapp" style="font-size:1.1rem;"></i> Share on WhatsApp';
+    alert('Failed to generate image: ' + e.message);
+  }
+};
+
+// Save certificate to Firestore
+window.saveCertToFirestore = async function() {
+  const title  = document.getElementById('certTitle').value.trim() || 'Certificate of Excellence';
+  const name   = document.getElementById('certCustomName').value.trim();
+  const role   = document.getElementById('certRole').value.trim();
+  const desc   = document.getElementById('certDesc').value.trim();
+  const issuer = document.getElementById('certIssuer').value.trim() || 'Management';
+  const dateVal = document.getElementById('certDate').value;
+  const certNum = document.getElementById('certNumDisplay').textContent;
+
+  if (!name) { alert('Please enter an employee name before saving.'); return; }
+
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving…';
+  try {
+    await saveCertificate({ title, employee_name: name, role, description: desc, issued_by: issuer, date: dateVal, cert_number: certNum });
+    btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+    setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save to Records'; }, 2000);
+    loadHistory();
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save to Records';
+    alert('Failed to save: ' + e.message);
+  }
+};
+
+// Load certificate history
+window.loadHistory = async function() {
+  const tbody = document.getElementById('certHistoryBody');
+  tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:rgba(240,230,211,0.3);"><i class="fas fa-spinner fa-spin me-2"></i>Loading…</td></tr>';
+  try {
+    const certs = await getCertificates();
+    if (!certs.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:rgba(240,230,211,0.3);">No certificates issued yet.</td></tr>';
+      return;
+    }
+    window._certCache = {};
+    tbody.innerHTML = certs.map(c => {
+      window._certCache[c.id] = c;
+      return `
+      <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+        <td style="padding:10px 12px;color:rgba(212,175,55,0.6);font-family:'Cinzel',serif;font-size:0.75rem;">${c.cert_number || '—'}</td>
+        <td style="padding:10px 12px;color:rgba(240,230,211,0.85);font-weight:600;">${c.title || '—'}</td>
+        <td style="padding:10px 12px;color:rgba(240,230,211,0.75);">${c.employee_name || '—'}</td>
+        <td style="padding:10px 12px;color:rgba(240,230,211,0.5);font-size:0.8rem;">${c.role || '—'}</td>
+        <td style="padding:10px 12px;color:rgba(240,230,211,0.5);font-size:0.8rem;">${c.issued_by || '—'}</td>
+        <td style="padding:10px 12px;color:rgba(240,230,211,0.5);font-size:0.8rem;">${c.date ? new Date(c.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—'}</td>
+        <td style="padding:10px 12px;">
+          <button onclick="reloadCert('${c.id}')" title="Preview" style="padding:4px 10px;border-radius:8px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.2);color:var(--gold-2);font-size:0.75rem;cursor:pointer;margin-right:4px;"><i class="fas fa-eye"></i></button>
+          <button onclick="shareFromHistory('${c.id}',this)" title="Share on WhatsApp" style="padding:4px 10px;border-radius:8px;background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.25);color:#25d366;font-size:0.75rem;cursor:pointer;margin-right:4px;"><i class="fab fa-whatsapp"></i></button>
+          <button onclick="deleteCert('${c.id}')" title="Delete" style="padding:4px 10px;border-radius:8px;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.2);color:#ff6b6b;font-size:0.75rem;cursor:pointer;"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ff6b6b;">Failed to load history.</td></tr>';
+  }
+};
+
+window.reloadCert = function(id) {
+  const c = window._certCache?.[id];
+  if (!c) return;
+  document.getElementById('certTitle').value = c.title || '';
+  document.getElementById('certCustomName').value = c.employee_name || '';
+  document.getElementById('certRole').value = c.role || '';
+  document.getElementById('certDesc').value = c.description || '';
+  document.getElementById('certIssuer').value = c.issued_by || '';
+  if (c.date) document.getElementById('certDate').value = c.date;
+  generateCert();
+  document.getElementById('certNumDisplay').textContent = c.cert_number || 'CERT-NS-001';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.shareFromHistory = async function(id, btnEl) {
+  const c = window._certCache?.[id];
+  if (!c) return;
+  // Load into form and preview first
+  document.getElementById('certTitle').value = c.title || '';
+  document.getElementById('certCustomName').value = c.employee_name || '';
+  document.getElementById('certRole').value = c.role || '';
+  document.getElementById('certDesc').value = c.description || '';
+  document.getElementById('certIssuer').value = c.issued_by || '';
+  if (c.date) document.getElementById('certDate').value = c.date;
+  updatePreviewOnly();
+  document.getElementById('certNumDisplay').textContent = c.cert_number || 'CERT-NS-001';
+  // Small delay to let DOM update before capturing
+  await new Promise(r => setTimeout(r, 150));
+  await shareOnWhatsApp(btnEl);
+};
+
+window.deleteCert = async function(id) {
+  if (!confirm('Delete this certificate record?')) return;
+  try {
+    await deleteCertificate(id);
+    loadHistory();
+  } catch(e) { alert('Delete failed: ' + e.message); }
+};
+
+// Initial render
+generateCert();
+loadHistory();
+
+document.getElementById('logoutBtn').addEventListener('click', e => { e.preventDefault(); logoutUser(); });
+const sidebar=document.getElementById('adminSidebar'),overlay=document.getElementById('sidebarOverlay'),toggleBtn=document.getElementById('sidebarToggle');
+toggleBtn.addEventListener('click',()=>{sidebar.classList.add('open');overlay.classList.add('show');document.body.style.overflow='hidden';});
+overlay.addEventListener('click',()=>{sidebar.classList.remove('open');overlay.classList.remove('show');document.body.style.overflow='';});
+</script>
+
+<style>
+.tpl-btn {
+  width:100%;padding:9px 14px;border-radius:12px;text-align:left;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);
+  color:rgba(240,230,211,0.75);font-size:0.82rem;cursor:pointer;
+  transition:all 0.2s;font-family:'DM Sans',sans-serif;
+}
+.tpl-btn:hover {
+  background:rgba(212,175,55,0.1);border-color:rgba(212,175,55,0.3);
+  color:rgba(240,230,211,0.95);
+}
+</style>
+</body>
+</html>

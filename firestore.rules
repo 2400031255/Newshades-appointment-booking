@@ -122,5 +122,13 @@ service cloud.firestore {
       allow update: if isAdmin() || isEmployee();
       allow delete: if isAdmin();
     }
+
+    // ── Certificates ─────────────────────────────────────────────────────
+    match /certificates/{id} {
+      allow read: if isAdmin() || isEmployee();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
   }
 }
