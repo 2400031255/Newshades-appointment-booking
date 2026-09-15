@@ -125,8 +125,8 @@ service cloud.firestore {
 
     // ── Certificates ─────────────────────────────────────────────────────
     match /certificates/{id} {
-      allow read: if isAdmin() || isEmployee();
-      allow create: if isAdmin();
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }

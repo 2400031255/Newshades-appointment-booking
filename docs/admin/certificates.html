@@ -576,6 +576,13 @@ window.applyTemplate = function(title, desc) {
 window.printCert = function() {
   const paper = document.getElementById('certPaper');
   const printWin = window.open('', '_blank', 'width=1000,height=720');
+  // Collect only same-origin style rules (avoids CORS errors from CDN stylesheets)
+  let inlineStyles = '';
+  Array.from(document.styleSheets).forEach(s => {
+    try {
+      Array.from(s.cssRules).forEach(r => { inlineStyles += r.cssText + '\n'; });
+    } catch(e) { /* skip cross-origin sheets */ }
+  });
   printWin.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8"/>
     <title>Certificate – New Shades</title>
@@ -583,10 +590,15 @@ window.printCert = function() {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
     <style>
       *{margin:0;padding:0;box-sizing:border-box;}
-      body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-      ${Array.from(document.styleSheets).filter(s=>{try{return s.cssRules;}catch{return false;}}).map(s=>Array.from(s.cssRules).map(r=>r.cssText).join('')).join('')}
+      html,body{background:#000!important;}
+      body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+      ${inlineStyles}
+      @media print{
+        body{padding:0;}
+        .cert-paper{box-shadow:none!important;}
+      }
     </style>
-  </head><body>${paper.outerHTML}<script>window.onload=()=>{window.print();}<\/script></body></html>`);
+  </head><body>${paper.outerHTML}<script>window.onload=()=>{setTimeout(()=>window.print(),800);}<\/script></body></html>`);
   printWin.document.close();
 };
 
