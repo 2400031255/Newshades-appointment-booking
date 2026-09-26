@@ -574,22 +574,24 @@ window.generateBill = async () => {
   else if (dtype === 'flat') disc = Math.min(Math.round(dval), sub);
   const total = Math.max(0, sub - disc);
   const now = new Date();
-  const istFmt = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', ...opts }).format(now);
+  const istTime = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+  const istDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now); // YYYY-MM-DD
+  const istDateDisplay = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' }).format(now); // DD/MM/YYYY
   const billData = {
     bill_no: genBillNo(),
     customer_name: name, customer_phone: phone,
     items: entries.map(([, v]) => ({ name: v.name, price: v.price, qty: v.qty, total: v.price * v.qty, type: v.type || 'catalogue' })),
     subtotal: sub, discount_type: dtype, discount_value: dval, discount_amount: disc, total,
     payment_method: document.getElementById('payMethod').value,
-    date: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now),
-    time: istFmt({ hour: '2-digit', minute: '2-digit', hour12: false }),
+    date: istDate,
+    time: istTime,
     created_at: serverTimestamp()
   };
   const btn = document.getElementById('generateBtn');
   btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
   try {
     await addDoc(collection(_db, 'bills'), billData);
-    lastBill = { ...billData, dateStr: istFmt({ day: '2-digit', month: '2-digit', year: 'numeric' }) };
+    lastBill = { ...billData, dateStr: istDateDisplay };
     showToast('Bill generated!', 'success');
     showReceipt(lastBill);
     resetForm();
@@ -707,7 +709,8 @@ window.quickPrint = () => {
 
 window.testPrint = () => {
   const now = new Date();
-  const istFmt = (opts) => new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', ...opts }).format(now);
+  const istTime = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+  const istDateDisplay = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
   const html = '<div class="rcpt"><div class="rcpt-center" style="margin-bottom:14px;">' +
     '<img src="../images/logo.jpeg" class="rcpt-logo" onerror="this.style.display=\'none\'"/>' +
     '<div class="rcpt-salon">NEWSHADES FAMILY SALON</div>' +
@@ -716,8 +719,8 @@ window.testPrint = () => {
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">&#10003; Printer is working correctly!</div>' +
     '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + istFmt({ hour: '2-digit', minute: '2-digit', hour12: false }) + '</div>' +
-    '<div class="rcpt-center" style="font-size:11px;color:#555;">' + istFmt({ day: '2-digit', month: '2-digit', year: 'numeric' }) + '</div></div>';
+    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + istTime + '</div>' +
+    '<div class="rcpt-center" style="font-size:11px;color:#555;">' + istDateDisplay + '</div></div>';
   openThermalPrint(html);
 };
 
