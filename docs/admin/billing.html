@@ -582,7 +582,7 @@ window.generateBill = async () => {
     subtotal: sub, discount_type: dtype, discount_value: dval, discount_amount: disc, total,
     payment_method: document.getElementById('payMethod').value,
     date: new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(now),
-    time: istFmt({ hour: 'numeric', minute: '2-digit', hour12: true }),
+    time: istFmt({ hour: '2-digit', minute: '2-digit', hour12: false }),
     created_at: serverTimestamp()
   };
   const btn = document.getElementById('generateBtn');
@@ -716,7 +716,7 @@ window.testPrint = () => {
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-center" style="padding:16px 0;font-size:14px;font-weight:900;">&#10003; Printer is working correctly!</div>' +
     '<hr class="rcpt-divider"/>' +
-    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + istFmt({ hour: 'numeric', minute: '2-digit', hour12: true }) + '</div>' +
+    '<div class="rcpt-center" style="font-size:11px;color:#555;">Tested at ' + istFmt({ hour: '2-digit', minute: '2-digit', hour12: false }) + '</div>' +
     '<div class="rcpt-center" style="font-size:11px;color:#555;">' + istFmt({ day: '2-digit', month: '2-digit', year: 'numeric' }) + '</div></div>';
   openThermalPrint(html);
 };
@@ -849,13 +849,8 @@ function renderCharts(bills) {
   const hourMap = Array(24).fill(0);
   bills.forEach(b => {
     if (b.time) {
-      const match = b.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
-      if (match) {
-        let h = parseInt(match[1]);
-        if (match[3].toUpperCase() === 'PM' && h !== 12) h += 12;
-        if (match[3].toUpperCase() === 'AM' && h === 12) h = 0;
-        hourMap[h]++;
-      }
+      const match = b.time.match(/(\d+):(\d+)/);
+      if (match) { hourMap[parseInt(match[1])]++; }
     }
   });
   destroyChart(hourChart);
