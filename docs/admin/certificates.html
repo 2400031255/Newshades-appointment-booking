@@ -23,21 +23,21 @@
     /* ===== CERTIFICATE DESIGN ===== */
     .cert-paper {
       width:900px;min-height:640px;margin:0 auto;position:relative;
-      background: linear-gradient(145deg, #1a1208 0%, #0d0b06 40%, #1a1208 100%);
+      background: linear-gradient(145deg, #f5edd8 0%, #fdf6e3 40%, #f5edd8 100%);
       border-radius:4px;overflow:hidden;
-      box-shadow:0 30px 80px rgba(0,0,0,0.8), inset 0 0 120px rgba(212,175,55,0.04);
+      box-shadow:0 30px 80px rgba(0,0,0,0.35), inset 0 0 120px rgba(212,175,55,0.08);
       font-family:'DM Sans',sans-serif;
     }
 
     /* Outer gold border frame */
     .cert-border-outer {
       position:absolute;inset:12px;
-      border:2px solid rgba(212,175,55,0.6);
+      border:2px solid rgba(180,140,20,0.7);
       border-radius:2px;pointer-events:none;z-index:2;
     }
     .cert-border-inner {
       position:absolute;inset:20px;
-      border:1px solid rgba(212,175,55,0.25);
+      border:1px solid rgba(180,140,20,0.35);
       border-radius:1px;pointer-events:none;z-index:2;
     }
 
@@ -53,7 +53,7 @@
 
     /* Background watermark pattern */
     .cert-bg-pattern {
-      position:absolute;inset:0;z-index:0;opacity:0.04;
+      position:absolute;inset:0;z-index:0;opacity:0.12;
       background-image:
         radial-gradient(circle at 20% 20%, #D4AF37 1px, transparent 1px),
         radial-gradient(circle at 80% 80%, #D4AF37 1px, transparent 1px),
@@ -64,13 +64,13 @@
     /* Gold shimmer top bar */
     .cert-top-bar {
       position:relative;z-index:4;
-      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.15), rgba(212,175,55,0.3), rgba(212,175,55,0.15), transparent);
-      height:4px;margin:28px 28px 0;
+      background:linear-gradient(90deg, transparent, rgba(180,140,20,0.4), rgba(180,140,20,0.8), rgba(180,140,20,0.4), transparent);
+      height:5px;margin:28px 28px 0;
     }
     .cert-bottom-bar {
       position:relative;z-index:4;
-      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.15), rgba(212,175,55,0.3), rgba(212,175,55,0.15), transparent);
-      height:4px;margin:0 28px 28px;
+      background:linear-gradient(90deg, transparent, rgba(180,140,20,0.4), rgba(180,140,20,0.8), rgba(180,140,20,0.4), transparent);
+      height:5px;margin:0 28px 28px;
     }
 
     .cert-body { position:relative;z-index:4;padding:10px 60px 20px; }
@@ -79,20 +79,20 @@
     .cert-header { text-align:center;margin-bottom:8px; }
     .cert-logo-wrap {
       width:72px;height:72px;border-radius:50%;
-      border:2px solid rgba(212,175,55,0.5);
-      background:rgba(212,175,55,0.08);
+      border:2px solid rgba(180,140,20,0.6);
+      background:rgba(212,175,55,0.12);
       display:flex;align-items:center;justify-content:center;
       margin:0 auto 10px;overflow:hidden;
-      box-shadow:0 0 20px rgba(212,175,55,0.2);
+      box-shadow:0 0 20px rgba(180,140,20,0.2);
     }
     .cert-logo-wrap img { width:100%;height:100%;object-fit:cover; }
     .cert-salon-name {
       font-family:'Cinzel',serif;font-size:1.05rem;font-weight:700;
-      letter-spacing:4px;color:rgba(212,175,55,0.9);text-transform:uppercase;
+      letter-spacing:4px;color:#8B6914;text-transform:uppercase;
       margin-bottom:2px;
     }
     .cert-salon-tagline {
-      font-size:0.7rem;color:rgba(240,220,160,0.5);letter-spacing:2px;text-transform:uppercase;
+      font-size:0.7rem;color:#a07820;letter-spacing:2px;text-transform:uppercase;
     }
 
     /* Divider */
@@ -101,42 +101,42 @@
     }
     .cert-divider-line {
       flex:1;height:1px;
-      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+      background:linear-gradient(90deg, transparent, rgba(180,140,20,0.6), transparent);
     }
     .cert-divider-diamond {
-      width:8px;height:8px;background:rgba(212,175,55,0.7);
+      width:8px;height:8px;background:rgba(180,140,20,0.8);
       transform:rotate(45deg);flex-shrink:0;
     }
 
     /* Certificate of title */
     .cert-of-label {
       text-align:center;font-family:'Cinzel',serif;
-      font-size:0.65rem;letter-spacing:6px;color:rgba(212,175,55,0.6);
+      font-size:0.65rem;letter-spacing:6px;color:#a07820;
       text-transform:uppercase;margin-bottom:4px;
     }
     .cert-title {
       text-align:center;font-family:'Cinzel',serif;
       font-size:2.2rem;font-weight:700;
-      color:#D4AF37;letter-spacing:2px;
-      text-shadow:0 0 40px rgba(212,175,55,0.4);
+      color:#8B6914;letter-spacing:2px;
+      text-shadow:0 2px 8px rgba(180,140,20,0.2);
       line-height:1.1;margin-bottom:4px;
     }
     .cert-subtitle {
       text-align:center;font-family:'Playfair Display',serif;
       font-style:italic;font-size:0.85rem;
-      color:rgba(240,220,160,0.55);letter-spacing:1px;
+      color:#b08a2a;letter-spacing:1px;
     }
 
     /* Presented to */
     .cert-presented {
       text-align:center;font-size:0.72rem;letter-spacing:3px;
-      color:rgba(240,220,160,0.45);text-transform:uppercase;
+      color:#a07820;text-transform:uppercase;
       margin:14px 0 4px;
     }
     .cert-recipient {
       text-align:center;font-family:'Great Vibes',cursive;
-      font-size:3.2rem;color:#F5D060;
-      text-shadow:0 2px 20px rgba(212,175,55,0.35);
+      font-size:3.2rem;color:#7a5500;
+      text-shadow:0 2px 8px rgba(180,140,20,0.2);
       line-height:1.2;margin-bottom:6px;
       word-break:break-word;overflow-wrap:break-word;
       max-width:100%;display:block;
@@ -144,7 +144,7 @@
     .cert-recipient-role {
       text-align:center;font-family:'Cinzel',serif;
       font-size:0.7rem;letter-spacing:3px;
-      color:rgba(212,175,55,0.55);text-transform:uppercase;
+      color:#a07820;text-transform:uppercase;
       margin-top:2px;display:block;
     }
 
@@ -152,7 +152,7 @@
     .cert-desc-text {
       text-align:center;font-family:'Playfair Display',serif;
       font-style:italic;font-size:0.88rem;
-      color:rgba(240,220,160,0.65);line-height:1.7;
+      color:#6b4f12;line-height:1.7;
       max-width:580px;margin:12px auto 0;
     }
 
@@ -163,45 +163,45 @@
     }
     .cert-footer-col { text-align:center;min-width:140px; }
     .cert-footer-date-label {
-      font-size:0.62rem;letter-spacing:2px;color:rgba(212,175,55,0.45);
+      font-size:0.62rem;letter-spacing:2px;color:#a07820;
       text-transform:uppercase;margin-bottom:2px;
     }
     .cert-footer-date-val {
       font-family:'Cinzel',serif;font-size:0.78rem;
-      color:rgba(240,220,160,0.75);letter-spacing:1px;
+      color:#7a5500;letter-spacing:1px;
     }
     .cert-seal {
       width:80px;height:80px;border-radius:50%;
-      border:2px solid rgba(212,175,55,0.4);
-      background:radial-gradient(circle, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.04) 70%);
+      border:2px solid rgba(180,140,20,0.6);
+      background:radial-gradient(circle, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.06) 70%);
       display:flex;flex-direction:column;align-items:center;justify-content:center;
-      box-shadow:0 0 20px rgba(212,175,55,0.15), inset 0 0 20px rgba(212,175,55,0.05);
+      box-shadow:0 0 20px rgba(180,140,20,0.2), inset 0 0 20px rgba(212,175,55,0.1);
     }
-    .cert-seal-icon { font-size:1.4rem;color:rgba(212,175,55,0.7); }
+    .cert-seal-icon { font-size:1.4rem;color:#8B6914; }
     .cert-seal-text {
       font-family:'Cinzel',serif;font-size:0.38rem;
-      letter-spacing:1.5px;color:rgba(212,175,55,0.5);
+      letter-spacing:1.5px;color:#a07820;
       text-transform:uppercase;margin-top:2px;text-align:center;
     }
     .cert-sign-line {
       width:120px;height:1px;
-      background:linear-gradient(90deg, transparent, rgba(212,175,55,0.5), transparent);
+      background:linear-gradient(90deg, transparent, rgba(180,140,20,0.6), transparent);
       margin:0 auto 4px;
     }
     .cert-sign-label {
-      font-size:0.6rem;letter-spacing:2px;color:rgba(212,175,55,0.45);
+      font-size:0.6rem;letter-spacing:2px;color:#a07820;
       text-transform:uppercase;
     }
     .cert-sign-name {
       font-family:'Great Vibes',cursive;font-size:1.3rem;
-      color:rgba(240,210,120,0.7);line-height:1;margin-bottom:2px;
+      color:#7a5500;line-height:1;margin-bottom:2px;
     }
 
     /* Certificate number badge */
     .cert-number {
       position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
       font-family:'Cinzel',serif;font-size:0.58rem;letter-spacing:2px;
-      color:rgba(212,175,55,0.3);z-index:4;white-space:nowrap;
+      color:#b09030;z-index:4;white-space:nowrap;
     }
 
     /* Ribbon accent */
@@ -210,18 +210,18 @@
     }
     .cert-ribbon-left {
       left:26px;
-      background:linear-gradient(180deg, transparent, rgba(212,175,55,0.15) 20%, rgba(212,175,55,0.25) 50%, rgba(212,175,55,0.15) 80%, transparent);
+      background:linear-gradient(180deg, transparent, rgba(180,140,20,0.25) 20%, rgba(180,140,20,0.45) 50%, rgba(180,140,20,0.25) 80%, transparent);
     }
     .cert-ribbon-right {
       right:26px;
-      background:linear-gradient(180deg, transparent, rgba(212,175,55,0.15) 20%, rgba(212,175,55,0.25) 50%, rgba(212,175,55,0.15) 80%, transparent);
+      background:linear-gradient(180deg, transparent, rgba(180,140,20,0.25) 20%, rgba(180,140,20,0.45) 50%, rgba(180,140,20,0.25) 80%, transparent);
     }
 
     /* Print styles */
     @media print {
       body * { visibility:hidden; }
       #certPrintArea, #certPrintArea * { visibility:visible; }
-      #certPrintArea { position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000; }
+      #certPrintArea { position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#fdf6e3; }
       .cert-paper { box-shadow:none; }
     }
   </style>
@@ -580,7 +580,7 @@ window.printCert = async function() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating…'; }
   try {
     const canvas = await html2canvas(document.getElementById('certPaper'), {
-      scale: 2, useCORS: true, backgroundColor: '#0d0b06', logging: false
+      scale: 2, useCORS: true, backgroundColor: '#fdf6e3', logging: false
     });
     const imgData = canvas.toDataURL('image/png');
     const { jsPDF } = window.jspdf;
@@ -606,7 +606,7 @@ window.shareOnWhatsApp = async function(btnEl) {
 
   try {
     const canvas = await html2canvas(document.getElementById('certPaper'), {
-      scale: 2, useCORS: true, backgroundColor: '#0d0b06', logging: false
+      scale: 2, useCORS: true, backgroundColor: '#fdf6e3', logging: false
     });
 
     canvas.toBlob(async (blob) => {
