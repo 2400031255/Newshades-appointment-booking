@@ -303,7 +303,7 @@
         </div>
         <div class="table-responsive">
           <table class="rpt-table">
-            <thead><tr><th>Bill No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Items</th><th style="text-align:right;">Subtotal</th><th style="text-align:right;">Discount</th><th style="text-align:right;">Total</th><th>Payment</th><th></th></tr></thead>
+            <thead><tr><th>Bill No</th><th>Date</th><th>Time</th><th>Customer</th><th>Phone</th><th>Items</th><th style="text-align:right;">Subtotal</th><th style="text-align:right;">Discount</th><th style="text-align:right;">Total</th><th>Payment</th><th></th></tr></thead>
             <tbody id="rptTableBody"></tbody>
           </table>
         </div>
@@ -885,6 +885,7 @@ window.renderRptTable = () => {
     ? filtered.map(b => '<tr>' +
         '<td style="font-weight:700;color:var(--gold-2);">' + esc(b.bill_no||'') + '</td>' +
         '<td>' + esc(b.date||'') + '</td>' +
+        '<td style="color:rgba(255,255,255,0.7);">' + esc(b.time||'—') + '</td>' +
         '<td style="font-weight:600;">' + esc(b.customer_name||'') + '</td>' +
         '<td style="color:rgba(255,255,255,0.5);">' + esc(b.customer_phone||'') + '</td>' +
         '<td style="color:rgba(255,255,255,0.5);font-size:0.8rem;">' + ((b.items||[]).map(i=>i.name).join(', ').slice(0,40)||'—') + '</td>' +
@@ -924,9 +925,9 @@ window.downloadPDF = () => {
   doc.text('Total Bills: ' + bills.length + '   |   Total Revenue: Rs.' + totalRev.toLocaleString('en-IN'), 105, 34, { align: 'center' });
   doc.autoTable({
     startY: 42,
-    head: [['Bill No','Date','Customer','Phone','Items','Subtotal','Discount','Total','Payment']],
+    head: [['Bill No','Date','Time','Customer','Phone','Items','Subtotal','Discount','Total','Payment']],
     body: bills.map(b => [
-      b.bill_no||'', b.date||'', b.customer_name||'', b.customer_phone||'',
+      b.bill_no||'', b.date||'', b.time||'', b.customer_name||'', b.customer_phone||'',
       (b.items||[]).map(i=>i.name).join(', ').slice(0,40),
       'Rs.'+(b.subtotal||0), b.discount_amount>0?'-Rs.'+b.discount_amount:'—',
       'Rs.'+(b.total||0), b.payment_method||''
