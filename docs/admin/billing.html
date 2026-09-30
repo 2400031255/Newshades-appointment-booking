@@ -634,7 +634,6 @@ function buildReceiptHTML(b) {
     '<hr class="rcpt-divider"/>' +
     '<div class="rcpt-row"><span>Bill No</span><span style="font-weight:900;">' + esc(billNo) + '</span></div>' +
     '<div class="rcpt-row"><span>Date</span><span style="font-weight:700;">' + esc(b.dateStr||b.date||'') + '</span></div>' +
-    '<div class="rcpt-row"><span>Time</span><span style="font-weight:700;">' + esc(b.time||'') + '</span></div>' +
     '<div class="rcpt-row"><span>Customer</span><span style="font-weight:700;">' + esc(b.customer_name||'') + '</span></div>' +
     '<div class="rcpt-row"><span>Mobile</span><span style="font-weight:700;">' + esc(b.customer_phone||'') + '</span></div>' +
     '<hr class="rcpt-divider"/>' +
@@ -730,7 +729,7 @@ window.shareWhatsApp = () => {
   const lines = (b.items||[]).map(i => '- ' + (i.name||'') + (i.qty > 1 ? ' ×' + i.qty : '') + ' ₹' + (i.total||0)).join('\n');
   const disc = (b.discount_amount||0) > 0 ? '\nDiscount: -₹' + b.discount_amount : '';
   const msg = 'NEWSHADES FAMILY SALON\nReceipt - ' + (b.bill_no||'') +
-    '\n\nDate: ' + (b.dateStr||b.date||'') + ' ' + (b.time||'') +
+    '\n\nDate: ' + (b.dateStr||b.date||'') +
     '\nCustomer: ' + (b.customer_name||'') + '\n\n' + lines + disc +
     '\n\nTOTAL: ₹' + (b.total||0) + '\nPayment: ' + (b.payment_method||'') + '\n\nThank you! Visit again ☺';
   window.open('https://wa.me/91' + (b.customer_phone||'') + '?text=' + encodeURIComponent(msg), '_blank');
